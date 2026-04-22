@@ -4,23 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Optics Lab — Converging Lens</title>
+
+<!-- ═══════ AR.js + A-Frame (only loaded when AR mode is active) ═══════ -->
+<!-- Loaded dynamically to avoid slowing down the desktop simulation -->
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#0a0e1a;font-family:'Outfit',sans-serif;overflow:hidden;height:100vh;width:100vw;color:#e8f4ff;}
 
-/* Camera feed sits behind everything in AR mode */
-#camFeed{
-  position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;display:none;z-index:0;
-  transform:scaleX(-1); /* front cam mirror — toggled for rear */
-}
-
-#mainCanvas{position:absolute;inset:0;z-index:1;}
+/* ── Desktop sim canvas ── */
+#simWrap{position:absolute;inset:0;z-index:1;}
+#mainCanvas{position:absolute;inset:0;}
 #labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
 
+/* ── AR.js scene wrapper (hidden until AR mode) ── */
+#arWrap{
+  display:none;position:absolute;inset:0;z-index:2;
+}
+#arWrap.show{display:block;}
+
 /* ── HUD ── */
-#hud{position:absolute;top:20px;right:20px;background:rgba(8,18,35,.9);backdrop-filter:blur(20px);border:1px solid rgba(100,200,255,.2);border-radius:16px;padding:16px;min-width:218px;z-index:5;}
+#hud{position:absolute;top:20px;right:20px;background:rgba(8,18,35,.9);backdrop-filter:blur(20px);border:1px solid rgba(100,200,255,.2);border-radius:16px;padding:16px;min-width:218px;z-index:10;}
 #hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(100,200,255,.55);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid rgba(100,200,255,.1);padding-bottom:8px;}
 .dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:7px;background:rgba(100,200,255,.04);}
 .dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,220,255,.7);}
@@ -30,12 +35,12 @@ body{background:#0a0e1a;font-family:'Outfit',sans-serif;overflow:hidden;height:1
 #image-info{padding:7px 8px;border-radius:7px;background:rgba(127,255,178,.05);border:1px solid rgba(127,255,178,.14);font-size:11px;font-family:'Space Mono',monospace;color:#7fffb2;line-height:1.9;}
 
 /* ── PiP ── */
-#pip{position:absolute;top:20px;left:200px;width:128px;height:128px;background:#06101a;border:1px solid rgba(127,255,178,.3);border-radius:10px;overflow:hidden;z-index:5;}
+#pip{position:absolute;top:20px;left:200px;width:128px;height:128px;background:#06101a;border:1px solid rgba(127,255,178,.3);border-radius:10px;overflow:hidden;z-index:10;}
 #pip canvas{width:100%;height:100%;display:block;}
 #pip-label{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:8px;color:rgba(127,255,178,.5);letter-spacing:1px;pointer-events:none;}
 
 /* ── Controls ── */
-#controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(8,18,35,.9);backdrop-filter:blur(20px);border:1px solid rgba(100,200,255,.2);border-radius:50px;padding:8px 16px;z-index:5;flex-wrap:wrap;justify-content:center;}
+#controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(8,18,35,.9);backdrop-filter:blur(20px);border:1px solid rgba(100,200,255,.2);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;}
 .btn{padding:7px 14px;border-radius:30px;border:1px solid rgba(100,200,255,.3);background:rgba(100,200,255,.08);color:#64c8ff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;}
 .btn:hover{background:rgba(100,200,255,.2);}
 .btn.on{background:rgba(100,200,255,.28);border-color:#64c8ff;color:#fff;box-shadow:0 0 12px rgba(100,200,255,.3);}
@@ -48,94 +53,62 @@ body{background:#0a0e1a;font-family:'Outfit',sans-serif;overflow:hidden;height:1
 input[type=range]{-webkit-appearance:none;width:80px;height:4px;border-radius:2px;background:rgba(100,200,255,.2);outline:none;cursor:pointer;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#64c8ff;cursor:pointer;}
 
-#title{position:absolute;top:20px;left:20px;z-index:5;}
+#title{position:absolute;top:20px;left:20px;z-index:10;}
 #title h1{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:#fff;letter-spacing:1px;}
 #title p{font-size:10px;color:rgba(100,200,255,.45);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
 
-#focus-badge{position:absolute;top:20px;left:50%;transform:translateX(-50%);padding:5px 14px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;transition:all .3s;pointer-events:none;z-index:5;white-space:nowrap;}
+#focus-badge{position:absolute;top:20px;left:50%;transform:translateX(-50%);padding:5px 14px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;transition:all .3s;pointer-events:none;z-index:10;white-space:nowrap;}
 #focus-badge.focused{background:rgba(127,255,178,.14);border:1px solid rgba(127,255,178,.4);color:#7fffb2;}
 #focus-badge.unfocused{background:rgba(255,100,100,.10);border:1px solid rgba(255,100,100,.3);color:#ff7070;}
 
-#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(100,200,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:5;white-space:nowrap;}
+#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(100,200,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
 
-/* ── AR mode badge ── */
-#ar-badge{
-  display:none;position:absolute;top:68px;left:50%;transform:translateX(-50%);
-  padding:5px 14px;border-radius:20px;
-  background:rgba(60,220,120,.14);border:1px solid rgba(60,220,120,.4);
-  font-family:'Space Mono',monospace;font-size:10px;color:#3fdc78;
-  letter-spacing:2px;text-transform:uppercase;z-index:5;pointer-events:none;
-  white-space:nowrap;
+/* ── AR marker instructions panel ── */
+#ar-instructions{
+  display:none;
+  position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+  background:rgba(8,18,35,.92);backdrop-filter:blur(16px);
+  border:1px solid rgba(60,220,120,.3);border-radius:14px;
+  padding:16px 22px;z-index:10;max-width:340px;width:90%;
+  font-family:'Space Mono',monospace;font-size:11px;color:#7fffb2;
+  line-height:1.8;text-align:center;
 }
+#ar-instructions.show{display:block;}
+#ar-instructions strong{color:#fff;}
+#ar-instructions a{color:#64c8ff;text-decoration:underline;}
 
-/* ── AR placement overlay ── */
-#ar-place-overlay{
-  display:none;position:absolute;inset:0;z-index:20;
-  align-items:center;justify-content:center;flex-direction:column;
-  background:rgba(0,0,0,.55);
-}
-#ar-place-overlay.show{display:flex;}
-#ar-place-ring{
-  width:90px;height:90px;border-radius:50%;
-  border:3px solid rgba(60,220,120,.9);
-  box-shadow:0 0 22px rgba(60,220,120,.6);
-  animation:pulse 1.4s ease-in-out infinite;
-  display:flex;align-items:center;justify-content:center;
-}
-#ar-place-ring::after{
-  content:'';width:14px;height:14px;border-radius:50%;
-  background:rgba(60,220,120,.9);
-  box-shadow:0 0 10px rgba(60,220,120,1);
-}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.1);opacity:.7;}}
-#ar-place-msg{
-  margin-top:26px;font-family:'Space Mono',monospace;font-size:13px;
-  color:#7fffb2;letter-spacing:1px;text-align:center;line-height:1.8;
-}
-#ar-place-confirm{
-  margin-top:28px;padding:14px 42px;border-radius:40px;
-  border:2px solid rgba(60,220,120,.8);background:rgba(60,220,120,.16);
-  color:#3fdc78;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
-  cursor:pointer;letter-spacing:1px;-webkit-tap-highlight-color:transparent;
-  box-shadow:0 0 24px rgba(60,220,120,.3);
-}
-#ar-place-cancel{
-  margin-top:14px;padding:8px 28px;border-radius:30px;
-  border:1px solid rgba(255,100,100,.35);background:rgba(255,100,100,.08);
-  color:#ff7070;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-}
+/* ── AR badge ── */
+#ar-badge{display:none;position:absolute;top:68px;left:50%;transform:translateX(-50%);
+  padding:5px 14px;border-radius:20px;background:rgba(60,220,120,.14);
+  border:1px solid rgba(60,220,120,.4);font-family:'Space Mono',monospace;
+  font-size:10px;color:#3fdc78;letter-spacing:2px;text-transform:uppercase;
+  z-index:10;pointer-events:none;white-space:nowrap;}
 
-/* ── tap-to-select highlight ── */
-#sel-hint{
-  display:none;position:absolute;bottom:68px;left:50%;transform:translateX(-50%);
-  font-size:10px;color:rgba(60,220,120,.7);font-family:'Space Mono',monospace;
-  z-index:5;pointer-events:none;white-space:nowrap;letter-spacing:1px;
-}
+/* A-Frame canvas must fill its container */
+#arWrap a-scene{width:100%;height:100%;}
 </style>
 </head>
 <body>
 
-<video id="camFeed" autoplay muted playsinline></video>
-<canvas id="mainCanvas"></canvas>
-<canvas id="labelCanvas"></canvas>
-
-<!-- AR placement screen -->
-<div id="ar-place-overlay">
-  <div id="ar-place-ring"></div>
-  <div id="ar-place-msg">
-    Point the iPad at where you want<br>
-    to place the optical bench,<br>
-    then tap <strong>PLACE HERE</strong>
-  </div>
-  <button id="ar-place-confirm">PLACE HERE</button>
-  <button id="ar-place-cancel">Cancel</button>
+<!-- ═══════════════════════════════════════════
+     DESKTOP 3D SIMULATION
+════════════════════════════════════════════ -->
+<div id="simWrap">
+  <canvas id="mainCanvas"></canvas>
+  <canvas id="labelCanvas"></canvas>
 </div>
 
-<div id="ar-badge">📐 AR LIVE</div>
+<!-- ═══════════════════════════════════════════
+     AR.js SCENE (injected when AR activated)
+════════════════════════════════════════════ -->
+<div id="arWrap"></div>
 
+<!-- ═══════════════════════════════════════════
+     SHARED UI (on top of both modes)
+════════════════════════════════════════════ -->
 <div id="title"><h1>OPTICS LAB</h1><p>Converging Lens Simulator</p></div>
 <div id="focus-badge" class="focused">IMAGE FOCUSED</div>
+<div id="ar-badge">📐 AR LIVE — marker detected</div>
 
 <div id="pip">
   <canvas id="pipCanvas"></canvas>
@@ -175,275 +148,85 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   <button class="btn"       id="btn-reset">Reset</button>
 </div>
 
-<div id="hint">LEFT drag: move elements · RIGHT drag / scroll: orbit & zoom</div>
-<div id="sel-hint">TAP an element to select · DRAG to move it</div>
+<div id="ar-instructions">
+  <strong>AR Mode — Marker Required</strong><br><br>
+  Print or display this marker on screen:<br>
+  <a href="https://ar-js-org.github.io/AR.js/data/images/hiro.png" target="_blank">
+    → Download Hiro Marker (print A5 or larger)
+  </a><br><br>
+  Point your camera at the marker.<br>
+  The optical bench will appear on it.<br>
+  Walk around to view from any angle.<br><br>
+  <strong>Tap elements on screen to move them.</strong>
+</div>
 
+<div id="hint">LEFT drag: move elements · RIGHT drag / scroll: orbit & zoom</div>
+
+<!-- Three.js for desktop mode -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script>
 'use strict';
 
-// ═══════════════════════════════════════════
-//  RENDERER
-// ═══════════════════════════════════════════
-const canvas   = document.getElementById('mainCanvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-renderer.setClearColor(0x000000, 0);
-
-const scene    = new THREE.Scene();
-const camera3D = new THREE.PerspectiveCamera(60, 1, 0.01, 300);
-
-const labelCanvas = document.getElementById('labelCanvas');
-const lctx        = labelCanvas.getContext('2d');
-const pipCanvas   = document.getElementById('pipCanvas');
-const pipCtx      = pipCanvas.getContext('2d');
-pipCanvas.width   = pipCanvas.height = 256;
-
-function resize() {
-  const w=window.innerWidth, h=window.innerHeight;
-  renderer.setSize(w,h);
-  camera3D.aspect=w/h;
-  camera3D.updateProjectionMatrix();
-  labelCanvas.width=w; labelCanvas.height=h;
-}
-resize();
-window.addEventListener('resize', resize);
-
-// ═══════════════════════════════════════════
-//  LIGHTS
-// ═══════════════════════════════════════════
-scene.add(new THREE.AmbientLight(0x2040a0, 4.0));
-const sunLight=new THREE.DirectionalLight(0xffffff,2.0);
-sunLight.position.set(5,15,8); sunLight.castShadow=true; scene.add(sunLight);
-const rimLight=new THREE.DirectionalLight(0x00ccff,0.8);
-rimLight.position.set(-10,4,-5); scene.add(rimLight);
-const fillLight=new THREE.PointLight(0x4488ff,1.5,40);
-fillLight.position.set(0,8,5); scene.add(fillLight);
-
-// ═══════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  SHARED PHYSICS STATE  (used by both desktop and AR)
+// ═══════════════════════════════════════════════════════
 const S={
   focalLength:15, objectDist:30, screenDist:30,
   objectHeight:10, showRays:false, lockHeight:false,
 };
 const CM=0.1;
 
-// ═══════════════════════════════════════════
-//  AR STATE
-// ═══════════════════════════════════════════
-let arMode     = false;   // AR mode active
-let arReady    = false;   // bench has been placed
-let camStream  = null;
-let arFacing   = 'environment';
-
-// DeviceOrientation → quaternion for the camera in AR mode
-const deviceQuat = new THREE.Quaternion();
-const _euler     = new THREE.Euler();
-const originQuat = new THREE.Quaternion();
-const AR_CAM_POS = new THREE.Vector3(0, 0, 0);  // camera at world origin in AR
-
-// The entire optics scene lives here — repositioned when AR anchored
-const sceneRoot=new THREE.Group();
-scene.add(sceneRoot);
-
-// ═══════════════════════════════════════════
-//  ORBIT CAMERA  (desktop / non-AR)
-// ═══════════════════════════════════════════
-const orb={theta:0.0,phi:0.18,radius:22,cx:0,cy:0.5,cz:0};
-const PHI_MAX=Math.PI/4, PHI_MIN=-Math.PI/8;
-function applyOrbit(){
-  orb.phi=Math.max(PHI_MIN,Math.min(PHI_MAX,orb.phi));
-  const r=orb.radius,p=orb.phi,t=orb.theta;
-  camera3D.position.set(
-    orb.cx+r*Math.cos(p)*Math.sin(t),
-    orb.cy+r*Math.sin(p),
-    orb.cz+r*Math.cos(p)*Math.cos(t)
-  );
-  camera3D.lookAt(orb.cx,orb.cy,orb.cz);
-}
-applyOrbit();
-
-// ═══════════════════════════════════════════
-//  FLOOR + GRID (desktop only)
-// ═══════════════════════════════════════════
-const floorMesh=new THREE.Mesh(
-  new THREE.PlaneGeometry(80,80),
-  new THREE.MeshStandardMaterial({color:0x060e18,roughness:1})
-);
-floorMesh.rotation.x=-Math.PI/2; floorMesh.position.y=-2.6;
-floorMesh.receiveShadow=true; scene.add(floorMesh);
-const gridHelper=new THREE.GridHelper(80,80,0x0c2840,0x0c2840);
-gridHelper.position.y=-2.58; scene.add(gridHelper);
-
-// ═══════════════════════════════════════════
-//  OPTICAL AXIS + RAIL
-// ═══════════════════════════════════════════
-{
-  const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]);
-  const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x1a5070,dashSize:0.5,gapSize:0.3}));
-  l.computeLineDistances(); sceneRoot.add(l);
-}
-{
-  const rail=new THREE.Mesh(new THREE.BoxGeometry(38,0.14,0.28),new THREE.MeshStandardMaterial({color:0x1a3a55,metalness:0.8,roughness:0.25}));
-  rail.position.set(0,-0.46,0); sceneRoot.add(rail);
-}
-
-// ═══════════════════════════════════════════
-//  MOUNT
-// ═══════════════════════════════════════════
-function buildMount(color,postH){
-  const g=new THREE.Group();
-  const mat=new THREE.MeshStandardMaterial({color,metalness:0.75,roughness:0.25});
-  const clamp=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.42,0.56),mat);
-  clamp.position.y=-0.5; clamp.castShadow=true; g.add(clamp);
-  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065,postH,10),mat);
-  post.position.y=-0.5+0.21+postH*0.5; post.castShadow=true; g.add(post);
-  return g;
-}
-
-// ═══════════════════════════════════════════
-//  ARROW
-// ═══════════════════════════════════════════
-const arrowObj=(()=>{
-  const g=new THREE.Group(); g.userData.type='object';
-  g.add(buildMount(0x3a1a1a,0.9));
-  const shMat=new THREE.MeshStandardMaterial({color:0xff3030,emissive:0x7a0000,emissiveIntensity:0.5,roughness:0.28,metalness:0.55});
-  const hdMat=new THREE.MeshStandardMaterial({color:0xff5555,emissive:0x990000,emissiveIntensity:0.6,roughness:0.18,metalness:0.65});
-  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,1,18),shMat); shaft.name='shaft'; shaft.castShadow=true; g.add(shaft);
-  const head=new THREE.Mesh(new THREE.ConeGeometry(0.36,0.9,18),hdMat); head.name='head'; head.castShadow=true; g.add(head);
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.1,16),shMat); base.name='base'; g.add(base);
-  return g;
-})();
-sceneRoot.add(arrowObj);
-
-function refreshArrow(){
-  const total=Math.max(0.5,S.objectHeight*CM);
-  const headH=Math.min(0.9,total*0.32),shH=Math.max(0.1,total-headH);
-  const sh=arrowObj.getObjectByName('shaft');
-  sh.geometry.dispose(); sh.geometry=new THREE.CylinderGeometry(0.13,0.13,shH,18);
-  sh.position.y=shH*0.5;
-  arrowObj.getObjectByName('head').position.y=shH+headH*0.5;
-  arrowObj.getObjectByName('base').position.y=0.06;
-}
-
-// ═══════════════════════════════════════════
-//  LENS
-// ═══════════════════════════════════════════
-const lensObj=(()=>{
-  const g=new THREE.Group(); g.userData.type='lens';
-  g.add(buildMount(0x1a2a3a,0.9));
-  const lR=2.2,bulge=0.55,N=80,pts=[];
-  for(let i=0;i<=N;i++){const t=i/N;pts.push(new THREE.Vector2(Math.max(0.03,bulge*Math.sin(Math.PI*t)),lR*(2*t-1)));}
-  const lMat=new THREE.MeshPhysicalMaterial({color:0xaaddff,transmission:0.82,opacity:0.70,transparent:true,roughness:0,metalness:0,reflectivity:0.95,ior:1.52,thickness:1.1,clearcoat:1.0,clearcoatRoughness:0,side:THREE.DoubleSide,depthWrite:false});
-  g.add(new THREE.Mesh(new THREE.LatheGeometry(pts,80),lMat));
-  [-1,1].forEach(side=>{
-    const dot=new THREE.Mesh(new THREE.SphereGeometry(0.10,16,16),new THREE.MeshStandardMaterial({color:0xffdd44,emissive:0xffaa00,emissiveIntensity:2.5}));
-    dot.userData.isFocalMarker=true; dot.userData.side=side; g.add(dot);
-  });
-  const ctr=new THREE.Mesh(new THREE.SphereGeometry(0.10,16,16),new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xaaccff,emissiveIntensity:3.0}));
-  g.add(ctr);
-  return g;
-})();
-sceneRoot.add(lensObj);
-
-// ═══════════════════════════════════════════
-//  SCREEN TEXTURE
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  SCREEN TEXTURE  (shared — updates both desktop + AR)
+// ═══════════════════════════════════════════════════════
 const screenTC=document.createElement('canvas');
 screenTC.width=screenTC.height=256;
 const screenTCtx=screenTC.getContext('2d');
-const screenTex=new THREE.CanvasTexture(screenTC);
 
 function paintProjection(blurAmt,inverted,imgH){
   const ctx=screenTCtx,W=256,H=256;
   ctx.clearRect(0,0,W,H);
   const bg=ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#0a1520'); bg.addColorStop(1,'#050d15');
-  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  bg.addColorStop(0,'#0a1520');bg.addColorStop(1,'#050d15');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
   const bright=Math.max(0,1-blurAmt*0.80);
-  if(bright<0.03){screenTex.needsUpdate=true;return;}
+  if(bright<0.03)return;
   const bpx=Math.min(blurAmt*20,30),cx=W/2,cy=H/2;
   const frac=Math.min(0.88,imgH/28),aPx=Math.max(18,frac*H*0.88);
   const hPx=Math.min(aPx*0.28,44),shW=aPx*0.10,hdW=aPx*0.28;
-  ctx.save(); ctx.filter=`blur(${bpx}px)`;
+  ctx.save();ctx.filter=`blur(${bpx}px)`;
   if(inverted){ctx.translate(cx,cy);ctx.scale(1,-1);ctx.translate(-cx,-cy);}
   ctx.fillStyle=`rgba(255,65,65,${Math.min(1,bright*1.6)})`;
   const top=cy-aPx/2;
-  ctx.beginPath(); ctx.moveTo(cx,top); ctx.lineTo(cx+hdW/2,top+hPx); ctx.lineTo(cx+shW/2,top+hPx);
-  ctx.lineTo(cx+shW/2,top+aPx); ctx.lineTo(cx-shW/2,top+aPx); ctx.lineTo(cx-shW/2,top+hPx); ctx.lineTo(cx-hdW/2,top+hPx);
-  ctx.closePath(); ctx.fill(); ctx.restore();
-  if(bright>0.2){const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,W*0.4);glow.addColorStop(0,`rgba(255,100,80,${bright*0.14})`);glow.addColorStop(1,'transparent');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);}
-  screenTex.needsUpdate=true;
-}
-
-// ═══════════════════════════════════════════
-//  SCREEN
-// ═══════════════════════════════════════════
-const screenObj=(()=>{
-  const g=new THREE.Group(); g.userData.type='screen';
-  g.add(buildMount(0x1a3a2a,0.45));
-  const mat=new THREE.MeshStandardMaterial({map:screenTex,roughness:0.75,metalness:0,side:THREE.DoubleSide,emissive:0x000a10,emissiveIntensity:0.1});
-  const panel=new THREE.Mesh(new THREE.PlaneGeometry(3,4),mat);
-  panel.rotation.y=Math.PI/2; panel.position.y=1.6; g.add(panel);
-  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.05,4.1,3.1)),new THREE.LineBasicMaterial({color:0x44887a}));
-  frame.position.y=1.6; g.add(frame);
-  return g;
-})();
-sceneRoot.add(screenObj);
-
-// ═══════════════════════════════════════════
-//  RAYS
-// ═══════════════════════════════════════════
-const rayGroup=new THREE.Group(); sceneRoot.add(rayGroup);
-function clearRays(){while(rayGroup.children.length)rayGroup.remove(rayGroup.children[0]);}
-function addRayLine(pts,color,opacity){
-  const mat=new THREE.LineBasicMaterial({color,transparent:true,opacity,depthTest:false});
-  const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
-  ln.renderOrder=10; rayGroup.add(ln);
-}
-function addDashedLine(pts,color,opacity){
-  const mat=new THREE.LineDashedMaterial({color,transparent:true,opacity,dashSize:0.22,gapSize:0.14,depthTest:false});
-  const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
-  ln.computeLineDistances(); ln.renderOrder=10; rayGroup.add(ln);
-}
-function updateRays(){
-  clearRays(); if(!S.showRays)return;
-  const f=S.focalLength*CM,do_=S.objectDist*CM,ho=S.objectHeight*CM;
-  const lx=lensObj.position.x,ox=arrowObj.position.x;
-  const di=1/(1/f-1/do_); if(!isFinite(di))return;
-  const tipY=ho,imgX=lx+di,imgY=-tipY*(di/do_),farX=lx+16;
-  const r1s=(imgY-tipY)/(imgX-lx),r1e=Math.min(imgX+2,farX);
-  addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,tipY,0),new THREE.Vector3(r1e,tipY+r1s*(r1e-lx),0)],0xffcc00,0.95);
-  addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,0,0),new THREE.Vector3(farX,(-tipY/(lx-ox))*(farX-lx),0)],0x00ffcc,0.95);
-  const fL=lx-f,r3s=tipY/(ox-fL),r3h=r3s*(lx-fL);
-  addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,r3h,0),new THREE.Vector3(farX,r3h,0)],0xff66ff,0.90);
-  if(di>0&&di<20){
-    addDashedLine([new THREE.Vector3(imgX,-2.5,0),new THREE.Vector3(imgX,3,0)],0x7fffb2,0.40);
-    const iMat=new THREE.MeshStandardMaterial({color:0x7fffb2,emissive:0x00aa66,emissiveIntensity:0.7,transparent:true,opacity:0.55,depthTest:false});
-    const hh=Math.min(0.45,Math.abs(imgY)*0.30),sh=Math.max(0.05,Math.abs(imgY)-hh),d=imgY>=0?1:-1;
-    const is=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,sh,8),iMat); is.position.set(imgX,d*sh/2,0); is.renderOrder=10; rayGroup.add(is);
-    const ih=new THREE.Mesh(new THREE.ConeGeometry(0.2,hh,8),iMat); ih.position.set(imgX,d*(sh+hh/2),0); if(d<0)ih.rotation.z=Math.PI; ih.renderOrder=10; rayGroup.add(ih);
+  ctx.beginPath();ctx.moveTo(cx,top);ctx.lineTo(cx+hdW/2,top+hPx);ctx.lineTo(cx+shW/2,top+hPx);
+  ctx.lineTo(cx+shW/2,top+aPx);ctx.lineTo(cx-shW/2,top+aPx);ctx.lineTo(cx-shW/2,top+hPx);ctx.lineTo(cx-hdW/2,top+hPx);
+  ctx.closePath();ctx.fill();ctx.restore();
+  if(bright>0.2){
+    const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,W*0.4);
+    glow.addColorStop(0,`rgba(255,100,80,${bright*0.14})`);glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
   }
 }
 
-// ═══════════════════════════════════════════
-//  LAYOUT
-// ═══════════════════════════════════════════
-function layoutScene(){
-  lensObj.position.set(0,0,0);
-  const f=S.focalLength*CM;
-  lensObj.children.forEach(c=>{if(c.userData.isFocalMarker)c.position.set(c.userData.side*f,0,0);});
-  arrowObj.position.set(-S.objectDist*CM,0,0); refreshArrow();
-  screenObj.position.set(S.screenDist*CM,0,0);
-  updateHUD(); refreshScreen(); updateRays();
+function refreshScreenTexture(){
+  const f=S.focalLength,do_=S.objectDist,ho=S.objectHeight;
+  const di=1/(1/f-1/do_),mag=isFinite(di)?-di/do_:0,hi=Math.abs(mag*ho);
+  const dlt=Math.abs(S.screenDist-di);
+  paintProjection(Math.min(dlt/14,1.0),isFinite(di)&&di>0,isFinite(hi)?hi:0);
+  // Update desktop texture
+  if(desktopTex) desktopTex.needsUpdate=true;
+  // Update AR texture
+  if(arScreenTex) arScreenTex.needsUpdate=true;
+  // Update PiP
+  const pipCtx=document.getElementById('pipCanvas').getContext('2d');
+  pipCtx.clearRect(0,0,256,256);pipCtx.drawImage(screenTC,0,0,256,256);
+  pipCtx.strokeStyle='rgba(127,255,178,.22)';pipCtx.lineWidth=2;pipCtx.strokeRect(1,1,254,254);
 }
 
-// ═══════════════════════════════════════════
-//  HUD
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  HUD  (shared)
+// ═══════════════════════════════════════════════════════
 function updateHUD(){
   const f=S.focalLength,do_=S.objectDist,ho=S.objectHeight;
   const di=1/(1/f-1/do_),mag=-di/do_,hi=mag*ho,dlt=S.screenDist-di;
@@ -468,42 +251,168 @@ function updateHUD(){
   badge.textContent=focused?'IMAGE FOCUSED':`BLURRED  |Δ|=${Math.abs(dlt).toFixed(1)}cm`;
 }
 
-function refreshScreen(){
-  const f=S.focalLength,do_=S.objectDist,ho=S.objectHeight;
-  const di=1/(1/f-1/do_),mag=isFinite(di)?-di/do_:0,hi=Math.abs(mag*ho);
-  const dlt=Math.abs(S.screenDist-di);
-  paintProjection(Math.min(dlt/14,1.0),isFinite(di)&&di>0,isFinite(hi)?hi:0);
-  pipCtx.clearRect(0,0,256,256); pipCtx.drawImage(screenTC,0,0,256,256);
-  pipCtx.strokeStyle='rgba(127,255,178,.22)';pipCtx.lineWidth=2;pipCtx.strokeRect(1,1,254,254);
+function fullUpdate(){updateHUD();refreshScreenTexture();}
+
+// ═══════════════════════════════════════════════════════
+//  ██████╗ ███████╗███████╗██╗  ██╗████████╗ ██████╗ ██████╗
+//  ██╔══██╗██╔════╝██╔════╝██║ ██╔╝╚══██╔══╝██╔═══██╗██╔══██╗
+//  ██║  ██║█████╗  ███████╗█████╔╝    ██║   ██║   ██║██████╔╝
+//  ██║  ██║██╔══╝  ╚════██║██╔═██╗    ██║   ██║   ██║██╔═══╝
+//  ██████╔╝███████╗███████║██║  ██╗   ██║   ╚██████╔╝██║
+//  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝
+// ═══════════════════════════════════════════════════════
+const canvas=document.getElementById('mainCanvas');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.setClearColor(0x000000,0);
+
+const scene3=new THREE.Scene();
+const cam3=new THREE.PerspectiveCamera(52,1,0.1,300);
+let desktopTex=null;
+
+const labelCanvas=document.getElementById('labelCanvas');
+const lctx=labelCanvas.getContext('2d');
+const pipCanvas=document.getElementById('pipCanvas');
+pipCanvas.width=pipCanvas.height=256;
+
+function resizeDesktop(){
+  if(arMode)return;
+  const w=window.innerWidth,h=window.innerHeight;
+  renderer.setSize(w,h);
+  cam3.aspect=w/h;cam3.updateProjectionMatrix();
+  labelCanvas.width=w;labelCanvas.height=h;
+}
+window.addEventListener('resize',resizeDesktop);
+
+// Lights
+scene3.add(new THREE.AmbientLight(0x2040a0,4.0));
+const sun=new THREE.DirectionalLight(0xffffff,2.0); sun.position.set(5,15,8); sun.castShadow=true; scene3.add(sun);
+const rim=new THREE.DirectionalLight(0x00ccff,0.8); rim.position.set(-10,4,-5); scene3.add(rim);
+scene3.add(Object.assign(new THREE.PointLight(0x4488ff,1.5,40),{position:{x:0,y:8,z:5}}));
+
+// Orbit cam
+const orb={theta:0,phi:0.18,radius:22,cx:0,cy:0.5,cz:0};
+const PHI_MAX=Math.PI/4,PHI_MIN=-Math.PI/8;
+function applyOrbit(){
+  orb.phi=Math.max(PHI_MIN,Math.min(PHI_MAX,orb.phi));
+  const r=orb.radius,p=orb.phi,t=orb.theta;
+  cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t),orb.cy+r*Math.sin(p),orb.cz+r*Math.cos(p)*Math.cos(t));
+  cam3.lookAt(orb.cx,orb.cy,orb.cz);
+}
+applyOrbit();
+
+// Floor + Grid
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x060e18,roughness:1}));
+floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.6; floorM.receiveShadow=true; scene3.add(floorM);
+const gridM=new THREE.GridHelper(80,80,0x0c2840,0x0c2840); gridM.position.y=-2.58; scene3.add(gridM);
+
+// Scene root (all optics objects)
+const root3=new THREE.Group(); scene3.add(root3);
+
+// Optical axis + rail
+{const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]);const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x1a5070,dashSize:0.5,gapSize:0.3}));l.computeLineDistances();root3.add(l);}
+{const r=new THREE.Mesh(new THREE.BoxGeometry(38,0.14,0.28),new THREE.MeshStandardMaterial({color:0x1a3a55,metalness:0.8,roughness:0.25}));r.position.set(0,-0.46,0);root3.add(r);}
+
+function buildMount(color,postH){
+  const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color,metalness:0.75,roughness:0.25});
+  const cl=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.42,0.56),mat); cl.position.y=-0.5; cl.castShadow=true; g.add(cl);
+  const po=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065,postH,10),mat); po.position.y=-0.5+0.21+postH*0.5; po.castShadow=true; g.add(po);
+  return g;
 }
 
-// ═══════════════════════════════════════════
-//  LABELS
-// ═══════════════════════════════════════════
+// Arrow
+const arrowD=(()=>{
+  const g=new THREE.Group(); g.userData.type='object'; g.add(buildMount(0x3a1a1a,0.9));
+  const shMat=new THREE.MeshStandardMaterial({color:0xff3030,emissive:0x7a0000,emissiveIntensity:0.5,roughness:0.28,metalness:0.55});
+  const hdMat=new THREE.MeshStandardMaterial({color:0xff5555,emissive:0x990000,emissiveIntensity:0.6,roughness:0.18,metalness:0.65});
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,1,18),shMat); sh.name='shaft'; sh.castShadow=true; g.add(sh);
+  const hd=new THREE.Mesh(new THREE.ConeGeometry(0.36,0.9,18),hdMat); hd.name='head'; hd.castShadow=true; g.add(hd);
+  const bs=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.1,16),shMat); bs.name='base'; g.add(bs);
+  return g;
+})();
+root3.add(arrowD);
+
+function refreshArrow(){
+  const total=Math.max(0.5,S.objectHeight*CM),headH=Math.min(0.9,total*0.32),shH=Math.max(0.1,total-headH);
+  const sh=arrowD.getObjectByName('shaft'); sh.geometry.dispose(); sh.geometry=new THREE.CylinderGeometry(0.13,0.13,shH,18);
+  sh.position.y=shH*0.5; arrowD.getObjectByName('head').position.y=shH+headH*0.5; arrowD.getObjectByName('base').position.y=0.06;
+}
+
+// Lens
+const lensD=(()=>{
+  const g=new THREE.Group(); g.userData.type='lens'; g.add(buildMount(0x1a2a3a,0.9));
+  const lR=2.2,bulge=0.55,N=80,pts=[];
+  for(let i=0;i<=N;i++){const t=i/N;pts.push(new THREE.Vector2(Math.max(0.03,bulge*Math.sin(Math.PI*t)),lR*(2*t-1)));}
+  const lMat=new THREE.MeshPhysicalMaterial({color:0xaaddff,transmission:0.82,opacity:0.70,transparent:true,roughness:0,metalness:0,reflectivity:0.95,ior:1.52,thickness:1.1,clearcoat:1.0,clearcoatRoughness:0,side:THREE.DoubleSide,depthWrite:false});
+  g.add(new THREE.Mesh(new THREE.LatheGeometry(pts,80),lMat));
+  [-1,1].forEach(side=>{const d=new THREE.Mesh(new THREE.SphereGeometry(0.10,16,16),new THREE.MeshStandardMaterial({color:0xffdd44,emissive:0xffaa00,emissiveIntensity:2.5}));d.userData.isFocalMarker=true;d.userData.side=side;g.add(d);});
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.10,16,16),new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xaaccff,emissiveIntensity:3.0})));
+  return g;
+})();
+root3.add(lensD);
+
+// Screen (desktop)
+desktopTex=new THREE.CanvasTexture(screenTC);
+const screenD=(()=>{
+  const g=new THREE.Group(); g.userData.type='screen'; g.add(buildMount(0x1a3a2a,0.45));
+  const mat=new THREE.MeshStandardMaterial({map:desktopTex,roughness:0.75,metalness:0,side:THREE.DoubleSide});
+  const panel=new THREE.Mesh(new THREE.PlaneGeometry(3,4),mat); panel.rotation.y=Math.PI/2; panel.position.y=1.6; g.add(panel);
+  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.05,4.1,3.1)),new THREE.LineBasicMaterial({color:0x44887a})); frame.position.y=1.6; g.add(frame);
+  return g;
+})();
+root3.add(screenD);
+
+// Rays
+const rayGroup=new THREE.Group(); root3.add(rayGroup);
+function clearRays(){while(rayGroup.children.length)rayGroup.remove(rayGroup.children[0]);}
+function addRayLine(pts,color,opacity){const mat=new THREE.LineBasicMaterial({color,transparent:true,opacity,depthTest:false});const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);ln.renderOrder=10;rayGroup.add(ln);}
+function addDashedLine(pts,color,opacity){const mat=new THREE.LineDashedMaterial({color,transparent:true,opacity,dashSize:0.22,gapSize:0.14,depthTest:false});const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);ln.computeLineDistances();ln.renderOrder=10;rayGroup.add(ln);}
+function updateRays(){
+  clearRays(); if(!S.showRays)return;
+  const f=S.focalLength*CM,do_=S.objectDist*CM,ho=S.objectHeight*CM;
+  const lx=lensD.position.x,ox=arrowD.position.x;
+  const di=1/(1/f-1/do_); if(!isFinite(di))return;
+  const tipY=ho,imgX=lx+di,imgY=-tipY*(di/do_),farX=lx+16;
+  const r1s=(imgY-tipY)/(imgX-lx),r1e=Math.min(imgX+2,farX);
+  addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,tipY,0),new THREE.Vector3(r1e,tipY+r1s*(r1e-lx),0)],0xffcc00,0.95);
+  addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,0,0),new THREE.Vector3(farX,(-tipY/(lx-ox))*(farX-lx),0)],0x00ffcc,0.95);
+  const fL=lx-f,r3s=tipY/(ox-fL),r3h=r3s*(lx-fL);
+  addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,r3h,0),new THREE.Vector3(farX,r3h,0)],0xff66ff,0.90);
+  if(di>0&&di<20){
+    addDashedLine([new THREE.Vector3(imgX,-2.5,0),new THREE.Vector3(imgX,3,0)],0x7fffb2,0.40);
+    const iMat=new THREE.MeshStandardMaterial({color:0x7fffb2,emissive:0x00aa66,emissiveIntensity:0.7,transparent:true,opacity:0.55,depthTest:false});
+    const hh=Math.min(0.45,Math.abs(imgY)*0.30),sh=Math.max(0.05,Math.abs(imgY)-hh),d=imgY>=0?1:-1;
+    const is=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,sh,8),iMat); is.position.set(imgX,d*sh/2,0); is.renderOrder=10; rayGroup.add(is);
+    const ih=new THREE.Mesh(new THREE.ConeGeometry(0.2,hh,8),iMat); ih.position.set(imgX,d*(sh+hh/2),0); if(d<0)ih.rotation.z=Math.PI; ih.renderOrder=10; rayGroup.add(ih);
+  }
+}
+
+// Layout
+function layoutScene(){
+  lensD.position.set(0,0,0);
+  const f=S.focalLength*CM;
+  lensD.children.forEach(c=>{if(c.userData.isFocalMarker)c.position.set(c.userData.side*f,0,0);});
+  arrowD.position.set(-S.objectDist*CM,0,0); refreshArrow();
+  screenD.position.set(S.screenDist*CM,0,0);
+  fullUpdate(); updateRays();
+  if(arMode) syncARPositions();
+}
+
+// Labels
 function drawLabels(){
+  if(arMode){lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);return;}
   lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
   lctx.textAlign='center';
   const tipY=Math.max(0.5,S.objectHeight*CM)+1.1;
-  function w2s(v3){
-    const v=v3.clone().applyMatrix4(sceneRoot.matrixWorld);
-    v.project(camera3D);
-    return{x:(v.x*.5+.5)*window.innerWidth,y:(-.5*v.y+.5)*window.innerHeight};
-  }
-  [
-    {p:new THREE.Vector3(arrowObj.position.x,tipY,0),t:`OBJECT  h=${S.objectHeight.toFixed(1)}cm`,c:'#ff8888'},
-    {p:new THREE.Vector3(0,3.2,0),t:`LENS  f=${S.focalLength}cm`,c:'#88ccff'},
-    {p:new THREE.Vector3(screenObj.position.x,3.5,0),t:'SCREEN',c:'#88ffcc'},
+  function w2s(v){const c=v.clone().project(cam3);return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight};}
+  [{p:new THREE.Vector3(arrowD.position.x,tipY,0),t:`OBJECT  h=${S.objectHeight.toFixed(1)}cm`,c:'#ff8888'},
+   {p:new THREE.Vector3(0,3.2,0),t:`LENS  f=${S.focalLength}cm`,c:'#88ccff'},
+   {p:new THREE.Vector3(screenD.position.x,3.5,0),t:'SCREEN',c:'#88ffcc'}
   ].forEach(({p,t,c})=>{
-    const s=w2s(p);
-    lctx.font='600 11px "Space Mono",monospace';
-    lctx.fillStyle=c;lctx.shadowColor=c;lctx.shadowBlur=8;
-    lctx.fillText(t,s.x,s.y);lctx.shadowBlur=0;
+    const s=w2s(p); lctx.font='600 11px "Space Mono",monospace'; lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=8; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
   });
-  const bY=-0.7;
-  const lS=w2s(new THREE.Vector3(0,bY,0));
-  const oS=w2s(new THREE.Vector3(arrowObj.position.x,bY,0));
-  const sS=w2s(new THREE.Vector3(screenObj.position.x,bY,0));
-  const ly=Math.max(lS.y,oS.y,sS.y)+10;
+  const bY=-0.7,lS=w2s(new THREE.Vector3(0,bY,0)),oS=w2s(new THREE.Vector3(arrowD.position.x,bY,0)),sS=w2s(new THREE.Vector3(screenD.position.x,bY,0)),ly=Math.max(lS.y,oS.y,sS.y)+10;
   lctx.font='500 10px "Space Mono",monospace';lctx.lineWidth=1;
   lctx.strokeStyle='rgba(100,200,255,.30)';lctx.beginPath();lctx.moveTo(oS.x,ly);lctx.lineTo(lS.x,ly);lctx.stroke();
   lctx.fillStyle='rgba(100,200,255,.65)';lctx.fillText(`d_o=${S.objectDist.toFixed(1)}cm`,(oS.x+lS.x)/2,ly+13);
@@ -511,38 +420,24 @@ function drawLabels(){
   lctx.fillStyle='rgba(127,255,178,.65)';lctx.fillText(`d_i=${S.screenDist.toFixed(1)}cm`,(lS.x+sS.x)/2,ly+13);
 }
 
-// ═══════════════════════════════════════════
-//  HITBOXES
-// ═══════════════════════════════════════════
-[
-  {obj:arrowObj, name:'object',sz:[1.4,7.0,1.4]},
-  {obj:lensObj,  name:'lens',  sz:[1.2,5.5,1.2]},
-  {obj:screenObj,name:'screen',sz:[0.8,5.5,3.6]},
-].forEach(({obj,name,sz})=>{
-  const hb=new THREE.Mesh(new THREE.BoxGeometry(...sz),new THREE.MeshBasicMaterial({visible:false}));
-  hb.userData.target=name; hb.position.y=1.2; obj.add(hb);
-});
+// Hitboxes
+[{obj:arrowD,name:'object',sz:[1.4,7.0,1.4]},{obj:lensD,name:'lens',sz:[1.2,5.5,1.2]},{obj:screenD,name:'screen',sz:[0.8,5.5,3.6]}]
+.forEach(({obj,name,sz})=>{const hb=new THREE.Mesh(new THREE.BoxGeometry(...sz),new THREE.MeshBasicMaterial({visible:false}));hb.userData.target=name;hb.position.y=1.2;obj.add(hb);});
 
-// ═══════════════════════════════════════════
-//  DESKTOP INTERACTION
-// ═══════════════════════════════════════════
-const rc=new THREE.Raycaster();
-let drag=null;
-
-function ndcXY(ex,ey){
-  const r=canvas.getBoundingClientRect();
-  return new THREE.Vector2(((ex-r.left)/r.width)*2-1,-((ey-r.top)/r.height)*2+1);
+// Desktop interaction
+const rc=new THREE.Raycaster(); let drag=null;
+function ndcXY(ex,ey){const r=canvas.getBoundingClientRect();return new THREE.Vector2(((ex-r.left)/r.width)*2-1,-((ey-r.top)/r.height)*2+1);}
+function doHit(ex,ey){rc.setFromCamera(ndcXY(ex,ey),cam3);return rc.intersectObjects(root3.children,true);}
+function applyDrag(drag,dx,dy,K){
+  if(drag.mode==='object'){S.objectDist=Math.max(5,Math.min(45,drag.startD-dx*K));if(!S.lockHeight)S.objectHeight=Math.max(1,Math.min(25,drag.startH-dy*K*0.45));}
+  else if(drag.mode==='screen'){S.screenDist=Math.max(1,Math.min(150,drag.startD+dx*K));}
+  else if(drag.mode==='lens'){S.objectDist=Math.max(5,Math.min(45,drag.startD-dx*K));}
+  layoutScene();
 }
-function doHitTest(ex,ey){
-  rc.setFromCamera(ndcXY(ex,ey),camera3D);
-  return rc.intersectObjects(sceneRoot.children,true);
-}
-
-// ── Desktop mouse ───────────────────────
 canvas.addEventListener('mousedown',e=>{
   if(arMode)return;
   if(e.button===1||e.button===2){drag={mode:'orbit',lastX:e.clientX,lastY:e.clientY};e.preventDefault();return;}
-  const hits=doHitTest(e.clientX,e.clientY);
+  const hits=doHit(e.clientX,e.clientY);
   for(const h of hits){const t=h.object.userData.target;if(t){drag={mode:t,lastX:e.clientX,lastY:e.clientY,startD:t==='screen'?S.screenDist:S.objectDist,startH:S.objectHeight};canvas.style.cursor='grabbing';return;}}
   drag={mode:'orbit',lastX:e.clientX,lastY:e.clientY};
 });
@@ -550,352 +445,380 @@ canvas.addEventListener('mousemove',e=>{
   if(arMode||!drag)return;
   const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;
   if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
-  else{const K=0.22;applyDrag(drag,dx,dy,K);}
+  else applyDrag(drag,dx,dy,0.22);
 });
 canvas.addEventListener('mouseup',()=>{drag=null;if(!arMode)canvas.style.cursor='default';});
 canvas.addEventListener('mouseleave',()=>{drag=null;});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('wheel',e=>{if(arMode)return;orb.radius=Math.max(6,Math.min(55,orb.radius+e.deltaY*0.03));applyOrbit();e.preventDefault();},{passive:false});
 
-function applyDrag(drag,dx,dy,K){
-  if(drag.mode==='object'){S.objectDist=Math.max(5,Math.min(45,drag.startD-dx*K));if(!S.lockHeight)S.objectHeight=Math.max(1,Math.min(25,drag.startH-dy*K*0.45));}
-  else if(drag.mode==='screen'){S.screenDist=Math.max(1,Math.min(150,drag.startD+dx*K));}
-  else if(drag.mode==='lens'){S.objectDist=Math.max(5,Math.min(45,drag.startD-dx*K));}
-  layoutScene();
-}
-
-// ── Touch (desktop non-AR) ──────────────
 const touches={};
 canvas.addEventListener('touchstart',e=>{
   e.preventDefault();
   [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
-  if(!arMode&&Object.keys(touches).length===1){
+  if(Object.keys(touches).length===1){
     const t=e.changedTouches[0];
-    const hits=doHitTest(t.clientX,t.clientY);
-    let found=false;
+    const hits=doHit(t.clientX,t.clientY); let found=false;
     for(const h of hits){const tgt=h.object.userData.target;if(tgt){drag={mode:tgt,lastX:t.clientX,lastY:t.clientY,startD:tgt==='screen'?S.screenDist:S.objectDist,startH:S.objectHeight};found=true;break;}}
-    if(!found)drag={mode:'orbit',lastX:t.clientX,lastY:t.clientY};
-  }
-  // In AR mode: tap selects element for dragging
-  if(arMode&&arReady&&Object.keys(touches).length===1){
-    const t=e.changedTouches[0];
-    const hits=doHitTest(t.clientX,t.clientY);
-    for(const h of hits){const tgt=h.object.userData.target;if(tgt){drag={mode:tgt,lastX:t.clientX,lastY:t.clientY,startD:tgt==='screen'?S.screenDist:S.objectDist,startH:S.objectHeight};break;}}
+    if(!found&&!arMode)drag={mode:'orbit',lastX:t.clientX,lastY:t.clientY};
   }
 },{passive:false});
-
 canvas.addEventListener('touchmove',e=>{
   e.preventDefault();
-  const nT=Object.keys(touches).length;
-  if(nT>=2&&!arMode){
+  if(Object.keys(touches).length>=2&&!arMode){
     const tArr=[...e.changedTouches];
-    if(tArr.length>=2){
-      const p0=touches[tArr[0].identifier]||{x:tArr[0].clientX,y:tArr[0].clientY};
-      const p1=touches[tArr[1].identifier]||{x:tArr[1].clientX,y:tArr[1].clientY};
-      const oldD=Math.hypot(p0.x-p1.x,p0.y-p1.y),newD=Math.hypot(tArr[0].clientX-tArr[1].clientX,tArr[0].clientY-tArr[1].clientY);
-      if(oldD>1){orb.radius=Math.max(6,Math.min(55,orb.radius*(oldD/newD)));applyOrbit();}
-    }
+    if(tArr.length>=2){const p0=touches[tArr[0].identifier]||{x:tArr[0].clientX,y:tArr[0].clientY},p1=touches[tArr[1].identifier]||{x:tArr[1].clientX,y:tArr[1].clientY};const oldD=Math.hypot(p0.x-p1.x,p0.y-p1.y),newD=Math.hypot(tArr[0].clientX-tArr[1].clientX,tArr[0].clientY-tArr[1].clientY);if(oldD>1){orb.radius=Math.max(6,Math.min(55,orb.radius*(oldD/newD)));applyOrbit();}}
   } else if(drag){
-    const t=e.changedTouches[0];
-    const dx=t.clientX-drag.lastX,dy=t.clientY-drag.lastY;
+    const t=e.changedTouches[0];const dx=t.clientX-drag.lastX,dy=t.clientY-drag.lastY;
     if(drag.mode==='orbit'&&!arMode){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
-    else if(drag.mode!=='orbit'){applyDrag(drag,dx,dy,0.22);}
-    drag.lastX=t.clientX;drag.lastY=t.clientY;
-    drag.startD=drag.mode==='screen'?S.screenDist:S.objectDist;
-    drag.startH=S.objectHeight;
+    else if(drag.mode!=='orbit')applyDrag(drag,dx,dy,0.22);
+    drag.lastX=t.clientX;drag.lastY=t.clientY;drag.startD=drag.mode==='screen'?S.screenDist:S.objectDist;drag.startH=S.objectHeight;
   }
   [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
 },{passive:false});
+canvas.addEventListener('touchend',e=>{[...e.changedTouches].forEach(t=>{delete touches[t.identifier];});if(Object.keys(touches).length===0)drag=null;},{passive:false});
 
-canvas.addEventListener('touchend',e=>{
-  [...e.changedTouches].forEach(t=>{delete touches[t.identifier];});
-  if(Object.keys(touches).length===0)drag=null;
-},{passive:false});
-
-// ═══════════════════════════════════════════════════════════════
-//  DEVICE ORIENTATION  —  stable AR camera
-// ═══════════════════════════════════════════════════════════════
-let lastAlpha=0, lastBeta=0, lastGamma=0;
-let orientationActive=false;
-
-// Smoothing: exponential low-pass to kill sensor jitter
-let smoothAlpha=0, smoothBeta=0, smoothGamma=0;
-const SMOOTH=0.12;   // 0=frozen, 1=raw — 0.12 gives stable but responsive tracking
-
-function shortAngleDiff(a,b){
-  // Shortest path between two angles (degrees), handles 0/360 wrap-around
-  let d=((a-b)+540)%360-180; return d;
+// Desktop render loop
+let arMode=false;
+function desktopLoop(){
+  if(arMode)return;
+  requestAnimationFrame(desktopLoop);
+  drawLabels();
+  renderer.render(scene3,cam3);
 }
 
-function handleOrientation(e){
-  if(e.alpha===null) return;
-  lastAlpha=e.alpha; lastBeta=e.beta; lastGamma=e.gamma;
+// ═══════════════════════════════════════════════════════
+//  ██████╗  █████╗     ███╗   ███╗ ██████╗ ██████╗ ███████╗
+//  ██╔══██╗██╔══██╗    ████╗ ████║██╔═══██╗██╔══██╗██╔════╝
+//  ███████║███████╗    ██╔████╔██║██║   ██║██║  ██║█████╗
+//  ██╔══██╗██╔══██╗    ██║╚██╔╝██║██║   ██║██║  ██║██╔══╝
+//  ██║  ██║██║  ██║    ██║ ╚═╝ ██║╚██████╔╝██████╔╝███████╗
+//  ╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝     ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
+//  Marker-based AR using AR.js + A-Frame
+//  The Hiro marker is a standard pattern — no need to train it.
+//  Student prints it, puts it on desk, bench appears on top of it.
+//  The scene is perfectly anchored because AR.js uses computer vision
+//  to track the marker corners every frame — true surface locking.
+// ═══════════════════════════════════════════════════════
 
-  // Smooth each axis (handle wrap-around on alpha)
-  smoothAlpha = smoothAlpha + shortAngleDiff(lastAlpha, smoothAlpha)*SMOOTH;
-  smoothBeta  = smoothBeta  + (lastBeta  - smoothBeta )*SMOOTH;
-  smoothGamma = smoothGamma + (lastGamma - smoothGamma)*SMOOTH;
+let arScreenTex = null;
+let arScene     = null;   // A-Frame scene element
+let arEntities  = {};     // A-Frame entity refs for each component
 
-  if(!arMode||!arReady) return;
-  updateARCamera();
-}
+// Build the AR scene as A-Frame HTML injected into #arWrap
+function buildARScene(){
+  const wrap=document.getElementById('arWrap');
+  wrap.innerHTML='';
 
-function updateARCamera(){
-  // Three.js DeviceOrientationControls math, adapted for rear camera:
-  //
-  // Standard deviceorientation gives orientation for a FRONT-facing screen.
-  // For a rear camera we need to rotate 180° around Y (flip forward direction).
-  //
-  // The correct sequence (matches Three.js DeviceOrientationControls source):
-  //   Q = Qscreen * Qdevice * QscreenOrientation
-  // where Qscreen corrects for the screen-to-world frame.
+  const f=S.focalLength*CM;
+  const ox=-S.objectDist*CM;
+  const sx= S.screenDist*CM;
 
-  const a = THREE.MathUtils.degToRad(smoothAlpha);
-  const b = THREE.MathUtils.degToRad(smoothBeta);
-  const g = THREE.MathUtils.degToRad(smoothGamma);
+  // All coordinates in metres (AR.js world = metres)
+  // Scale: 1 scene unit = 0.05 m  → bench spans ~2m (nicely visible)
+  // But we want it on the marker which is ~10cm, so scale=0.015 per unit
+  const sc=0.015;
 
-  // Device euler in ZXY order (matches browser spec)
-  const qDevice = new THREE.Quaternion();
-  const eDevice = new THREE.Euler(b, a, -g, 'YXZ');
-  qDevice.setFromEuler(eDevice);
-
-  // Screen frame correction: rotate -90° around X to go from screen-space to world-space
-  const qScreen = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-
-  // For rear camera: additional 180° around Y
-  const qRear = new THREE.Quaternion(0, 1, 0, 0);   // 180° Y
-
-  // Final camera quaternion
-  const qFinal = new THREE.Quaternion();
-  qFinal.copy(qDevice).multiply(qScreen).multiply(qRear);
-
-  camera3D.quaternion.copy(qFinal);
-  // Position stays fixed at anchor — the scene is what's anchored, not the camera
-  camera3D.position.set(0, 0, 0);
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  SCENE ANCHORING  —  lock bench to horizontal surface
-// ═══════════════════════════════════════════════════════════════
-// When "PLACE HERE" is tapped, we capture:
-//   - the compass heading (alpha) → sets which direction the bench faces
-//   - the gravity vector (beta/gamma) → tells us the surface tilt
-// sceneRoot is then positioned in WORLD space (not camera space),
-// with Y-up aligned to gravity so the rail always lies flat.
-
-let anchorAlphaDeg=0;   // compass heading at placement time
-
-function placeScene(){
-  // Capture placement orientation
-  anchorAlphaDeg = smoothAlpha;
-
-  // Build sceneRoot world transform:
-  // - Position: 1 metre directly in front of the camera at placement
-  // - Rotation: Y rotated by compass heading so bench faces user
-  // - Scale: 0.10 (10cm per scene unit → 40cm wide bench in real world)
-
-  // Forward vector in world space at placement moment
-  const a = THREE.MathUtils.degToRad(smoothAlpha);
-  const b = THREE.MathUtils.degToRad(smoothBeta);
-  const g = THREE.MathUtils.degToRad(smoothGamma);
-
-  const qDev = new THREE.Quaternion();
-  qDev.setFromEuler(new THREE.Euler(b, a, -g, 'YXZ'));
-  const qScr = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-  const qRear = new THREE.Quaternion(0, 1, 0, 0);
-  const qCam = new THREE.Quaternion().copy(qDev).multiply(qScr).multiply(qRear);
-
-  // Forward = -Z in camera space → transform to world
-  const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(qCam);
-
-  // Place 0.8m in front, at a fixed height (table height ~0.8m)
-  const anchorPos = new THREE.Vector3(
-    forward.x * 0.8,
-    -0.8,           // fixed height below camera (table surface)
-    forward.z * 0.8
+  const sceneEl=document.createElement('a-scene');
+  sceneEl.setAttribute('embedded','');
+  sceneEl.setAttribute('arjs',
+    'sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
   );
+  sceneEl.setAttribute('renderer','logarithmicDepthBuffer: true; precision: medium;');
+  sceneEl.setAttribute('vr-mode-ui','enabled: false');
+  sceneEl.style.cssText='width:100%;height:100%;position:absolute;top:0;left:0;';
 
-  // Orient sceneRoot: bench lies flat (X-Z plane = horizontal surface)
-  // Rotate around Y only so compass heading aligns bench with user's view
-  // The bench optical axis (X) points toward the user's right
-  const benchYaw = Math.atan2(forward.x, forward.z);
-  sceneRoot.position.copy(anchorPos);
-  sceneRoot.rotation.set(0, benchYaw, 0);  // Y-only rotation = lies flat on surface
-  sceneRoot.scale.setScalar(0.10);
+  // Marker anchor — everything is a child of this
+  const marker=document.createElement('a-marker');
+  marker.setAttribute('preset','hiro');
+  marker.setAttribute('id','hiroMarker');
 
-  arReady = true;
-  arOverlayEl.classList.remove('show');
-  arBadgeEl.style.display = 'block';
-  selHint.style.display = 'block';
-  floorMesh.visible  = false;
-  gridHelper.visible = false;
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  AR MODE LIFECYCLE
-// ═══════════════════════════════════════════════════════════════
-const camFeedEl   = document.getElementById('camFeed');
-const arOverlayEl = document.getElementById('ar-place-overlay');
-const arBadgeEl   = document.getElementById('ar-badge');
-const btnAR       = document.getElementById('btn-ar');
-const selHint     = document.getElementById('sel-hint');
-
-function startOrientationListener(){
-  if(orientationActive) return;  // never double-add
-  window.addEventListener('deviceorientation', handleOrientation, true);
-  orientationActive = true;
-}
-
-function stopOrientationListener(){
-  window.removeEventListener('deviceorientation', handleOrientation, true);
-  orientationActive = false;
-}
-
-function startARCamera(){
-  // Stop any previous stream first (fixes camera-not-restarting bug)
-  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
-  camFeedEl.srcObject = null;
-
-  navigator.mediaDevices.getUserMedia({
-    video:{ facingMode:{exact:'environment'}, width:{ideal:1920}, height:{ideal:1080} },
-    audio:false
-  }).catch(()=>{
-    // 'exact' failed (some iPads) — fall back to ideal
-    return navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ideal:'environment'} },
-      audio:false
-    });
-  }).then(stream=>{
-    camStream = stream;
-    camFeedEl.srcObject  = stream;
-    camFeedEl.style.transform = 'scaleX(1)';  // rear cam, no mirror
-    camFeedEl.style.display   = 'block';
-    camFeedEl.play().catch(()=>{});
-
-    arMode  = true;
-    arReady = false;
-    arOverlayEl.classList.add('show');
-    document.getElementById('hint').style.display = 'none';
-    btnAR.textContent = '✕ Exit AR';
-    btnAR.classList.add('on');
-  }).catch(err=>{
-    alert('Camera access denied.\n'+err.message);
-    stopOrientationListener();
+  // Notify badge when marker found/lost
+  marker.addEventListener('markerFound',()=>{
+    document.getElementById('ar-badge').style.display='block';
   });
+  marker.addEventListener('markerLost',()=>{
+    document.getElementById('ar-badge').style.display='none';
+  });
+
+  // ── Rail
+  const rail=document.createElement('a-box');
+  rail.setAttribute('position',`0 0 0`);
+  rail.setAttribute('width',`${38*sc}`);
+  rail.setAttribute('height',`${0.14*sc}`);
+  rail.setAttribute('depth',`${0.28*sc}`);
+  rail.setAttribute('color','#1a3a55');
+  rail.setAttribute('metalness','0.8');
+  rail.setAttribute('roughness','0.25');
+  marker.appendChild(rail);
+
+  // ── Optical axis line (thin box)
+  const axis=document.createElement('a-box');
+  axis.setAttribute('position','0 0.001 0');
+  axis.setAttribute('width',`${40*sc}`);
+  axis.setAttribute('height','0.001');
+  axis.setAttribute('depth','0.001');
+  axis.setAttribute('color','#1a5070');
+  axis.setAttribute('opacity','0.5');
+  marker.appendChild(axis);
+
+  // ── Helper to build a mount post
+  function makeMount(x,color){
+    const g=document.createElement('a-entity');
+    g.setAttribute('position',`${x} 0 0`);
+    // clamp
+    const cl=document.createElement('a-box');
+    cl.setAttribute('position',`0 ${-0.5*sc} 0`);
+    cl.setAttribute('width',`${0.52*sc}`);cl.setAttribute('height',`${0.42*sc}`);cl.setAttribute('depth',`${0.56*sc}`);
+    cl.setAttribute('color',color);
+    g.appendChild(cl);
+    return g;
+  }
+
+  // ── Arrow (object)
+  const arrowEnt=makeMount(ox,'#3a1a1a');
+  arrowEnt.setAttribute('id','ar-arrow');
+  // shaft + head built as primitives
+  const shaftEnt=document.createElement('a-cylinder');
+  shaftEnt.setAttribute('id','ar-shaft');
+  shaftEnt.setAttribute('position',`0 ${S.objectHeight*CM*0.5*sc} 0`);
+  shaftEnt.setAttribute('radius',`${0.13*sc}`);
+  shaftEnt.setAttribute('height',`${S.objectHeight*CM*sc}`);
+  shaftEnt.setAttribute('color','#ff3030');
+  shaftEnt.setAttribute('metalness','0.5');
+  arrowEnt.appendChild(shaftEnt);
+  const headEnt=document.createElement('a-cone');
+  headEnt.setAttribute('id','ar-head');
+  headEnt.setAttribute('position',`0 ${(S.objectHeight*CM+0.45)*sc} 0`);
+  headEnt.setAttribute('radius-bottom',`${0.36*sc}`);
+  headEnt.setAttribute('height',`${0.9*sc}`);
+  headEnt.setAttribute('color','#ff5555');
+  arrowEnt.appendChild(headEnt);
+  marker.appendChild(arrowEnt);
+
+  // ── Lens
+  const lensEnt=makeMount(0,'#1a2a3a');
+  lensEnt.setAttribute('id','ar-lens');
+  // Approximate biconvex lens as a flattened sphere
+  const lensBody=document.createElement('a-sphere');
+  lensBody.setAttribute('position',`0 0 0`);
+  lensBody.setAttribute('radius',`${2.2*sc}`);
+  lensBody.setAttribute('scale',`${0.27} 1 ${0.27}`);
+  lensBody.setAttribute('color','#aaddff');
+  lensBody.setAttribute('opacity','0.55');
+  lensBody.setAttribute('metalness','0');
+  lensBody.setAttribute('roughness','0');
+  lensEnt.appendChild(lensBody);
+  // Focal point dots
+  [-1,1].forEach(side=>{
+    const dot=document.createElement('a-sphere');
+    dot.setAttribute('position',`${side*f*sc} 0 0`);
+    dot.setAttribute('radius',`${0.10*sc}`);
+    dot.setAttribute('color','#ffdd44');
+    dot.setAttribute('emissive','#ffaa00');
+    dot.setAttribute('emissive-intensity','1');
+    lensEnt.appendChild(dot);
+  });
+  // Centre dot
+  const cdot=document.createElement('a-sphere');
+  cdot.setAttribute('position','0 0 0');
+  cdot.setAttribute('radius',`${0.10*sc}`);
+  cdot.setAttribute('color','#ffffff');
+  cdot.setAttribute('emissive','#aaccff');
+  cdot.setAttribute('emissive-intensity','1');
+  lensEnt.appendChild(cdot);
+  marker.appendChild(lensEnt);
+
+  // ── Screen
+  // Create a canvas texture for screen
+  arScreenTex=new THREE.CanvasTexture(screenTC);
+  // A-Frame material using canvas src
+  const screenEnt=makeMount(sx,'#1a3a2a');
+  screenEnt.setAttribute('id','ar-screen');
+  const screenPanel=document.createElement('a-plane');
+  screenPanel.setAttribute('id','ar-screen-panel');
+  screenPanel.setAttribute('position',`0 ${1.6*sc} 0`);
+  screenPanel.setAttribute('rotation','0 90 0');
+  screenPanel.setAttribute('width',`${3*sc}`);
+  screenPanel.setAttribute('height',`${4*sc}`);
+  screenPanel.setAttribute('src','#screen-canvas');
+  screenPanel.setAttribute('side','double');
+  screenEnt.appendChild(screenPanel);
+  // frame
+  const sframe=document.createElement('a-box');
+  sframe.setAttribute('position',`0 ${1.6*sc} 0`);
+  sframe.setAttribute('width',`${0.05*sc}`);
+  sframe.setAttribute('height',`${4.1*sc}`);
+  sframe.setAttribute('depth',`${3.1*sc}`);
+  sframe.setAttribute('color','#44887a');
+  sframe.setAttribute('opacity','0.7');
+  sframe.setAttribute('wireframe','true');
+  screenEnt.appendChild(sframe);
+  marker.appendChild(screenEnt);
+
+  // Assets — canvas as texture asset
+  const assets=document.createElement('a-assets');
+  // We expose the canvas via a fake img element that A-Frame can use as texture
+  const canvasImg=document.createElement('canvas');
+  canvasImg.id='screen-canvas';
+  canvasImg.width=canvasImg.height=256;
+  // Copy current projection onto it
+  const ctx2=canvasImg.getContext('2d');
+  ctx2.drawImage(screenTC,0,0);
+  assets.appendChild(canvasImg);
+  sceneEl.appendChild(assets);
+
+  // Hook up the screen panel to use the canvas directly
+  // (A-Frame supports canvas elements as texture source)
+  screenPanel.setAttribute('src','#screen-canvas');
+
+  // Camera entity required by AR.js
+  const camEnt=document.createElement('a-entity');
+  camEnt.setAttribute('camera','');
+  sceneEl.appendChild(camEnt);
+
+  sceneEl.appendChild(marker);
+  wrap.appendChild(sceneEl);
+  arScene=sceneEl;
+
+  // Store refs for position updates
+  arEntities={arrow:arrowEnt, lens:lensEnt, screen:screenEnt, shaft:shaftEnt, head:headEnt, screenPanel, canvasEl:canvasImg};
+
+  // Touch interaction on AR canvas: tap element → drag to move
+  wrap.addEventListener('touchstart',onARTouch,{passive:false});
+  wrap.addEventListener('touchmove', onARTouchMove,{passive:false});
+  wrap.addEventListener('touchend',  onARTouchEnd, {passive:false});
 }
 
-function stopCamera(){
-  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
-  camFeedEl.srcObject = null;
-  camFeedEl.style.display = 'none';
+// Keep AR entity positions in sync with S state
+function syncARPositions(){
+  if(!arEntities.arrow)return;
+  const sc=0.015;
+  const ox=-S.objectDist*CM, sx=S.screenDist*CM, f=S.focalLength*CM;
+  arEntities.arrow.setAttribute('position',`${ox*sc} 0 0`);
+  arEntities.lens.setAttribute('position',`0 0 0`);
+  arEntities.screen.setAttribute('position',`${sx*sc} 0 0`);
+  // Arrow height
+  const total=Math.max(0.5,S.objectHeight*CM);
+  const headH=Math.min(0.9,total*0.32),shH=Math.max(0.1,total-headH);
+  arEntities.shaft.setAttribute('height',`${shH*sc}`);
+  arEntities.shaft.setAttribute('position',`0 ${shH*0.5*sc} 0`);
+  arEntities.head.setAttribute('position',`0 ${(shH+headH*0.5)*sc} 0`);
+  // Focal markers
+  if(arEntities.lens){
+    const dots=[...arEntities.lens.querySelectorAll('a-sphere')];
+    if(dots[0]) dots[0].setAttribute('position',`${-f*sc} 0 0`);
+    if(dots[1]) dots[1].setAttribute('position',`${f*sc} 0 0`);
+  }
+  // Update screen canvas
+  if(arEntities.canvasEl){
+    const ctx=arEntities.canvasEl.getContext('2d');
+    ctx.drawImage(screenTC,0,0);
+    // Force A-Frame to pick up the update
+    if(arEntities.screenPanel) arEntities.screenPanel.components&&arEntities.screenPanel.components.material&&arEntities.screenPanel.components.material.material&&(arEntities.screenPanel.components.material.material.map.needsUpdate=true);
+  }
+}
+
+// AR touch dragging
+let arDrag=null;
+function onARTouch(e){
+  e.preventDefault();
+  if(e.touches.length!==1)return;
+  const t=e.touches[0];
+  // Determine which element area was tapped based on screen X position
+  // Map screen X to scene X roughly
+  const normX=(t.clientX/window.innerWidth)*2-1;  // -1 to +1
+  // Identify closest element
+  const ox=-S.objectDist*CM*0.015, lx=0, sx=S.screenDist*CM*0.015;
+  // Project to screen (rough) — just use relative thirds
+  const third=window.innerWidth/3;
+  if(t.clientX<third) arDrag={mode:'object',lastX:t.clientX,lastY:t.clientY,startD:S.objectDist,startH:S.objectHeight};
+  else if(t.clientX<third*2) arDrag={mode:'lens',lastX:t.clientX,lastY:t.clientY,startD:S.objectDist,startH:S.objectHeight};
+  else arDrag={mode:'screen',lastX:t.clientX,lastY:t.clientY,startD:S.screenDist,startH:S.objectHeight};
+}
+function onARTouchMove(e){
+  e.preventDefault();
+  if(!arDrag||e.touches.length!==1)return;
+  const t=e.touches[0];
+  const dx=t.clientX-arDrag.lastX, dy=t.clientY-arDrag.lastY;
+  const K=0.15;
+  if(arDrag.mode==='object'){S.objectDist=Math.max(5,Math.min(45,arDrag.startD-dx*K));if(!S.lockHeight)S.objectHeight=Math.max(1,Math.min(25,arDrag.startH-dy*K*0.45));}
+  else if(arDrag.mode==='screen'){S.screenDist=Math.max(1,Math.min(150,arDrag.startD+dx*K));}
+  else if(arDrag.mode==='lens'){S.objectDist=Math.max(5,Math.min(45,arDrag.startD-dx*K));}
+  arDrag.lastX=t.clientX; arDrag.lastY=t.clientY;
+  arDrag.startD=arDrag.mode==='screen'?S.screenDist:S.objectDist; arDrag.startH=S.objectHeight;
+  layoutScene();
+}
+function onARTouchEnd(){arDrag=null;}
+
+// Enter / exit AR
+const btnAR=document.getElementById('btn-ar');
+
+function enterAR(){
+  arMode=true;
+  document.getElementById('simWrap').style.display='none';
+  document.getElementById('arWrap').classList.add('show');
+  document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('hint').style.display='none';
+  floorM.visible=false; gridM.visible=false;
+
+  // Load A-Frame + AR.js if not already loaded
+  if(!window.AFRAME){
+    const s1=document.createElement('script');
+    s1.src='https://aframe.io/releases/1.4.0/aframe.min.js';
+    s1.onload=()=>{
+      const s2=document.createElement('script');
+      s2.src='https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js';
+      s2.onload=()=>{ buildARScene(); refreshScreenTexture(); };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  } else {
+    buildARScene();
+    refreshScreenTexture();
+  }
+
+  btnAR.textContent='✕ Exit AR'; btnAR.classList.add('on');
 }
 
 function exitAR(){
-  arMode  = false;
-  arReady = false;
-  stopCamera();
-  stopOrientationListener();
-
-  floorMesh.visible  = true;
-  gridHelper.visible = true;
-  sceneRoot.position.set(0,0,0);
-  sceneRoot.rotation.set(0,0,0);
-  sceneRoot.scale.setScalar(1);
-
-  arOverlayEl.classList.remove('show');
-  arBadgeEl.style.display = 'none';
-  selHint.style.display   = 'none';
-  document.getElementById('hint').style.display = '';
-
-  btnAR.textContent = '📷 AR Mode';
-  btnAR.classList.remove('on');
-  applyOrbit();
+  arMode=false;
+  document.getElementById('simWrap').style.display='';
+  const wrap=document.getElementById('arWrap');
+  wrap.classList.remove('show');
+  wrap.innerHTML='';
+  arScene=null; arEntities={};
+  document.getElementById('ar-instructions').classList.remove('show');
+  document.getElementById('ar-badge').style.display='none';
+  document.getElementById('hint').style.display='';
+  floorM.visible=true; gridM.visible=true;
+  btnAR.textContent='📷 AR Mode'; btnAR.classList.remove('on');
+  resizeDesktop(); applyOrbit();
+  requestAnimationFrame(desktopLoop);
 }
 
-document.getElementById('ar-place-confirm').addEventListener('click', placeScene);
-document.getElementById('ar-place-cancel').addEventListener('click', ()=>{
-  arOverlayEl.classList.remove('show'); exitAR();
-});
+btnAR.addEventListener('click',()=>{ if(!arMode) enterAR(); else exitAR(); });
 
-// ── iOS permission: plain non-async click handler, requestPermission() first ──
-btnAR.addEventListener('click', function(){
-  if(arMode){ exitAR(); return; }
-
-  // Android / desktop — no permission API
-  if(typeof DeviceOrientationEvent==='undefined' ||
-     typeof DeviceOrientationEvent.requestPermission!=='function'){
-    startOrientationListener();
-    startARCamera();
-    return;
-  }
-
-  // iOS 13+: must call requestPermission() as FIRST statement in a plain
-  // (non-async) click handler. iOS silently re-grants if already approved,
-  // so this also correctly handles the "re-enter AR" case.
-  DeviceOrientationEvent.requestPermission().then(function(result){
-    if(result==='granted'){
-      startOrientationListener();
-      startARCamera();
-    } else {
-      alert('Motion & Orientation access denied.\n\nEnable it in:\niOS Settings → Safari → Motion & Orientation Access → ON\nThen reload the page.');
-    }
-  }).catch(function(err){
-    alert('Motion permission error: '+err.message);
-  });
-});
-
-// ═══════════════════════════════════════════
-//  CONTROLS
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  CONTROLS (shared)
+// ═══════════════════════════════════════════════════════
 const btnLock=document.getElementById('btn-lock');
-btnLock.addEventListener('click',()=>{
-  S.lockHeight=!S.lockHeight;
-  btnLock.textContent=S.lockHeight?'🔒 Locked h':'🔓 Lock h';
-  btnLock.classList.toggle('on',S.lockHeight);
-});
-document.getElementById('focal-slider').addEventListener('input',function(){
-  S.focalLength=parseFloat(this.value);
-  document.getElementById('focal-val').textContent=this.value+'cm';
-  layoutScene();
-});
+btnLock.addEventListener('click',()=>{S.lockHeight=!S.lockHeight;btnLock.textContent=S.lockHeight?'🔒 Locked h':'🔓 Lock h';btnLock.classList.toggle('on',S.lockHeight);});
+document.getElementById('focal-slider').addEventListener('input',function(){S.focalLength=parseFloat(this.value);document.getElementById('focal-val').textContent=this.value+'cm';layoutScene();});
 const btnRays=document.getElementById('btn-rays');
-btnRays.addEventListener('click',()=>{
-  S.showRays=!S.showRays;
-  btnRays.classList.toggle('on',S.showRays);
-  updateRays();
-});
+btnRays.addEventListener('click',()=>{S.showRays=!S.showRays;btnRays.classList.toggle('on',S.showRays);updateRays();});
 document.getElementById('btn-reset').addEventListener('click',()=>{
   Object.assign(S,{focalLength:15,objectDist:30,screenDist:30,objectHeight:10,showRays:false,lockHeight:false});
-  document.getElementById('focal-slider').value=15;
-  document.getElementById('focal-val').textContent='15cm';
-  btnRays.classList.remove('on');
-  btnLock.textContent='🔓 Lock h'; btnLock.classList.remove('on');
-  layoutScene();
+  document.getElementById('focal-slider').value=15;document.getElementById('focal-val').textContent='15cm';
+  btnRays.classList.remove('on');btnLock.textContent='🔓 Lock h';btnLock.classList.remove('on');layoutScene();
 });
 
-// ═══════════════════════════════════════════
-//  PARTICLES
-// ═══════════════════════════════════════════
-{
-  const pa=new Float32Array(120*3);
-  for(let i=0;i<120;i++){pa[i*3]=(Math.random()-.5)*36;pa[i*3+1]=(Math.random()-.5)*10;pa[i*3+2]=(Math.random()-.5)*10;}
-  const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.BufferAttribute(pa,3));
-  sceneRoot.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0x336699,size:0.05,transparent:true,opacity:0.25})));
-}
-
-// ═══════════════════════════════════════════
-//  RENDER LOOP
-// ═══════════════════════════════════════════
-function loop(){
-  requestAnimationFrame(loop);
-  // In AR mode, camera is driven by device orientation (updated in handleOrientation)
-  // In desktop mode, camera is driven by orbit rig
-  drawLabels();
-  renderer.render(scene,camera3D);
-}
+// Particles
+{const pa=new Float32Array(120*3);for(let i=0;i<120;i++){pa[i*3]=(Math.random()-.5)*36;pa[i*3+1]=(Math.random()-.5)*10;pa[i*3+2]=(Math.random()-.5)*10;}const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pa,3));root3.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0x336699,size:0.05,transparent:true,opacity:0.25})));}
 
 layoutScene();
-loop();
+resizeDesktop();
+desktopLoop();
 </script>
 </body>
 </html>
