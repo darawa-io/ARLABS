@@ -24,9 +24,15 @@ body{background:#06080f;font-family:'Syne',sans-serif;overflow:hidden;height:100
 .dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(120,180,255,.04);}
 .dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,210,255,.65);}
 .dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#78b4ff;}
-.dv.laser{color:#ff4466;}.dv.g{color:#7fffb2;}.dv.w{color:#ffcc44;}
+.dv.laser{color:#ff4466;}.dv.g{color:#7fffb2;}.dv.amber{color:#ffcc44;}
 .hdiv{height:1px;background:rgba(120,180,255,.1);margin:10px 0;}
 #formula-box{padding:8px;border-radius:8px;background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.18);font-size:11px;font-family:'Space Mono',monospace;color:rgba(255,160,180,.85);line-height:1.9;text-align:center;}
+
+/* PiP — frontal screen view */
+#pip{position:absolute;top:20px;left:200px;width:130px;height:172px;background:#04060d;border:1px solid rgba(120,180,255,.25);border-radius:12px;overflow:hidden;z-index:10;}
+#pip canvas{width:100%;height:100%;display:block;}
+#pip-label{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);letter-spacing:1px;pointer-events:none;}
+body.ar-active #pip{display:none!important;}
 
 /* Controls */
 #controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
@@ -81,15 +87,20 @@ body.ar-active #wave-quiz{display:flex;}
 <div id="hud">
   <h2>Measurements</h2>
   <div class="dr"><span class="dl">λ (wavelength)</span><span class="dv laser" id="val-lambda">532 nm</span></div>
-  <div class="dr"><span class="dl">a (slit width)</span><span class="dv"      id="val-a">0.10 mm</span></div>
+  <div class="dr"><span class="dl">w (slit width)</span><span class="dv"       id="val-a">0.10 mm</span></div>
   <div class="dr"><span class="dl">L (slit→screen)</span><span class="dv g"   id="val-L">1.00 m</span></div>
   <div class="hdiv"></div>
-  <div class="dr"><span class="dl">y₁ (1st min)</span><span class="dv w"     id="val-y1">5.32 mm</span></div>
-  <div class="dr"><span class="dl">W (central band)</span><span class="dv w"  id="val-W">10.64 mm</span></div>
+  <div class="dr"><span class="dl">x₁ (1st min)</span><span class="dv amber"  id="val-y1">5.32 mm</span></div>
+  <div class="dr"><span class="dl">2x (central band)</span><span class="dv amber" id="val-W">10.64 mm</span></div>
   <div class="hdiv"></div>
   <div id="formula-box">
-    W = 2λL / a
+    2x = 2λL / w
   </div>
+</div>
+
+<div id="pip">
+  <canvas id="pipCanvas" width="130" height="172"></canvas>
+  <div id="pip-label">SCREEN  (frontal)</div>
 </div>
 
 <div id="controls">
@@ -100,7 +111,7 @@ body.ar-active #wave-quiz{display:flex;}
   </div>
   <div class="sep ctrl-ar-hide"></div>
   <div class="sw ctrl-ar-hide">
-    <span>a=</span>
+    <span>w=</span>
     <input type="range" id="slit-slider" min="0.02" max="0.50" value="0.10" step="0.01">
     <span id="slit-val" style="min-width:50px;">0.10mm</span>
   </div>
@@ -181,10 +192,10 @@ body.ar-active #wave-quiz{display:flex;}
     <strong style="display:block;text-align:center;margin-bottom:8px;">📋 Experiment Steps</strong>
     <span style="color:rgba(255,255,255,.8);">
       1️⃣ &nbsp;Use the <span style="color:#ffdd88;">horizontal ruler</span> to measure <b>L</b> (laser → screen).<br>
-      2️⃣ &nbsp;Use the <span style="color:#88ffcc;">vertical ruler</span> on the screen to measure the <b>width W</b> of the central bright band.<br>
-      3️⃣ &nbsp;The slit width <b>a</b> is given in the info panel.<br>
+      2️⃣ &nbsp;Use the <span style="color:#88ffcc;">vertical ruler</span> on the screen to measure <b>2x</b> (central band).<br>
+      3️⃣ &nbsp;The slit width <b>w</b> is given in the info panel.<br>
       4️⃣ &nbsp;Apply the formula:<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<b>λ = W × a / (2L)</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<b>λ = 2x · w / (2L)</b><br>
       5️⃣ &nbsp;Enter your λ in nm and tap <b>Validate</b>.
     </span>
     <br>
@@ -238,97 +249,125 @@ const screenTCtx = screenTC.getContext('2d');
 
 function sinc(x){ return Math.abs(x)<1e-9 ? 1 : Math.sin(x)/x; }
 
-function paintDiffraction(){
-  const ctx = screenTCtx, W = 512, H = 512;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = '#04060d';
-  ctx.fillRect(0,0,W,H);
-
-  const col = waveToRGB(S.lambda);
-  const y1px = calcY1();  // mm
-
-  // Map: ±40 mm → screen height (with some margin)
-  const mmPerPx = 80 / H;
-
-  const [r_c,g_c,b_c] = parseRGB(col);
-  for(let px=0; px<H; px++){
-    const ymm = (px - H/2) * mmPerPx;  // mm from centre
-    // sinc² diffraction intensity
-    const beta = Math.PI * (S.slitWidth*1e-3) * (ymm*1e-3) / (S.lambda*1e-9 * S.dist);
-    const I = sinc(beta) ** 2;
-    const alpha = Math.min(1, I * 1.15);
-    ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${alpha})`;
-    ctx.fillRect(0, px, W, 1);
-  }
-
-  // Draw subtle tick marks for first minima
-  const y1_frac = (y1px / 80);
-  const topMin = H/2 - y1_frac * H;
-  const botMin = H/2 + y1_frac * H;
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-  ctx.setLineDash([4,4]);
-  ctx.lineWidth = 1.5;
-  if(topMin > 0 && topMin < H){ ctx.beginPath(); ctx.moveTo(W*0.05,topMin); ctx.lineTo(W*0.95,topMin); ctx.stroke(); }
-  if(botMin > 0 && botMin < H){ ctx.beginPath(); ctx.moveTo(W*0.05,botMin); ctx.lineTo(W*0.95,botMin); ctx.stroke(); }
-  ctx.setLineDash([]);
-
-  // Vertical ruler on right side of screen
-  drawScreenRuler(ctx, W, H, mmPerPx);
-
-  // Scanlines
-  ctx.fillStyle='rgba(0,0,0,0.05)';
-  for(let y=0;y<H;y+=5) ctx.fillRect(0,y,W,2);
-
-  if(desktopTex) desktopTex.needsUpdate = true;
-  if(arScreenTex) arScreenTex.needsUpdate = true;
-}
-
 function parseRGB(col){
   const m = col.match(/\d+/g);
   return m ? [+m[0],+m[1],+m[2]] : [255,255,255];
 }
 
-function drawScreenRuler(ctx, W, H, mmPerPx){
-  // Right-side vertical ruler, range ±40 mm
-  const rx = W - 36;
-  ctx.fillStyle = 'rgba(20,30,50,0.72)';
-  ctx.fillRect(rx, 0, 36, H);
+// Shared: draw diffraction pattern + ruler onto any canvas context
+// rulerW = pixel width of ruler strip (right-aligned); labelSide controls text position
+function renderDiffractionToCtx(ctx, W, H, rulerW){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#04060d';
+  ctx.fillRect(0,0,W,H);
+
+  const mmPerPx = 80 / H;  // ±40 mm maps to full height
+  const col = waveToRGB(S.lambda);
+  const [r_c,g_c,b_c] = parseRGB(col);
+  const patW = W - rulerW;
+
+  // Diffraction pattern columns
+  for(let py=0; py<H; py++){
+    const ymm = (py - H/2) * mmPerPx;
+    const beta = Math.PI * (S.slitWidth*1e-3) * (ymm*1e-3) / (S.lambda*1e-9 * S.dist);
+    const I = sinc(beta) ** 2;
+    const alpha = Math.min(1, I * 1.18);
+    ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${alpha})`;
+    ctx.fillRect(0, py, patW, 1);
+  }
+
+  // Dashed lines at first minima (x1)
+  const x1mm = calcY1();
+  const topMin = H/2 - (x1mm / mmPerPx);
+  const botMin = H/2 + (x1mm / mmPerPx);
+  ctx.strokeStyle = 'rgba(255,220,80,0.55)';
+  ctx.setLineDash([4,4]); ctx.lineWidth = 1.5;
+  if(topMin > 0 && topMin < H){ ctx.beginPath(); ctx.moveTo(0,topMin); ctx.lineTo(patW,topMin); ctx.stroke(); }
+  if(botMin > 0 && botMin < H){ ctx.beginPath(); ctx.moveTo(0,botMin); ctx.lineTo(patW,botMin); ctx.stroke(); }
+  ctx.setLineDash([]);
+
+  // Scanlines overlay
+  ctx.fillStyle='rgba(0,0,0,0.04)';
+  for(let y=0;y<H;y+=5) ctx.fillRect(0,y,patW,2);
+
+  // ── Vertical ruler strip (right side)
+  const rx = patW;
+  const rBg = 'rgba(10,18,38,0.88)';
+  ctx.fillStyle = rBg;
+  ctx.fillRect(rx, 0, rulerW, H);
+
+  // Ruler ticks & labels
+  const scale = H/80; // px per mm
   for(let mm = -40; mm <= 40; mm++){
-    const py = H/2 - mm / mmPerPx;
+    const py = H/2 - mm * scale;
     if(py < 0 || py > H) continue;
-    const is5 = (mm % 5 === 0), is10 = (mm % 10 === 0), isZ = (mm === 0);
-    const tw = isZ ? 24 : is10 ? 18 : is5 ? 12 : 6;
-    ctx.fillStyle = isZ ? '#ffdd66' : mm > 0 ? '#88ffcc' : '#ff9999';
-    ctx.fillRect(rx, py, tw, isZ ? 2 : 1);
-    if(is10 && Math.abs(mm) > 0){
-      ctx.font = '20px monospace'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(200,220,255,0.7)';
-      ctx.fillText(Math.abs(mm), rx - 2, py + 6);
-    }
-    if(isZ){
-      ctx.font = 'bold 22px monospace'; ctx.textAlign = 'right'; ctx.fillStyle = '#ffdd66';
-      ctx.fillText('0', rx - 2, py + 7);
+    const isZ = mm===0, is10 = mm%10===0, is5 = mm%5===0;
+    const tw = isZ ? rulerW*0.75 : is10 ? rulerW*0.55 : is5 ? rulerW*0.35 : rulerW*0.18;
+    ctx.fillStyle = isZ ? '#ffdd66' : '#7fbfff';
+    ctx.fillRect(rx, Math.round(py), tw, isZ ? 2 : 1);
+    if(is10){
+      const lbl = isZ ? '0' : String(Math.abs(mm));
+      const fs = Math.max(9, Math.min(20, rulerW * 0.38));
+      ctx.font = `${isZ?'bold ':' '}${fs}px monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = isZ ? '#ffdd66' : 'rgba(180,210,255,0.85)';
+      ctx.fillText(lbl, rx + rulerW - 2, Math.round(py) + fs*0.38);
     }
   }
-  // Label
-  ctx.font = '18px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(180,210,255,0.55)';
-  ctx.save(); ctx.translate(W - 10, H/2); ctx.rotate(-Math.PI/2);
+
+  // "mm" label rotated
+  const fs2 = Math.max(8, Math.min(14, rulerW * 0.28));
+  ctx.font = `${fs2}px monospace`; ctx.textAlign='center'; ctx.fillStyle='rgba(120,180,255,0.5)';
+  ctx.save(); ctx.translate(rx + rulerW*0.5, H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText('mm', 0, 0); ctx.restore();
+}
+
+function paintDiffraction(){
+  renderDiffractionToCtx(screenTCtx, 512, 512, 52);
+  if(desktopTex) desktopTex.needsUpdate = true;
+  if(arScreenTex) arScreenTex.needsUpdate = true;
+}
+
+// ─── PiP: frontal screen preview panel
+function updatePiP(){
+  const pipEl = document.getElementById('pipCanvas');
+  if(!pipEl) return;
+  const W = pipEl.width, H = pipEl.height;
+  const ctx = pipEl.getContext('2d');
+  renderDiffractionToCtx(ctx, W, H, Math.round(W * 0.28));
+  // Overlay label for x1 and 2x
+  const x1mm = calcY1();
+  const scale = H/80;
+  const topMin = H/2 - x1mm * scale;
+  const botMin = H/2 + x1mm * scale;
+  const patW = W - Math.round(W*0.28);
+  ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,220,80,0.9)';
+  if(topMin > 6 && topMin < H-6) ctx.fillText('x₁', 3, topMin - 2);
+  if(botMin > 6 && botMin < H-6) ctx.fillText('x₁', 3, botMin + 9);
+  // 2x bracket
+  if(topMin > 0 && botMin < H){
+    ctx.strokeStyle = 'rgba(255,220,80,0.55)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(patW-4, topMin); ctx.lineTo(patW-4, botMin); ctx.stroke();
+    const midY = (topMin+botMin)/2;
+    ctx.font = 'bold 8px monospace'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,220,80,0.9)';
+    ctx.fillText('2x', patW-6, midY+3);
+  }
 }
 
 // ═══════════════════════════════════════════════════════
 //  HUD UPDATE
 // ═══════════════════════════════════════════════════════
 function updateHUD(){
-  const y1 = calcY1(), W_band = calcW();
+  const x1 = calcY1(), band2x = calcW();
   document.getElementById('val-lambda').textContent = S.lambda + ' nm';
   document.getElementById('val-lambda').style.color = waveToRGB(S.lambda);
   document.getElementById('val-a').textContent = S.slitWidth.toFixed(2) + ' mm';
   document.getElementById('val-L').textContent = S.dist.toFixed(2) + ' m';
-  document.getElementById('val-y1').textContent = y1.toFixed(2) + ' mm';
-  document.getElementById('val-W').textContent = W_band.toFixed(2) + ' mm';
+  document.getElementById('val-y1').textContent = x1.toFixed(2) + ' mm';
+  document.getElementById('val-W').textContent = band2x.toFixed(2) + ' mm';
 }
 
-function fullUpdate(){ updateHUD(); paintDiffraction(); if(arMode) syncARTexture(); }
+function fullUpdate(){ updateHUD(); paintDiffraction(); updatePiP(); if(arMode) syncARTexture(); }
 
 // ═══════════════════════════════════════════════════════
 //  THREE.JS DESKTOP SCENE
@@ -403,8 +442,8 @@ const railMat = new THREE.MeshStandardMaterial({color:0x0d2040,metalness:0.85,ro
   rulerMesh.rotation.x=-Math.PI/2; rulerMesh.position.set(0,-0.41,0); rulerMesh.renderOrder=1; root3.add(rulerMesh);
 }
 
-// ── LASER source (left side, fixed at -15 cm)
-const LASER_X = -15 * CM;
+// ── LASER source (left side, fixed at -35 cm — well separated from slit at 0)
+const LASER_X = -35 * CM;
 function buildLaser(){
   const g = new THREE.Group();
   // Body
@@ -521,7 +560,7 @@ function drawLabels(){
   const scrPos   = new THREE.Vector3(screenD.position.x, 3.5, 0);
   [
     {p:laserPos, t:`LASER  λ=${S.lambda}nm`, c:waveToRGB(S.lambda)},
-    {p:slitPos,  t:`SLIT  a=${S.slitWidth.toFixed(2)}mm`, c:'#88aaff'},
+    {p:slitPos,  t:`SLIT  w=${S.slitWidth.toFixed(2)}mm`, c:'#88aaff'},
     {p:scrPos,   t:'SCREEN', c:'#88ffcc'},
   ].forEach(({p,t,c})=>{
     const s=w2s(p); lctx.font='600 11px "Space Mono",monospace'; lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=8; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
@@ -689,8 +728,9 @@ function buildARScene(){
     return g;
   }
 
-  // LASER
-  const laserEnt=makeMount(-3.0,'#1a2a3a');
+  // LASER — placed at -3.5 AR units (35 cm from slit at origin)
+  const AR_LASER_X = -3.5;
+  const laserEnt=makeMount(AR_LASER_X,'#1a2a3a');
   laserEnt.setAttribute('id','ar-laser');
   const laserBody=document.createElement('a-cylinder');
   laserBody.setAttribute('position',`0.7 ${POST+0.12} 0`); laserBody.setAttribute('rotation','0 0 90');
@@ -770,15 +810,11 @@ function buildARScene(){
 function syncARPositions(){
   if(!arEntities.screen) return;
   const POST=0.148;
-  const CM_AR = CM; // same scale
-  // screen position in AR units (marker centre = 0, ±4 units = ±40cm)
-  // Our scene uses 1 unit = 10cm, so S.dist metres → S.dist*100cm → *CM scene units
-  // AR: 1 AR unit = 10cm (arCmPx maps ±40cm to 8 units)
-  const screenXAR = S.dist * 100 * CM;  // scene units
+  const screenXAR = S.dist * 100 * CM;  // 1 unit = 10cm, slit at 0
   arEntities.screen.setAttribute('position',`${screenXAR} 0 0`);
 
-  // Laser at -3.0 (fixed, ~-30cm)
-  const laserXAR = -3.0;
+  // Laser aperture is at AR_LASER_X + 1.35 body offset (fixed at -3.5 units)
+  const laserXAR = -3.5;
   const beamStart = laserXAR + 1.35;
   const beamLen = screenXAR - beamStart;
   if(beamLen > 0){
@@ -789,10 +825,8 @@ function syncARPositions(){
     arEntities.beamGlow.setAttribute('height',`${beamLen}`);
   }
 
-  // Update screen texture
   syncARTexture();
 
-  // Update beam / dot colour
   const col = waveToRGB(S.lambda);
   if(arEntities.laserDot){ arEntities.laserDot.setAttribute('color',col); arEntities.laserDot.setAttribute('emissive',col); }
   if(arEntities.beam){ arEntities.beam.setAttribute('color',col); }
@@ -862,7 +896,7 @@ function enterAR(){
   const slitInfo = document.createElement('span');
   slitInfo.id='ar-slit-info';
   slitInfo.style.cssText='font-family:"Space Mono",monospace;font-size:10px;color:rgba(180,210,255,.75);letter-spacing:1px;white-space:nowrap;';
-  slitInfo.textContent=`a=${S.slitWidth.toFixed(2)}mm`;
+  slitInfo.textContent=`w=${S.slitWidth.toFixed(2)}mm`;
   const wq=document.getElementById('wave-quiz');
   if(wq && !document.getElementById('ar-slit-info')) wq.insertBefore(slitInfo, wq.firstChild);
 }
@@ -896,6 +930,14 @@ btnAR.addEventListener('click',()=>{ if(!arMode) enterAR(); else exitAR(); });
 
 document.getElementById('ar-start-btn').addEventListener('click',function(){
   showARStep(2);
+
+  function loadScript(urls,onDone,onFail){
+    if(!urls.length){onFail();return;}
+    const s=document.createElement('script'); s.src=urls[0]; s.setAttribute('data-arscript','1');
+    s.onload=onDone; s.onerror=()=>loadScript(urls.slice(1),onDone,onFail);
+    document.head.appendChild(s);
+  }
+
   function onLibsReady(){
     const wrap=document.getElementById('arWrap');
     const old=wrap.querySelector('a-scene');
@@ -903,14 +945,39 @@ document.getElementById('ar-start-btn').addEventListener('click',function(){
     arScene=null; arEntities={};
     buildARScene();
     const s=document.getElementById('ar-status');
-    s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+    s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…';
+    s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
     showARStep(3);
   }
-  if(window.AFRAME && window.AFRAME.version){ onLibsReady(); return; }
-  function loadScript(urls,onDone,onFail){ if(!urls.length){onFail();return;} const s=document.createElement('script'); s.src=urls[0]; s.setAttribute('data-arscript','1'); s.onload=onDone; s.onerror=()=>loadScript(urls.slice(1),onDone,onFail); document.head.appendChild(s); }
-  const aframeCDNs=['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js','https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js'];
-  const arjsCDNs=['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'];
-  loadScript(aframeCDNs,()=>loadScript(arjsCDNs,onLibsReady,()=>alert('Could not load AR engine.')),()=>alert('Could not load A-Frame.'));
+
+  function loadARLibs(){
+    if(window.AFRAME && window.AFRAME.version){ onLibsReady(); return; }
+    const aframeCDNs=[
+      'https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js',
+      'https://aframe.io/releases/1.4.0/aframe.min.js'
+    ];
+    const arjsCDNs=[
+      'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js',
+      'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'
+    ];
+    loadScript(aframeCDNs,
+      ()=>loadScript(arjsCDNs, onLibsReady, ()=>alert('Could not load AR.js engine.')),
+      ()=>alert('Could not load A-Frame.')
+    );
+  }
+
+  // Explicitly request camera permission first — this triggers the browser prompt
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    .then(stream => {
+      // Permission granted — stop the test stream immediately; AR.js will open its own
+      stream.getTracks().forEach(t => t.stop());
+      loadARLibs();
+    })
+    .catch(err => {
+      console.warn('Camera permission denied or error:', err);
+      // Still try to load — some browsers handle it inside AR.js
+      loadARLibs();
+    });
 });
 
 // Wavelength quiz
