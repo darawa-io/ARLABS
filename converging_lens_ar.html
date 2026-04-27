@@ -521,47 +521,55 @@ const railWeb3=new THREE.Mesh(new THREE.BoxGeometry(38,0.12,0.18),railMat3); rai
 const railTop3=new THREE.Mesh(new THREE.BoxGeometry(38,0.06,0.50),railMat3); railTop3.position.set(0,-0.44,0); root3.add(railTop3);
 const railBot3=new THREE.Mesh(new THREE.BoxGeometry(38,0.06,0.50),railMat3); railBot3.position.set(0,-0.56,0); root3.add(railBot3);
 
-// ── Ruler canvas  (mm ticks, 0 at lens, no minus signs — just distance)
-// Scene scale: CM=0.1, so 1 scene unit = 10 cm. Rail spans ±4.5 units = ±45 cm.
-// Ruler plane width = 9.0 scene units to exactly match the ±45 cm range.
+// ── Ruler canvas — mm ticks, 0 at lens, bigger numbers, every mm shown
+// Scene scale: CM=0.1, ±45 cm = ±4.5 scene units → plane width = 9.0
 {
-  const RW=4096, RH=128;
+  const RW=4096, RH=256;  // taller canvas = bigger fonts
   const rc=document.createElement('canvas'); rc.width=RW; rc.height=RH;
   const rx=rc.getContext('2d');
   rx.clearRect(0,0,RW,RH);
-  // Range: -45 cm to +45 cm, mapped to 0..RW pixels
   const minCM=-45, maxCM=45, rangeCM=maxCM-minCM;
-  function cmPx(cm){ return Math.round(((cm-minCM)/rangeCM)*RW); }
+  function dCmPx(cm){ return Math.round(((cm-minCM)/rangeCM)*RW); }
 
+  // Draw every mm
   for(let mm=-450; mm<=450; mm++){
     const cm=mm/10;
-    const px=cmPx(cm);
-    const isCm=(mm%10===0), is5cm=(mm%50===0), isZero=(mm===0);
-    if(mm%5!==0) continue; // draw every 0.5 cm
-    const tickH=isZero?RH*0.85 : is5cm?RH*0.55 : isCm?RH*0.35 : RH*0.18;
-    rx.fillStyle=isZero?'#ffdd88' : mm<0?'#ff9999' : '#99ffcc';
-    rx.fillRect(px-1, 0, isZero?3:2, tickH);
-    if(is5cm && mm!==0){
-      rx.font='bold 28px monospace'; rx.textAlign='center';
-      rx.fillStyle=mm<0?'#ffaaaa':'#aaffcc';
-      rx.fillText(Math.abs(cm).toFixed(0), px, RH-2);
-    } else if(isZero){
-      rx.font='bold 32px monospace'; rx.textAlign='center';
-      rx.fillStyle='#ffdd88'; rx.fillText('0', px, RH-2);
+    const px=dCmPx(cm);
+    const isMM=true;
+    const is5mm=(mm%5===0), isCm=(mm%10===0), is5cm=(mm%50===0), isZero=(mm===0);
+    // Tick height
+    const tickH = isZero  ? RH*0.88
+                : is5cm   ? RH*0.60
+                : isCm    ? RH*0.42
+                : is5mm   ? RH*0.25
+                : RH*0.14;
+    // Tick colour
+    rx.fillStyle = isZero ? '#ffdd88' : mm<0 ? '#ff8888' : '#88ffcc';
+    // Tick width: thicker for major marks
+    const tw = isZero ? 4 : is5cm ? 3 : isCm ? 2 : 1;
+    rx.fillRect(px - Math.floor(tw/2), 0, tw, tickH);
+
+    // Labels — every 5 cm (abs value, no minus)
+    if(is5cm){
+      const label = isZero ? '0' : Math.abs(cm).toFixed(0);
+      rx.font = isZero ? 'bold 72px monospace' : 'bold 56px monospace';
+      rx.textAlign = 'center';
+      rx.fillStyle = isZero ? '#ffdd88' : mm<0 ? '#ffaaaa' : '#aaffcc';
+      rx.fillText(label, px, RH-4);
     }
   }
-  rx.font='bold 22px monospace';
-  rx.fillStyle='#ff8888'; rx.textAlign='left';  rx.fillText('← OBJ', cmPx(minCM)+6, RH-2);
-  rx.fillStyle='#88ffcc'; rx.textAlign='right'; rx.fillText('SCR →', cmPx(maxCM)-6, RH-2);
+  // Side labels
+  rx.font='bold 44px monospace';
+  rx.fillStyle='#ff7777'; rx.textAlign='left';  rx.fillText('← OBJ', dCmPx(minCM)+8, RH-4);
+  rx.fillStyle='#77ffcc'; rx.textAlign='right'; rx.fillText('SCR →', dCmPx(maxCM)-8, RH-4);
 
   const rulerTex3=new THREE.CanvasTexture(rc);
-  // Width = 9.0 scene units = 90 cm total (±45 cm), matching object range ±45*CM = ±4.5
   const rulerMesh3=new THREE.Mesh(
-    new THREE.PlaneGeometry(9.0, 0.6),
-    new THREE.MeshBasicMaterial({map:rulerTex3, transparent:true, opacity:0.90, side:THREE.DoubleSide, depthWrite:false})
+    new THREE.PlaneGeometry(9.0, 0.9),   // taller plane so text is readable
+    new THREE.MeshBasicMaterial({map:rulerTex3, transparent:true, opacity:0.95, side:THREE.DoubleSide, depthWrite:false})
   );
   rulerMesh3.rotation.x=-Math.PI/2;
-  rulerMesh3.position.set(0, -0.43, 0);
+  rulerMesh3.position.set(0, -0.41, 0);
   rulerMesh3.renderOrder=1;
   root3.add(rulerMesh3);
 }
@@ -858,52 +866,20 @@ function buildARScene(){
   marker.setAttribute('smoothTolerance','0.01');
   marker.setAttribute('smoothThreshold','2');
 
-  // Notify badge when marker found/lost
-  // On FIRST detection: capture world pose and freeze the scene there permanently
-  let markerFrozen = false;
-
+  // Status updates when marker found / lost
   marker.addEventListener('markerFound',()=>{
     const s=document.getElementById('ar-status');
     s.textContent='✅ MARKER DETECTED';
     s.style.background='rgba(60,220,120,.18)';
     s.style.border='1px solid rgba(60,220,120,.5)';
     s.style.color='#3fdc78';
-
-    if(!markerFrozen){
-      markerFrozen=true;
-
-      // Give A-Frame one frame to update the marker's world matrix
-      requestAnimationFrame(()=>{
-        // Capture the marker's current world matrix
-        const frozen=new THREE.Matrix4();
-        frozen.copy(scaleGroup.object3D.matrixWorld);
-
-        // Detach scaleGroup from marker, re-attach directly to scene
-        // so it stays at the captured world pose regardless of marker visibility
-        marker.object3D.remove(scaleGroup.object3D);
-        sceneEl.object3D.add(scaleGroup.object3D);
-        scaleGroup.object3D.matrix.copy(frozen);
-        scaleGroup.object3D.matrixAutoUpdate=false;
-        scaleGroup.object3D.matrixWorldNeedsUpdate=true;
-
-        // Update status to show it's now world-locked
-        s.textContent='📌 SCENE ANCHORED';
-        s.style.background='rgba(100,200,255,.12)';
-        s.style.border='1px solid rgba(100,200,255,.4)';
-        s.style.color='#64c8ff';
-      });
-    }
   });
-
   marker.addEventListener('markerLost',()=>{
-    // Only update status if not yet frozen — once frozen, scene stays put
-    if(!markerFrozen){
-      const s=document.getElementById('ar-status');
-      s.textContent='🔍 SCANNING FOR MARKER…';
-      s.style.background='rgba(255,180,0,.12)';
-      s.style.border='1px solid rgba(255,180,0,.4)';
-      s.style.color='#ffb400';
-    }
+    const s=document.getElementById('ar-status');
+    s.textContent='🔍 SCANNING FOR MARKER…';
+    s.style.background='rgba(255,180,0,.12)';
+    s.style.border='1px solid rgba(255,180,0,.4)';
+    s.style.color='#ffb400';
   });
 
   // ── All scene content goes inside a scalable group
@@ -928,36 +904,46 @@ function buildARScene(){
   // ── Meter tape — drawn onto a canvas, applied as a flat plane texture
   // (Avoids a-text MSDF font loading which blocks AR.js camera init)
   const scaleCvs=document.createElement('canvas');
-  scaleCvs.id='ar-scale-cvs'; scaleCvs.width=2048; scaleCvs.height=96;
+  scaleCvs.id='ar-scale-cvs'; scaleCvs.width=4096; scaleCvs.height=192;
   const sCtx=scaleCvs.getContext('2d');
-  sCtx.clearRect(0,0,2048,96);
-  // helper: cm (-40..+40) → canvas pixel x
-  function cmPx(cm){ return Math.round(((cm+40)/80)*2048); }
-  for(let cm=-40; cm<=40; cm+=5){
-    const sx=cmPx(cm);
-    const isMajor=(cm%10===0), isZero=(cm===0);
-    sCtx.fillStyle=isZero?'#ffdd88':isMajor?'#aaccdd':'#445566';
-    const tH=isZero?88:isMajor?58:30;
-    sCtx.fillRect(sx-2,0,4,tH);
-    if(isMajor){
-      sCtx.font='bold 24px monospace'; sCtx.textAlign='center';
-      sCtx.fillStyle=isZero?'#ffdd88':cm<0?'#ff9999':'#99ffcc';
-      sCtx.fillText(String(cm),sx,92);
+  const SW=4096, SH=192;
+  sCtx.clearRect(0,0,SW,SH);
+  // Range: -40 cm to +40 cm (8 A-Frame units, 1 unit = 10 cm)
+  function arCmPx(cm){ return Math.round(((cm+40)/80)*SW); }
+
+  // Every mm
+  for(let mm=-400; mm<=400; mm++){
+    const cm=mm/10;
+    const px=arCmPx(cm);
+    const is5mm=(mm%5===0), isCm=(mm%10===0), is5cm=(mm%50===0), isZero=(mm===0);
+    const tickH = isZero  ? SH*0.88
+                : is5cm   ? SH*0.62
+                : isCm    ? SH*0.42
+                : is5mm   ? SH*0.26
+                : SH*0.14;
+    sCtx.fillStyle = isZero ? '#ffdd88' : mm<0 ? '#ff8888' : '#88ffcc';
+    const tw = isZero ? 5 : is5cm ? 4 : isCm ? 2 : 1;
+    sCtx.fillRect(px - Math.floor(tw/2), 0, tw, tickH);
+
+    if(is5cm){
+      const label = isZero ? '0' : Math.abs(cm).toFixed(0);
+      sCtx.font = isZero ? 'bold 80px monospace' : 'bold 64px monospace';
+      sCtx.textAlign='center';
+      sCtx.fillStyle = isZero ? '#ffdd88' : mm<0 ? '#ffaaaa' : '#aaffcc';
+      sCtx.fillText(label, px, SH-4);
     }
   }
-  // Side labels
-  sCtx.font='bold 20px monospace';
-  sCtx.fillStyle='#ff8888'; sCtx.textAlign='right';
-  sCtx.fillText('<- OBJECT',cmPx(-40)-4,92);
-  sCtx.fillStyle='#88ffcc'; sCtx.textAlign='left';
-  sCtx.fillText('SCREEN ->',cmPx(40)+4,92);
-  // Flat plane lying along the top of the rail, facing upward
+  sCtx.font='bold 52px monospace';
+  sCtx.fillStyle='#ff7777'; sCtx.textAlign='right'; sCtx.fillText('<- OBJ', arCmPx(-40)-6, SH-4);
+  sCtx.fillStyle='#77ffcc'; sCtx.textAlign='left';  sCtx.fillText('SCR ->', arCmPx(40)+6, SH-4);
+
+  // Flat plane on top of AR rail
   const scalePlane=document.createElement('a-plane');
-  scalePlane.setAttribute('width','8.0'); scalePlane.setAttribute('height','0.30');
-  scalePlane.setAttribute('position','0 0.18 0');
+  scalePlane.setAttribute('width','8.0'); scalePlane.setAttribute('height','0.55');
+  scalePlane.setAttribute('position','0 0.19 0');
   scalePlane.setAttribute('rotation','-90 0 0');
   scalePlane.setAttribute('src','#ar-scale-cvs');
-  scalePlane.setAttribute('material','transparent: true; opacity: 0.92; shader: flat; side: double;');
+  scalePlane.setAttribute('material','transparent: true; opacity: 0.95; shader: flat; side: double;');
   scaleGroup.appendChild(scalePlane);
 
   // ── Mount/carriage helper — reduced to 20 % of original size
@@ -1257,14 +1243,20 @@ document.getElementById('ar-start-btn').addEventListener('click',function(){
   showARStep(2);
 
   function onLibsReady(){
-    // Always destroy any previous A-Frame scene first
+    // Destroy any previous A-Frame scene DOM, then rebuild fresh
     const wrap=document.getElementById('arWrap');
-    wrap.innerHTML='';
+    // Remove previous scene element if any (stops camera track)
+    const old=wrap.querySelector('a-scene');
+    if(old){
+      // Stop camera stream before removing
+      old.querySelectorAll('video').forEach(v=>{
+        if(v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null; }
+      });
+      wrap.removeChild(old);
+    }
     arScene=null; arEntities={};
-    // Build the A-Frame scene — this opens the camera
     buildARScene();
     refreshScreenTexture();
-    // Show scanning status
     const s=document.getElementById('ar-status');
     s.style.display='block';
     s.textContent='🔍 SCANNING FOR MARKER…';
@@ -1272,48 +1264,38 @@ document.getElementById('ar-start-btn').addEventListener('click',function(){
     s.style.border='1px solid rgba(255,180,0,.4)';
     s.style.color='#ffb400';
     showARStep(3);
-    // No auto-dismiss — user controls it via the Guide button in AR controls
   }
 
-  // Always reload scripts for a clean AR session.
-  // Reusing the previous AFRAME instance causes the "no scene on re-enter" bug
-  // because A-Frame registers itself once and can't be re-initialised.
-  // Solution: remove old scripts + AFRAME global, then reload fresh.
-  function purgeAndReload(){
-    // Remove previously injected script tags
-    document.querySelectorAll('script[data-arscript]').forEach(s=>s.remove());
-    // Delete globals so loadScript triggers fresh download
-    try{ delete window.AFRAME; } catch(e){ window.AFRAME=undefined; }
-    try{ delete window.THREEx; } catch(e){}
-    loadScripts();
+  // Load A-Frame + AR.js only once — CustomElementRegistry can't be reset,
+  // so re-deleting window.AFRAME and reloading breaks on second session.
+  // If already loaded, go straight to onLibsReady.
+  if(window.AFRAME && window.AFRAME.version){
+    onLibsReady();
+    return;
   }
 
-  function loadScripts(){
-    function loadScript(urls, onDone, onFail){
-      if(!urls.length){ onFail(); return; }
-      const s=document.createElement('script');
-      s.src=urls[0]; s.setAttribute('data-arscript','1');
-      s.onload=onDone;
-      s.onerror=()=>loadScript(urls.slice(1),onDone,onFail);
-      document.head.appendChild(s);
-    }
-    const aframeCDNs=[
-      'https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js',
-      'https://aframe.io/releases/1.4.0/aframe.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js',
-    ];
-    const arjsCDNs=[
-      'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js',
-      'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js',
-    ];
-    loadScript(aframeCDNs,
-      ()=>loadScript(arjsCDNs, onLibsReady,
-        ()=>alert('Could not load AR engine. Check your internet connection.')),
-      ()=>alert('Could not load A-Frame. Check your internet connection.')
-    );
+  function loadScript(urls, onDone, onFail){
+    if(!urls.length){ onFail(); return; }
+    const s=document.createElement('script');
+    s.src=urls[0]; s.setAttribute('data-arscript','1');
+    s.onload=onDone;
+    s.onerror=()=>loadScript(urls.slice(1),onDone,onFail);
+    document.head.appendChild(s);
   }
-
-  purgeAndReload();
+  const aframeCDNs=[
+    'https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js',
+    'https://aframe.io/releases/1.4.0/aframe.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js',
+  ];
+  const arjsCDNs=[
+    'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js',
+    'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js',
+  ];
+  loadScript(aframeCDNs,
+    ()=>loadScript(arjsCDNs, onLibsReady,
+      ()=>alert('Could not load AR engine. Check your internet connection.')),
+    ()=>alert('Could not load A-Frame. Check your internet connection.')
+  );
 });
 
 function exitAR(){
