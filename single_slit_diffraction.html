@@ -29,10 +29,11 @@ body{background:#06080f;font-family:'Syne',sans-serif;overflow:hidden;height:100
 #formula-box{padding:8px;border-radius:8px;background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.18);font-size:11px;font-family:'Space Mono',monospace;color:rgba(255,160,180,.85);line-height:1.9;text-align:center;}
 
 /* PiP — frontal screen view */
-#pip{position:absolute;top:20px;left:200px;width:130px;height:172px;background:#04060d;border:1px solid rgba(120,180,255,.25);border-radius:12px;overflow:hidden;z-index:10;}
+#pip{position:absolute;top:20px;left:200px;width:140px;height:186px;background:#04060d;border:1px solid rgba(120,180,255,.25);border-radius:12px;overflow:hidden;z-index:10;}
 #pip canvas{width:100%;height:100%;display:block;}
 #pip-label{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);letter-spacing:1px;pointer-events:none;}
-body.ar-active #pip{display:none!important;}
+/* In AR mode: reposition PiP to top-left since HUD is hidden */
+body.ar-active #pip{left:12px;top:70px;z-index:200;border-color:rgba(120,180,255,.45);}
 
 /* Controls */
 #controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
@@ -83,6 +84,7 @@ body.ar-active #wave-quiz{display:flex;}
 <div id="title"><h1>DIFFRACTION LAB</h1><p>Single Slit Experiment</p></div>
 
 <div id="ar-status">🔍 SCANNING FOR MARKER…</div>
+<div id="ar-dist-readout" style="display:none;position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:200;padding:5px 16px;border-radius:14px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;background:rgba(6,10,22,.88);border:1px solid rgba(120,180,255,.3);color:#7fffb2;pointer-events:none;white-space:nowrap;"></div>
 
 <div id="hud">
   <h2>Measurements</h2>
@@ -99,7 +101,7 @@ body.ar-active #wave-quiz{display:flex;}
 </div>
 
 <div id="pip">
-  <canvas id="pipCanvas" width="130" height="172"></canvas>
+  <canvas id="pipCanvas" width="140" height="186"></canvas>
   <div id="pip-label">SCREEN  (frontal)</div>
 </div>
 
@@ -135,7 +137,7 @@ body.ar-active #wave-quiz{display:flex;}
   </div>
 </div>
 
-<div id="hint">Sliders: λ wavelength · a slit width · L distance · AR: pinch = zoom · drag = orbit</div>
+<div id="hint">Desktop: drag screen • orbit • scroll zoom &nbsp;|&nbsp; AR: drag right side = move screen • pinch = zoom</div>
 
 <!-- AR instructions panel -->
 <div id="ar-instructions">
@@ -255,32 +257,36 @@ function parseRGB(col){
 }
 
 // Shared: draw diffraction pattern + ruler onto any canvas context
-// rulerW = pixel width of ruler strip (right-aligned); labelSide controls text position
+// The display range is ±rangeMultiplier * x1, so secondary bands are always visible
 function renderDiffractionToCtx(ctx, W, H, rulerW){
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#04060d';
   ctx.fillRect(0,0,W,H);
 
-  const mmPerPx = 80 / H;  // ±40 mm maps to full height
+  const x1mm = calcY1();   // first minimum in mm
+  // Show at least ±4 * x1 so 3+ secondary bands are always visible; cap at ±80mm
+  const halfRange = Math.min(80, Math.max(4 * x1mm, 8));
+  const mmPerPx = (2 * halfRange) / H;   // mm per pixel
+
   const col = waveToRGB(S.lambda);
   const [r_c,g_c,b_c] = parseRGB(col);
   const patW = W - rulerW;
 
-  // Diffraction pattern columns
+  // Diffraction pattern — sinc² with proper normalised intensity
   for(let py=0; py<H; py++){
     const ymm = (py - H/2) * mmPerPx;
     const beta = Math.PI * (S.slitWidth*1e-3) * (ymm*1e-3) / (S.lambda*1e-9 * S.dist);
     const I = sinc(beta) ** 2;
-    const alpha = Math.min(1, I * 1.18);
+    // Use sqrt to brighten secondary bands (perceptual gamma), then cap central at 1
+    const alpha = Math.min(1, Math.sqrt(I) * 1.05);
     ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${alpha})`;
     ctx.fillRect(0, py, patW, 1);
   }
 
   // Dashed lines at first minima (x1)
-  const x1mm = calcY1();
   const topMin = H/2 - (x1mm / mmPerPx);
   const botMin = H/2 + (x1mm / mmPerPx);
-  ctx.strokeStyle = 'rgba(255,220,80,0.55)';
+  ctx.strokeStyle = 'rgba(255,220,80,0.6)';
   ctx.setLineDash([4,4]); ctx.lineWidth = 1.5;
   if(topMin > 0 && topMin < H){ ctx.beginPath(); ctx.moveTo(0,topMin); ctx.lineTo(patW,topMin); ctx.stroke(); }
   if(botMin > 0 && botMin < H){ ctx.beginPath(); ctx.moveTo(0,botMin); ctx.lineTo(patW,botMin); ctx.stroke(); }
@@ -292,27 +298,32 @@ function renderDiffractionToCtx(ctx, W, H, rulerW){
 
   // ── Vertical ruler strip (right side)
   const rx = patW;
-  const rBg = 'rgba(10,18,38,0.88)';
-  ctx.fillStyle = rBg;
+  ctx.fillStyle = 'rgba(10,18,38,0.88)';
   ctx.fillRect(rx, 0, rulerW, H);
 
-  // Ruler ticks & labels
-  const scale = H/80; // px per mm
-  for(let mm = -40; mm <= 40; mm++){
+  // Adaptive tick spacing: choose nice mm step that gives 6–14 ticks
+  const totalMM = 2 * halfRange;
+  const niceSteps = [1,2,5,10,20,25,50];
+  let tickStep = 5;
+  for(const s of niceSteps){ if(totalMM / s <= 14){ tickStep = s; break; } }
+
+  const scale = H / (2 * halfRange); // px per mm
+  const mmStart = -Math.ceil(halfRange / tickStep) * tickStep;
+  const mmEnd   =  Math.ceil(halfRange / tickStep) * tickStep;
+
+  for(let mm = mmStart; mm <= mmEnd; mm += tickStep){
     const py = H/2 - mm * scale;
     if(py < 0 || py > H) continue;
-    const isZ = mm===0, is10 = mm%10===0, is5 = mm%5===0;
-    const tw = isZ ? rulerW*0.75 : is10 ? rulerW*0.55 : is5 ? rulerW*0.35 : rulerW*0.18;
+    const isZ = mm===0;
+    const tw = isZ ? rulerW*0.75 : rulerW*0.55;
     ctx.fillStyle = isZ ? '#ffdd66' : '#7fbfff';
     ctx.fillRect(rx, Math.round(py), tw, isZ ? 2 : 1);
-    if(is10){
-      const lbl = isZ ? '0' : String(Math.abs(mm));
-      const fs = Math.max(9, Math.min(20, rulerW * 0.38));
-      ctx.font = `${isZ?'bold ':' '}${fs}px monospace`;
-      ctx.textAlign = 'right';
-      ctx.fillStyle = isZ ? '#ffdd66' : 'rgba(180,210,255,0.85)';
-      ctx.fillText(lbl, rx + rulerW - 2, Math.round(py) + fs*0.38);
-    }
+    const lbl = isZ ? '0' : String(Math.abs(mm));
+    const fs = Math.max(9, Math.min(20, rulerW * 0.38));
+    ctx.font = `${isZ?'bold ':' '}${fs}px monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = isZ ? '#ffdd66' : 'rgba(180,210,255,0.85)';
+    ctx.fillText(lbl, rx + rulerW - 2, Math.round(py) + fs*0.38);
   }
 
   // "mm" label rotated
@@ -328,29 +339,32 @@ function paintDiffraction(){
   if(arScreenTex) arScreenTex.needsUpdate = true;
 }
 
-// ─── PiP: frontal screen preview panel
+// ─── PiP: frontal screen preview panel (shown in both desktop and AR)
 function updatePiP(){
   const pipEl = document.getElementById('pipCanvas');
   if(!pipEl) return;
   const W = pipEl.width, H = pipEl.height;
   const ctx = pipEl.getContext('2d');
-  renderDiffractionToCtx(ctx, W, H, Math.round(W * 0.28));
-  // Overlay label for x1 and 2x
+  const rw = Math.round(W * 0.26);
+  renderDiffractionToCtx(ctx, W, H, rw);
+  // Overlay x₁ labels and 2x bracket
   const x1mm = calcY1();
-  const scale = H/80;
+  const x1half = Math.min(80, Math.max(4 * x1mm, 8));
+  const scale = H / (2 * x1half); // px per mm
   const topMin = H/2 - x1mm * scale;
   const botMin = H/2 + x1mm * scale;
-  const patW = W - Math.round(W*0.28);
-  ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,220,80,0.9)';
+  const patW = W - rw;
+  ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,220,80,0.95)';
   if(topMin > 6 && topMin < H-6) ctx.fillText('x₁', 3, topMin - 2);
   if(botMin > 6 && botMin < H-6) ctx.fillText('x₁', 3, botMin + 9);
-  // 2x bracket
   if(topMin > 0 && botMin < H){
-    ctx.strokeStyle = 'rgba(255,220,80,0.55)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(patW-4, topMin); ctx.lineTo(patW-4, botMin); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,220,80,0.6)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(patW-5, topMin); ctx.lineTo(patW-5, botMin); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(patW-8,topMin); ctx.lineTo(patW-2,topMin); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(patW-8,botMin); ctx.lineTo(patW-2,botMin); ctx.stroke();
     const midY = (topMin+botMin)/2;
-    ctx.font = 'bold 8px monospace'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,220,80,0.9)';
-    ctx.fillText('2x', patW-6, midY+3);
+    ctx.font = 'bold 8px monospace'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,220,80,0.95)';
+    ctx.fillText('2x', patW-8, midY+3);
   }
 }
 
@@ -637,7 +651,7 @@ function buildARScene(){
   const wrap=document.getElementById('arWrap');
   wrap.innerHTML='';
   wrap.classList.add('show');
-  arScale=0.55;
+  arScale=0.44;  // 80% of original 0.55
 
   const sceneEl=document.createElement('a-scene');
   sceneEl.setAttribute('embedded','');
@@ -756,9 +770,8 @@ function buildARScene(){
   slitBot.setAttribute('id','ar-slit-bot'); slitBot.setAttribute('position',`0 ${POST-0.32} 0`); slitEnt.appendChild(slitBot);
   sg.appendChild(slitEnt);
 
-  // SCREEN
-  const screenXAR = (S.dist * 100 * CM) / (1/arScale) * 0;  // will use syncARPositions
-  const screenEnt=makeMount(3.0,'#0a1e2a');
+  // SCREEN — starts at 1.5 AR units (~15 cm from slit), moved via tap
+  const screenEnt=makeMount(1.5,'#0a1e2a');
   screenEnt.setAttribute('id','ar-screen');
   const scrFrame=mkBox('0.05','2.2','1.8','#1a3040','0.75','0.3'); scrFrame.setAttribute('position',`0 ${POST+1.05} 0`); screenEnt.appendChild(scrFrame);
   const scrPanel=document.createElement('a-plane');
@@ -840,13 +853,34 @@ function syncARTexture(){
   if(mat && mat.material && mat.material.map) mat.material.map.needsUpdate=true;
 }
 
-// AR touch
+// AR touch — pinch = scale, single-finger drag on screen panel = move screen along rail
+let arScreenDragStartX = null, arScreenDragStartDist = null;
+
+function getARScreenBounds(){
+  // Approximate: in AR the screen panel projected onto the page is roughly right half of viewport
+  // We use a simple heuristic: if touch X > 45% of viewport width, assume screen area
+  return window.innerWidth * 0.45;
+}
+
 function onARTouch(e){
   e.preventDefault();
-  if(e.touches.length===2){ arDrag=null; arPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); arScale0=arScale; return; }
-  if(e.touches.length!==1)return;
+  if(e.touches.length===2){
+    arDrag=null; arScreenDragStartX=null;
+    arPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    arScale0=arScale;
+    return;
+  }
+  if(e.touches.length!==1) return;
   const t=e.touches[0];
-  arDrag={mode:'orbit',lastX:t.clientX,lastY:t.clientY};
+  // Use right portion of screen as "screen drag" zone (>40% from left)
+  if(t.clientX > getARScreenBounds()){
+    arScreenDragStartX = t.clientX;
+    arScreenDragStartDist = S.dist;
+    arDrag = {mode:'screen', lastX:t.clientX};
+  } else {
+    arDrag = null;
+    arScreenDragStartX = null;
+  }
 }
 function onARTouchMove(e){
   e.preventDefault();
@@ -856,9 +890,28 @@ function onARTouchMove(e){
     if(arEntities.scaleGroup) arEntities.scaleGroup.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
     return;
   }
-  if(!arDrag||e.touches.length!==1)return;
+  if(!arDrag||e.touches.length!==1) return;
+  const t=e.touches[0];
+  if(arDrag.mode==='screen' && arScreenDragStartX!==null){
+    const dx = t.clientX - arScreenDragStartX;
+    const newDist = Math.max(0.10, Math.min(2.00, arScreenDragStartDist + dx * 0.006));
+    S.dist = newDist;
+    document.getElementById('dist-slider').value = newDist.toFixed(2);
+    document.getElementById('dist-val').textContent = newDist.toFixed(2)+'m';
+    const rd = document.getElementById('ar-dist-readout');
+    if(rd){ rd.style.display='block'; rd.textContent=`L = ${newDist.toFixed(2)} m  |  2x = ${calcW().toFixed(1)} mm`; }
+    syncARPositions();
+    fullUpdate();
+  }
 }
-function onARTouchEnd(e){ if(e.touches.length<2){arPinchDist0=null;arScale0=null;} if(e.touches.length===0)arDrag=null; }
+function onARTouchEnd(e){
+  if(e.touches.length<2){arPinchDist0=null;arScale0=null;}
+  if(e.touches.length===0){
+    arDrag=null;arScreenDragStartX=null;
+    const rd=document.getElementById('ar-dist-readout');
+    if(rd) rd.style.display='none';
+  }
+}
 
 // Enter / Exit AR
 const btnAR=document.getElementById('btn-ar');
@@ -870,6 +923,7 @@ function enterAR(){
   arMode=true;
   document.getElementById('simWrap').style.display='none';
   document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('ar-status').style.display='block';
   document.getElementById('hint').style.display='none';
   document.body.classList.add('ar-active');
   floorM.visible=false; gridM.visible=false;
@@ -880,6 +934,8 @@ function enterAR(){
 
   // Randomise wavelength for AR challenge
   S._arOrigLambda = S.lambda;
+  S._arOrigDist = S.dist;
+  S.dist = 0.50;  // start screen close so it fits on rail
   const waves = [405,445,488,515,532,543,594,633,650,670];
   S.lambda = waves[Math.floor(Math.random()*waves.length)];
   document.getElementById('lambda-slider').value = S.lambda;
@@ -910,6 +966,7 @@ function exitAR(){
   arScene=null; arEntities={};
   document.getElementById('ar-instructions').classList.remove('show');
   document.getElementById('ar-status').style.display='none';
+  const rd=document.getElementById('ar-dist-readout'); if(rd) rd.style.display='none';
   document.getElementById('hint').style.display='';
   document.getElementById('btn-guide').style.display='none';
   document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='');
@@ -917,7 +974,9 @@ function exitAR(){
   floorM.visible=true; gridM.visible=true;
   const si=document.getElementById('ar-slit-info');
   if(si) si.remove();
-  if(S._arOrigLambda !== undefined){ S.lambda=S._arOrigLambda; delete S._arOrigLambda; document.getElementById('lambda-slider').value=S.lambda; document.getElementById('lambda-val').textContent=S.lambda+'nm'; layoutScene(); }
+  if(S._arOrigLambda !== undefined){ S.lambda=S._arOrigLambda; delete S._arOrigLambda; document.getElementById('lambda-slider').value=S.lambda; document.getElementById('lambda-val').textContent=S.lambda+'nm'; }
+  if(S._arOrigDist !== undefined){ S.dist=S._arOrigDist; delete S._arOrigDist; document.getElementById('dist-slider').value=S.dist.toFixed(2); document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m'; }
+  layoutScene();
   btnAR.textContent='📷 AR Mode'; btnAR.classList.remove('on');
   const w=window.innerWidth,h=window.innerHeight;
   renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix();
