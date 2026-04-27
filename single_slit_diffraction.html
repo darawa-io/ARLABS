@@ -33,7 +33,15 @@ body{background:#06080f;font-family:'Syne',sans-serif;overflow:hidden;height:100
 #pip canvas{width:100%;height:100%;display:block;}
 #pip-label{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);letter-spacing:1px;pointer-events:none;}
 /* In AR mode: reposition PiP to top-left since HUD is hidden */
-body.ar-active #pip{left:12px;top:70px;z-index:200;border-color:rgba(120,180,255,.45);}
+body.ar-active #pip{left:12px;top:62px;z-index:200;border-color:rgba(120,180,255,.55);}
+
+/* AR slit-width info pill */
+#ar-w-pill{display:none;position:fixed;top:20px;right:12px;z-index:200;
+  padding:6px 14px;border-radius:14px;background:rgba(6,10,22,.92);
+  border:1px solid rgba(120,180,255,.4);backdrop-filter:blur(12px);
+  font-family:'Space Mono',monospace;font-size:12px;color:#e8f4ff;white-space:nowrap;}
+#ar-w-pill span{color:#78b4ff;font-weight:700;}
+body.ar-active #ar-w-pill{display:block;}
 
 /* Controls */
 #controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
@@ -84,6 +92,7 @@ body.ar-active #wave-quiz{display:flex;}
 <div id="title"><h1>DIFFRACTION LAB</h1><p>Single Slit Experiment</p></div>
 
 <div id="ar-status">🔍 SCANNING FOR MARKER…</div>
+<div id="ar-w-pill">Slit width &nbsp;<span id="ar-w-val">w = 0.10 mm</span></div>
 <div id="ar-dist-readout" style="display:none;position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:200;padding:5px 16px;border-radius:14px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;background:rgba(6,10,22,.88);border:1px solid rgba(120,180,255,.3);color:#7fffb2;pointer-events:none;white-space:nowrap;"></div>
 
 <div id="hud">
@@ -257,78 +266,73 @@ function parseRGB(col){
 }
 
 // Shared: draw diffraction pattern + ruler onto any canvas context
-// The display range is ±rangeMultiplier * x1, so secondary bands are always visible
+// Ruler is ALWAYS fixed ±40 mm so the student's measurements are stable.
+// The pattern is rendered at true physical scale within that fixed window.
 function renderDiffractionToCtx(ctx, W, H, rulerW){
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#04060d';
   ctx.fillRect(0,0,W,H);
 
-  const x1mm = calcY1();   // first minimum in mm
-  // Show at least ±4 * x1 so 3+ secondary bands are always visible; cap at ±80mm
-  const halfRange = Math.min(80, Math.max(4 * x1mm, 8));
-  const mmPerPx = (2 * halfRange) / H;   // mm per pixel
+  // Fixed physical range: ±40 mm
+  const halfRange = 40;                   // mm
+  const mmPerPx   = (2 * halfRange) / H;  // mm per pixel  (fixed)
+  const scale     = H / (2 * halfRange);  // px per mm     (fixed)
 
   const col = waveToRGB(S.lambda);
   const [r_c,g_c,b_c] = parseRGB(col);
   const patW = W - rulerW;
 
-  // Diffraction pattern — sinc² with proper normalised intensity
+  // Diffraction pattern — sinc²
   for(let py=0; py<H; py++){
     const ymm = (py - H/2) * mmPerPx;
     const beta = Math.PI * (S.slitWidth*1e-3) * (ymm*1e-3) / (S.lambda*1e-9 * S.dist);
     const I = sinc(beta) ** 2;
-    // Use sqrt to brighten secondary bands (perceptual gamma), then cap central at 1
+    // Perceptual brightness: sqrt brings up secondary bands without clipping centre
     const alpha = Math.min(1, Math.sqrt(I) * 1.05);
     ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${alpha})`;
     ctx.fillRect(0, py, patW, 1);
   }
 
-  // Dashed lines at first minima (x1)
-  const topMin = H/2 - (x1mm / mmPerPx);
-  const botMin = H/2 + (x1mm / mmPerPx);
-  ctx.strokeStyle = 'rgba(255,220,80,0.6)';
+  // Dashed lines at first minima (x₁)
+  const x1mm  = calcY1();
+  const topMin = H/2 - x1mm * scale;
+  const botMin = H/2 + x1mm * scale;
+  ctx.strokeStyle = 'rgba(255,220,80,0.65)';
   ctx.setLineDash([4,4]); ctx.lineWidth = 1.5;
   if(topMin > 0 && topMin < H){ ctx.beginPath(); ctx.moveTo(0,topMin); ctx.lineTo(patW,topMin); ctx.stroke(); }
   if(botMin > 0 && botMin < H){ ctx.beginPath(); ctx.moveTo(0,botMin); ctx.lineTo(patW,botMin); ctx.stroke(); }
   ctx.setLineDash([]);
 
-  // Scanlines overlay
+  // Scanlines
   ctx.fillStyle='rgba(0,0,0,0.04)';
   for(let y=0;y<H;y+=5) ctx.fillRect(0,y,patW,2);
 
-  // ── Vertical ruler strip (right side)
+  // ── Vertical ruler strip — fixed ±40 mm, 1 mm minor / 5 mm medium / 10 mm major
   const rx = patW;
-  ctx.fillStyle = 'rgba(10,18,38,0.88)';
+  ctx.fillStyle = 'rgba(8,15,35,0.92)';
   ctx.fillRect(rx, 0, rulerW, H);
 
-  // Adaptive tick spacing: choose nice mm step that gives 6–14 ticks
-  const totalMM = 2 * halfRange;
-  const niceSteps = [1,2,5,10,20,25,50];
-  let tickStep = 5;
-  for(const s of niceSteps){ if(totalMM / s <= 14){ tickStep = s; break; } }
-
-  const scale = H / (2 * halfRange); // px per mm
-  const mmStart = -Math.ceil(halfRange / tickStep) * tickStep;
-  const mmEnd   =  Math.ceil(halfRange / tickStep) * tickStep;
-
-  for(let mm = mmStart; mm <= mmEnd; mm += tickStep){
-    const py = H/2 - mm * scale;
+  for(let mm = -40; mm <= 40; mm++){
+    const py = Math.round(H/2 - mm * scale);
     if(py < 0 || py > H) continue;
-    const isZ = mm===0;
-    const tw = isZ ? rulerW*0.75 : rulerW*0.55;
-    ctx.fillStyle = isZ ? '#ffdd66' : '#7fbfff';
-    ctx.fillRect(rx, Math.round(py), tw, isZ ? 2 : 1);
-    const lbl = isZ ? '0' : String(Math.abs(mm));
-    const fs = Math.max(9, Math.min(20, rulerW * 0.38));
-    ctx.font = `${isZ?'bold ':' '}${fs}px monospace`;
-    ctx.textAlign = 'right';
-    ctx.fillStyle = isZ ? '#ffdd66' : 'rgba(180,210,255,0.85)';
-    ctx.fillText(lbl, rx + rulerW - 2, Math.round(py) + fs*0.38);
+    const isZ  = mm === 0;
+    const is10 = mm % 10 === 0;
+    const is5  = mm % 5  === 0;
+    const tw = isZ ? rulerW*0.82 : is10 ? rulerW*0.62 : is5 ? rulerW*0.42 : rulerW*0.22;
+    ctx.fillStyle = isZ ? '#ffdd66' : is10 ? '#a0c8ff' : is5 ? '#6090cc' : '#304060';
+    ctx.fillRect(rx, py, tw, isZ ? 2 : 1);
+    if(is10){
+      const lbl = isZ ? '0' : String(Math.abs(mm));
+      const fs = Math.max(8, Math.min(18, rulerW * 0.36));
+      ctx.font = `${isZ ? 'bold ' : ''}${fs}px monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = isZ ? '#ffdd66' : 'rgba(160,200,255,0.9)';
+      ctx.fillText(lbl, rx + rulerW - 2, py + fs * 0.38);
+    }
   }
-
-  // "mm" label rotated
-  const fs2 = Math.max(8, Math.min(14, rulerW * 0.28));
-  ctx.font = `${fs2}px monospace`; ctx.textAlign='center'; ctx.fillStyle='rgba(120,180,255,0.5)';
+  // "mm" rotated label
+  const fs2 = Math.max(7, Math.min(13, rulerW * 0.26));
+  ctx.font = `${fs2}px monospace`; ctx.textAlign='center'; ctx.fillStyle='rgba(100,160,255,0.45)';
   ctx.save(); ctx.translate(rx + rulerW*0.5, H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText('mm', 0, 0); ctx.restore();
 }
@@ -347,18 +351,19 @@ function updatePiP(){
   const ctx = pipEl.getContext('2d');
   const rw = Math.round(W * 0.26);
   renderDiffractionToCtx(ctx, W, H, rw);
-  // Overlay x₁ labels and 2x bracket
+  // Overlay x₁ labels and 2x bracket — using same fixed ±40mm scale
   const x1mm = calcY1();
-  const x1half = Math.min(80, Math.max(4 * x1mm, 8));
-  const scale = H / (2 * x1half); // px per mm
+  const scale = H / 80;  // px per mm, fixed ±40mm
   const topMin = H/2 - x1mm * scale;
   const botMin = H/2 + x1mm * scale;
   const patW = W - rw;
-  ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,220,80,0.95)';
-  if(topMin > 6 && topMin < H-6) ctx.fillText('x₁', 3, topMin - 2);
-  if(botMin > 6 && botMin < H-6) ctx.fillText('x₁', 3, botMin + 9);
-  if(topMin > 0 && botMin < H){
-    ctx.strokeStyle = 'rgba(255,220,80,0.6)'; ctx.lineWidth = 1;
+  // Only draw annotations if x₁ markers are within visible canvas area
+  if(topMin > 2 && topMin < H-2 && botMin > 2 && botMin < H-2){
+    ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,220,80,0.95)';
+    ctx.fillText('x₁', 3, topMin - 2);
+    ctx.fillText('x₁', 3, botMin + 9);
+    // 2x bracket with end caps
+    ctx.strokeStyle = 'rgba(255,220,80,0.7)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(patW-5, topMin); ctx.lineTo(patW-5, botMin); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(patW-8,topMin); ctx.lineTo(patW-2,topMin); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(patW-8,botMin); ctx.lineTo(patW-2,botMin); ctx.stroke();
@@ -719,16 +724,18 @@ function buildARScene(){
   sg.setAttribute('id','ar-scale-group');
   sg.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
 
-  // Rail
+  // Rail — longer on screen side (laser at -3.5, screen can go to +7.5)
+  // Rail total length 12 units, centred at +2 so it spans from -4 to +8
   function mkBox(w,h,d,col,met,rou){ const b=document.createElement('a-box'); b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d); b.setAttribute('color',col); if(met!=null) b.setAttribute('metalness',met); if(rou!=null) b.setAttribute('roughness',rou); return b; }
-  const rw=mkBox('8.0','0.06','0.15','#0d2040','0.85','0.15'); rw.setAttribute('position','0 0 0'); sg.appendChild(rw);
-  const rf=mkBox('8.0','0.04','0.42','#142a55','0.85','0.12'); rf.setAttribute('position','0 0.05 0'); sg.appendChild(rf);
-  const rb=mkBox('8.0','0.04','0.42','#0d2040','0.85','0.15'); rb.setAttribute('position','0 -0.05 0'); sg.appendChild(rb);
+  const railCx = 2.0;  // offset so more rail is on the screen side
+  const rw=mkBox('12.0','0.06','0.15','#0d2040','0.85','0.15'); rw.setAttribute('position',`${railCx} 0 0`); sg.appendChild(rw);
+  const rf=mkBox('12.0','0.04','0.42','#142a55','0.85','0.12'); rf.setAttribute('position',`${railCx} 0.05 0`); sg.appendChild(rf);
+  const rb=mkBox('12.0','0.04','0.42','#0d2040','0.85','0.15'); rb.setAttribute('position',`${railCx} -0.05 0`); sg.appendChild(rb);
 
-  // Ruler plane
+  // Ruler plane — same length as rail, centred at railCx
   const rulePlane=document.createElement('a-plane');
-  rulePlane.setAttribute('width','8.0'); rulePlane.setAttribute('height','0.55');
-  rulePlane.setAttribute('position','0 0.16 0'); rulePlane.setAttribute('rotation','-90 0 0');
+  rulePlane.setAttribute('width','12.0'); rulePlane.setAttribute('height','0.55');
+  rulePlane.setAttribute('position',`${railCx} 0.16 0`); rulePlane.setAttribute('rotation','-90 0 0');
   rulePlane.setAttribute('src','#ar-ruler-cvs');
   rulePlane.setAttribute('material','transparent: true; opacity: 0.95; shader: flat; side: double;');
   sg.appendChild(rulePlane);
@@ -894,12 +901,10 @@ function onARTouchMove(e){
   const t=e.touches[0];
   if(arDrag.mode==='screen' && arScreenDragStartX!==null){
     const dx = t.clientX - arScreenDragStartX;
-    const newDist = Math.max(0.10, Math.min(2.00, arScreenDragStartDist + dx * 0.006));
+    const newDist = Math.max(0.10, Math.min(3.00, arScreenDragStartDist + dx * 0.006));
     S.dist = newDist;
     document.getElementById('dist-slider').value = newDist.toFixed(2);
     document.getElementById('dist-val').textContent = newDist.toFixed(2)+'m';
-    const rd = document.getElementById('ar-dist-readout');
-    if(rd){ rd.style.display='block'; rd.textContent=`L = ${newDist.toFixed(2)} m  |  2x = ${calcW().toFixed(1)} mm`; }
     syncARPositions();
     fullUpdate();
   }
@@ -942,19 +947,15 @@ function enterAR(){
   document.getElementById('lambda-val').textContent = S.lambda+'nm';
   layoutScene();
 
-  // Update quiz input
+  // Update w pill with current slit width
+  const wPill = document.getElementById('ar-w-val');
+  if(wPill) wPill.textContent = `w = ${S.slitWidth.toFixed(2)} mm`;
+
+  // Update quiz input reset
   const res=document.getElementById('wave-quiz-result');
   if(res){ res.textContent=''; res.style.display='none'; }
   const inp=document.getElementById('wave-quiz-input');
   if(inp) inp.value='';
-
-  // Show slit width in AR quiz area
-  const slitInfo = document.createElement('span');
-  slitInfo.id='ar-slit-info';
-  slitInfo.style.cssText='font-family:"Space Mono",monospace;font-size:10px;color:rgba(180,210,255,.75);letter-spacing:1px;white-space:nowrap;';
-  slitInfo.textContent=`w=${S.slitWidth.toFixed(2)}mm`;
-  const wq=document.getElementById('wave-quiz');
-  if(wq && !document.getElementById('ar-slit-info')) wq.insertBefore(slitInfo, wq.firstChild);
 }
 
 function exitAR(){
@@ -972,8 +973,6 @@ function exitAR(){
   document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='');
   document.body.classList.remove('ar-active');
   floorM.visible=true; gridM.visible=true;
-  const si=document.getElementById('ar-slit-info');
-  if(si) si.remove();
   if(S._arOrigLambda !== undefined){ S.lambda=S._arOrigLambda; delete S._arOrigLambda; document.getElementById('lambda-slider').value=S.lambda; document.getElementById('lambda-val').textContent=S.lambda+'nm'; }
   if(S._arOrigDist !== undefined){ S.dist=S._arOrigDist; delete S._arOrigDist; document.getElementById('dist-slider').value=S.dist.toFixed(2); document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m'; }
   layoutScene();
@@ -1044,11 +1043,19 @@ document.getElementById('wave-quiz-btn').addEventListener('click',()=>{
   const input=parseFloat(document.getElementById('wave-quiz-input').value);
   const res=document.getElementById('wave-quiz-result');
   res.style.display='block';
-  if(isNaN(input)||input<380||input>750){ res.style.color='#ffcc44'; res.textContent='Enter 380–750 nm'; return; }
+  if(isNaN(input)||input<380||input>750){ res.style.color='#ffcc44'; res.textContent='⚠ Enter 380–750 nm'; return; }
   const trueLambda=S.lambda;
   const relErr=Math.abs(input-trueLambda)/trueLambda;
-  if(relErr<=0.05){ res.style.color='#7fffb2'; res.textContent=`✓ Correct! λ≈${trueLambda}nm`; }
-  else { res.style.color='#ff7070'; res.textContent='✗ Wrong λ. Try again!'; }
+  if(relErr<=0.10){
+    res.style.color='#7fffb2';
+    res.textContent=`✓ Correct!  λ = ${trueLambda} nm`;
+  } else if(relErr<=0.20){
+    res.style.color='#ff9922';
+    res.textContent=`≈ Close, but not enough`;
+  } else {
+    res.style.color='#ff4444';
+    res.textContent=`✗ Incorrect — try again`;
+  }
 });
 
 // ═══════════════════════════════════════════════════════
