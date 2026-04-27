@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Diffraction Lab — Single Slit</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#06080f;font-family:'Syne',sans-serif;overflow:hidden;height:100vh;width:100vw;color:#e8f4ff;}
+
+#simWrap{position:absolute;inset:0;z-index:1;}
+#mainCanvas{position:absolute;inset:0;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+#arWrap{display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;}
+#arWrap.show{display:block;}
+#arWrap a-scene{width:100%!important;height:100%!important;position:absolute!important;top:0;left:0;}
+
+/* HUD */
+#hud{position:absolute;top:20px;right:20px;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:18px;padding:18px;min-width:228px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid rgba(120,180,255,.1);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(120,180,255,.04);}
+.dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,210,255,.65);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#78b4ff;}
+.dv.laser{color:#ff4466;}.dv.g{color:#7fffb2;}.dv.w{color:#ffcc44;}
+.hdiv{height:1px;background:rgba(120,180,255,.1);margin:10px 0;}
+#formula-box{padding:8px;border-radius:8px;background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.18);font-size:11px;font-family:'Space Mono',monospace;color:rgba(255,160,180,.85);line-height:1.9;text-align:center;}
+
+/* Controls */
+#controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
+#hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(120,180,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+.btn{padding:7px 14px;border-radius:30px;border:1px solid rgba(120,180,255,.3);background:rgba(120,180,255,.07);color:#78b4ff;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;}
+.btn:hover{background:rgba(120,180,255,.18);}
+.btn.on{background:rgba(120,180,255,.28);border-color:#78b4ff;color:#fff;box-shadow:0 0 12px rgba(120,180,255,.3);}
+.btn.red{border-color:rgba(255,68,102,.4);color:#ff4466;background:rgba(255,68,102,.07);}
+.btn.red.on{background:rgba(255,68,102,.25);border-color:#ff4466;color:#fff;}
+.btn.green{border-color:rgba(60,220,120,.45);color:#3fdc78;background:rgba(60,220,120,.07);}
+.btn.green.on{background:rgba(60,220,120,.22);border-color:#3fdc78;color:#fff;box-shadow:0 0 14px rgba(60,220,120,.3);}
+.sep{width:1px;height:20px;background:rgba(120,180,255,.18);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:rgba(180,210,255,.7);font-size:11px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;width:80px;height:4px;border-radius:2px;background:rgba(120,180,255,.2);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#78b4ff;cursor:pointer;}
+
+#title{position:absolute;top:20px;left:20px;z-index:10;}
+#title h1{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:#fff;letter-spacing:1px;}
+#title p{font-size:10px;color:rgba(120,180,255,.45);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+
+/* AR status */
+#ar-status{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;padding:7px 18px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;transition:all 0.3s;}
+body.ar-active #hud{display:none!important;}
+
+/* AR instructions */
+#ar-instructions{display:none;background:rgba(6,10,22,.97);backdrop-filter:blur(16px);border:1px solid rgba(60,220,120,.35);border-radius:18px;padding:24px 26px;z-index:20;max-width:340px;width:90%;font-family:'Space Mono',monospace;font-size:11px;color:#7fffb2;line-height:1.9;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);}
+#ar-instructions.show{display:block;}
+#ar-instructions strong{color:#fff;}
+#ar-instructions a{color:#78b4ff;text-decoration:underline;}
+
+/* AR quiz */
+#wave-quiz{display:none;align-items:center;flex-wrap:wrap;gap:6px;padding:3px 0;}
+body.ar-active #wave-quiz{display:flex;}
+#wave-quiz input[type=number]{width:75px;padding:5px 7px;border-radius:8px;border:1px solid rgba(120,180,255,.4);background:rgba(0,0,0,.5);color:#fff;font-family:'Space Mono',monospace;font-size:11px;text-align:center;}
+#wave-quiz-btn{padding:5px 12px;border-radius:12px;border:1px solid rgba(120,180,255,.45);background:rgba(30,60,160,.4);color:#78b4ff;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;}
+#wave-quiz-result{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;padding:3px 0;}
+</style>
+</head>
+<body>
+
+<div id="simWrap">
+  <canvas id="mainCanvas"></canvas>
+  <canvas id="labelCanvas"></canvas>
+</div>
+<div id="arWrap"></div>
+
+<!-- UI -->
+<div id="title"><h1>DIFFRACTION LAB</h1><p>Single Slit Experiment</p></div>
+
+<div id="ar-status">🔍 SCANNING FOR MARKER…</div>
+
+<div id="hud">
+  <h2>Measurements</h2>
+  <div class="dr"><span class="dl">λ (wavelength)</span><span class="dv laser" id="val-lambda">532 nm</span></div>
+  <div class="dr"><span class="dl">a (slit width)</span><span class="dv"      id="val-a">0.10 mm</span></div>
+  <div class="dr"><span class="dl">L (slit→screen)</span><span class="dv g"   id="val-L">1.00 m</span></div>
+  <div class="hdiv"></div>
+  <div class="dr"><span class="dl">y₁ (1st min)</span><span class="dv w"     id="val-y1">5.32 mm</span></div>
+  <div class="dr"><span class="dl">W (central band)</span><span class="dv w"  id="val-W">10.64 mm</span></div>
+  <div class="hdiv"></div>
+  <div id="formula-box">
+    W = 2λL / a
+  </div>
+</div>
+
+<div id="controls">
+  <div class="sw ctrl-ar-hide">
+    <span>λ=</span>
+    <input type="range" id="lambda-slider" min="380" max="750" value="532" step="1">
+    <span id="lambda-val" style="min-width:52px;">532nm</span>
+  </div>
+  <div class="sep ctrl-ar-hide"></div>
+  <div class="sw ctrl-ar-hide">
+    <span>a=</span>
+    <input type="range" id="slit-slider" min="0.02" max="0.50" value="0.10" step="0.01">
+    <span id="slit-val" style="min-width:50px;">0.10mm</span>
+  </div>
+  <div class="sep ctrl-ar-hide"></div>
+  <div class="sw ctrl-ar-hide">
+    <span>L=</span>
+    <input type="range" id="dist-slider" min="0.20" max="3.00" value="1.00" step="0.05">
+    <span id="dist-val" style="min-width:44px;">1.00m</span>
+  </div>
+  <div class="sep"></div>
+  <button class="btn green" id="btn-ar">📷 AR Mode</button>
+  <button class="btn" id="btn-guide" style="display:none;" onclick="toggleARGuide()">📋 Guide</button>
+  <div class="sep"></div>
+  <button class="btn" id="btn-reset">Reset</button>
+  <!-- wavelength quiz shown in AR -->
+  <div id="wave-quiz">
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(120,180,255,.7);letter-spacing:1px;">λ (nm):</span>
+    <input id="wave-quiz-input" type="number" min="380" max="750" step="1" placeholder="e.g. 532">
+    <button id="wave-quiz-btn">Validate</button>
+    <div id="wave-quiz-result"></div>
+  </div>
+</div>
+
+<div id="hint">Sliders: λ wavelength · a slit width · L distance · AR: pinch = zoom · drag = orbit</div>
+
+<!-- AR instructions panel -->
+<div id="ar-instructions">
+  <button id="ar-instr-close" onclick="document.getElementById('ar-instructions').classList.remove('show');exitAR();" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;line-height:1;">✕</button>
+  <strong>AR Mode — Marker Required</strong><br><br>
+  <span id="ar-step1">
+    Print or display this marker (A5 or larger):<br><br>
+    <img src="https://ar-js-org.github.io/AR.js/data/images/hiro.png" alt="Hiro AR marker"
+         style="width:160px;height:160px;display:block;margin:0 auto 8px;border:6px solid white;background:white;border-radius:4px;"
+         onerror="this.style.display='none';document.getElementById('hiro-svg-fallback').style.display='block';" />
+    <svg id="hiro-svg-fallback" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
+         style="display:none;width:160px;height:160px;margin:0 auto 8px;background:white;border:3px solid white;border-radius:4px;">
+      <rect x="0" y="0" width="280" height="280" fill="black"/>
+      <rect x="70" y="70" width="140" height="140" fill="white"/>
+      <rect x="87.5" y="87.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="140" y="87.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="157.5" y="87.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="87.5" y="105" width="17.5" height="17.5" fill="black"/>
+      <rect x="122.5" y="105" width="17.5" height="17.5" fill="black"/>
+      <rect x="175" y="105" width="17.5" height="17.5" fill="black"/>
+      <rect x="122.5" y="122.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="175" y="122.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="87.5" y="140" width="17.5" height="17.5" fill="black"/>
+      <rect x="175" y="140" width="17.5" height="17.5" fill="black"/>
+      <rect x="87.5" y="157.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="140" y="157.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="175" y="157.5" width="17.5" height="17.5" fill="black"/>
+      <rect x="105" y="175" width="17.5" height="17.5" fill="black"/>
+      <rect x="122.5" y="175" width="17.5" height="17.5" fill="black"/>
+    </svg>
+    <small style="color:rgba(255,200,100,.9);font-size:10px;display:block;margin-bottom:4px;">⚠️ This exact pattern is required</small>
+    <a href="https://ar-js-org.github.io/AR.js/data/images/hiro.png" target="_blank" style="color:#78b4ff;font-size:10px;">→ Official image (tap → save → print)</a><br><br>
+    Place flat on table, then tap:<br><br>
+    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(60,220,120,.7);background:rgba(60,220,120,.18);color:#3fdc78;font-family:Syne,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+      Open Camera
+    </button>
+  </span>
+  <span id="ar-step2" style="display:none;">
+    ⏳ Loading AR engine…<br>
+    <small style="color:rgba(127,255,178,.5);">(first load: ~5–10 seconds)</small>
+  </span>
+  <span id="ar-step3" style="display:none;">
+    ✅ Camera ready!<br><br>
+    Point at the <strong>Hiro marker</strong>.<br>
+    The experiment appears on it.<br><br>
+    <button onclick="showARStep(4)" style="padding:8px 22px;border-radius:20px;border:1px solid rgba(60,220,120,.6);background:rgba(60,220,120,.15);color:#3fdc78;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">
+      Experiment Guide →
+    </button>
+    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-size:12px;cursor:pointer;">
+      Close
+    </button>
+  </span>
+  <span id="ar-step4" style="display:none;text-align:left;line-height:2.0;">
+    <strong style="display:block;text-align:center;margin-bottom:8px;">📋 Experiment Steps</strong>
+    <span style="color:rgba(255,255,255,.8);">
+      1️⃣ &nbsp;Use the <span style="color:#ffdd88;">horizontal ruler</span> to measure <b>L</b> (laser → screen).<br>
+      2️⃣ &nbsp;Use the <span style="color:#88ffcc;">vertical ruler</span> on the screen to measure the <b>width W</b> of the central bright band.<br>
+      3️⃣ &nbsp;The slit width <b>a</b> is given in the info panel.<br>
+      4️⃣ &nbsp;Apply the formula:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<b>λ = W × a / (2L)</b><br>
+      5️⃣ &nbsp;Enter your λ in nm and tap <b>Validate</b>.
+    </span>
+    <br>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button onclick="showARStep(3)" style="padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-size:12px;cursor:pointer;">← Back</button>
+      <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="flex:1;padding:8px 22px;border-radius:20px;border:1px solid rgba(60,220,120,.6);background:rgba(60,220,120,.15);color:#3fdc78;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Got it — Start!</button>
+    </div>
+  </span>
+</div>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  PHYSICS STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  lambda: 532,    // nm — wavelength
+  slitWidth: 0.10, // mm
+  dist: 1.00,     // m — slit to screen
+};
+
+// Single-slit: minima at sin θ = m·λ/a
+// Central band half-width y1 = λ·L / a  (small angle)
+function calcY1(){ return (S.lambda*1e-9 * S.dist) / (S.slitWidth*1e-3) * 1000; } // mm
+function calcW(){ return 2 * calcY1(); } // mm — full width of central band
+
+// Wavelength → colour string
+function waveToRGB(nm){
+  let r=0,g=0,b=0;
+  if(nm>=380&&nm<440){r=(440-nm)/60;g=0;b=1;}
+  else if(nm<490){r=0;g=(nm-440)/50;b=1;}
+  else if(nm<510){r=0;g=1;b=(510-nm)/20;}
+  else if(nm<580){r=(nm-510)/70;g=1;b=0;}
+  else if(nm<645){r=1;g=(645-nm)/65;b=0;}
+  else{r=1;g=0;b=0;}
+  // gamma
+  const f=nm<420?(0.3+0.7*(nm-380)/40):nm>700?(0.3+0.7*(750-nm)/50):1.0;
+  return `rgb(${Math.round(r*f*255)},${Math.round(g*f*255)},${Math.round(b*f*255)})`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN TEXTURE  (diffraction pattern)
+// ═══════════════════════════════════════════════════════
+const screenTC = document.createElement('canvas');
+screenTC.width = screenTC.height = 512;
+const screenTCtx = screenTC.getContext('2d');
+
+function sinc(x){ return Math.abs(x)<1e-9 ? 1 : Math.sin(x)/x; }
+
+function paintDiffraction(){
+  const ctx = screenTCtx, W = 512, H = 512;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#04060d';
+  ctx.fillRect(0,0,W,H);
+
+  const col = waveToRGB(S.lambda);
+  const y1px = calcY1();  // mm
+
+  // Map: ±40 mm → screen height (with some margin)
+  const mmPerPx = 80 / H;
+
+  const [r_c,g_c,b_c] = parseRGB(col);
+  for(let px=0; px<H; px++){
+    const ymm = (px - H/2) * mmPerPx;  // mm from centre
+    // sinc² diffraction intensity
+    const beta = Math.PI * (S.slitWidth*1e-3) * (ymm*1e-3) / (S.lambda*1e-9 * S.dist);
+    const I = sinc(beta) ** 2;
+    const alpha = Math.min(1, I * 1.15);
+    ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${alpha})`;
+    ctx.fillRect(0, px, W, 1);
+  }
+
+  // Draw subtle tick marks for first minima
+  const y1_frac = (y1px / 80);
+  const topMin = H/2 - y1_frac * H;
+  const botMin = H/2 + y1_frac * H;
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.setLineDash([4,4]);
+  ctx.lineWidth = 1.5;
+  if(topMin > 0 && topMin < H){ ctx.beginPath(); ctx.moveTo(W*0.05,topMin); ctx.lineTo(W*0.95,topMin); ctx.stroke(); }
+  if(botMin > 0 && botMin < H){ ctx.beginPath(); ctx.moveTo(W*0.05,botMin); ctx.lineTo(W*0.95,botMin); ctx.stroke(); }
+  ctx.setLineDash([]);
+
+  // Vertical ruler on right side of screen
+  drawScreenRuler(ctx, W, H, mmPerPx);
+
+  // Scanlines
+  ctx.fillStyle='rgba(0,0,0,0.05)';
+  for(let y=0;y<H;y+=5) ctx.fillRect(0,y,W,2);
+
+  if(desktopTex) desktopTex.needsUpdate = true;
+  if(arScreenTex) arScreenTex.needsUpdate = true;
+}
+
+function parseRGB(col){
+  const m = col.match(/\d+/g);
+  return m ? [+m[0],+m[1],+m[2]] : [255,255,255];
+}
+
+function drawScreenRuler(ctx, W, H, mmPerPx){
+  // Right-side vertical ruler, range ±40 mm
+  const rx = W - 36;
+  ctx.fillStyle = 'rgba(20,30,50,0.72)';
+  ctx.fillRect(rx, 0, 36, H);
+  for(let mm = -40; mm <= 40; mm++){
+    const py = H/2 - mm / mmPerPx;
+    if(py < 0 || py > H) continue;
+    const is5 = (mm % 5 === 0), is10 = (mm % 10 === 0), isZ = (mm === 0);
+    const tw = isZ ? 24 : is10 ? 18 : is5 ? 12 : 6;
+    ctx.fillStyle = isZ ? '#ffdd66' : mm > 0 ? '#88ffcc' : '#ff9999';
+    ctx.fillRect(rx, py, tw, isZ ? 2 : 1);
+    if(is10 && Math.abs(mm) > 0){
+      ctx.font = '20px monospace'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(200,220,255,0.7)';
+      ctx.fillText(Math.abs(mm), rx - 2, py + 6);
+    }
+    if(isZ){
+      ctx.font = 'bold 22px monospace'; ctx.textAlign = 'right'; ctx.fillStyle = '#ffdd66';
+      ctx.fillText('0', rx - 2, py + 7);
+    }
+  }
+  // Label
+  ctx.font = '18px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(180,210,255,0.55)';
+  ctx.save(); ctx.translate(W - 10, H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('mm', 0, 0); ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HUD UPDATE
+// ═══════════════════════════════════════════════════════
+function updateHUD(){
+  const y1 = calcY1(), W_band = calcW();
+  document.getElementById('val-lambda').textContent = S.lambda + ' nm';
+  document.getElementById('val-lambda').style.color = waveToRGB(S.lambda);
+  document.getElementById('val-a').textContent = S.slitWidth.toFixed(2) + ' mm';
+  document.getElementById('val-L').textContent = S.dist.toFixed(2) + ' m';
+  document.getElementById('val-y1').textContent = y1.toFixed(2) + ' mm';
+  document.getElementById('val-W').textContent = W_band.toFixed(2) + ' mm';
+}
+
+function fullUpdate(){ updateHUD(); paintDiffraction(); if(arMode) syncARTexture(); }
+
+// ═══════════════════════════════════════════════════════
+//  THREE.JS DESKTOP SCENE
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.setClearColor(0x000000,0);
+
+const scene3 = new THREE.Scene();
+const cam3 = new THREE.PerspectiveCamera(52, 1, 0.1, 300);
+let desktopTex = null;
+let arScreenTex = null;
+let arMode = false;
+let arScene = null, arEntities = {}, arScale = 0.55;
+
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resizeDesktop(){ if(arMode)return; const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); labelCanvas.width=w; labelCanvas.height=h; }
+window.addEventListener('resize', resizeDesktop);
+
+// Lights
+scene3.add(new THREE.AmbientLight(0x1530a0, 5.0));
+const sun = new THREE.DirectionalLight(0xffffff, 2.0); sun.position.set(5,15,8); sun.castShadow=true; scene3.add(sun);
+const rim = new THREE.DirectionalLight(0x0044ff, 0.9); rim.position.set(-10,4,-5); scene3.add(rim);
+const fill = new THREE.PointLight(0x2244ff, 1.5, 40); fill.position.set(0,8,5); scene3.add(fill);
+
+// Orbit
+const orb = {theta:0.4, phi:0.22, radius:22, cx:0, cy:0.5, cz:0};
+function applyOrbit(){ orb.phi=Math.max(-Math.PI/8,Math.min(Math.PI/4,orb.phi)); const r=orb.radius,p=orb.phi,t=orb.theta; cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t),orb.cy+r*Math.sin(p),orb.cz+r*Math.cos(p)*Math.cos(t)); cam3.lookAt(orb.cx,orb.cy,orb.cz); }
+applyOrbit();
+
+// Floor + grid
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.MeshStandardMaterial({color:0x050810, roughness:1}));
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -2.6; floorM.receiveShadow=true; scene3.add(floorM);
+const gridM = new THREE.GridHelper(80,80,0x0a1535,0x0a1535); gridM.position.y=-2.58; scene3.add(gridM);
+
+const root3 = new THREE.Group(); scene3.add(root3);
+const CM = 0.1; // scale: 1 cm = 0.1 scene units
+
+// Optical axis
+{ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]); const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x102050,dashSize:0.5,gapSize:0.3})); l.computeLineDistances(); root3.add(l); }
+
+// Rail — I-beam
+const railMat = new THREE.MeshStandardMaterial({color:0x0d2040,metalness:0.85,roughness:0.2});
+[[-0.50,0.12,0.18],[-0.44,0.06,0.50],[-0.56,0.06,0.50]].forEach(([y,h,d])=>{
+  const m=new THREE.Mesh(new THREE.BoxGeometry(38,h,d),railMat); m.position.set(0,y,0); root3.add(m);
+});
+
+// Horizontal ruler (same as original, ±45 cm range)
+{
+  const RW=4096, RH=256;
+  const rc=document.createElement('canvas'); rc.width=RW; rc.height=RH;
+  const rx=rc.getContext('2d'); rx.clearRect(0,0,RW,RH);
+  const minCM=-45,maxCM=45,rangeCM=90;
+  function dCmPx(cm){ return Math.round(((cm-minCM)/rangeCM)*RW); }
+  for(let mm=-450;mm<=450;mm++){
+    const cm=mm/10,px=dCmPx(cm);
+    const is5mm=(mm%5===0),isCm=(mm%10===0),is5cm=(mm%50===0),isZ=(mm===0);
+    const tickH=isZ?RH*0.88:is5cm?RH*0.60:isCm?RH*0.42:is5mm?RH*0.25:RH*0.14;
+    rx.fillStyle=isZ?'#ffdd88':mm<0?'#ff7777':'#88ffcc';
+    const tw=isZ?4:is5cm?3:isCm?2:1;
+    rx.fillRect(px-Math.floor(tw/2),0,tw,tickH);
+    if(is5cm){ const lbl=isZ?'0':Math.abs(cm).toFixed(0); rx.font=isZ?'bold 72px monospace':'bold 56px monospace'; rx.textAlign='center'; rx.fillStyle=isZ?'#ffdd88':mm<0?'#ffaaaa':'#aaffcc'; rx.fillText(lbl,px,RH-4); }
+  }
+  rx.font='bold 44px monospace'; rx.fillStyle='#ff7777'; rx.textAlign='left'; rx.fillText('← LASER',dCmPx(minCM)+8,RH-4);
+  rx.fillStyle='#77ffcc'; rx.textAlign='right'; rx.fillText('SCR →',dCmPx(maxCM)-8,RH-4);
+  const rulerTex=new THREE.CanvasTexture(rc);
+  const rulerMesh=new THREE.Mesh(new THREE.PlaneGeometry(9.0,0.9),new THREE.MeshBasicMaterial({map:rulerTex,transparent:true,opacity:0.95,side:THREE.DoubleSide,depthWrite:false}));
+  rulerMesh.rotation.x=-Math.PI/2; rulerMesh.position.set(0,-0.41,0); rulerMesh.renderOrder=1; root3.add(rulerMesh);
+}
+
+// ── LASER source (left side, fixed at -15 cm)
+const LASER_X = -15 * CM;
+function buildLaser(){
+  const g = new THREE.Group();
+  // Body
+  const bodyMat = new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.85,roughness:0.2});
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,2.5,16), bodyMat);
+  body.rotation.z = Math.PI/2; body.position.set(0,0.5,0); g.add(body);
+  // Aperture ring
+  const ringMat = new THREE.MeshStandardMaterial({color:0x334455,metalness:0.95,roughness:0.1});
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.37,0.07,8,24), ringMat);
+  ring.rotation.y = Math.PI/2; ring.position.set(1.26,0.5,0); g.add(ring);
+  // Emitter dot — coloured to wavelength
+  const emitMat = new THREE.MeshStandardMaterial({color:0xff4466,emissive:0xff2244,emissiveIntensity:4.0});
+  const emit = new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12), emitMat);
+  emit.name='emitter'; emit.position.set(1.3,0.5,0); g.add(emit);
+  // Mount post
+  const postMat = new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5), postMat); base.position.set(0,-0.44,0); g.add(base);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.9,8), postMat); post.position.set(0,-0.0,0); g.add(post);
+  return g;
+}
+const laserD = buildLaser();
+laserD.position.set(LASER_X, 0, 0);
+root3.add(laserD);
+
+// ── SLIT (centre at x=0)
+function buildSlit(){
+  const g = new THREE.Group();
+  const plateMat = new THREE.MeshStandardMaterial({color:0x223344,metalness:0.9,roughness:0.15});
+  // Two half-plates with a tiny gap between them
+  const topPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,0.1), plateMat); topPlate.name='topPlate'; g.add(topPlate);
+  const botPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,0.1), plateMat); botPlate.name='botPlate'; g.add(botPlate);
+  // Highlight edges
+  const edgeMat = new THREE.MeshStandardMaterial({color:0x445566,metalness:0.95,roughness:0.05,emissive:0x112233,emissiveIntensity:0.5});
+  const topEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.14), edgeMat); topEdge.name='topEdge'; g.add(topEdge);
+  const botEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.14), edgeMat); botEdge.name='botEdge'; g.add(botEdge);
+  // Stand
+  const standMat = new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5), standMat); base.position.set(0,-2.1,0); g.add(base);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,1.6,8), standMat); post.position.set(0,-1.3,0); g.add(post);
+  return g;
+}
+const slitD = buildSlit();
+root3.add(slitD);
+
+function updateSlitGeometry(){
+  const halfGap = 0.5 * (S.slitWidth / 10) * CM * 30; // visual gap (scaled for visibility)
+  const visualGap = Math.max(0.04, halfGap);
+  const tp = slitD.getObjectByName('topPlate');
+  const bp = slitD.getObjectByName('botPlate');
+  const te = slitD.getObjectByName('topEdge');
+  const be = slitD.getObjectByName('botEdge');
+  if(tp){ tp.position.set(0, visualGap + 0.75, 0); }
+  if(bp){ bp.position.set(0, -(visualGap + 0.75), 0); }
+  if(te){ te.position.set(0, visualGap, 0); }
+  if(be){ be.position.set(0, -visualGap, 0); }
+}
+
+// ── SCREEN (right side, draggable in x within 10-300 cm)
+desktopTex = new THREE.CanvasTexture(screenTC);
+function buildScreen(){
+  const g = new THREE.Group(); g.userData.type='screen';
+  const standMat = new THREE.MeshStandardMaterial({color:0x0a1e2a,metalness:0.8,roughness:0.25});
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5), standMat); base.position.set(0,-0.44,0); g.add(base);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.5,8), standMat); post.position.set(0,-0.16,0); g.add(post);
+  const frameMat = new THREE.MeshStandardMaterial({color:0x1a3040,metalness:0.75,roughness:0.3});
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.1,5.2,4.2), frameMat); frame.position.y=2.1; g.add(frame);
+  const screenMat = new THREE.MeshStandardMaterial({map:desktopTex,roughness:0.8,metalness:0,side:THREE.DoubleSide,emissive:0x010203,emissiveIntensity:0.3});
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(4,5), screenMat);
+  panel.rotation.y = Math.PI/2; panel.position.y = 2.1; g.add(panel);
+  return g;
+}
+const screenD = buildScreen();
+root3.add(screenD);
+
+// ── LASER BEAM (volumetric glow)
+const beamGroup = new THREE.Group(); root3.add(beamGroup);
+function updateBeam(){
+  while(beamGroup.children.length) beamGroup.remove(beamGroup.children[0]);
+  const col = waveToRGB(S.lambda);
+  const cHex = parseInt(col.replace('rgb(','').replace(')','').split(',').map((v,i)=>{const h=parseInt(v).toString(16);return h.length<2?'0'+h:h;}).join(''),16);
+  const screenX = screenD.position.x;
+  const laserX = LASER_X + 1.32;  // aperture of laser
+  const len = screenX - laserX;
+  if(len <= 0) return;
+  // Main beam
+  const bMat = new THREE.MeshBasicMaterial({color:cHex, transparent:true, opacity:0.18, side:THREE.DoubleSide, depthWrite:false});
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,len,8), bMat);
+  beam.rotation.z = Math.PI/2; beam.position.set(laserX + len/2, 0.5, 0); beam.renderOrder=5; beamGroup.add(beam);
+  // Glow
+  const gMat = new THREE.MeshBasicMaterial({color:cHex, transparent:true, opacity:0.06, side:THREE.DoubleSide, depthWrite:false});
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,len,8), gMat);
+  glow.rotation.z = Math.PI/2; glow.position.set(laserX + len/2, 0.5, 0); glow.renderOrder=4; beamGroup.add(glow);
+  // Update emitter colour
+  const emitter = laserD.getObjectByName('emitter');
+  if(emitter){ emitter.material.color.setHex(cHex); emitter.material.emissive.setHex(cHex); }
+}
+
+function layoutScene(){
+  screenD.position.set(S.dist * 100 * CM, 0, 0);
+  updateSlitGeometry();
+  updateBeam();
+  fullUpdate();
+  if(arMode) syncARPositions();
+}
+
+// ── Desktop labels
+function drawLabels(){
+  if(arMode){ lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height); return; }
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  lctx.textAlign='center';
+  function w2s(v){ const c=v.clone().project(cam3); return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight}; }
+  const laserPos = new THREE.Vector3(LASER_X, 2.0, 0);
+  const slitPos  = new THREE.Vector3(0, 2.5, 0);
+  const scrPos   = new THREE.Vector3(screenD.position.x, 3.5, 0);
+  [
+    {p:laserPos, t:`LASER  λ=${S.lambda}nm`, c:waveToRGB(S.lambda)},
+    {p:slitPos,  t:`SLIT  a=${S.slitWidth.toFixed(2)}mm`, c:'#88aaff'},
+    {p:scrPos,   t:'SCREEN', c:'#88ffcc'},
+  ].forEach(({p,t,c})=>{
+    const s=w2s(p); lctx.font='600 11px "Space Mono",monospace'; lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=8; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
+  });
+  // Distance annotation
+  const bY=-0.7, lS=w2s(new THREE.Vector3(0,bY,0)), sS=w2s(new THREE.Vector3(screenD.position.x,bY,0)), laS=w2s(new THREE.Vector3(LASER_X,bY,0));
+  const ly=Math.max(lS.y,sS.y,laS.y)+10;
+  lctx.font='500 10px "Space Mono",monospace'; lctx.lineWidth=1;
+  lctx.strokeStyle='rgba(120,180,255,.30)'; lctx.beginPath(); lctx.moveTo(lS.x,ly); lctx.lineTo(sS.x,ly); lctx.stroke();
+  lctx.fillStyle='rgba(120,180,255,.65)'; lctx.fillText(`L=${S.dist.toFixed(2)}m`,(lS.x+sS.x)/2,ly+13);
+}
+
+// Hitbox for screen drag
+{ const hb=new THREE.Mesh(new THREE.BoxGeometry(0.8,5.5,4.2),new THREE.MeshBasicMaterial({visible:false})); hb.userData.target='screen'; hb.position.y=2.1; screenD.add(hb); }
+
+// Desktop interaction
+const rc3 = new THREE.Raycaster(); let drag=null;
+function ndcXY(ex,ey){ const r=canvas.getBoundingClientRect(); return new THREE.Vector2(((ex-r.left)/r.width)*2-1,-((ey-r.top)/r.height)*2+1); }
+function doHit(ex,ey){ rc3.setFromCamera(ndcXY(ex,ey),cam3); return rc3.intersectObjects(root3.children,true); }
+
+canvas.addEventListener('mousedown',e=>{
+  if(arMode)return;
+  if(e.button===1||e.button===2){drag={mode:'orbit',lastX:e.clientX,lastY:e.clientY};e.preventDefault();return;}
+  const hits=doHit(e.clientX,e.clientY);
+  for(const h of hits){ const t=h.object.userData.target; if(t==='screen'){drag={mode:'screen',lastX:e.clientX,lastY:e.clientY,startD:S.dist};canvas.style.cursor='grabbing';return;} }
+  drag={mode:'orbit',lastX:e.clientX,lastY:e.clientY};
+});
+canvas.addEventListener('mousemove',e=>{
+  if(arMode||!drag)return;
+  const dx=e.clientX-drag.lastX, dy=e.clientY-drag.lastY;
+  if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
+  else if(drag.mode==='screen'){S.dist=Math.max(0.20,Math.min(3.0,drag.startD+dx*0.007));document.getElementById('dist-slider').value=S.dist.toFixed(2);document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m';layoutScene();}
+  drag.lastX=e.clientX; drag.lastY=e.clientY;
+});
+canvas.addEventListener('mouseup',()=>{drag=null;if(!arMode)canvas.style.cursor='default';});
+canvas.addEventListener('mouseleave',()=>{drag=null;});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('wheel',e=>{if(arMode)return;orb.radius=Math.max(6,Math.min(55,orb.radius+e.deltaY*0.03));applyOrbit();e.preventDefault();},{passive:false});
+
+const touches={};
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
+  if(Object.keys(touches).length===1){
+    const t=e.changedTouches[0]; const hits=doHit(t.clientX,t.clientY);
+    let found=false;
+    for(const h of hits){ if(h.object.userData.target==='screen'){drag={mode:'screen',lastX:t.clientX,lastY:t.clientY,startD:S.dist};found=true;break;} }
+    if(!found&&!arMode)drag={mode:'orbit',lastX:t.clientX,lastY:t.clientY};
+  }
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(Object.keys(touches).length>=2&&!arMode){
+    const tArr=[...e.changedTouches];
+    if(tArr.length>=2){ const p0=touches[tArr[0].identifier]||{x:tArr[0].clientX,y:tArr[0].clientY},p1=touches[tArr[1].identifier]||{x:tArr[1].clientX,y:tArr[1].clientY}; const oldD=Math.hypot(p0.x-p1.x,p0.y-p1.y),newD=Math.hypot(tArr[0].clientX-tArr[1].clientX,tArr[0].clientY-tArr[1].clientY); if(oldD>1){orb.radius=Math.max(6,Math.min(55,orb.radius*(oldD/newD)));applyOrbit();} }
+  } else if(drag){
+    const t=e.changedTouches[0]; const dx=t.clientX-drag.lastX,dy=t.clientY-drag.lastY;
+    if(drag.mode==='orbit'&&!arMode){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
+    else if(drag.mode==='screen'){S.dist=Math.max(0.20,Math.min(3.0,drag.startD+dx*0.007));document.getElementById('dist-slider').value=S.dist.toFixed(2);document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m';layoutScene();}
+    drag.lastX=t.clientX;drag.lastY=t.clientY;drag.startD=S.dist;
+  }
+  [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
+},{passive:false});
+canvas.addEventListener('touchend',e=>{[...e.changedTouches].forEach(t=>{delete touches[t.identifier];});if(Object.keys(touches).length===0)drag=null;},{passive:false});
+
+function desktopLoop(){ if(arMode)return; requestAnimationFrame(desktopLoop); drawLabels(); renderer.render(scene3,cam3); }
+
+// ═══════════════════════════════════════════════════════
+//  AR MODE
+// ═══════════════════════════════════════════════════════
+let arPinchDist0=null, arScale0=null, arDrag=null;
+
+function buildARScene(){
+  const wrap=document.getElementById('arWrap');
+  wrap.innerHTML='';
+  wrap.classList.add('show');
+  arScale=0.55;
+
+  const sceneEl=document.createElement('a-scene');
+  sceneEl.setAttribute('embedded','');
+  sceneEl.setAttribute('arjs','sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.50;');
+  sceneEl.setAttribute('renderer','antialias: true; precision: medium;');
+  sceneEl.setAttribute('vr-mode-ui','enabled: false');
+  sceneEl.setAttribute('device-orientation-permission-ui','enabled: false');
+  sceneEl.style.cssText='width:100%;height:100%;display:block;';
+
+  // Assets
+  const assets=document.createElement('a-assets');
+  assets.setAttribute('timeout','10000');
+
+  // Horizontal ruler canvas
+  const rulCvs=document.createElement('canvas');
+  rulCvs.id='ar-ruler-cvs'; rulCvs.width=4096; rulCvs.height=192;
+  const rCtx=rulCvs.getContext('2d');
+  { const SW=4096,SH=192; rCtx.clearRect(0,0,SW,SH);
+    function arCmPx(cm){ return Math.round(((cm+40)/80)*SW); }
+    for(let mm=-400;mm<=400;mm++){
+      const cm=mm/10,px=arCmPx(cm);
+      const is5mm=(mm%5===0),isCm=(mm%10===0),is5cm=(mm%50===0),isZ=(mm===0);
+      const tickH=isZ?SH*0.88:is5cm?SH*0.62:isCm?SH*0.42:is5mm?SH*0.26:SH*0.14;
+      rCtx.fillStyle=isZ?'#ffdd88':mm<0?'#ff8888':'#88ffcc';
+      const tw=isZ?5:is5cm?4:isCm?2:1;
+      rCtx.fillRect(px-Math.floor(tw/2),0,tw,tickH);
+      if(is5cm){ const lbl=isZ?'0':Math.abs(cm).toFixed(0); rCtx.font=isZ?'bold 80px monospace':'bold 64px monospace'; rCtx.textAlign='center'; rCtx.fillStyle=isZ?'#ffdd88':mm<0?'#ffaaaa':'#aaffcc'; rCtx.fillText(lbl,px,SH-4); }
+    }
+    rCtx.font='bold 52px monospace'; rCtx.fillStyle='#ff7777'; rCtx.textAlign='left'; rCtx.fillText('← LASER',arCmPx(-40)+6,SH-4);
+    rCtx.fillStyle='#77ffcc'; rCtx.textAlign='right'; rCtx.fillText('SCR →',arCmPx(40)-6,SH-4);
+  }
+  assets.appendChild(rulCvs);
+
+  // Screen canvas
+  const screenCvs=document.createElement('canvas');
+  screenCvs.id='ar-screen-cvs'; screenCvs.width=screenCvs.height=512;
+  screenCvs.getContext('2d').drawImage(screenTC,0,0,512,512);
+  assets.appendChild(screenCvs);
+
+  sceneEl.appendChild(assets);
+
+  // Camera
+  const camEnt=document.createElement('a-entity');
+  camEnt.setAttribute('camera','');
+  sceneEl.appendChild(camEnt);
+
+  // Marker — scene content tracked live each frame
+  const marker=document.createElement('a-marker');
+  marker.setAttribute('preset','hiro');
+  marker.setAttribute('smooth','true');
+  marker.setAttribute('smoothCount','5');
+  marker.setAttribute('smoothTolerance','0.01');
+  marker.setAttribute('smoothThreshold','2');
+
+  marker.addEventListener('markerFound',()=>{
+    const s=document.getElementById('ar-status');
+    s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(60,220,120,.18)'; s.style.border='1px solid rgba(60,220,120,.5)'; s.style.color='#3fdc78';
+  });
+  marker.addEventListener('markerLost',()=>{
+    const s=document.getElementById('ar-status');
+    s.textContent='🔍 SCANNING FOR MARKER…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+  });
+
+  const sg=document.createElement('a-entity');
+  sg.setAttribute('id','ar-scale-group');
+  sg.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
+
+  // Rail
+  function mkBox(w,h,d,col,met,rou){ const b=document.createElement('a-box'); b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d); b.setAttribute('color',col); if(met!=null) b.setAttribute('metalness',met); if(rou!=null) b.setAttribute('roughness',rou); return b; }
+  const rw=mkBox('8.0','0.06','0.15','#0d2040','0.85','0.15'); rw.setAttribute('position','0 0 0'); sg.appendChild(rw);
+  const rf=mkBox('8.0','0.04','0.42','#142a55','0.85','0.12'); rf.setAttribute('position','0 0.05 0'); sg.appendChild(rf);
+  const rb=mkBox('8.0','0.04','0.42','#0d2040','0.85','0.15'); rb.setAttribute('position','0 -0.05 0'); sg.appendChild(rb);
+
+  // Ruler plane
+  const rulePlane=document.createElement('a-plane');
+  rulePlane.setAttribute('width','8.0'); rulePlane.setAttribute('height','0.55');
+  rulePlane.setAttribute('position','0 0.16 0'); rulePlane.setAttribute('rotation','-90 0 0');
+  rulePlane.setAttribute('src','#ar-ruler-cvs');
+  rulePlane.setAttribute('material','transparent: true; opacity: 0.95; shader: flat; side: double;');
+  sg.appendChild(rulePlane);
+
+  const POST=0.148;
+
+  function makeMount(xPos,col){
+    const g=document.createElement('a-entity'); g.setAttribute('position',`${xPos} 0 0`);
+    const base=mkBox('0.036','0.028','0.10',col,'0.75','0.25'); base.setAttribute('position','0 0 0'); g.appendChild(base);
+    const post=document.createElement('a-cylinder'); post.setAttribute('position',`0 ${POST/2} 0`); post.setAttribute('radius','0.008'); post.setAttribute('height',`${POST}`); post.setAttribute('color',col); post.setAttribute('metalness','0.8'); g.appendChild(post);
+    return g;
+  }
+
+  // LASER
+  const laserEnt=makeMount(-3.0,'#1a2a3a');
+  laserEnt.setAttribute('id','ar-laser');
+  const laserBody=document.createElement('a-cylinder');
+  laserBody.setAttribute('position',`0.7 ${POST+0.12} 0`); laserBody.setAttribute('rotation','0 0 90');
+  laserBody.setAttribute('radius','0.15'); laserBody.setAttribute('height','1.2');
+  laserBody.setAttribute('color','#1a2a3a'); laserBody.setAttribute('metalness','0.85');
+  laserEnt.appendChild(laserBody);
+  const laserDot=document.createElement('a-sphere');
+  laserDot.setAttribute('id','ar-laser-dot');
+  laserDot.setAttribute('position',`1.32 ${POST+0.12} 0`);
+  laserDot.setAttribute('radius','0.06');
+  laserDot.setAttribute('color',waveToRGB(S.lambda));
+  laserDot.setAttribute('emissive',waveToRGB(S.lambda));
+  laserDot.setAttribute('emissive-intensity','3.0');
+  laserEnt.appendChild(laserDot);
+  sg.appendChild(laserEnt);
+
+  // SLIT plate
+  const slitEnt=makeMount(0,'#223344');
+  slitEnt.setAttribute('id','ar-slit');
+  const slitTop=mkBox('0.10','0.55','0.06','#223344','0.9','0.15');
+  slitTop.setAttribute('id','ar-slit-top'); slitTop.setAttribute('position',`0 ${POST+0.32} 0`); slitEnt.appendChild(slitTop);
+  const slitBot=mkBox('0.10','0.55','0.06','#223344','0.9','0.15');
+  slitBot.setAttribute('id','ar-slit-bot'); slitBot.setAttribute('position',`0 ${POST-0.32} 0`); slitEnt.appendChild(slitBot);
+  sg.appendChild(slitEnt);
+
+  // SCREEN
+  const screenXAR = (S.dist * 100 * CM) / (1/arScale) * 0;  // will use syncARPositions
+  const screenEnt=makeMount(3.0,'#0a1e2a');
+  screenEnt.setAttribute('id','ar-screen');
+  const scrFrame=mkBox('0.05','2.2','1.8','#1a3040','0.75','0.3'); scrFrame.setAttribute('position',`0 ${POST+1.05} 0`); screenEnt.appendChild(scrFrame);
+  const scrPanel=document.createElement('a-plane');
+  scrPanel.setAttribute('id','ar-screen-panel');
+  scrPanel.setAttribute('position',`0 ${POST+1.05} 0`); scrPanel.setAttribute('rotation','0 90 0');
+  scrPanel.setAttribute('width','1.8'); scrPanel.setAttribute('height','2.1');
+  scrPanel.setAttribute('src','#ar-screen-cvs'); scrPanel.setAttribute('side','double');
+  screenEnt.appendChild(scrPanel);
+  sg.appendChild(screenEnt);
+
+  // BEAM (thin line)
+  const beamEnt=document.createElement('a-cylinder');
+  beamEnt.setAttribute('id','ar-beam');
+  beamEnt.setAttribute('rotation','0 0 90');
+  beamEnt.setAttribute('radius','0.018');
+  beamEnt.setAttribute('color',waveToRGB(S.lambda));
+  beamEnt.setAttribute('opacity','0.55');
+  beamEnt.setAttribute('transparent','true');
+  sg.appendChild(beamEnt);
+
+  const beamGlow=document.createElement('a-cylinder');
+  beamGlow.setAttribute('id','ar-beam-glow');
+  beamGlow.setAttribute('rotation','0 0 90');
+  beamGlow.setAttribute('radius','0.07');
+  beamGlow.setAttribute('color',waveToRGB(S.lambda));
+  beamGlow.setAttribute('opacity','0.12');
+  beamGlow.setAttribute('transparent','true');
+  sg.appendChild(beamGlow);
+
+  marker.appendChild(sg);
+  sceneEl.appendChild(marker);
+  wrap.appendChild(sceneEl);
+  arScene=sceneEl;
+
+  arEntities={
+    laser:laserEnt, laserDot,
+    slitTop, slitBot, screen:screenEnt, screenPanel:scrPanel,
+    screenCvs, beam:beamEnt, beamGlow, scaleGroup:sg
+  };
+
+  syncARPositions();
+
+  // Touch
+  wrap.addEventListener('touchstart', onARTouch, {passive:false});
+  wrap.addEventListener('touchmove', onARTouchMove, {passive:false});
+  wrap.addEventListener('touchend', onARTouchEnd, {passive:false});
+}
+
+function syncARPositions(){
+  if(!arEntities.screen) return;
+  const POST=0.148;
+  const CM_AR = CM; // same scale
+  // screen position in AR units (marker centre = 0, ±4 units = ±40cm)
+  // Our scene uses 1 unit = 10cm, so S.dist metres → S.dist*100cm → *CM scene units
+  // AR: 1 AR unit = 10cm (arCmPx maps ±40cm to 8 units)
+  const screenXAR = S.dist * 100 * CM;  // scene units
+  arEntities.screen.setAttribute('position',`${screenXAR} 0 0`);
+
+  // Laser at -3.0 (fixed, ~-30cm)
+  const laserXAR = -3.0;
+  const beamStart = laserXAR + 1.35;
+  const beamLen = screenXAR - beamStart;
+  if(beamLen > 0){
+    const midX = beamStart + beamLen/2;
+    arEntities.beam.setAttribute('position',`${midX} ${POST+0.12} 0`);
+    arEntities.beam.setAttribute('height',`${beamLen}`);
+    arEntities.beamGlow.setAttribute('position',`${midX} ${POST+0.12} 0`);
+    arEntities.beamGlow.setAttribute('height',`${beamLen}`);
+  }
+
+  // Update screen texture
+  syncARTexture();
+
+  // Update beam / dot colour
+  const col = waveToRGB(S.lambda);
+  if(arEntities.laserDot){ arEntities.laserDot.setAttribute('color',col); arEntities.laserDot.setAttribute('emissive',col); }
+  if(arEntities.beam){ arEntities.beam.setAttribute('color',col); }
+  if(arEntities.beamGlow){ arEntities.beamGlow.setAttribute('color',col); }
+}
+
+function syncARTexture(){
+  if(!arEntities.screenCvs) return;
+  arEntities.screenCvs.getContext('2d').drawImage(screenTC,0,0,512,512);
+  const mat = arEntities.screenPanel && arEntities.screenPanel.components && arEntities.screenPanel.components.material;
+  if(mat && mat.material && mat.material.map) mat.material.map.needsUpdate=true;
+}
+
+// AR touch
+function onARTouch(e){
+  e.preventDefault();
+  if(e.touches.length===2){ arDrag=null; arPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); arScale0=arScale; return; }
+  if(e.touches.length!==1)return;
+  const t=e.touches[0];
+  arDrag={mode:'orbit',lastX:t.clientX,lastY:t.clientY};
+}
+function onARTouchMove(e){
+  e.preventDefault();
+  if(e.touches.length===2&&arPinchDist0!==null){
+    const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    arScale=Math.max(0.05,Math.min(3.0,arScale0*(nd/arPinchDist0)));
+    if(arEntities.scaleGroup) arEntities.scaleGroup.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
+    return;
+  }
+  if(!arDrag||e.touches.length!==1)return;
+}
+function onARTouchEnd(e){ if(e.touches.length<2){arPinchDist0=null;arScale0=null;} if(e.touches.length===0)arDrag=null; }
+
+// Enter / Exit AR
+const btnAR=document.getElementById('btn-ar');
+
+function showARStep(n){ [1,2,3,4].forEach(i=>{const el=document.getElementById('ar-step'+i);if(el)el.style.display=(i===n?'':'none');}); }
+function toggleARGuide(){ const p=document.getElementById('ar-instructions'); if(p.classList.contains('show')){p.classList.remove('show');}else{showARStep(3);p.classList.add('show');} }
+
+function enterAR(){
+  arMode=true;
+  document.getElementById('simWrap').style.display='none';
+  document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('hint').style.display='none';
+  document.body.classList.add('ar-active');
+  floorM.visible=false; gridM.visible=false;
+  document.getElementById('btn-guide').style.display='';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='none');
+  showARStep(1);
+  btnAR.textContent='✕ Exit AR'; btnAR.classList.add('on');
+
+  // Randomise wavelength for AR challenge
+  S._arOrigLambda = S.lambda;
+  const waves = [405,445,488,515,532,543,594,633,650,670];
+  S.lambda = waves[Math.floor(Math.random()*waves.length)];
+  document.getElementById('lambda-slider').value = S.lambda;
+  document.getElementById('lambda-val').textContent = S.lambda+'nm';
+  layoutScene();
+
+  // Update quiz input
+  const res=document.getElementById('wave-quiz-result');
+  if(res){ res.textContent=''; res.style.display='none'; }
+  const inp=document.getElementById('wave-quiz-input');
+  if(inp) inp.value='';
+
+  // Show slit width in AR quiz area
+  const slitInfo = document.createElement('span');
+  slitInfo.id='ar-slit-info';
+  slitInfo.style.cssText='font-family:"Space Mono",monospace;font-size:10px;color:rgba(180,210,255,.75);letter-spacing:1px;white-space:nowrap;';
+  slitInfo.textContent=`a=${S.slitWidth.toFixed(2)}mm`;
+  const wq=document.getElementById('wave-quiz');
+  if(wq && !document.getElementById('ar-slit-info')) wq.insertBefore(slitInfo, wq.firstChild);
+}
+
+function exitAR(){
+  arMode=false;
+  document.querySelectorAll('video').forEach(v=>{ if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;} });
+  document.getElementById('simWrap').style.display='';
+  const wrap=document.getElementById('arWrap');
+  wrap.classList.remove('show'); wrap.innerHTML='';
+  arScene=null; arEntities={};
+  document.getElementById('ar-instructions').classList.remove('show');
+  document.getElementById('ar-status').style.display='none';
+  document.getElementById('hint').style.display='';
+  document.getElementById('btn-guide').style.display='none';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='');
+  document.body.classList.remove('ar-active');
+  floorM.visible=true; gridM.visible=true;
+  const si=document.getElementById('ar-slit-info');
+  if(si) si.remove();
+  if(S._arOrigLambda !== undefined){ S.lambda=S._arOrigLambda; delete S._arOrigLambda; document.getElementById('lambda-slider').value=S.lambda; document.getElementById('lambda-val').textContent=S.lambda+'nm'; layoutScene(); }
+  btnAR.textContent='📷 AR Mode'; btnAR.classList.remove('on');
+  const w=window.innerWidth,h=window.innerHeight;
+  renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix();
+  labelCanvas.width=w; labelCanvas.height=h;
+  applyOrbit();
+  requestAnimationFrame(desktopLoop);
+}
+
+btnAR.addEventListener('click',()=>{ if(!arMode) enterAR(); else exitAR(); });
+
+document.getElementById('ar-start-btn').addEventListener('click',function(){
+  showARStep(2);
+  function onLibsReady(){
+    const wrap=document.getElementById('arWrap');
+    const old=wrap.querySelector('a-scene');
+    if(old){ old.querySelectorAll('video').forEach(v=>{if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}}); wrap.removeChild(old); }
+    arScene=null; arEntities={};
+    buildARScene();
+    const s=document.getElementById('ar-status');
+    s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+    showARStep(3);
+  }
+  if(window.AFRAME && window.AFRAME.version){ onLibsReady(); return; }
+  function loadScript(urls,onDone,onFail){ if(!urls.length){onFail();return;} const s=document.createElement('script'); s.src=urls[0]; s.setAttribute('data-arscript','1'); s.onload=onDone; s.onerror=()=>loadScript(urls.slice(1),onDone,onFail); document.head.appendChild(s); }
+  const aframeCDNs=['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js','https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js'];
+  const arjsCDNs=['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'];
+  loadScript(aframeCDNs,()=>loadScript(arjsCDNs,onLibsReady,()=>alert('Could not load AR engine.')),()=>alert('Could not load A-Frame.'));
+});
+
+// Wavelength quiz
+document.getElementById('wave-quiz-btn').addEventListener('click',()=>{
+  const input=parseFloat(document.getElementById('wave-quiz-input').value);
+  const res=document.getElementById('wave-quiz-result');
+  res.style.display='block';
+  if(isNaN(input)||input<380||input>750){ res.style.color='#ffcc44'; res.textContent='Enter 380–750 nm'; return; }
+  const trueLambda=S.lambda;
+  const relErr=Math.abs(input-trueLambda)/trueLambda;
+  if(relErr<=0.05){ res.style.color='#7fffb2'; res.textContent=`✓ Correct! λ≈${trueLambda}nm`; }
+  else { res.style.color='#ff7070'; res.textContent='✗ Wrong λ. Try again!'; }
+});
+
+// ═══════════════════════════════════════════════════════
+//  CONTROLS
+// ═══════════════════════════════════════════════════════
+document.getElementById('lambda-slider').addEventListener('input',function(){
+  S.lambda=parseInt(this.value);
+  document.getElementById('lambda-val').textContent=S.lambda+'nm';
+  document.getElementById('lambda-val').style.color=waveToRGB(S.lambda);
+  layoutScene();
+});
+document.getElementById('slit-slider').addEventListener('input',function(){
+  S.slitWidth=parseFloat(this.value);
+  document.getElementById('slit-val').textContent=S.slitWidth.toFixed(2)+'mm';
+  layoutScene();
+});
+document.getElementById('dist-slider').addEventListener('input',function(){
+  S.dist=parseFloat(this.value);
+  document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m';
+  layoutScene();
+});
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  Object.assign(S,{lambda:532,slitWidth:0.10,dist:1.00});
+  document.getElementById('lambda-slider').value=532; document.getElementById('lambda-val').textContent='532nm'; document.getElementById('lambda-val').style.color=waveToRGB(532);
+  document.getElementById('slit-slider').value=0.10; document.getElementById('slit-val').textContent='0.10mm';
+  document.getElementById('dist-slider').value=1.00; document.getElementById('dist-val').textContent='1.00m';
+  layoutScene();
+});
+
+// Background particles
+{ const pa=new Float32Array(120*3); for(let i=0;i<120;i++){pa[i*3]=(Math.random()-.5)*36;pa[i*3+1]=(Math.random()-.5)*10;pa[i*3+2]=(Math.random()-.5)*10;} const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.BufferAttribute(pa,3)); root3.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0x1a2a50,size:0.05,transparent:true,opacity:0.3}))); }
+
+// Init
+{ const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); labelCanvas.width=w; labelCanvas.height=h; }
+layoutScene();
+desktopLoop();
+</script>
+</body>
+</html>
