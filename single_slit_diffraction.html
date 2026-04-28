@@ -685,44 +685,10 @@ function buildARScene(){
   const assets=document.createElement('a-assets');
   assets.setAttribute('timeout','10000');
 
-  // Horizontal ruler canvas — ±50 cm range, 1cm minor ticks, 5cm major labels
+  // Horizontal ruler canvas — drawn below once rail geometry is known
   const rulCvs=document.createElement('canvas');
   rulCvs.id='ar-ruler-cvs'; rulCvs.width=4096; rulCvs.height=220;
   const rCtx=rulCvs.getContext('2d');
-  { const SW=4096,SH=220;
-    rCtx.clearRect(0,0,SW,SH);
-    rCtx.fillStyle='rgba(8,15,35,0.0)'; rCtx.fillRect(0,0,SW,SH);
-    function arCmPx(cm){ return Math.round(((cm+50)/100)*SW); }
-    for(let mm=-500;mm<=500;mm++){
-      const cm=mm/10, px=arCmPx(cm);
-      if(px<0||px>SW) continue;
-      const is5mm =(mm%5===0);
-      const isCm  =(mm%10===0);
-      const is5cm =(mm%50===0);
-      const isZ   =(mm===0);
-      const tickH = isZ?SH*0.88 : is5cm?SH*0.65 : isCm?SH*0.44 : is5mm?SH*0.28 : SH*0.15;
-      rCtx.fillStyle = isZ?'#ffdd88' : mm<0?'#ff9999':'#99ffcc';
-      const tw=isZ?6:is5cm?4:isCm?2:1;
-      rCtx.fillRect(px-Math.floor(tw/2), 0, tw, tickH);
-      if(is5cm && !isZ){
-        const lbl=Math.abs(cm).toFixed(0);
-        rCtx.font='bold 70px monospace';
-        rCtx.textAlign='center';
-        rCtx.fillStyle=mm<0?'#ffbbbb':'#bbffdd';
-        rCtx.fillText(lbl, px, SH-6);
-      }
-      if(isZ){
-        rCtx.font='bold 80px monospace'; rCtx.textAlign='center';
-        rCtx.fillStyle='#ffdd88'; rCtx.fillText('0', px, SH-6);
-      }
-    }
-    // LASER label — placed well to the left of the -35cm tick, on its own line
-    rCtx.font='bold 58px monospace'; rCtx.fillStyle='#ff8888';
-    rCtx.textAlign='center'; rCtx.fillText('LASER', arCmPx(-43), SH*0.45);
-    // SCR label on right end
-    rCtx.fillStyle='#88ffcc'; rCtx.textAlign='center';
-    rCtx.fillText('SCR', arCmPx(47), SH*0.45);
-  }
   assets.appendChild(rulCvs);
 
   // Screen canvas
@@ -759,23 +725,65 @@ function buildARScene(){
   sg.setAttribute('id','ar-scale-group');
   sg.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
 
-  // Rail — longer on screen side (laser at -3.5, screen can go to +7.5)
-  // Rail total length 12 units, centred at +2 so it spans from -4 to +8
+  // Rail — laser at -3.5, screen can go to +7.5; total 12 units centred at railCx=2.0
   function mkBox(w,h,d,col,met,rou){ const b=document.createElement('a-box'); b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d); b.setAttribute('color',col); if(met!=null) b.setAttribute('metalness',met); if(rou!=null) b.setAttribute('roughness',rou); return b; }
-  const railCx = 2.0;  // offset so more rail is on the screen side
+  const railCx   = 2.0;   // AR-space centre of rail (shifted right so more rail on screen side)
+  const railHalf = 6.0;   // half-length in AR units (so rail runs from -4 to +8)
   const rw=mkBox('12.0','0.06','0.15','#0d2040','0.85','0.15'); rw.setAttribute('position',`${railCx} 0 0`); sg.appendChild(rw);
   const rf=mkBox('12.0','0.04','0.42','#142a55','0.85','0.12'); rf.setAttribute('position',`${railCx} 0.05 0`); sg.appendChild(rf);
   const rb=mkBox('12.0','0.04','0.42','#0d2040','0.85','0.15'); rb.setAttribute('position',`${railCx} -0.05 0`); sg.appendChild(rb);
 
-  // Ruler plane — same length as rail, centred at railCx
+  // Ruler canvas: the plane is 12 AR-units wide centred at railCx.
+  // Left edge of plane  = railCx - railHalf = -4 AR units = -40 cm (from slit)
+  // Right edge of plane = railCx + railHalf = +8 AR units = +80 cm (from slit)
+  // So the canvas maps: leftmost pixel = -40 cm, rightmost = +80 cm  (total 120 cm)
+  // arCmPx(cm) maps slit-relative cm to canvas pixel.
+  const RUL_LEFT_CM  = (railCx - railHalf) * 10;   // -40 cm
+  const RUL_RIGHT_CM = (railCx + railHalf) * 10;   //  80 cm
+  const RUL_RANGE_CM = RUL_RIGHT_CM - RUL_LEFT_CM; // 120 cm
+
+  { const SW=4096, SH=220;
+    rCtx.clearRect(0,0,SW,SH);
+    function arCmPx(cm){ return Math.round(((cm - RUL_LEFT_CM) / RUL_RANGE_CM) * SW); }
+    for(let mm = Math.floor(RUL_LEFT_CM)*10; mm <= Math.ceil(RUL_RIGHT_CM)*10; mm++){
+      const cm  = mm/10;
+      const px  = arCmPx(cm);
+      if(px<0||px>SW) continue;
+      const is5mm =(mm%5===0);
+      const isCm  =(mm%10===0);
+      const is5cm =(mm%50===0);
+      const isZ   =(mm===0);
+      const tickH = isZ?SH*0.92 : is5cm?SH*0.65 : isCm?SH*0.44 : is5mm?SH*0.28 : SH*0.15;
+      rCtx.fillStyle = isZ?'#ffdd44' : cm<0?'#ff9999':'#99ffcc';
+      const tw=isZ?7:is5cm?4:isCm?2:1;
+      rCtx.fillRect(px-Math.floor(tw/2), 0, tw, tickH);
+      if(is5cm && !isZ){
+        const lbl=Math.abs(cm).toFixed(0);
+        rCtx.font='bold 68px monospace'; rCtx.textAlign='center';
+        rCtx.fillStyle=cm<0?'#ffbbbb':'#bbffdd';
+        rCtx.fillText(lbl, px, SH-6);
+      }
+      if(isZ){
+        rCtx.font='bold 82px monospace'; rCtx.textAlign='center';
+        rCtx.fillStyle='#ffee44'; rCtx.fillText('0', px, SH-6);
+      }
+    }
+    // LASER label near laser position (-35 cm)
+    const laserPx = arCmPx(-35);
+    rCtx.font='bold 56px monospace'; rCtx.fillStyle='#ff9988';
+    rCtx.textAlign='center'; rCtx.fillText('LASER', laserPx, SH*0.48);
+    // SCR label on right end
+    rCtx.fillStyle='#88ffcc'; rCtx.textAlign='center';
+    rCtx.fillText('SCR →', arCmPx(RUL_RIGHT_CM - 8), SH*0.48);
+  }
+
+  // Ruler plane — centred at railCx so it exactly overlaps the rail
   const rulePlane=document.createElement('a-plane');
   rulePlane.setAttribute('width','12.0'); rulePlane.setAttribute('height','0.55');
   rulePlane.setAttribute('position',`${railCx} 0.16 0`); rulePlane.setAttribute('rotation','-90 0 0');
   rulePlane.setAttribute('src','#ar-ruler-cvs');
   rulePlane.setAttribute('material','transparent: true; opacity: 0.95; shader: flat; side: double;');
   sg.appendChild(rulePlane);
-
-  const POST=0.22;   // taller post so components clear the rail top (rail top ~0.05)
   const RAIL_TOP=0.055; // y of rail top surface
 
   function makeMount(xPos,col){
