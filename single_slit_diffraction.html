@@ -35,14 +35,28 @@ body{background:#06080f;font-family:'Syne',sans-serif;overflow:hidden;height:100
 /* In AR mode: reposition PiP to top-left since HUD is hidden */
 body.ar-active #pip{left:12px;top:62px;z-index:200;border-color:rgba(120,180,255,.55);}
 
-/* AR slit-width info pill */
-#ar-w-pill{display:none;position:fixed;top:20px;right:12px;z-index:200;
-  padding:6px 14px;border-radius:14px;background:rgba(6,10,22,.92);
-  border:1px solid rgba(120,180,255,.4);backdrop-filter:blur(12px);
-  font-family:'Space Mono',monospace;font-size:12px;color:#e8f4ff;white-space:nowrap;}
+/* AR info pills — stacked top-right */
+#ar-w-pill{
+  display:none;position:fixed;top:20px;right:12px;z-index:200;
+  padding:6px 14px;border-radius:14px;
+  background:rgba(6,10,22,.94);border:1px solid rgba(120,180,255,.45);
+  backdrop-filter:blur(12px);
+  font-family:'Space Mono',monospace;font-size:12px;color:rgba(180,210,255,.75);
+  white-space:nowrap;
+}
 #ar-w-pill span{color:#78b4ff;font-weight:700;}
 body.ar-active #ar-w-pill{display:block;}
-body.ar-active #ar-l-pill{display:block!important;top:52px;}
+
+#ar-l-pill{
+  display:none;position:fixed;top:54px;right:12px;z-index:200;
+  padding:6px 14px;border-radius:14px;
+  background:rgba(6,10,22,.94);border:1px solid rgba(127,255,178,.38);
+  backdrop-filter:blur(12px);
+  font-family:'Space Mono',monospace;font-size:12px;color:rgba(180,220,200,.75);
+  white-space:nowrap;
+}
+#ar-l-pill span{color:#7fffb2;font-weight:700;}
+body.ar-active #ar-l-pill{display:block;}
 
 /* Controls */
 #controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
@@ -93,8 +107,8 @@ body.ar-active #wave-quiz{display:flex;}
 <div id="title"><h1>DIFFRACTION LAB</h1><p>Single Slit Experiment</p></div>
 
 <div id="ar-status">🔍 SCANNING FOR MARKER…</div>
-<div id="ar-w-pill">Slit width &nbsp;<span id="ar-w-val">w = 0.05 mm</span></div>
-<div id="ar-l-pill" style="display:none;position:fixed;top:20px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(6,10,22,.92);border:1px solid rgba(127,255,178,.35);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:#e8f4ff;white-space:nowrap;">L = <span id="ar-l-val" style="color:#7fffb2;font-weight:700;">0.50 m</span></div>
+<div id="ar-w-pill">w &nbsp;<span id="ar-w-val">= 0.05 mm</span></div>
+<div id="ar-l-pill">L &nbsp;<span id="ar-l-val">= 0.50 m</span></div>
 
 <div id="hud">
   <h2>Measurements</h2>
@@ -671,23 +685,43 @@ function buildARScene(){
   const assets=document.createElement('a-assets');
   assets.setAttribute('timeout','10000');
 
-  // Horizontal ruler canvas
+  // Horizontal ruler canvas — ±50 cm range, 1cm minor ticks, 5cm major labels
   const rulCvs=document.createElement('canvas');
-  rulCvs.id='ar-ruler-cvs'; rulCvs.width=4096; rulCvs.height=192;
+  rulCvs.id='ar-ruler-cvs'; rulCvs.width=4096; rulCvs.height=220;
   const rCtx=rulCvs.getContext('2d');
-  { const SW=4096,SH=192; rCtx.clearRect(0,0,SW,SH);
-    function arCmPx(cm){ return Math.round(((cm+40)/80)*SW); }
-    for(let mm=-400;mm<=400;mm++){
-      const cm=mm/10,px=arCmPx(cm);
-      const is5mm=(mm%5===0),isCm=(mm%10===0),is5cm=(mm%50===0),isZ=(mm===0);
-      const tickH=isZ?SH*0.88:is5cm?SH*0.62:isCm?SH*0.42:is5mm?SH*0.26:SH*0.14;
-      rCtx.fillStyle=isZ?'#ffdd88':mm<0?'#ff8888':'#88ffcc';
-      const tw=isZ?5:is5cm?4:isCm?2:1;
-      rCtx.fillRect(px-Math.floor(tw/2),0,tw,tickH);
-      if(is5cm){ const lbl=isZ?'0':Math.abs(cm).toFixed(0); rCtx.font=isZ?'bold 80px monospace':'bold 64px monospace'; rCtx.textAlign='center'; rCtx.fillStyle=isZ?'#ffdd88':mm<0?'#ffaaaa':'#aaffcc'; rCtx.fillText(lbl,px,SH-4); }
+  { const SW=4096,SH=220;
+    rCtx.clearRect(0,0,SW,SH);
+    rCtx.fillStyle='rgba(8,15,35,0.0)'; rCtx.fillRect(0,0,SW,SH);
+    function arCmPx(cm){ return Math.round(((cm+50)/100)*SW); }
+    for(let mm=-500;mm<=500;mm++){
+      const cm=mm/10, px=arCmPx(cm);
+      if(px<0||px>SW) continue;
+      const is5mm =(mm%5===0);
+      const isCm  =(mm%10===0);
+      const is5cm =(mm%50===0);
+      const isZ   =(mm===0);
+      const tickH = isZ?SH*0.88 : is5cm?SH*0.65 : isCm?SH*0.44 : is5mm?SH*0.28 : SH*0.15;
+      rCtx.fillStyle = isZ?'#ffdd88' : mm<0?'#ff9999':'#99ffcc';
+      const tw=isZ?6:is5cm?4:isCm?2:1;
+      rCtx.fillRect(px-Math.floor(tw/2), 0, tw, tickH);
+      if(is5cm && !isZ){
+        const lbl=Math.abs(cm).toFixed(0);
+        rCtx.font='bold 70px monospace';
+        rCtx.textAlign='center';
+        rCtx.fillStyle=mm<0?'#ffbbbb':'#bbffdd';
+        rCtx.fillText(lbl, px, SH-6);
+      }
+      if(isZ){
+        rCtx.font='bold 80px monospace'; rCtx.textAlign='center';
+        rCtx.fillStyle='#ffdd88'; rCtx.fillText('0', px, SH-6);
+      }
     }
-    rCtx.font='bold 52px monospace'; rCtx.fillStyle='#ff7777'; rCtx.textAlign='left'; rCtx.fillText('← LASER',arCmPx(-40)+6,SH-4);
-    rCtx.fillStyle='#77ffcc'; rCtx.textAlign='right'; rCtx.fillText('SCR →',arCmPx(40)-6,SH-4);
+    // LASER label — placed well to the left of the -35cm tick, on its own line
+    rCtx.font='bold 58px monospace'; rCtx.fillStyle='#ff8888';
+    rCtx.textAlign='center'; rCtx.fillText('LASER', arCmPx(-43), SH*0.45);
+    // SCR label on right end
+    rCtx.fillStyle='#88ffcc'; rCtx.textAlign='center';
+    rCtx.fillText('SCR', arCmPx(47), SH*0.45);
   }
   assets.appendChild(rulCvs);
 
@@ -741,71 +775,100 @@ function buildARScene(){
   rulePlane.setAttribute('material','transparent: true; opacity: 0.95; shader: flat; side: double;');
   sg.appendChild(rulePlane);
 
-  const POST=0.148;
+  const POST=0.22;   // taller post so components clear the rail top (rail top ~0.05)
+  const RAIL_TOP=0.055; // y of rail top surface
 
   function makeMount(xPos,col){
     const g=document.createElement('a-entity'); g.setAttribute('position',`${xPos} 0 0`);
-    const base=mkBox('0.036','0.028','0.10',col,'0.75','0.25'); base.setAttribute('position','0 0 0'); g.appendChild(base);
-    const post=document.createElement('a-cylinder'); post.setAttribute('position',`0 ${POST/2} 0`); post.setAttribute('radius','0.008'); post.setAttribute('height',`${POST}`); post.setAttribute('color',col); post.setAttribute('metalness','0.8'); g.appendChild(post);
+    // Base clamp sits on rail surface
+    const base=mkBox('0.05','0.03','0.12',col,'0.75','0.25');
+    base.setAttribute('position',`0 ${RAIL_TOP+0.015} 0`); g.appendChild(base);
+    const post=document.createElement('a-cylinder');
+    post.setAttribute('position',`0 ${RAIL_TOP+0.03+POST/2} 0`);
+    post.setAttribute('radius','0.009'); post.setAttribute('height',`${POST}`);
+    post.setAttribute('color',col); post.setAttribute('metalness','0.8'); g.appendChild(post);
     return g;
   }
+  const MOUNT_TOP = RAIL_TOP + 0.03 + POST; // y where post ends = bottom of mounted object
 
   // LASER — placed at -3.5 AR units (35 cm from slit at origin)
   const AR_LASER_X = -3.5;
   const laserEnt=makeMount(AR_LASER_X,'#1a2a3a');
   laserEnt.setAttribute('id','ar-laser');
   const laserBody=document.createElement('a-cylinder');
-  laserBody.setAttribute('position',`0.7 ${POST+0.12} 0`); laserBody.setAttribute('rotation','0 0 90');
-  laserBody.setAttribute('radius','0.15'); laserBody.setAttribute('height','1.2');
+  laserBody.setAttribute('position',`0.65 ${MOUNT_TOP+0.14} 0`); laserBody.setAttribute('rotation','0 0 90');
+  laserBody.setAttribute('radius','0.14'); laserBody.setAttribute('height','1.1');
   laserBody.setAttribute('color','#1a2a3a'); laserBody.setAttribute('metalness','0.85');
   laserEnt.appendChild(laserBody);
   const laserDot=document.createElement('a-sphere');
   laserDot.setAttribute('id','ar-laser-dot');
-  laserDot.setAttribute('position',`1.32 ${POST+0.12} 0`);
-  laserDot.setAttribute('radius','0.06');
+  laserDot.setAttribute('position',`1.22 ${MOUNT_TOP+0.14} 0`);
+  laserDot.setAttribute('radius','0.055');
   laserDot.setAttribute('color',waveToRGB(S.lambda));
   laserDot.setAttribute('emissive',waveToRGB(S.lambda));
-  laserDot.setAttribute('emissive-intensity','3.0');
+  laserDot.setAttribute('emissive-intensity','4.0');
   laserEnt.appendChild(laserDot);
   sg.appendChild(laserEnt);
 
-  // SLIT plate
-  const slitEnt=makeMount(0,'#223344');
+  // SLIT plate — two halves above rail, gap at beam height
+  const slitEnt=makeMount(0,'#2a3f55');
   slitEnt.setAttribute('id','ar-slit');
-  const slitTop=mkBox('0.10','0.55','0.06','#223344','0.9','0.15');
-  slitTop.setAttribute('id','ar-slit-top'); slitTop.setAttribute('position',`0 ${POST+0.32} 0`); slitEnt.appendChild(slitTop);
-  const slitBot=mkBox('0.10','0.55','0.06','#223344','0.9','0.15');
-  slitBot.setAttribute('id','ar-slit-bot'); slitBot.setAttribute('position',`0 ${POST-0.32} 0`); slitEnt.appendChild(slitBot);
+  const BEAM_Y = MOUNT_TOP + 0.14; // beam axis height
+  const PLATE_H = 0.50;
+  const GAP = 0.04; // visual gap between plates
+  // Top plate: from beam+GAP upward
+  const slitTop=mkBox('0.08', String(PLATE_H),'0.06','#2a3f55','0.9','0.15');
+  slitTop.setAttribute('id','ar-slit-top');
+  slitTop.setAttribute('position',`0 ${BEAM_Y + GAP + PLATE_H/2} 0`);
+  slitEnt.appendChild(slitTop);
+  // Bottom plate: from beam-GAP downward — clamped above rail
+  const botH = Math.max(0.10, BEAM_Y - GAP - MOUNT_TOP);
+  const slitBot=mkBox('0.08', String(botH.toFixed(3)),'0.06','#2a3f55','0.9','0.15');
+  slitBot.setAttribute('id','ar-slit-bot');
+  slitBot.setAttribute('position',`0 ${MOUNT_TOP + botH/2} 0`);
+  slitEnt.appendChild(slitBot);
+  // Bright edge highlight on slit gap
+  const edgeTop=mkBox('0.04','0.01','0.08','#4488aa','0.95','0.05');
+  edgeTop.setAttribute('position',`0 ${BEAM_Y+GAP} 0`); slitEnt.appendChild(edgeTop);
+  const edgeBot=mkBox('0.04','0.01','0.08','#4488aa','0.95','0.05');
+  edgeBot.setAttribute('position',`0 ${BEAM_Y-GAP} 0`); slitEnt.appendChild(edgeBot);
   sg.appendChild(slitEnt);
 
-  // SCREEN — starts at 1.5 AR units (~15 cm from slit), moved via tap
+  // SCREEN — starts at 1.5 AR units, taller and brighter
   const screenEnt=makeMount(1.5,'#0a1e2a');
   screenEnt.setAttribute('id','ar-screen');
-  const scrFrame=mkBox('0.05','2.2','1.8','#1a3040','0.75','0.3'); scrFrame.setAttribute('position',`0 ${POST+1.05} 0`); screenEnt.appendChild(scrFrame);
+  const SCREEN_H = 2.4, SCREEN_W = 2.0;
+  const SCREEN_CX_Y = MOUNT_TOP + SCREEN_H/2;
+  const scrFrame=mkBox('0.06', String(SCREEN_H), String(SCREEN_W),'#1e3850','0.7','0.35');
+  scrFrame.setAttribute('position',`0 ${SCREEN_CX_Y} 0`); screenEnt.appendChild(scrFrame);
   const scrPanel=document.createElement('a-plane');
   scrPanel.setAttribute('id','ar-screen-panel');
-  scrPanel.setAttribute('position',`0 ${POST+1.05} 0`); scrPanel.setAttribute('rotation','0 90 0');
-  scrPanel.setAttribute('width','1.8'); scrPanel.setAttribute('height','2.1');
+  scrPanel.setAttribute('position',`0 ${SCREEN_CX_Y} 0`); scrPanel.setAttribute('rotation','0 90 0');
+  scrPanel.setAttribute('width', String(SCREEN_W - 0.08)); scrPanel.setAttribute('height', String(SCREEN_H - 0.08));
   scrPanel.setAttribute('src','#ar-screen-cvs'); scrPanel.setAttribute('side','double');
+  scrPanel.setAttribute('material',`src:#ar-screen-cvs; side:double; emissive:#111; emissiveIntensity:0.5;`);
   screenEnt.appendChild(scrPanel);
   sg.appendChild(screenEnt);
 
-  // BEAM (thin line)
+  // Beam height matches laser axis
+  const BEAM_HEIGHT = MOUNT_TOP + 0.14;
+
+  // BEAM (thin glowing line at beam axis height)
   const beamEnt=document.createElement('a-cylinder');
   beamEnt.setAttribute('id','ar-beam');
   beamEnt.setAttribute('rotation','0 0 90');
-  beamEnt.setAttribute('radius','0.018');
+  beamEnt.setAttribute('radius','0.016');
   beamEnt.setAttribute('color',waveToRGB(S.lambda));
-  beamEnt.setAttribute('opacity','0.55');
+  beamEnt.setAttribute('opacity','0.65');
   beamEnt.setAttribute('transparent','true');
   sg.appendChild(beamEnt);
 
   const beamGlow=document.createElement('a-cylinder');
   beamGlow.setAttribute('id','ar-beam-glow');
   beamGlow.setAttribute('rotation','0 0 90');
-  beamGlow.setAttribute('radius','0.07');
+  beamGlow.setAttribute('radius','0.08');
   beamGlow.setAttribute('color',waveToRGB(S.lambda));
-  beamGlow.setAttribute('opacity','0.12');
+  beamGlow.setAttribute('opacity','0.10');
   beamGlow.setAttribute('transparent','true');
   sg.appendChild(beamGlow);
 
@@ -817,7 +880,8 @@ function buildARScene(){
   arEntities={
     laser:laserEnt, laserDot,
     slitTop, slitBot, screen:screenEnt, screenPanel:scrPanel,
-    screenCvs, beam:beamEnt, beamGlow, scaleGroup:sg
+    screenCvs, beam:beamEnt, beamGlow, scaleGroup:sg,
+    beamHeight: BEAM_HEIGHT
   };
 
   syncARPositions();
@@ -830,19 +894,18 @@ function buildARScene(){
 
 function syncARPositions(){
   if(!arEntities.screen) return;
-  const POST=0.148;
-  const screenXAR = S.dist * 100 * CM;  // 1 unit = 10cm, slit at 0
+  const screenXAR = S.dist * 100 * CM;
   arEntities.screen.setAttribute('position',`${screenXAR} 0 0`);
 
-  // Laser aperture is at AR_LASER_X + 1.35 body offset (fixed at -3.5 units)
   const laserXAR = -3.5;
-  const beamStart = laserXAR + 1.35;
+  const beamStart = laserXAR + 1.25;
   const beamLen = screenXAR - beamStart;
+  const bh = arEntities.beamHeight || 0.305;
   if(beamLen > 0){
     const midX = beamStart + beamLen/2;
-    arEntities.beam.setAttribute('position',`${midX} ${POST+0.12} 0`);
+    arEntities.beam.setAttribute('position',`${midX} ${bh} 0`);
     arEntities.beam.setAttribute('height',`${beamLen}`);
-    arEntities.beamGlow.setAttribute('position',`${midX} ${POST+0.12} 0`);
+    arEntities.beamGlow.setAttribute('position',`${midX} ${bh} 0`);
     arEntities.beamGlow.setAttribute('height',`${beamLen}`);
   }
 
@@ -907,7 +970,7 @@ function onARTouchMove(e){
     document.getElementById('dist-slider').value = newDist.toFixed(2);
     document.getElementById('dist-val').textContent = newDist.toFixed(2)+'m';
     const lPill = document.getElementById('ar-l-val');
-    if(lPill) lPill.textContent = newDist.toFixed(2)+' m';
+    if(lPill) lPill.textContent = `= ${newDist.toFixed(2)} m`;
     syncARPositions();
     fullUpdate();
   }
@@ -952,9 +1015,9 @@ function enterAR(){
 
   // Update info pills
   const wPill = document.getElementById('ar-w-val');
-  if(wPill) wPill.textContent = `w = ${S.slitWidth.toFixed(2)} mm`;
+  if(wPill) wPill.textContent = `= ${S.slitWidth.toFixed(2)} mm`;
   const lPill = document.getElementById('ar-l-val');
-  if(lPill) lPill.textContent = `${S.dist.toFixed(2)} m`;
+  if(lPill) lPill.textContent = `= ${S.dist.toFixed(2)} m`;
 
   // Update quiz input reset
   const res=document.getElementById('wave-quiz-result');
