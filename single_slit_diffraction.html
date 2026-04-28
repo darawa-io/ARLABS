@@ -42,6 +42,7 @@ body.ar-active #pip{left:12px;top:62px;z-index:200;border-color:rgba(120,180,255
   font-family:'Space Mono',monospace;font-size:12px;color:#e8f4ff;white-space:nowrap;}
 #ar-w-pill span{color:#78b4ff;font-weight:700;}
 body.ar-active #ar-w-pill{display:block;}
+body.ar-active #ar-l-pill{display:block!important;top:52px;}
 
 /* Controls */
 #controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
@@ -92,8 +93,8 @@ body.ar-active #wave-quiz{display:flex;}
 <div id="title"><h1>DIFFRACTION LAB</h1><p>Single Slit Experiment</p></div>
 
 <div id="ar-status">🔍 SCANNING FOR MARKER…</div>
-<div id="ar-w-pill">Slit width &nbsp;<span id="ar-w-val">w = 0.10 mm</span></div>
-<div id="ar-dist-readout" style="display:none;position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:200;padding:5px 16px;border-radius:14px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;background:rgba(6,10,22,.88);border:1px solid rgba(120,180,255,.3);color:#7fffb2;pointer-events:none;white-space:nowrap;"></div>
+<div id="ar-w-pill">Slit width &nbsp;<span id="ar-w-val">w = 0.05 mm</span></div>
+<div id="ar-l-pill" style="display:none;position:fixed;top:20px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(6,10,22,.92);border:1px solid rgba(127,255,178,.35);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:#e8f4ff;white-space:nowrap;">L = <span id="ar-l-val" style="color:#7fffb2;font-weight:700;">0.50 m</span></div>
 
 <div id="hud">
   <h2>Measurements</h2>
@@ -905,17 +906,15 @@ function onARTouchMove(e){
     S.dist = newDist;
     document.getElementById('dist-slider').value = newDist.toFixed(2);
     document.getElementById('dist-val').textContent = newDist.toFixed(2)+'m';
+    const lPill = document.getElementById('ar-l-val');
+    if(lPill) lPill.textContent = newDist.toFixed(2)+' m';
     syncARPositions();
     fullUpdate();
   }
 }
 function onARTouchEnd(e){
   if(e.touches.length<2){arPinchDist0=null;arScale0=null;}
-  if(e.touches.length===0){
-    arDrag=null;arScreenDragStartX=null;
-    const rd=document.getElementById('ar-dist-readout');
-    if(rd) rd.style.display='none';
-  }
+  if(e.touches.length===0){arDrag=null;arScreenDragStartX=null;}
 }
 
 // Enter / Exit AR
@@ -937,19 +936,25 @@ function enterAR(){
   showARStep(1);
   btnAR.textContent='✕ Exit AR'; btnAR.classList.add('on');
 
-  // Randomise wavelength for AR challenge
+  // Randomise wavelength for AR challenge; fix slit width at 0.05 mm
   S._arOrigLambda = S.lambda;
   S._arOrigDist = S.dist;
-  S.dist = 0.50;  // start screen close so it fits on rail
+  S._arOrigSlit = S.slitWidth;
+  S.dist = 0.50;
+  S.slitWidth = 0.05;
+  document.getElementById('slit-slider').value = 0.05;
+  document.getElementById('slit-val').textContent = '0.05mm';
   const waves = [405,445,488,515,532,543,594,633,650,670];
   S.lambda = waves[Math.floor(Math.random()*waves.length)];
   document.getElementById('lambda-slider').value = S.lambda;
   document.getElementById('lambda-val').textContent = S.lambda+'nm';
   layoutScene();
 
-  // Update w pill with current slit width
+  // Update info pills
   const wPill = document.getElementById('ar-w-val');
   if(wPill) wPill.textContent = `w = ${S.slitWidth.toFixed(2)} mm`;
+  const lPill = document.getElementById('ar-l-val');
+  if(lPill) lPill.textContent = `${S.dist.toFixed(2)} m`;
 
   // Update quiz input reset
   const res=document.getElementById('wave-quiz-result');
@@ -967,14 +972,14 @@ function exitAR(){
   arScene=null; arEntities={};
   document.getElementById('ar-instructions').classList.remove('show');
   document.getElementById('ar-status').style.display='none';
-  const rd=document.getElementById('ar-dist-readout'); if(rd) rd.style.display='none';
   document.getElementById('hint').style.display='';
   document.getElementById('btn-guide').style.display='none';
   document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='');
   document.body.classList.remove('ar-active');
   floorM.visible=true; gridM.visible=true;
   if(S._arOrigLambda !== undefined){ S.lambda=S._arOrigLambda; delete S._arOrigLambda; document.getElementById('lambda-slider').value=S.lambda; document.getElementById('lambda-val').textContent=S.lambda+'nm'; }
-  if(S._arOrigDist !== undefined){ S.dist=S._arOrigDist; delete S._arOrigDist; document.getElementById('dist-slider').value=S.dist.toFixed(2); document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m'; }
+  if(S._arOrigDist  !== undefined){ S.dist=S._arOrigDist; delete S._arOrigDist; document.getElementById('dist-slider').value=S.dist.toFixed(2); document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m'; }
+  if(S._arOrigSlit  !== undefined){ S.slitWidth=S._arOrigSlit; delete S._arOrigSlit; document.getElementById('slit-slider').value=S.slitWidth.toFixed(2); document.getElementById('slit-val').textContent=S.slitWidth.toFixed(2)+'mm'; }
   layoutScene();
   btnAR.textContent='📷 AR Mode'; btnAR.classList.remove('on');
   const w=window.innerWidth,h=window.innerHeight;
