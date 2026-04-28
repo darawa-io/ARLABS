@@ -785,6 +785,7 @@ function buildARScene(){
   rulePlane.setAttribute('material','transparent: true; opacity: 0.95; shader: flat; side: double;');
   sg.appendChild(rulePlane);
   const RAIL_TOP=0.055; // y of rail top surface
+  const POST=0.22;      // post height — was missing, caused ReferenceError crash
 
   function makeMount(xPos,col){
     const g=document.createElement('a-entity'); g.setAttribute('position',`${xPos} 0 0`);
