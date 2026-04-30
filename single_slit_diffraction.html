@@ -8,7 +8,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#06080f;font-family:'Syne',sans-serif;overflow:hidden;height:100vh;width:100vw;color:#e8f4ff;}
+body{background:#111825;font-family:'Syne',sans-serif;overflow:hidden;height:100vh;width:100vw;color:#e8f4ff;}
 
 #simWrap{position:absolute;inset:0;z-index:1;}
 #mainCanvas{position:absolute;inset:0;}
@@ -410,9 +410,10 @@ const canvas = document.getElementById('mainCanvas');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.shadowMap.enabled = true;
-renderer.setClearColor(0x000000,0);
+renderer.setClearColor(0x111825, 1);   // deep blue-slate — not pure black
 
 const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x111825, 0.018);   // gentle depth fog
 const cam3 = new THREE.PerspectiveCamera(52, 1, 0.1, 300);
 let desktopTex = null;
 let arScreenTex = null;
@@ -425,11 +426,14 @@ const lctx = labelCanvas.getContext('2d');
 function resizeDesktop(){ if(arMode)return; const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); labelCanvas.width=w; labelCanvas.height=h; }
 window.addEventListener('resize', resizeDesktop);
 
-// Lights
-scene3.add(new THREE.AmbientLight(0x1530a0, 5.0));
-const sun = new THREE.DirectionalLight(0xffffff, 2.0); sun.position.set(5,15,8); sun.castShadow=true; scene3.add(sun);
-const rim = new THREE.DirectionalLight(0x0044ff, 0.9); rim.position.set(-10,4,-5); scene3.add(rim);
-const fill = new THREE.PointLight(0x2244ff, 1.5, 40); fill.position.set(0,8,5); scene3.add(fill);
+// Lights — bright neutral so colours read clearly
+scene3.add(new THREE.AmbientLight(0xffffff, 2.8));          // neutral white ambient
+const sun = new THREE.DirectionalLight(0xfff8f0, 2.5);      // warm key light from upper-right
+sun.position.set(8,18,10); sun.castShadow=true; scene3.add(sun);
+const fill = new THREE.DirectionalLight(0xe0eeff, 1.2);     // cool fill from left
+fill.position.set(-12,6,-4); scene3.add(fill);
+const under = new THREE.PointLight(0xffffff, 1.0, 35);      // soft bounce from below
+under.position.set(0,4,6); scene3.add(under);
 
 // Orbit
 const orb = {theta:0.4, phi:0.22, radius:22, cx:0, cy:0.5, cz:0};
@@ -437,18 +441,18 @@ function applyOrbit(){ orb.phi=Math.max(-Math.PI/8,Math.min(Math.PI/4,orb.phi));
 applyOrbit();
 
 // Floor + grid
-const floorM = new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.MeshStandardMaterial({color:0x050810, roughness:1}));
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.MeshStandardMaterial({color:0x1a2235, roughness:0.95}));
 floorM.rotation.x = -Math.PI/2; floorM.position.y = -2.6; floorM.receiveShadow=true; scene3.add(floorM);
-const gridM = new THREE.GridHelper(80,80,0x0a1535,0x0a1535); gridM.position.y=-2.58; scene3.add(gridM);
+const gridM = new THREE.GridHelper(80,80,0x2a3a55,0x1e2e48); gridM.position.y=-2.58; scene3.add(gridM);
 
 const root3 = new THREE.Group(); scene3.add(root3);
 const CM = 0.1; // scale: 1 cm = 0.1 scene units
 
 // Optical axis
-{ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]); const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x102050,dashSize:0.5,gapSize:0.3})); l.computeLineDistances(); root3.add(l); }
+{ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]); const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x4488aa,dashSize:0.5,gapSize:0.3})); l.computeLineDistances(); root3.add(l); }
 
 // Rail — I-beam
-const railMat = new THREE.MeshStandardMaterial({color:0x0d2040,metalness:0.85,roughness:0.2});
+const railMat = new THREE.MeshStandardMaterial({color:0x3a5a78,metalness:0.80,roughness:0.25});
 [[-0.50,0.12,0.18],[-0.44,0.06,0.50],[-0.56,0.06,0.50]].forEach(([y,h,d])=>{
   const m=new THREE.Mesh(new THREE.BoxGeometry(38,h,d),railMat); m.position.set(0,y,0); root3.add(m);
 });
@@ -480,22 +484,26 @@ const railMat = new THREE.MeshStandardMaterial({color:0x0d2040,metalness:0.85,ro
 const LASER_X = -35 * CM;
 function buildLaser(){
   const g = new THREE.Group();
-  // Body
-  const bodyMat = new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.85,roughness:0.2});
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,2.5,16), bodyMat);
-  body.rotation.z = Math.PI/2; body.position.set(0,0.5,0); g.add(body);
-  // Aperture ring
-  const ringMat = new THREE.MeshStandardMaterial({color:0x334455,metalness:0.95,roughness:0.1});
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.37,0.07,8,24), ringMat);
+  // Main body — aluminium silver
+  const bodyMat = new THREE.MeshStandardMaterial({color:0x8899aa,metalness:0.90,roughness:0.15});
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,2.5,20), bodyMat);
+  body.rotation.z = Math.PI/2; body.position.set(0,0.5,0); body.castShadow=true; g.add(body);
+  // Orange warning band
+  const bandMat = new THREE.MeshStandardMaterial({color:0xff6600,metalness:0.3,roughness:0.5,emissive:0xff3300,emissiveIntensity:0.3});
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.36,0.22,20), bandMat);
+  band.rotation.z = Math.PI/2; band.position.set(-0.5,0.5,0); g.add(band);
+  // Aperture ring — dark chrome
+  const ringMat = new THREE.MeshStandardMaterial({color:0x445566,metalness:0.98,roughness:0.05});
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.37,0.07,8,28), ringMat);
   ring.rotation.y = Math.PI/2; ring.position.set(1.26,0.5,0); g.add(ring);
-  // Emitter dot — coloured to wavelength
-  const emitMat = new THREE.MeshStandardMaterial({color:0xff4466,emissive:0xff2244,emissiveIntensity:4.0});
-  const emit = new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12), emitMat);
-  emit.name='emitter'; emit.position.set(1.3,0.5,0); g.add(emit);
-  // Mount post
-  const postMat = new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5), postMat); base.position.set(0,-0.44,0); g.add(base);
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.9,8), postMat); post.position.set(0,-0.0,0); g.add(post);
+  // Emitter dot — bright laser colour
+  const emitMat = new THREE.MeshStandardMaterial({color:0xff4466,emissive:0xff2244,emissiveIntensity:5.0});
+  const emit = new THREE.Mesh(new THREE.SphereGeometry(0.13,14,14), emitMat);
+  emit.name='emitter'; emit.position.set(1.31,0.5,0); g.add(emit);
+  // Mount
+  const postMat = new THREE.MeshStandardMaterial({color:0x445566,metalness:0.82,roughness:0.22});
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.15,0.55), postMat); base.position.set(0,-0.44,0); g.add(base);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.9,10), postMat); post.position.set(0,-0.0,0); g.add(post);
   return g;
 }
 const laserD = buildLaser();
@@ -505,18 +513,18 @@ root3.add(laserD);
 // ── SLIT (centre at x=0)
 function buildSlit(){
   const g = new THREE.Group();
-  const plateMat = new THREE.MeshStandardMaterial({color:0x223344,metalness:0.9,roughness:0.15});
-  // Two half-plates with a tiny gap between them
-  const topPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,0.1), plateMat); topPlate.name='topPlate'; g.add(topPlate);
-  const botPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,0.1), plateMat); botPlate.name='botPlate'; g.add(botPlate);
-  // Highlight edges
-  const edgeMat = new THREE.MeshStandardMaterial({color:0x445566,metalness:0.95,roughness:0.05,emissive:0x112233,emissiveIntensity:0.5});
-  const topEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.14), edgeMat); topEdge.name='topEdge'; g.add(topEdge);
-  const botEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.14), edgeMat); botEdge.name='botEdge'; g.add(botEdge);
-  // Stand
-  const standMat = new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5), standMat); base.position.set(0,-2.1,0); g.add(base);
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,1.6,8), standMat); post.position.set(0,-1.3,0); g.add(post);
+  // Plates — polished steel, clearly visible
+  const plateMat = new THREE.MeshStandardMaterial({color:0x99aabb,metalness:0.92,roughness:0.10});
+  const topPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,0.12), plateMat); topPlate.name='topPlate'; topPlate.castShadow=true; g.add(topPlate);
+  const botPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,0.12), plateMat); botPlate.name='botPlate'; botPlate.castShadow=true; g.add(botPlate);
+  // Gold slit-edge highlights — make the gap obvious
+  const edgeMat = new THREE.MeshStandardMaterial({color:0xffcc44,metalness:0.6,roughness:0.2,emissive:0xffaa00,emissiveIntensity:0.8});
+  const topEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.16), edgeMat); topEdge.name='topEdge'; g.add(topEdge);
+  const botEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.16), edgeMat); botEdge.name='botEdge'; g.add(botEdge);
+  // Stand — teal/cyan so it's distinct
+  const standMat = new THREE.MeshStandardMaterial({color:0x2a6678,metalness:0.78,roughness:0.28});
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.15,0.55), standMat); base.position.set(0,-2.1,0); g.add(base);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,1.6,10), standMat); post.position.set(0,-1.3,0); g.add(post);
   return g;
 }
 const slitD = buildSlit();
@@ -539,12 +547,18 @@ function updateSlitGeometry(){
 desktopTex = new THREE.CanvasTexture(screenTC);
 function buildScreen(){
   const g = new THREE.Group(); g.userData.type='screen';
-  const standMat = new THREE.MeshStandardMaterial({color:0x0a1e2a,metalness:0.8,roughness:0.25});
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5), standMat); base.position.set(0,-0.44,0); g.add(base);
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.5,8), standMat); post.position.set(0,-0.16,0); g.add(post);
-  const frameMat = new THREE.MeshStandardMaterial({color:0x1a3040,metalness:0.75,roughness:0.3});
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.1,5.2,4.2), frameMat); frame.position.y=2.1; g.add(frame);
-  const screenMat = new THREE.MeshStandardMaterial({map:desktopTex,roughness:0.8,metalness:0,side:THREE.DoubleSide,emissive:0x010203,emissiveIntensity:0.3});
+  // Stand — warm grey, clearly visible
+  const standMat = new THREE.MeshStandardMaterial({color:0x5a6a7a,metalness:0.75,roughness:0.30});
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.15,0.55), standMat); base.position.set(0,-0.44,0); base.castShadow=true; g.add(base);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.5,10), standMat); post.position.set(0,-0.16,0); g.add(post);
+  // Frame — off-white / cream so screen stands out
+  const frameMat = new THREE.MeshStandardMaterial({color:0xdde8f0,metalness:0.15,roughness:0.6});
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.12,5.3,4.3), frameMat); frame.position.y=2.1; frame.castShadow=true; g.add(frame);
+  // Screen panel — emissive so diffraction pattern glows
+  const screenMat = new THREE.MeshStandardMaterial({
+    map:desktopTex, roughness:0.75, metalness:0,
+    side:THREE.DoubleSide, emissive:0x050a10, emissiveIntensity:0.8
+  });
   const panel = new THREE.Mesh(new THREE.PlaneGeometry(4,5), screenMat);
   panel.rotation.y = Math.PI/2; panel.position.y = 2.1; g.add(panel);
   return g;
@@ -563,12 +577,12 @@ function updateBeam(){
   const len = screenX - laserX;
   if(len <= 0) return;
   // Main beam
-  const bMat = new THREE.MeshBasicMaterial({color:cHex, transparent:true, opacity:0.18, side:THREE.DoubleSide, depthWrite:false});
+  const bMat = new THREE.MeshBasicMaterial({color:cHex, transparent:true, opacity:0.72, side:THREE.DoubleSide, depthWrite:false});
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,len,8), bMat);
   beam.rotation.z = Math.PI/2; beam.position.set(laserX + len/2, 0.5, 0); beam.renderOrder=5; beamGroup.add(beam);
-  // Glow
-  const gMat = new THREE.MeshBasicMaterial({color:cHex, transparent:true, opacity:0.06, side:THREE.DoubleSide, depthWrite:false});
-  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,len,8), gMat);
+  // Glow — wider, more visible
+  const gMat = new THREE.MeshBasicMaterial({color:cHex, transparent:true, opacity:0.18, side:THREE.DoubleSide, depthWrite:false});
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,len,8), gMat);
   glow.rotation.z = Math.PI/2; glow.position.set(laserX + len/2, 0.5, 0); glow.renderOrder=4; beamGroup.add(glow);
   // Update emitter colour
   const emitter = laserD.getObjectByName('emitter');
