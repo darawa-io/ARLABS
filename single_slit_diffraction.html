@@ -475,6 +475,9 @@ const railMat = new THREE.MeshStandardMaterial({color:0x3a5a78,metalness:0.80,ro
   }
   rx.font='bold 44px monospace'; rx.fillStyle='#ff7777'; rx.textAlign='left'; rx.fillText('← LASER',dCmPx(minCM)+8,RH-4);
   rx.fillStyle='#77ffcc'; rx.textAlign='right'; rx.fillText('SCR →',dCmPx(maxCM)-8,RH-4);
+  // Unit label — "cm" centred, slightly above base line
+  rx.font='bold 38px monospace'; rx.textAlign='center'; rx.fillStyle='rgba(255,221,136,0.75)';
+  rx.fillText('cm', dCmPx(0)+140, RH-4);
   const rulerTex=new THREE.CanvasTexture(rc);
   const rulerMesh=new THREE.Mesh(new THREE.PlaneGeometry(9.0,0.9),new THREE.MeshBasicMaterial({map:rulerTex,transparent:true,opacity:0.95,side:THREE.DoubleSide,depthWrite:false}));
   rulerMesh.rotation.x=-Math.PI/2; rulerMesh.position.set(0,-0.41,0); rulerMesh.renderOrder=1; root3.add(rulerMesh);
@@ -607,18 +610,40 @@ function drawLabels(){
   const slitPos  = new THREE.Vector3(0, 2.5, 0);
   const scrPos   = new THREE.Vector3(screenD.position.x, 3.5, 0);
   [
-    {p:laserPos, t:`LASER  λ=${S.lambda}nm`, c:waveToRGB(S.lambda)},
-    {p:slitPos,  t:`SLIT  w=${S.slitWidth.toFixed(2)}mm`, c:'#88aaff'},
-    {p:scrPos,   t:'SCREEN', c:'#88ffcc'},
+    {p:laserPos, t:`LASER  λ=${S.lambda}nm`,        c:waveToRGB(S.lambda)},
+    {p:slitPos,  t:`SLIT  w=${S.slitWidth.toFixed(2)}mm`, c:'#ffe066'},
+    {p:scrPos,   t:'SCREEN',                         c:'#66ffcc'},
   ].forEach(({p,t,c})=>{
-    const s=w2s(p); lctx.font='600 11px "Space Mono",monospace'; lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=8; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
+    const s=w2s(p);
+    // Dark backdrop so label is readable over any background
+    lctx.font='600 12px "Space Mono",monospace';
+    const tw=lctx.measureText(t).width;
+    lctx.fillStyle='rgba(5,10,24,0.72)';
+    lctx.fillRect(s.x-tw/2-5, s.y-14, tw+10, 18);
+    lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=10;
+    lctx.fillText(t, s.x, s.y); lctx.shadowBlur=0;
   });
-  // Distance annotation
-  const bY=-0.7, lS=w2s(new THREE.Vector3(0,bY,0)), sS=w2s(new THREE.Vector3(screenD.position.x,bY,0)), laS=w2s(new THREE.Vector3(LASER_X,bY,0));
-  const ly=Math.max(lS.y,sS.y,laS.y)+10;
-  lctx.font='500 10px "Space Mono",monospace'; lctx.lineWidth=1;
-  lctx.strokeStyle='rgba(120,180,255,.30)'; lctx.beginPath(); lctx.moveTo(lS.x,ly); lctx.lineTo(sS.x,ly); lctx.stroke();
-  lctx.fillStyle='rgba(120,180,255,.65)'; lctx.fillText(`L=${S.dist.toFixed(2)}m`,(lS.x+sS.x)/2,ly+13);
+  // Distance annotation — bright yellow-white, dark backing
+  const bY=-0.7;
+  const lS=w2s(new THREE.Vector3(0,bY,0));
+  const sS=w2s(new THREE.Vector3(screenD.position.x,bY,0));
+  const ly=Math.max(lS.y,sS.y)+14;
+  // Line
+  lctx.strokeStyle='rgba(255,230,100,.80)'; lctx.lineWidth=1.5;
+  lctx.beginPath(); lctx.moveTo(lS.x,ly); lctx.lineTo(sS.x,ly); lctx.stroke();
+  // Arrowheads
+  [lS.x, sS.x].forEach(ax=>{
+    lctx.beginPath(); lctx.moveTo(ax,ly-4); lctx.lineTo(ax,ly+4); lctx.stroke();
+  });
+  // Label with backdrop
+  const distLabel=`L = ${S.dist.toFixed(2)} m`;
+  lctx.font='bold 12px "Space Mono",monospace';
+  const dtw=lctx.measureText(distLabel).width;
+  const mx=(lS.x+sS.x)/2;
+  lctx.fillStyle='rgba(5,10,24,0.80)';
+  lctx.fillRect(mx-dtw/2-6, ly+2, dtw+12, 17);
+  lctx.fillStyle='#ffe066'; lctx.shadowColor='#ffe066'; lctx.shadowBlur=6;
+  lctx.fillText(distLabel, mx, ly+15); lctx.shadowBlur=0;
 }
 
 // Hitbox for screen drag
@@ -789,6 +814,9 @@ function buildARScene(){
     // SCR label on right end
     rCtx.fillStyle='#88ffcc'; rCtx.textAlign='center';
     rCtx.fillText('SCR →', arCmPx(RUL_RIGHT_CM - 8), SH*0.48);
+    // Unit label "cm" near zero, slightly right so it doesn't overlap the 0 tick
+    rCtx.font='bold 48px monospace'; rCtx.fillStyle='rgba(255,221,136,0.80)';
+    rCtx.textAlign='left'; rCtx.fillText('cm', arCmPx(0)+120, SH-6);
   }
 
   // Ruler plane — centred at railCx so it exactly overlaps the rail
