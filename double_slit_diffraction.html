@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Diffraction Lab — Double Slit</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#06080f;font-family:'Syne',sans-serif;overflow:hidden;height:100vh;width:100vw;color:#e8f4ff;}
+
+#simWrap{position:absolute;inset:0;z-index:1;}
+#mainCanvas{position:absolute;inset:0;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+#arWrap{display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;}
+#arWrap.show{display:block;}
+#arWrap a-scene{width:100%!important;height:100%!important;position:absolute!important;top:0;left:0;}
+
+/* HUD */
+#hud{position:absolute;top:20px;right:20px;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:18px;padding:18px;min-width:235px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid rgba(120,180,255,.12);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(120,180,255,.04);}
+.dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,210,255,.65);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#78b4ff;}
+.dv.laser{color:#ff4466;}.dv.g{color:#7fffb2;}.dv.amber{color:#ffcc44;}.dv.violet{color:#cc88ff;}
+.hdiv{height:1px;background:rgba(120,180,255,.1);margin:10px 0;}
+#formula-box{padding:8px;border-radius:8px;background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.18);font-size:11px;font-family:'Space Mono',monospace;color:rgba(255,160,180,.85);line-height:1.9;text-align:center;}
+
+/* PiP */
+#pip{position:absolute;top:20px;left:200px;width:140px;height:186px;background:#04060d;border:1px solid rgba(120,180,255,.25);border-radius:12px;overflow:hidden;z-index:10;}
+#pip canvas{width:100%;height:100%;display:block;}
+#pip-label{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);letter-spacing:1px;pointer-events:none;}
+body.ar-active #pip{left:12px;top:62px;z-index:200;border-color:rgba(120,180,255,.55);}
+
+/* AR pills */
+#ar-d-pill{display:none;position:fixed;top:20px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(6,10,22,.94);border:1px solid rgba(120,180,255,.45);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(180,210,255,.75);white-space:nowrap;}
+#ar-d-pill span{color:#cc88ff;font-weight:700;}
+body.ar-active #ar-d-pill{display:block;}
+#ar-w-pill{display:none;position:fixed;top:54px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(6,10,22,.94);border:1px solid rgba(120,180,255,.45);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(180,210,255,.75);white-space:nowrap;}
+#ar-w-pill span{color:#78b4ff;font-weight:700;}
+body.ar-active #ar-w-pill{display:block;}
+#ar-l-pill{display:none;position:fixed;top:88px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(6,10,22,.94);border:1px solid rgba(127,255,178,.38);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(180,220,200,.75);white-space:nowrap;}
+#ar-l-pill span{color:#7fffb2;font-weight:700;}
+body.ar-active #ar-l-pill{display:block;}
+
+/* Controls */
+#controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(6,10,22,.92);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.18);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
+#hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(120,180,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+.btn{padding:7px 14px;border-radius:30px;border:1px solid rgba(120,180,255,.3);background:rgba(120,180,255,.07);color:#78b4ff;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;}
+.btn:hover{background:rgba(120,180,255,.18);}
+.btn.on{background:rgba(120,180,255,.28);border-color:#78b4ff;color:#fff;box-shadow:0 0 12px rgba(120,180,255,.3);}
+.btn.green{border-color:rgba(60,220,120,.45);color:#3fdc78;background:rgba(60,220,120,.07);}
+.btn.green.on{background:rgba(60,220,120,.22);border-color:#3fdc78;color:#fff;box-shadow:0 0 14px rgba(60,220,120,.3);}
+.sep{width:1px;height:20px;background:rgba(120,180,255,.18);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:rgba(180,210,255,.7);font-size:11px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;width:75px;height:4px;border-radius:2px;background:rgba(120,180,255,.2);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#78b4ff;cursor:pointer;}
+
+#title{position:absolute;top:20px;left:20px;z-index:10;}
+#title h1{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:#fff;letter-spacing:1px;}
+#title p{font-size:10px;color:rgba(120,180,255,.45);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+
+/* AR */
+#ar-status{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;padding:7px 18px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;transition:all 0.3s;}
+body.ar-active #hud{display:none!important;}
+#ar-instructions{display:none;background:rgba(6,10,22,.97);backdrop-filter:blur(16px);border:1px solid rgba(60,220,120,.35);border-radius:18px;padding:24px 26px;z-index:20;max-width:340px;width:90%;font-family:'Space Mono',monospace;font-size:11px;color:#7fffb2;line-height:1.9;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);}
+#ar-instructions.show{display:block;}
+#ar-instructions strong{color:#fff;}
+#wave-quiz{display:none;align-items:center;flex-wrap:wrap;gap:6px;padding:3px 0;}
+body.ar-active #wave-quiz{display:flex;}
+#wave-quiz input[type=number]{width:75px;padding:5px 7px;border-radius:8px;border:1px solid rgba(120,180,255,.4);background:rgba(0,0,0,.5);color:#fff;font-family:'Space Mono',monospace;font-size:11px;text-align:center;}
+#wave-quiz-btn{padding:5px 12px;border-radius:12px;border:1px solid rgba(120,180,255,.45);background:rgba(30,60,160,.4);color:#78b4ff;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;}
+#wave-quiz-result{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;padding:3px 0;}
+</style>
+</head>
+<body>
+
+<div id="simWrap"><canvas id="mainCanvas"></canvas><canvas id="labelCanvas"></canvas></div>
+<div id="arWrap"></div>
+
+<div id="title"><h1>DIFFRACTION LAB</h1><p>Double Slit Experiment</p></div>
+
+<div id="ar-status">🔍 SCANNING FOR MARKER…</div>
+<div id="ar-d-pill">d &nbsp;<span id="ar-d-val">= 0.25 mm</span></div>
+<div id="ar-w-pill">w &nbsp;<span id="ar-w-val">= 0.05 mm</span></div>
+<div id="ar-l-pill">L &nbsp;<span id="ar-l-val">= 0.50 m</span></div>
+
+<div id="hud">
+  <h2>Measurements</h2>
+  <div class="dr"><span class="dl">λ (wavelength)</span><span class="dv laser" id="val-lambda">532 nm</span></div>
+  <div class="dr"><span class="dl">w (slit width)</span><span class="dv"        id="val-w">0.05 mm</span></div>
+  <div class="dr"><span class="dl">d (separation)</span><span class="dv violet" id="val-d">0.25 mm</span></div>
+  <div class="dr"><span class="dl">L (slit→screen)</span><span class="dv g"    id="val-L">1.00 m</span></div>
+  <div class="hdiv"></div>
+  <div class="dr"><span class="dl">Δy (fringe spacing)</span><span class="dv amber" id="val-dy">2.13 mm</span></div>
+  <div class="hdiv"></div>
+  <div id="formula-box">Δy = λL / d</div>
+</div>
+
+<div id="pip">
+  <canvas id="pipCanvas" width="140" height="186"></canvas>
+  <div id="pip-label">SCREEN  (frontal)</div>
+</div>
+
+<div id="controls">
+  <div class="sw ctrl-ar-hide">
+    <span>λ=</span>
+    <input type="range" id="lambda-slider" min="380" max="750" value="532" step="1">
+    <span id="lambda-val" style="min-width:52px;">532nm</span>
+  </div>
+  <div class="sep ctrl-ar-hide"></div>
+  <div class="sw ctrl-ar-hide">
+    <span>w=</span>
+    <input type="range" id="slit-slider" min="0.02" max="0.20" value="0.05" step="0.01">
+    <span id="slit-val" style="min-width:50px;">0.05mm</span>
+  </div>
+  <div class="sep ctrl-ar-hide"></div>
+  <div class="sw ctrl-ar-hide">
+    <span>d=</span>
+    <input type="range" id="sep-slider" min="0.10" max="1.00" value="0.25" step="0.01">
+    <span id="sep-val" style="min-width:50px;">0.25mm</span>
+  </div>
+  <div class="sep ctrl-ar-hide"></div>
+  <div class="sw ctrl-ar-hide">
+    <span>L=</span>
+    <input type="range" id="dist-slider" min="0.20" max="3.00" value="1.00" step="0.05">
+    <span id="dist-val" style="min-width:44px;">1.00m</span>
+  </div>
+  <div class="sep"></div>
+  <button class="btn green" id="btn-ar">📷 AR Mode</button>
+  <button class="btn" id="btn-guide" style="display:none;" onclick="toggleARGuide()">📋 Guide</button>
+  <div class="sep"></div>
+  <button class="btn" id="btn-reset">Reset</button>
+  <div id="wave-quiz">
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(120,180,255,.7);letter-spacing:1px;">λ (nm):</span>
+    <input id="wave-quiz-input" type="number" min="380" max="750" step="1" placeholder="e.g. 532">
+    <button id="wave-quiz-btn">Validate</button>
+    <div id="wave-quiz-result"></div>
+  </div>
+</div>
+
+<div id="hint">Desktop: drag screen • orbit • scroll zoom &nbsp;|&nbsp; AR: drag right side = move screen • pinch = zoom</div>
+
+<!-- AR instructions -->
+<div id="ar-instructions">
+  <button onclick="document.getElementById('ar-instructions').classList.remove('show');exitAR();" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;">✕</button>
+  <strong>AR Mode — Marker Required</strong><br><br>
+  <span id="ar-step1">
+    Print or display the Hiro marker (A5 or larger):<br><br>
+    <img src="https://ar-js-org.github.io/AR.js/data/images/hiro.png" alt="Hiro marker"
+         style="width:150px;height:150px;display:block;margin:0 auto 8px;border:6px solid white;background:white;border-radius:4px;"
+         onerror="this.style.display='none'"/>
+    <small style="color:rgba(255,200,100,.9);font-size:10px;display:block;margin-bottom:8px;">⚠️ This exact pattern is required</small>
+    Place flat on table, then tap:<br><br>
+    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(60,220,120,.7);background:rgba(60,220,120,.18);color:#3fdc78;font-family:Syne,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Open Camera</button>
+  </span>
+  <span id="ar-step2" style="display:none;">⏳ Loading AR engine…<br><small style="color:rgba(127,255,178,.5);">(first load ~5–10 s)</small></span>
+  <span id="ar-step3" style="display:none;">
+    ✅ Camera ready!<br><br>Point at the <strong>Hiro marker</strong>.<br>The experiment appears on it.<br><br>
+    <button onclick="showARStep(4)" style="padding:8px 22px;border-radius:20px;border:1px solid rgba(60,220,120,.6);background:rgba(60,220,120,.15);color:#3fdc78;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">Guide →</button>
+    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-size:12px;cursor:pointer;">Close</button>
+  </span>
+  <span id="ar-step4" style="display:none;text-align:left;line-height:2.0;">
+    <strong style="display:block;text-align:center;margin-bottom:8px;">📋 Experiment Steps</strong>
+    <span style="color:rgba(255,255,255,.8);">
+      1️⃣ &nbsp;Use the <span style="color:#ffdd88;">horizontal ruler</span> to measure <b>L</b>.<br>
+      2️⃣ &nbsp;Use the <span style="color:#88ffcc;">vertical ruler</span> to measure fringe spacing <b>Δy</b>.<br>
+      3️⃣ &nbsp;<b>d</b> and <b>w</b> are given in the info panel.<br>
+      4️⃣ &nbsp;Apply: <b>λ = Δy · d / L</b><br>
+      5️⃣ &nbsp;Enter λ in nm and tap <b>Validate</b>.
+    </span><br>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button onclick="showARStep(3)" style="padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-size:12px;cursor:pointer;">← Back</button>
+      <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="flex:1;padding:8px 22px;border-radius:20px;border:1px solid rgba(60,220,120,.6);background:rgba(60,220,120,.15);color:#3fdc78;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Got it!</button>
+    </div>
+  </span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  PHYSICS STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  lambda:   532,   // nm
+  slitWidth: 0.05, // mm — each slit width (w)
+  slitSep:   0.25, // mm — centre-to-centre separation (d)
+  dist:      1.00, // m
+};
+
+// Double-slit fringe spacing  Δy = λL/d
+function calcDY(){ return (S.lambda*1e-9 * S.dist) / (S.slitSep*1e-3) * 1e3; } // mm
+// Single-slit envelope half-width  x1 = λL/w
+function calcEnvHalf(){ return (S.lambda*1e-9 * S.dist) / (S.slitWidth*1e-3) * 1e3; } // mm
+// Full central envelope 2x1
+function calcEnvFull(){ return 2 * calcEnvHalf(); } // mm
+
+// Wavelength → colour string
+function waveToRGB(nm){
+  let r=0,g=0,b=0;
+  if(nm>=380&&nm<440){r=(440-nm)/60;g=0;b=1;}
+  else if(nm<490){r=0;g=(nm-440)/50;b=1;}
+  else if(nm<510){r=0;g=1;b=(510-nm)/20;}
+  else if(nm<580){r=(nm-510)/70;g=1;b=0;}
+  else if(nm<645){r=1;g=(645-nm)/65;b=0;}
+  else{r=1;g=0;b=0;}
+  const f=nm<420?(0.3+0.7*(nm-380)/40):nm>700?(0.3+0.7*(750-nm)/50):1.0;
+  return `rgb(${Math.round(r*f*255)},${Math.round(g*f*255)},${Math.round(b*f*255)})`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  DIFFRACTION PATTERN — double slit
+// ═══════════════════════════════════════════════════════
+const screenTC = document.createElement('canvas');
+screenTC.width = screenTC.height = 512;
+const screenTCtx = screenTC.getContext('2d');
+
+function sinc(x){ return Math.abs(x)<1e-9 ? 1 : Math.sin(x)/x; }
+function parseRGB(col){ const m=col.match(/\d+/g); return m?[+m[0],+m[1],+m[2]]:[255,255,255]; }
+
+// Intensity at position ymm from centre
+// I = sinc²(β) · cos²(δ)
+// β = π·w·sinθ/λ ≈ π·w·y/(λ·L)  (small angle, all in SI)
+// δ = π·d·sinθ/λ ≈ π·d·y/(λ·L)
+function doubleSlitI(ymm){
+  const y = ymm * 1e-3; // m
+  const beta  = Math.PI * (S.slitWidth*1e-3) * y / (S.lambda*1e-9 * S.dist);
+  const delta = Math.PI * (S.slitSep  *1e-3) * y / (S.lambda*1e-9 * S.dist);
+  const envelope = sinc(beta) ** 2;
+  const fringes  = Math.cos(delta) ** 2;
+  return envelope * fringes;
+}
+
+function renderDiffractionToCtx(ctx, W, H, rulerW){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#04060d';
+  ctx.fillRect(0,0,W,H);
+
+  const halfRange = 40;                   // mm, fixed ±40 mm scale
+  const mmPerPx   = (2*halfRange) / H;
+  const scale     = H / (2*halfRange);    // px per mm
+
+  const col = waveToRGB(S.lambda);
+  const [r_c,g_c,b_c] = parseRGB(col);
+  const patW = W - rulerW;
+
+  // Pattern — pixel by pixel
+  for(let py=0; py<H; py++){
+    const ymm = (py - H/2) * mmPerPx;
+    const I = doubleSlitI(ymm);
+    // sqrt for perceptual brightness — keeps fringes visible
+    const alpha = Math.min(1, Math.sqrt(I) * 1.08);
+    ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${alpha})`;
+    ctx.fillRect(0, py, patW, 1);
+  }
+
+  // Envelope dashed lines (single-slit first minima)
+  const envH = calcEnvHalf();
+  const topEnv = H/2 - envH * scale;
+  const botEnv = H/2 + envH * scale;
+  ctx.strokeStyle = 'rgba(255,220,80,0.6)';
+  ctx.setLineDash([4,4]); ctx.lineWidth = 1.5;
+  if(topEnv>0&&topEnv<H){ ctx.beginPath(); ctx.moveTo(0,topEnv); ctx.lineTo(patW,topEnv); ctx.stroke(); }
+  if(botEnv>0&&botEnv<H){ ctx.beginPath(); ctx.moveTo(0,botEnv); ctx.lineTo(patW,botEnv); ctx.stroke(); }
+  ctx.setLineDash([]);
+
+  // Fringe spacing Δy marker (first bright fringe above centre)
+  const dy = calcDY();
+  const fringeY = H/2 - dy * scale;
+  if(fringeY > 0 && fringeY < H){
+    ctx.strokeStyle = 'rgba(180,120,255,0.55)';
+    ctx.setLineDash([2,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,fringeY); ctx.lineTo(patW,fringeY); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Scanlines
+  ctx.fillStyle='rgba(0,0,0,0.04)';
+  for(let y=0;y<H;y+=5) ctx.fillRect(0,y,patW,2);
+
+  // ── Vertical ruler — fixed ±40 mm, 1/5/10 mm ticks
+  const rx = patW;
+  ctx.fillStyle='rgba(8,15,35,0.92)';
+  ctx.fillRect(rx,0,rulerW,H);
+  for(let mm=-40; mm<=40; mm++){
+    const py=Math.round(H/2 - mm*scale);
+    if(py<0||py>H) continue;
+    const isZ=mm===0, is10=mm%10===0, is5=mm%5===0;
+    const tw=isZ?rulerW*0.82:is10?rulerW*0.62:is5?rulerW*0.42:rulerW*0.22;
+    ctx.fillStyle=isZ?'#ffdd66':is10?'#a0c8ff':is5?'#6090cc':'#304060';
+    ctx.fillRect(rx, py, tw, isZ?2:1);
+    if(is10){
+      const lbl=isZ?'0':String(Math.abs(mm));
+      const fs=Math.max(8,Math.min(18,rulerW*0.36));
+      ctx.font=`${isZ?'bold ':' '}${fs}px monospace`;
+      ctx.textAlign='right';
+      ctx.fillStyle=isZ?'#ffdd66':'rgba(160,200,255,0.9)';
+      ctx.fillText(lbl, rx+rulerW-2, py+fs*0.38);
+    }
+  }
+  const fs2=Math.max(7,Math.min(13,rulerW*0.26));
+  ctx.font=`${fs2}px monospace`; ctx.textAlign='center'; ctx.fillStyle='rgba(100,160,255,0.45)';
+  ctx.save(); ctx.translate(rx+rulerW*0.5,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('mm',0,0); ctx.restore();
+}
+
+function paintDiffraction(){
+  renderDiffractionToCtx(screenTCtx,512,512,52);
+  if(desktopTex) desktopTex.needsUpdate=true;
+}
+
+function updatePiP(){
+  const el=document.getElementById('pipCanvas'); if(!el)return;
+  const W=el.width, H=el.height;
+  const ctx=el.getContext('2d');
+  const rw=Math.round(W*0.26);
+  renderDiffractionToCtx(ctx,W,H,rw);
+  const scale=H/80;
+  const patW=W-rw;
+  // Δy bracket — first fringe above centre
+  const dy=calcDY();
+  const dyPx=dy*scale;
+  if(dyPx>4 && dyPx<H*0.45){
+    const cy=H/2, top=cy-dyPx;
+    ctx.strokeStyle='rgba(190,130,255,.75)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(6,cy); ctx.lineTo(6,top); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(3,top); ctx.lineTo(9,top); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(3,cy); ctx.lineTo(9,cy); ctx.stroke();
+    ctx.font='bold 7px monospace'; ctx.textAlign='left'; ctx.fillStyle='rgba(200,150,255,.95)';
+    ctx.fillText('Δy',10,top+(dyPx/2)+3);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  HUD UPDATE
+// ═══════════════════════════════════════════════════════
+function updateHUD(){
+  const dy=calcDY();
+  document.getElementById('val-lambda').textContent=S.lambda+' nm';
+  document.getElementById('val-lambda').style.color=waveToRGB(S.lambda);
+  document.getElementById('val-w').textContent=S.slitWidth.toFixed(2)+' mm';
+  document.getElementById('val-d').textContent=S.slitSep.toFixed(2)+' mm';
+  document.getElementById('val-L').textContent=S.dist.toFixed(2)+' m';
+  document.getElementById('val-dy').textContent=dy.toFixed(2)+' mm';
+}
+function fullUpdate(){ updateHUD(); paintDiffraction(); updatePiP(); if(arMode) syncARTexture(); }
+
+// ═══════════════════════════════════════════════════════
+//  THREE.JS DESKTOP SCENE
+// ═══════════════════════════════════════════════════════
+const canvas=document.getElementById('mainCanvas');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.setClearColor(0x000000,0);
+const scene3=new THREE.Scene();
+const cam3=new THREE.PerspectiveCamera(52,1,0.1,300);
+let desktopTex=null;
+let arMode=false;
+let arScene=null, arEntities={}, arScale=0.44;
+const labelCanvas=document.getElementById('labelCanvas');
+const lctx=labelCanvas.getContext('2d');
+
+function resizeDesktop(){ if(arMode)return; const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); labelCanvas.width=w; labelCanvas.height=h; }
+window.addEventListener('resize',resizeDesktop);
+
+// Lights — original dark-lab scheme
+scene3.add(new THREE.AmbientLight(0x1530a0, 5.0));
+const sun=new THREE.DirectionalLight(0xffffff,2.0); sun.position.set(5,15,8); sun.castShadow=true; scene3.add(sun);
+const rimL=new THREE.DirectionalLight(0x0044ff,0.9); rimL.position.set(-10,4,-5); scene3.add(rimL);
+const fill=new THREE.PointLight(0x2244ff,1.5,40); fill.position.set(0,8,5); scene3.add(fill);
+
+const orb={theta:0.4,phi:0.22,radius:22,cx:0,cy:0.5,cz:0};
+function applyOrbit(){ orb.phi=Math.max(-Math.PI/8,Math.min(Math.PI/4,orb.phi)); const r=orb.radius,p=orb.phi,t=orb.theta; cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t),orb.cy+r*Math.sin(p),orb.cz+r*Math.cos(p)*Math.cos(t)); cam3.lookAt(orb.cx,orb.cy,orb.cz); }
+applyOrbit();
+
+// Floor — light grey lab bench
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x050810,roughness:1}));
+floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.6; floorM.receiveShadow=true; scene3.add(floorM);
+const gridM=new THREE.GridHelper(80,80,0x0a1535,0x0a1535); gridM.position.y=-2.58; scene3.add(gridM);
+
+const root3=new THREE.Group(); scene3.add(root3);
+const CM=0.1;
+
+// Optical axis
+{ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]); const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x102050,dashSize:0.5,gapSize:0.3})); l.computeLineDistances(); root3.add(l); }
+
+// Rail — original dark blue-grey
+const railMat=new THREE.MeshStandardMaterial({color:0x0d2040,metalness:0.85,roughness:0.2});
+[[-0.50,0.12,0.18],[-0.44,0.06,0.50],[-0.56,0.06,0.50]].forEach(([y,h,d])=>{
+  const m=new THREE.Mesh(new THREE.BoxGeometry(38,h,d),railMat); m.position.set(0,y,0); root3.add(m);
+});
+
+// Horizontal ruler ±45 cm
+{
+  const RW=4096,RH=256;
+  const rc=document.createElement('canvas'); rc.width=RW; rc.height=RH;
+  const rx=rc.getContext('2d'); rx.clearRect(0,0,RW,RH);
+  const minCM=-45,maxCM=45,rangeCM=90;
+  function dCmPx(cm){ return Math.round(((cm-minCM)/rangeCM)*RW); }
+  for(let mm=-450;mm<=450;mm++){
+    const cm=mm/10,px=dCmPx(cm);
+    const is5mm=(mm%5===0),isCm=(mm%10===0),is5cm=(mm%50===0),isZ=(mm===0);
+    const tickH=isZ?RH*0.88:is5cm?RH*0.60:isCm?RH*0.42:is5mm?RH*0.25:RH*0.14;
+    rx.fillStyle=isZ?'#ffdd88':mm<0?'#ff8888':'#88ffcc';
+    const tw=isZ?4:is5cm?3:isCm?2:1;
+    rx.fillRect(px-Math.floor(tw/2),0,tw,tickH);
+    if(is5cm){ const lbl=isZ?'0':Math.abs(cm).toFixed(0); rx.font=isZ?'bold 72px monospace':'bold 56px monospace'; rx.textAlign='center'; rx.fillStyle=isZ?'#ffdd88':mm<0?'#ffaaaa':'#aaffcc'; rx.fillText(lbl,px,RH-4); }
+  }
+  rx.font='bold 44px monospace'; rx.fillStyle='#ff8888'; rx.textAlign='left'; rx.fillText('← LASER',dCmPx(minCM)+8,RH-4);
+  rx.fillStyle='#88ffcc'; rx.textAlign='right'; rx.fillText('SCR →',dCmPx(maxCM)-8,RH-4);
+  const rulerTex=new THREE.CanvasTexture(rc);
+  const rulerMesh=new THREE.Mesh(new THREE.PlaneGeometry(9.0,0.9),new THREE.MeshBasicMaterial({map:rulerTex,transparent:true,opacity:0.95,side:THREE.DoubleSide,depthWrite:false}));
+  rulerMesh.rotation.x=-Math.PI/2; rulerMesh.position.set(0,-0.41,0); rulerMesh.renderOrder=1; root3.add(rulerMesh);
+}
+
+// ── LASER — original dark body
+const LASER_X=-35*CM;
+function buildLaser(){
+  const g=new THREE.Group();
+  const bodyMat=new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.85,roughness:0.2});
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,2.5,16),bodyMat);
+  body.rotation.z=Math.PI/2; body.position.set(0,0.5,0); g.add(body);
+  const ringMat=new THREE.MeshStandardMaterial({color:0x334455,metalness:0.95,roughness:0.1});
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.37,0.07,8,24),ringMat);
+  ring.rotation.y=Math.PI/2; ring.position.set(1.26,0.5,0); g.add(ring);
+  const emitMat=new THREE.MeshStandardMaterial({color:0xff4466,emissive:0xff2244,emissiveIntensity:4.0});
+  const emit=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),emitMat);
+  emit.name='emitter'; emit.position.set(1.3,0.5,0); g.add(emit);
+  const postMat=new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),postMat); base.position.set(0,-0.44,0); g.add(base);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.9,8),postMat); post.position.set(0,0,0); g.add(post);
+  return g;
+}
+const laserD=buildLaser(); laserD.position.set(LASER_X,0,0); root3.add(laserD);
+
+// ── DOUBLE SLIT (three plates, two gaps)
+function buildDoubleSlit(){
+  const g=new THREE.Group();
+  const plateMat=new THREE.MeshStandardMaterial({color:0x223344,metalness:0.9,roughness:0.15});
+  const edgeMat=new THREE.MeshStandardMaterial({color:0x445566,metalness:0.95,roughness:0.05,emissive:0x112233,emissiveIntensity:0.5});
+  const topP=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.4,0.1),plateMat); topP.name='topPlate'; g.add(topP);
+  const midP=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.18,0.1),plateMat); midP.name='midPlate'; g.add(midP);
+  const botP=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.4,0.1),plateMat); botP.name='botPlate'; g.add(botP);
+  const te=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); te.name='topEdge'; g.add(te);
+  const mte=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); mte.name='midTopEdge'; g.add(mte);
+  const mbe=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); mbe.name='midBotEdge'; g.add(mbe);
+  const be=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); be.name='botEdge'; g.add(be);
+  const standMat=new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),standMat); base.position.set(0,-2.1,0); g.add(base);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,1.6,8),standMat); post.position.set(0,-1.3,0); g.add(post);
+  return g;
+}
+const slitD=buildDoubleSlit(); root3.add(slitD);
+
+function updateSlitGeometry(){
+  // d = centre-to-centre separation, w = each slit width
+  // Gap visual scaling: exaggerated so it's visible at scene scale
+  const scale=30*CM;
+  const halfD = (S.slitSep/10)*scale;    // half separation (scene units)
+  const halfW = Math.max(0.04,(S.slitWidth/10)*scale); // half slit width
+  // Slit gap edges: top slit top=halfD+halfW, bottom=halfD-halfW
+  //                 bot slit top=-(halfD-halfW), bottom=-(halfD+halfW)
+  const topSlitTop  =  halfD + halfW;
+  const topSlitBot  =  halfD - halfW;
+  const botSlitTop  = -(halfD - halfW);
+  const botSlitBot  = -(halfD + halfW);
+
+  // Middle (bridge) plate between the two slits
+  const midH=Math.max(0.01,topSlitBot-(-botSlitTop));
+  // Heights of top and bottom outer plates
+  const outerH=1.4;
+
+  const tp=slitD.getObjectByName('topPlate');
+  const mp=slitD.getObjectByName('midPlate');
+  const bp=slitD.getObjectByName('botPlate');
+  const te=slitD.getObjectByName('topEdge');
+  const mte=slitD.getObjectByName('midTopEdge');
+  const mbe=slitD.getObjectByName('midBotEdge');
+  const be=slitD.getObjectByName('botEdge');
+
+  if(tp){ tp.position.set(0, topSlitTop+outerH/2, 0); }
+  if(mp){ mp.position.set(0, (topSlitBot+(-botSlitTop))/2, 0); mp.scale.y=Math.max(0.01,2*Math.abs(topSlitBot)/0.18); }
+  if(bp){ bp.position.set(0, botSlitBot-outerH/2, 0); }
+  if(te ){ te.position.set(0,  topSlitTop, 0); }
+  if(mte){ mte.position.set(0, topSlitBot, 0); }
+  if(mbe){ mbe.position.set(0,-botSlitTop, 0); }
+  if(be ){ be.position.set(0,  botSlitBot, 0); }
+}
+
+// ── SCREEN
+desktopTex=new THREE.CanvasTexture(screenTC);
+function buildScreen(){
+  const g=new THREE.Group(); g.userData.type='screen';
+  const standMat=new THREE.MeshStandardMaterial({color:0x0a1e2a,metalness:0.8,roughness:0.25});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),standMat); base.position.set(0,-0.44,0); g.add(base);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.5,8),standMat); post.position.set(0,-0.16,0); g.add(post);
+  const frameMat=new THREE.MeshStandardMaterial({color:0x1a3040,metalness:0.75,roughness:0.3});
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(0.1,5.2,4.2),frameMat); frame.position.y=2.1; g.add(frame);
+  const screenMat=new THREE.MeshStandardMaterial({map:desktopTex,roughness:0.8,metalness:0,side:THREE.DoubleSide,emissive:0x010203,emissiveIntensity:0.3});
+  const panel=new THREE.Mesh(new THREE.PlaneGeometry(4,5),screenMat);
+  panel.rotation.y=Math.PI/2; panel.position.y=2.1; g.add(panel);
+  // Hitbox for drag
+  const hb=new THREE.Mesh(new THREE.BoxGeometry(0.8,5.5,4.4),new THREE.MeshBasicMaterial({visible:false}));
+  hb.userData.target='screen'; hb.position.y=2.1; g.add(hb);
+  return g;
+}
+const screenD=buildScreen(); root3.add(screenD);
+
+// ── BEAM — two beams diverging after slit, then merging (simplified: single beam to slit)
+const beamGroup=new THREE.Group(); root3.add(beamGroup);
+function updateBeam(){
+  while(beamGroup.children.length) beamGroup.remove(beamGroup.children[0]);
+  const col=waveToRGB(S.lambda);
+  const cHex=parseInt(col.replace('rgb(','').replace(')','').split(',').map(v=>{const h=parseInt(v).toString(16);return h.length<2?'0'+h:h;}).join(''),16);
+  const screenX=screenD.position.x;
+  const laserX=LASER_X+1.32;
+  const len=screenX-laserX;
+  if(len<=0) return;
+  // Core beam
+  const bMat=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:0.55,side:THREE.DoubleSide,depthWrite:false});
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,len,8),bMat);
+  beam.rotation.z=Math.PI/2; beam.position.set(laserX+len/2,0.5,0); beam.renderOrder=5; beamGroup.add(beam);
+  // Glow
+  const gMat=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:0.12,side:THREE.DoubleSide,depthWrite:false});
+  const glow=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.18,len,8),gMat);
+  glow.rotation.z=Math.PI/2; glow.position.set(laserX+len/2,0.5,0); glow.renderOrder=4; beamGroup.add(glow);
+  // Update emitter colour
+  const emitter=laserD.getObjectByName('emitter');
+  if(emitter){ emitter.material.color.setHex(cHex); emitter.material.emissive.setHex(cHex); }
+}
+
+function layoutScene(){
+  screenD.position.set(S.dist*100*CM,0,0);
+  updateSlitGeometry();
+  updateBeam();
+  fullUpdate();
+  if(arMode) syncARPositions();
+}
+
+// Desktop labels
+function drawLabels(){
+  if(arMode){ lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height); return; }
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  lctx.textAlign='center';
+  function w2s(v){ const c=v.clone().project(cam3); return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight}; }
+  [
+    {p:new THREE.Vector3(LASER_X,2.0,0), t:`LASER  λ=${S.lambda}nm`, c:waveToRGB(S.lambda)},
+    {p:new THREE.Vector3(0,2.8,0),       t:`DOUBLE SLIT  w=${S.slitWidth.toFixed(2)}  d=${S.slitSep.toFixed(2)} mm`, c:'#88ccff'},
+    {p:new THREE.Vector3(screenD.position.x,3.5,0), t:'SCREEN', c:'#88ffcc'},
+  ].forEach(({p,t,c})=>{
+    const s=w2s(p); lctx.font='600 11px "Space Mono",monospace'; lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=8; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
+  });
+  // L annotation
+  const bY=-0.7;
+  const lS=w2s(new THREE.Vector3(0,bY,0)), sS=w2s(new THREE.Vector3(screenD.position.x,bY,0));
+  const ly=Math.max(lS.y,sS.y)+10;
+  lctx.font='500 10px "Space Mono",monospace'; lctx.lineWidth=1;
+  lctx.strokeStyle='rgba(120,180,255,.3)'; lctx.beginPath(); lctx.moveTo(lS.x,ly); lctx.lineTo(sS.x,ly); lctx.stroke();
+  lctx.fillStyle='rgba(120,180,255,.65)'; lctx.fillText(`L=${S.dist.toFixed(2)}m`,(lS.x+sS.x)/2,ly+13);
+}
+
+// Desktop interaction
+const rc3=new THREE.Raycaster(); let drag=null;
+function ndcXY(ex,ey){ const r=canvas.getBoundingClientRect(); return new THREE.Vector2(((ex-r.left)/r.width)*2-1,-((ey-r.top)/r.height)*2+1); }
+function doHit(ex,ey){ rc3.setFromCamera(ndcXY(ex,ey),cam3); return rc3.intersectObjects(root3.children,true); }
+
+canvas.addEventListener('mousedown',e=>{
+  if(arMode)return;
+  if(e.button===1||e.button===2){drag={mode:'orbit',lastX:e.clientX,lastY:e.clientY};e.preventDefault();return;}
+  const hits=doHit(e.clientX,e.clientY);
+  for(const h of hits){ if(h.object.userData.target==='screen'){drag={mode:'screen',lastX:e.clientX,lastY:e.clientY,startD:S.dist};canvas.style.cursor='grabbing';return;} }
+  drag={mode:'orbit',lastX:e.clientX,lastY:e.clientY};
+});
+canvas.addEventListener('mousemove',e=>{
+  if(arMode||!drag)return;
+  const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;
+  if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
+  else if(drag.mode==='screen'){S.dist=Math.max(0.20,Math.min(3.0,drag.startD+dx*0.007));document.getElementById('dist-slider').value=S.dist.toFixed(2);document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m';layoutScene();}
+  drag.lastX=e.clientX; drag.lastY=e.clientY;
+});
+canvas.addEventListener('mouseup',()=>{drag=null;if(!arMode)canvas.style.cursor='default';});
+canvas.addEventListener('mouseleave',()=>{drag=null;});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('wheel',e=>{if(arMode)return;orb.radius=Math.max(6,Math.min(55,orb.radius+e.deltaY*0.03));applyOrbit();e.preventDefault();},{passive:false});
+
+const touches={};
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
+  if(Object.keys(touches).length===1){
+    const t=e.changedTouches[0]; const hits=doHit(t.clientX,t.clientY);
+    let found=false;
+    for(const h of hits){ if(h.object.userData.target==='screen'){drag={mode:'screen',lastX:t.clientX,lastY:t.clientY,startD:S.dist};found=true;break;} }
+    if(!found&&!arMode)drag={mode:'orbit',lastX:t.clientX,lastY:t.clientY};
+  }
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(Object.keys(touches).length>=2&&!arMode){
+    const tArr=[...e.changedTouches];
+    if(tArr.length>=2){ const p0=touches[tArr[0].identifier]||{x:tArr[0].clientX,y:tArr[0].clientY},p1=touches[tArr[1].identifier]||{x:tArr[1].clientX,y:tArr[1].clientY}; const oldD=Math.hypot(p0.x-p1.x,p0.y-p1.y),newD=Math.hypot(tArr[0].clientX-tArr[1].clientX,tArr[0].clientY-tArr[1].clientY); if(oldD>1){orb.radius=Math.max(6,Math.min(55,orb.radius*(oldD/newD)));applyOrbit();} }
+  } else if(drag){
+    const t=e.changedTouches[0]; const dx=t.clientX-drag.lastX,dy=t.clientY-drag.lastY;
+    if(drag.mode==='orbit'&&!arMode){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
+    else if(drag.mode==='screen'){S.dist=Math.max(0.20,Math.min(3.0,drag.startD+dx*0.007));document.getElementById('dist-slider').value=S.dist.toFixed(2);document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m';layoutScene();}
+    drag.lastX=t.clientX; drag.lastY=t.clientY; drag.startD=S.dist;
+  }
+  [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
+},{passive:false});
+canvas.addEventListener('touchend',e=>{[...e.changedTouches].forEach(t=>{delete touches[t.identifier];});if(Object.keys(touches).length===0)drag=null;},{passive:false});
+
+function desktopLoop(){ if(arMode)return; requestAnimationFrame(desktopLoop); drawLabels(); renderer.render(scene3,cam3); }
+
+// ═══════════════════════════════════════════════════════
+//  AR MODE
+// ═══════════════════════════════════════════════════════
+let arPinchDist0=null,arScale0=null,arDrag=null,arScreenDragStartX=null,arScreenDragStartDist=null;
+
+function buildARScene(){
+  const wrap=document.getElementById('arWrap');
+  wrap.innerHTML=''; wrap.classList.add('show');
+  arScale=0.44;
+
+  const sceneEl=document.createElement('a-scene');
+  sceneEl.setAttribute('embedded','');
+  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.50;');
+  sceneEl.setAttribute('renderer','antialias:true;precision:medium;');
+  sceneEl.setAttribute('vr-mode-ui','enabled:false');
+  sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
+  sceneEl.style.cssText='width:100%;height:100%;display:block;';
+
+  const assets=document.createElement('a-assets');
+  assets.setAttribute('timeout','10000');
+
+  // Ruler canvas
+  const rulCvs=document.createElement('canvas');
+  rulCvs.id='ar-ruler-cvs'; rulCvs.width=4096; rulCvs.height=220;
+  const rCtx=rulCvs.getContext('2d');
+  assets.appendChild(rulCvs);
+
+  // Screen canvas
+  const screenCvs=document.createElement('canvas');
+  screenCvs.id='ar-screen-cvs'; screenCvs.width=screenCvs.height=512;
+  screenCvs.getContext('2d').drawImage(screenTC,0,0,512,512);
+  assets.appendChild(screenCvs);
+
+  sceneEl.appendChild(assets);
+
+  const camEnt=document.createElement('a-entity'); camEnt.setAttribute('camera',''); sceneEl.appendChild(camEnt);
+
+  const marker=document.createElement('a-marker');
+  marker.setAttribute('preset','hiro');
+  marker.setAttribute('smooth','true'); marker.setAttribute('smoothCount','5');
+  marker.setAttribute('smoothTolerance','0.01'); marker.setAttribute('smoothThreshold','2');
+  marker.addEventListener('markerFound',()=>{ const s=document.getElementById('ar-status'); s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(60,220,120,.18)'; s.style.border='1px solid rgba(60,220,120,.5)'; s.style.color='#3fdc78'; });
+  marker.addEventListener('markerLost', ()=>{ const s=document.getElementById('ar-status'); s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400'; });
+
+  const sg=document.createElement('a-entity');
+  sg.setAttribute('id','ar-scale-group');
+  sg.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
+
+  function mkBox(w,h,d,col,met,rou){ const b=document.createElement('a-box'); b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d); b.setAttribute('color',col); if(met!=null)b.setAttribute('metalness',met); if(rou!=null)b.setAttribute('roughness',rou); return b; }
+
+  // Rail — extended right
+  const railCx=2.0, railHalf=6.0;
+  const rw=mkBox('12.0','0.06','0.15','#0d2040','0.85','0.15'); rw.setAttribute('position',`${railCx} 0 0`); sg.appendChild(rw);
+  const rf=mkBox('12.0','0.04','0.42','#142a55','0.85','0.12'); rf.setAttribute('position',`${railCx} 0.05 0`); sg.appendChild(rf);
+  const rb=mkBox('12.0','0.04','0.42','#0d2040','0.85','0.15'); rb.setAttribute('position',`${railCx} -0.05 0`); sg.appendChild(rb);
+
+  // Ruler mapping: canvas covers RUL_LEFT_CM to RUL_RIGHT_CM (slit-relative)
+  const RUL_LEFT_CM=(railCx-railHalf)*10, RUL_RIGHT_CM=(railCx+railHalf)*10, RUL_RANGE_CM=RUL_RIGHT_CM-RUL_LEFT_CM;
+  { const SW=4096,SH=220;
+    rCtx.clearRect(0,0,SW,SH);
+    function arCmPx(cm){ return Math.round(((cm-RUL_LEFT_CM)/RUL_RANGE_CM)*SW); }
+    for(let mm=Math.floor(RUL_LEFT_CM)*10; mm<=Math.ceil(RUL_RIGHT_CM)*10; mm++){
+      const cm=mm/10, px=arCmPx(cm);
+      if(px<0||px>SW)continue;
+      const is5mm=(mm%5===0),isCm=(mm%10===0),is5cm=(mm%50===0),isZ=(mm===0);
+      const tickH=isZ?SH*0.92:is5cm?SH*0.65:isCm?SH*0.44:is5mm?SH*0.28:SH*0.15;
+      rCtx.fillStyle=isZ?'#ffdd44':cm<0?'#ff9999':'#99ffcc';
+      const tw=isZ?7:is5cm?4:isCm?2:1;
+      rCtx.fillRect(px-Math.floor(tw/2),0,tw,tickH);
+      if(is5cm&&!isZ){ rCtx.font='bold 68px monospace'; rCtx.textAlign='center'; rCtx.fillStyle=cm<0?'#ffbbbb':'#bbffdd'; rCtx.fillText(Math.abs(cm).toFixed(0),px,SH-6); }
+      if(isZ){ rCtx.font='bold 82px monospace'; rCtx.textAlign='center'; rCtx.fillStyle='#ffee44'; rCtx.fillText('0',px,SH-6); }
+    }
+    rCtx.font='bold 56px monospace'; rCtx.fillStyle='#ff9988'; rCtx.textAlign='center'; rCtx.fillText('LASER',arCmPx(-35),SH*0.48);
+    rCtx.fillStyle='#88ffcc'; rCtx.textAlign='center'; rCtx.fillText('SCR →',arCmPx(RUL_RIGHT_CM-8),SH*0.48);
+  }
+
+  const rulePlane=document.createElement('a-plane');
+  rulePlane.setAttribute('width','12.0'); rulePlane.setAttribute('height','0.55');
+  rulePlane.setAttribute('position',`${railCx} 0.16 0`); rulePlane.setAttribute('rotation','-90 0 0');
+  rulePlane.setAttribute('src','#ar-ruler-cvs');
+  rulePlane.setAttribute('material','transparent:true;opacity:0.95;shader:flat;side:double;');
+  sg.appendChild(rulePlane);
+
+  const RAIL_TOP=0.055, POST=0.22;
+  const MOUNT_TOP=RAIL_TOP+0.03+POST;
+  const BEAM_Y=MOUNT_TOP+0.14;
+
+  function makeMount(xPos,col){
+    const g=document.createElement('a-entity'); g.setAttribute('position',`${xPos} 0 0`);
+    const base=mkBox('0.05','0.03','0.12',col,'0.75','0.25'); base.setAttribute('position',`0 ${RAIL_TOP+0.015} 0`); g.appendChild(base);
+    const post=document.createElement('a-cylinder'); post.setAttribute('position',`0 ${RAIL_TOP+0.03+POST/2} 0`); post.setAttribute('radius','0.009'); post.setAttribute('height',`${POST}`); post.setAttribute('color',col); post.setAttribute('metalness','0.8'); g.appendChild(post);
+    return g;
+  }
+
+  // LASER
+  const AR_LASER_X=-3.5;
+  const laserEnt=makeMount(AR_LASER_X,'#1a2a3a');
+  const laserBody=document.createElement('a-cylinder'); laserBody.setAttribute('position',`0.65 ${BEAM_Y} 0`); laserBody.setAttribute('rotation','0 0 90'); laserBody.setAttribute('radius','0.14'); laserBody.setAttribute('height','1.1'); laserBody.setAttribute('color','#1a2a3a'); laserBody.setAttribute('metalness','0.85'); laserEnt.appendChild(laserBody);
+  const laserDot=document.createElement('a-sphere'); laserDot.setAttribute('id','ar-laser-dot'); laserDot.setAttribute('position',`1.22 ${BEAM_Y} 0`); laserDot.setAttribute('radius','0.055'); laserDot.setAttribute('color',waveToRGB(S.lambda)); laserDot.setAttribute('emissive',waveToRGB(S.lambda)); laserDot.setAttribute('emissive-intensity','4.0'); laserEnt.appendChild(laserDot);
+  sg.appendChild(laserEnt);
+
+  // DOUBLE SLIT — three plate sections
+  const slitEnt=makeMount(0,'#223344');
+  const PLATE_H=0.50, GAP=0.04;
+  // d separation visual (same scale as desktop)
+  const dVis=(S.slitSep/10)*0.3;
+  const wVis=Math.max(0.03,(S.slitWidth/10)*0.3);
+  // Top slit: from (dVis+wVis/2) to (dVis-wVis/2)  above centre
+  // Bot slit: from -(dVis-wVis/2) to -(dVis+wVis/2) below centre
+  const tsTop=BEAM_Y+dVis+wVis/2, tsBot=BEAM_Y+dVis-wVis/2;
+  const bsTop=BEAM_Y-dVis+wVis/2, bsBot=BEAM_Y-dVis-wVis/2;
+
+  const topPlate=mkBox('0.08',String(PLATE_H),'0.06','#3a6080','0.85','0.15');
+  topPlate.setAttribute('position',`0 ${tsTop+PLATE_H/2} 0`); slitEnt.appendChild(topPlate);
+  const midBridgeH=Math.max(0.02,tsBot-bsTop);
+  const midPlate=mkBox('0.08',String(midBridgeH.toFixed(3)),'0.06','#3a6080','0.85','0.15');
+  midPlate.setAttribute('position',`0 ${(tsBot+bsTop)/2} 0`); slitEnt.appendChild(midPlate);
+  const botPlate=mkBox('0.08',String(PLATE_H),'0.06','#3a6080','0.85','0.15');
+  botPlate.setAttribute('position',`0 ${bsBot-PLATE_H/2} 0`); slitEnt.appendChild(botPlate);
+  // Edge highlights
+  [tsTop,tsBot,bsTop,bsBot].forEach(y=>{ const e=mkBox('0.04','0.01','0.08','#445566','0.95','0.05'); e.setAttribute('position',`0 ${y} 0`); slitEnt.appendChild(e); });
+  sg.appendChild(slitEnt);
+
+  // SCREEN
+  const screenEnt=makeMount(1.5,'#0a1e2a');
+  screenEnt.setAttribute('id','ar-screen');
+  const SCREEN_H=2.4, SCREEN_W=2.0, SCREEN_CX_Y=MOUNT_TOP+SCREEN_H/2;
+  const scrFrame=mkBox('0.06',String(SCREEN_H),String(SCREEN_W),'#1a3040','0.75','0.3');
+  scrFrame.setAttribute('position',`0 ${SCREEN_CX_Y} 0`); screenEnt.appendChild(scrFrame);
+  const scrPanel=document.createElement('a-plane');
+  scrPanel.setAttribute('id','ar-screen-panel');
+  scrPanel.setAttribute('position',`0 ${SCREEN_CX_Y} 0`); scrPanel.setAttribute('rotation','0 90 0');
+  scrPanel.setAttribute('width',String(SCREEN_W-0.08)); scrPanel.setAttribute('height',String(SCREEN_H-0.08));
+  scrPanel.setAttribute('src','#ar-screen-cvs'); scrPanel.setAttribute('side','double');
+  scrPanel.setAttribute('material','src:#ar-screen-cvs;side:double;emissive:#111;emissiveIntensity:0.5;');
+  screenEnt.appendChild(scrPanel);
+  sg.appendChild(screenEnt);
+
+  // BEAM
+  const beamEnt=document.createElement('a-cylinder'); beamEnt.setAttribute('id','ar-beam'); beamEnt.setAttribute('rotation','0 0 90'); beamEnt.setAttribute('radius','0.016'); beamEnt.setAttribute('color',waveToRGB(S.lambda)); beamEnt.setAttribute('opacity','0.65'); beamEnt.setAttribute('transparent','true'); sg.appendChild(beamEnt);
+  const beamGlow=document.createElement('a-cylinder'); beamGlow.setAttribute('id','ar-beam-glow'); beamGlow.setAttribute('rotation','0 0 90'); beamGlow.setAttribute('radius','0.08'); beamGlow.setAttribute('color',waveToRGB(S.lambda)); beamGlow.setAttribute('opacity','0.10'); beamGlow.setAttribute('transparent','true'); sg.appendChild(beamGlow);
+
+  marker.appendChild(sg); sceneEl.appendChild(marker); wrap.appendChild(sceneEl);
+  arScene=sceneEl;
+  arEntities={ laserDot, screen:screenEnt, screenPanel:scrPanel, screenCvs, beam:beamEnt, beamGlow, scaleGroup:sg, beamHeight:BEAM_Y };
+  syncARPositions();
+
+  wrap.addEventListener('touchstart',onARTouch,{passive:false});
+  wrap.addEventListener('touchmove',onARTouchMove,{passive:false});
+  wrap.addEventListener('touchend',onARTouchEnd,{passive:false});
+}
+
+function syncARPositions(){
+  if(!arEntities.screen)return;
+  const screenXAR=S.dist*100*CM;
+  arEntities.screen.setAttribute('position',`${screenXAR} 0 0`);
+  const laserXAR=-3.5, beamStart=laserXAR+1.25, beamLen=screenXAR-beamStart;
+  const bh=arEntities.beamHeight||0.305;
+  if(beamLen>0){ const midX=beamStart+beamLen/2; ['beam','beamGlow'].forEach(k=>{ arEntities[k].setAttribute('position',`${midX} ${bh} 0`); arEntities[k].setAttribute('height',`${beamLen}`); }); }
+  const col=waveToRGB(S.lambda);
+  if(arEntities.laserDot){ arEntities.laserDot.setAttribute('color',col); arEntities.laserDot.setAttribute('emissive',col); }
+  if(arEntities.beam){ arEntities.beam.setAttribute('color',col); }
+  if(arEntities.beamGlow){ arEntities.beamGlow.setAttribute('color',col); }
+  syncARTexture();
+}
+function syncARTexture(){
+  if(!arEntities.screenCvs)return;
+  arEntities.screenCvs.getContext('2d').drawImage(screenTC,0,0,512,512);
+  const mat=arEntities.screenPanel&&arEntities.screenPanel.components&&arEntities.screenPanel.components.material;
+  if(mat&&mat.material&&mat.material.map) mat.material.map.needsUpdate=true;
+}
+
+function onARTouch(e){
+  e.preventDefault();
+  if(e.touches.length===2){ arDrag=null; arScreenDragStartX=null; arPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); arScale0=arScale; return; }
+  if(e.touches.length!==1)return;
+  const t=e.touches[0];
+  if(t.clientX>window.innerWidth*0.45){ arScreenDragStartX=t.clientX; arScreenDragStartDist=S.dist; arDrag={mode:'screen'}; }
+  else{ arDrag=null; arScreenDragStartX=null; }
+}
+function onARTouchMove(e){
+  e.preventDefault();
+  if(e.touches.length===2&&arPinchDist0!==null){ const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); arScale=Math.max(0.05,Math.min(3.0,arScale0*(nd/arPinchDist0))); if(arEntities.scaleGroup)arEntities.scaleGroup.setAttribute('scale',`${arScale} ${arScale} ${arScale}`); return; }
+  if(!arDrag||e.touches.length!==1)return;
+  const t=e.touches[0];
+  if(arDrag.mode==='screen'&&arScreenDragStartX!==null){
+    const dx=t.clientX-arScreenDragStartX;
+    const newDist=Math.max(0.10,Math.min(3.00,arScreenDragStartDist+dx*0.006));
+    S.dist=newDist;
+    document.getElementById('dist-slider').value=newDist.toFixed(2);
+    document.getElementById('dist-val').textContent=newDist.toFixed(2)+'m';
+    const lPill=document.getElementById('ar-l-val');
+    if(lPill)lPill.textContent=`= ${newDist.toFixed(2)} m`;
+    syncARPositions(); fullUpdate();
+  }
+}
+function onARTouchEnd(e){ if(e.touches.length<2){arPinchDist0=null;arScale0=null;} if(e.touches.length===0){arDrag=null;arScreenDragStartX=null;} }
+
+// Enter / Exit AR
+const btnAR=document.getElementById('btn-ar');
+function showARStep(n){ [1,2,3,4].forEach(i=>{const el=document.getElementById('ar-step'+i);if(el)el.style.display=(i===n?'':'none');}); }
+function toggleARGuide(){ const p=document.getElementById('ar-instructions'); if(p.classList.contains('show')){p.classList.remove('show');}else{showARStep(3);p.classList.add('show');} }
+
+function enterAR(){
+  arMode=true;
+  document.getElementById('simWrap').style.display='none';
+  document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('ar-status').style.display='block';
+  document.getElementById('hint').style.display='none';
+  document.body.classList.add('ar-active');
+  floorM.visible=false; gridM.visible=false;
+  document.getElementById('btn-guide').style.display='';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='none');
+  showARStep(1);
+  btnAR.textContent='✕ Exit AR'; btnAR.classList.add('on');
+
+  S._arOrigLambda=S.lambda; S._arOrigDist=S.dist; S._arOrigSlit=S.slitWidth; S._arOrigSep=S.slitSep;
+  S.dist=0.50; S.slitWidth=0.05; S.slitSep=0.25;
+  document.getElementById('slit-slider').value=0.05; document.getElementById('slit-val').textContent='0.05mm';
+  document.getElementById('sep-slider').value=0.25;  document.getElementById('sep-val').textContent='0.25mm';
+  const waves=[405,445,488,515,532,543,594,633,650,670];
+  S.lambda=waves[Math.floor(Math.random()*waves.length)];
+  document.getElementById('lambda-slider').value=S.lambda; document.getElementById('lambda-val').textContent=S.lambda+'nm';
+  layoutScene();
+
+  document.getElementById('ar-d-val').textContent=`= ${S.slitSep.toFixed(2)} mm`;
+  document.getElementById('ar-w-val').textContent=`= ${S.slitWidth.toFixed(2)} mm`;
+  document.getElementById('ar-l-val').textContent=`= ${S.dist.toFixed(2)} m`;
+
+  const res=document.getElementById('wave-quiz-result'); if(res){res.textContent='';res.style.display='none';}
+  const inp=document.getElementById('wave-quiz-input'); if(inp)inp.value='';
+}
+
+function exitAR(){
+  arMode=false;
+  document.querySelectorAll('video').forEach(v=>{ if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;} });
+  document.getElementById('simWrap').style.display='';
+  const wrap=document.getElementById('arWrap'); wrap.classList.remove('show'); wrap.innerHTML='';
+  arScene=null; arEntities={};
+  document.getElementById('ar-instructions').classList.remove('show');
+  document.getElementById('ar-status').style.display='none';
+  document.getElementById('hint').style.display='';
+  document.getElementById('btn-guide').style.display='none';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='');
+  document.body.classList.remove('ar-active');
+  floorM.visible=true; gridM.visible=true;
+  if(S._arOrigLambda!==undefined){S.lambda=S._arOrigLambda;delete S._arOrigLambda;document.getElementById('lambda-slider').value=S.lambda;document.getElementById('lambda-val').textContent=S.lambda+'nm';}
+  if(S._arOrigDist!==undefined){S.dist=S._arOrigDist;delete S._arOrigDist;document.getElementById('dist-slider').value=S.dist.toFixed(2);document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m';}
+  if(S._arOrigSlit!==undefined){S.slitWidth=S._arOrigSlit;delete S._arOrigSlit;document.getElementById('slit-slider').value=S.slitWidth.toFixed(2);document.getElementById('slit-val').textContent=S.slitWidth.toFixed(2)+'mm';}
+  if(S._arOrigSep!==undefined){S.slitSep=S._arOrigSep;delete S._arOrigSep;document.getElementById('sep-slider').value=S.slitSep.toFixed(2);document.getElementById('sep-val').textContent=S.slitSep.toFixed(2)+'mm';}
+  layoutScene();
+  btnAR.textContent='📷 AR Mode'; btnAR.classList.remove('on');
+  const w=window.innerWidth,h=window.innerHeight;
+  renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix();
+  labelCanvas.width=w; labelCanvas.height=h;
+  applyOrbit(); requestAnimationFrame(desktopLoop);
+}
+
+btnAR.addEventListener('click',()=>{ if(!arMode) enterAR(); else exitAR(); });
+
+document.getElementById('ar-start-btn').addEventListener('click',function(){
+  showARStep(2);
+  function loadScript(urls,onDone,onFail){ if(!urls.length){onFail();return;} const s=document.createElement('script'); s.src=urls[0]; s.setAttribute('data-arscript','1'); s.onload=onDone; s.onerror=()=>loadScript(urls.slice(1),onDone,onFail); document.head.appendChild(s); }
+  function onLibsReady(){ const wrap=document.getElementById('arWrap'); const old=wrap.querySelector('a-scene'); if(old){old.querySelectorAll('video').forEach(v=>{if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}});wrap.removeChild(old);} arScene=null; arEntities={}; buildARScene(); const s=document.getElementById('ar-status'); s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400'; showARStep(3); }
+  function loadARLibs(){ if(window.AFRAME&&window.AFRAME.version){onLibsReady();return;} const aframeCDNs=['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js']; const arjsCDNs=['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js']; loadScript(aframeCDNs,()=>loadScript(arjsCDNs,onLibsReady,()=>alert('Could not load AR.js')),()=>alert('Could not load A-Frame')); }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(stream=>{stream.getTracks().forEach(t=>t.stop());loadARLibs();}).catch(()=>loadARLibs());
+});
+
+// Quiz
+document.getElementById('wave-quiz-btn').addEventListener('click',()=>{
+  const input=parseFloat(document.getElementById('wave-quiz-input').value);
+  const res=document.getElementById('wave-quiz-result'); res.style.display='block';
+  if(isNaN(input)||input<380||input>750){ res.style.color='#ffcc44'; res.textContent='⚠ Enter 380–750 nm'; return; }
+  const relErr=Math.abs(input-S.lambda)/S.lambda;
+  if(relErr<=0.10){ res.style.color='#7fffb2'; res.textContent=`✓ Correct!  λ = ${S.lambda} nm`; }
+  else if(relErr<=0.20){ res.style.color='#ff9922'; res.textContent='≈ Close, but not enough'; }
+  else { res.style.color='#ff4444'; res.textContent='✗ Incorrect — try again'; }
+});
+
+// Controls
+document.getElementById('lambda-slider').addEventListener('input',function(){ S.lambda=parseInt(this.value); document.getElementById('lambda-val').textContent=S.lambda+'nm'; document.getElementById('lambda-val').style.color=waveToRGB(S.lambda); layoutScene(); });
+document.getElementById('slit-slider').addEventListener('input',function(){ S.slitWidth=parseFloat(this.value); document.getElementById('slit-val').textContent=S.slitWidth.toFixed(2)+'mm'; layoutScene(); });
+document.getElementById('sep-slider').addEventListener('input',function(){ S.slitSep=parseFloat(this.value); document.getElementById('sep-val').textContent=S.slitSep.toFixed(2)+'mm'; layoutScene(); });
+document.getElementById('dist-slider').addEventListener('input',function(){ S.dist=parseFloat(this.value); document.getElementById('dist-val').textContent=S.dist.toFixed(2)+'m'; layoutScene(); });
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  Object.assign(S,{lambda:532,slitWidth:0.05,slitSep:0.25,dist:1.00});
+  document.getElementById('lambda-slider').value=532; document.getElementById('lambda-val').textContent='532nm'; document.getElementById('lambda-val').style.color=waveToRGB(532);
+  document.getElementById('slit-slider').value=0.05; document.getElementById('slit-val').textContent='0.05mm';
+  document.getElementById('sep-slider').value=0.25; document.getElementById('sep-val').textContent='0.25mm';
+  document.getElementById('dist-slider').value=1.00; document.getElementById('dist-val').textContent='1.00m';
+  layoutScene();
+});
+
+// Init
+{ const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); labelCanvas.width=w; labelCanvas.height=h; }
+layoutScene();
+desktopLoop();
+</script>
+</body>
+</html>
