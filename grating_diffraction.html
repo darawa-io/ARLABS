@@ -157,9 +157,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 <div id="hint">drag orbit · scroll zoom · drag screen to reposition</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script>
 'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  AR STATE — declared first to avoid temporal dead zone
+// ═══════════════════════════════════════════════════════
+let arMode=false, arScene=null, arEntities={}, arScale=0.55;
+let arDrag=null, arPinchDist0=null, arScale0=null;
+let screenD=null;  // forward-declared; assigned after buildScreen()
 
 // ═══════════════════════════════════════════════════════
 //  STATE
@@ -230,29 +236,53 @@ function renderGratingToCtx(ctx, W, H, rulerW){
   const [r_c,g_c,b_c] = parseRGB(col);
   const lam   = S.lambda * 1e-9;     // m
   const d     = d_m();               // m
-  const Nslits= 30;                  // virtual number of slits for envelope sharpness
-  const a     = d * 0.5;            // single-slit width ≈ half spacing
+  // Single-slit envelope width  a ≈ d/2
+  const a = d * 0.5;
 
-  for(let py=0; py<H; py++){
-    const ymm  = (py - H/2) * mmPerPx;
-    const yM   = ymm * 1e-3;
-    const sinT = yM / Math.sqrt(yM*yM + S.dist*S.dist);
-    // Single-slit envelope
-    const beta  = Math.PI * a * sinT / lam;
-    const env   = Math.abs(beta) < 1e-9 ? 1 : Math.pow(Math.sin(beta)/beta, 2);
-    // Multi-slit interference
-    const delta = Math.PI * d * sinT / lam;
-    const msl   = Math.abs(Math.sin(delta)) < 1e-9
-                  ? 1
-                  : Math.pow(Math.sin(Nslits*delta)/(Nslits*Math.sin(delta)), 2);
-    const I = env * msl;
-    // Perceptual: pow(I,0.35) keeps faint orders visible but not washed out
-    const alpha = Math.min(1, Math.pow(I, 0.35) * 1.1);
-    ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${alpha})`;
+  // ── Grating pattern: analytically sharp peaks ──────────────────────────
+  // Strategy: render a dark base, then for each pixel compute distance to
+  // nearest integer-order maximum. Peaks have width ~λ/(N·d) radians —
+  // with a real grating (N~10000) they are sub-pixel in angle space.
+  // We model them as Gaussian spikes of controlled pixel-width (3 px FWHM)
+  // modulated by the sinc² single-slit envelope.
+
+  // First pass: dark background
+  // Second pass: draw each visible order as a bright spike
+
+  // Find which orders m are visible (|sinθ| < 1) and their y positions
+  const orders = [];
+  for(let m = -20; m <= 20; m++){
+    const sinT = m * lam / d;
+    if(Math.abs(sinT) >= 1) continue;
+    const tanT = sinT / Math.sqrt(1 - sinT*sinT);
+    const ymm  = tanT * S.dist * 1e3;  // mm on screen
+    if(Math.abs(ymm) > halfRange + 2) continue;
+    // Single-slit envelope at this angle
+    const beta = Math.PI * a * sinT / lam;
+    const env  = Math.abs(beta) < 1e-9 ? 1.0 : Math.pow(Math.sin(beta)/beta, 2);
+    orders.push({ ymm, env, m });
+  }
+
+  // Render: for each pixel row find the intensity from all nearby orders
+  // Use a narrow Gaussian per order (sigma = 1.2 px) for realistic sharpness
+  const sigma = 1.2; // px — controls peak width (sharp grating lines)
+  const sig2  = 2 * sigma * sigma;
+
+  for(let py = 0; py < H; py++){
+    let I = 0;
+    for(const {ymm, env} of orders){
+      const peakPy = H/2 - ymm * scale;
+      const dpy    = py - peakPy;
+      I += env * Math.exp(-(dpy*dpy)/sig2);
+    }
+    I = Math.min(1, I);
+    // No gamma — peaks should be crisp bright on black background
+    if(I < 0.01) continue;  // skip truly dark pixels (keep background black)
+    ctx.fillStyle = `rgba(${r_c},${g_c},${b_c},${I})`;
     ctx.fillRect(0, py, patW, 1);
   }
 
-  // Dashed lines at ±1st and ±2nd order maxima
+  // Dashed marker lines at ±1st and ±2nd order maxima
   const mColors = ['rgba(255,220,80,0.70)', 'rgba(180,120,255,0.60)'];
   [1,2].forEach(m=>{
     const ym = calcYm(m);
@@ -288,7 +318,6 @@ function renderGratingToCtx(ctx, W, H, rulerW){
       ctx.fillText(lbl, patW+rulerW-2, py+fs*0.38);
     }
   }
-  // "mm" label at top of ruler
   const fs2 = Math.max(8, Math.min(12, rulerW*0.30));
   ctx.font=`bold ${fs2}px monospace`; ctx.textAlign='center';
   ctx.fillStyle='rgba(180,210,255,0.95)';
@@ -478,37 +507,68 @@ const beamGroup=new THREE.Group(); beamGroup.renderOrder=4; root3.add(beamGroup)
 function updateBeam(){
   while(beamGroup.children.length) beamGroup.remove(beamGroup.children[0]);
   const col=waveToRGB(S.lambda);
-  const cHex=parseInt(col.replace('rgb(','').split(',').map((v,i)=>parseInt(v).toString(16).padStart(2,'0')).join(''),16)||0xff4466;
-  // Incident beam: laser → grating
-  const inc=LASER_X+1.3, gx=0;
-  const lenI=gx-inc;
-  const bMatI=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:0.72,side:THREE.DoubleSide,depthWrite:false});
-  const bI=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,lenI,8),bMatI);
-  bI.rotation.z=Math.PI/2; bI.position.set(inc+lenI/2,0.5,0); beamGroup.add(bI);
-  const gMatI=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:0.18,side:THREE.DoubleSide,depthWrite:false});
-  const gI=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,lenI,8),gMatI);
-  gI.rotation.z=Math.PI/2; gI.position.set(inc+lenI/2,0.5,0); beamGroup.add(gI);
-  // Diffracted beams: central (0th order) + ±1st + ±2nd order
-  const scrX=screenD ? screenD.position.x : 6;
-  [[0,1.0],[1,0.55],[-1,0.55],[2,0.25],[-2,0.25]].forEach(([m,opac])=>{
-    if(m===0){
-      const len=scrX-0.18;
-      const mb=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:opac*0.72,side:THREE.DoubleSide,depthWrite:false});
-      const bm=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,len,8),mb);
-      bm.rotation.z=Math.PI/2; bm.position.set(0.18+len/2,0.5,0); beamGroup.add(bm);
-    } else {
-      const ym=calcYm(Math.abs(m)); if(ym===null) return;
-      const yScene=ym*0.01*(m<0?-1:1);
-      const dx=scrX-0.18, dy=yScene;
-      const len=Math.sqrt(dx*dx+dy*dy), angle=Math.atan2(dy,dx);
-      const mb=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:opac*0.72,side:THREE.DoubleSide,depthWrite:false});
-      const bm=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,len,8),mb);
-      bm.rotation.z=Math.PI/2-angle; bm.position.set(0.18+dx/2,0.5+dy/2,0); beamGroup.add(bm);
+  const [rc,gc,bc]=parseRGB(col);
+  const cHex=(rc<<16)|(gc<<8)|bc;
+
+  // Grating sits at x=0, beam axis y=0.5
+  const GRATING_X = 0;
+  const BEAM_Y    = 0.5;
+
+  // Incident beam: laser aperture → grating face
+  const laserApertureX = LASER_X + 1.3;
+  const incLen = GRATING_X - laserApertureX;
+  const bMatI=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:0.72,depthWrite:false});
+  const bI=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,incLen,8),bMatI);
+  bI.rotation.z=Math.PI/2;
+  bI.position.set(laserApertureX + incLen/2, BEAM_Y, 0);
+  beamGroup.add(bI);
+  // Incident glow
+  const gMatI=new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity:0.15,depthWrite:false});
+  const gI=new THREE.Mesh(new THREE.CylinderGeometry(0.20,0.20,incLen,8),gMatI);
+  gI.rotation.z=Math.PI/2;
+  gI.position.set(laserApertureX + incLen/2, BEAM_Y, 0);
+  beamGroup.add(gI);
+
+  // Diffracted beams: each starts at grating (GRATING_X, BEAM_Y) and goes to screen
+  const scrX = screenD ? screenD.position.x : 6;
+  [[0,1.0],[1,0.55],[-1,0.55],[2,0.30],[-2,0.30]].forEach(([m,opac])=>{
+    // y on screen in scene units  (ym in mm × scene_scale)
+    // scene scale: screen is at scrX scene units = S.dist metres
+    // 1 scene unit = S.dist/scrX metres, so 1 mm = S.dist/(scrX*1000) scene units... 
+    // simpler: yScene = ym_mm * (scrX / (S.dist*1000))
+    let yScene = 0;
+    if(m !== 0){
+      const ym = calcYm(Math.abs(m));
+      if(ym === null) return;
+      yScene = ym * (scrX / (S.dist * 1000)) * (m < 0 ? -1 : 1);
     }
+
+    // Start: grating face
+    const x0 = GRATING_X, y0 = BEAM_Y;
+    // End: screen face
+    const x1 = scrX,       y1 = BEAM_Y + yScene;
+
+    const dx  = x1 - x0, dy = y1 - y0;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    // Angle: cylinder default axis is Y; rotation.z rotates it.
+    // We want the cylinder to point along (dx,dy), so angle from +X axis = atan2(dy,dx)
+    // rotation.z = -(PI/2 - atan2(dy,dx)) = atan2(dy,dx) - PI/2
+    const angle = Math.atan2(dy, dx);
+
+    const opacity = opac * (m===0 ? 0.65 : 0.55);
+    const radius  = m===0 ? 0.035 : 0.025;
+    const mb = new THREE.MeshBasicMaterial({color:cHex,transparent:true,opacity,depthWrite:false});
+    const bm = new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,len,8),mb);
+    // Rotate so cylinder points along beam direction
+    bm.rotation.z = angle - Math.PI/2;
+    // Centre of cylinder = midpoint of (x0,y0)→(x1,y1)
+    bm.position.set((x0+x1)/2, (y0+y1)/2, 0);
+    beamGroup.add(bm);
   });
+
   // Update emitter colour
   const emit=laserD.getObjectByName('emitter');
-  if(emit){ const [r,g,b]=parseRGB(col); emit.material.color.setRGB(r/255,g/255,b/255); emit.material.emissive.setRGB(r/255*0.5,g/255*0.5,b/255*0.5); }
+  if(emit){ emit.material.color.setRGB(rc/255,gc/255,bc/255); emit.material.emissive.setRGB(rc/255*0.5,gc/255*0.5,bc/255*0.5); }
 }
 
 // ── Screen
@@ -525,7 +585,7 @@ function buildScreen(){
   panel.rotation.y=Math.PI/2; panel.position.y=2.1; g.add(panel);
   return g;
 }
-const screenD=buildScreen(); screenD.position.set(6,0,0); root3.add(screenD);
+screenD=buildScreen(); screenD.position.set(6,0,0); root3.add(screenD);
 
 // Hitbox for dragging screen
 { const hb=new THREE.Mesh(new THREE.BoxGeometry(0.8,5.5,4.5),new THREE.MeshBasicMaterial({visible:false}));
@@ -560,11 +620,11 @@ canvas.addEventListener('mousemove',e=>{
   const dx=e.clientX-drag.lx, dy=e.clientY-(drag.ly||e.clientY);
   if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();drag.lx=e.clientX;drag.ly=e.clientY;}
   else if(drag.mode==='screen'){
-    const newX=Math.max(1,Math.min(12,drag.startX+dx*0.05));
-    screenD.position.x=newX; S.dist=newX*0.18;
+    const newX=Math.max(1.5,Math.min(12,drag.startX+dx*0.05));
+    screenD.position.x=newX; S.dist=Math.max(0.2, newX*0.18);
     document.getElementById('sl-L').value=S.dist.toFixed(2);
     document.getElementById('lbl-L').textContent=S.dist.toFixed(2)+'m';
-    fullUpdate();
+    updateBeam(); fullUpdate();
   }
 });
 canvas.addEventListener('mouseup',()=>{drag=null;canvas.style.cursor='default';});
@@ -578,7 +638,7 @@ canvas.addEventListener('touchstart',e=>{e.preventDefault();[...e.changedTouches
   if(Object.keys(touches).length===1){const t=e.changedTouches[0];const hits=hitTest(t.clientX,t.clientY);let f=false;for(const h of hits){if(h.object.userData.target==='screen'){drag={mode:'screen',lx:t.clientX,startX:screenD.position.x};f=true;break;}} if(!f)drag={mode:'orbit',lx:t.clientX,ly:t.clientY};}},{passive:false});
 canvas.addEventListener('touchmove',e=>{e.preventDefault();
   if(Object.keys(touches).length>=2){const ta=[...e.changedTouches];if(ta.length>=2){const p0=touches[ta[0].identifier]||{x:ta[0].clientX,y:ta[0].clientY},p1=touches[ta[1].identifier]||{x:ta[1].clientX,y:ta[1].clientY};const od=Math.hypot(p0.x-p1.x,p0.y-p1.y),nd=Math.hypot(ta[0].clientX-ta[1].clientX,ta[0].clientY-ta[1].clientY);if(od>1){orb.radius=Math.max(6,Math.min(55,orb.radius*(od/nd)));applyOrbit();}}}
-  else if(drag){const t=e.changedTouches[0];const dx=t.clientX-drag.lx,dy=t.clientY-(drag.ly||t.clientY);if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}else if(drag.mode==='screen'){const newX=Math.max(1,Math.min(12,drag.startX+dx*0.05));screenD.position.x=newX;S.dist=newX*0.18;document.getElementById('sl-L').value=S.dist.toFixed(2);document.getElementById('lbl-L').textContent=S.dist.toFixed(2)+'m';fullUpdate();}drag.lx=t.clientX;drag.ly=t.clientY;}
+  else if(drag){const t=e.changedTouches[0];const dx=t.clientX-drag.lx,dy=t.clientY-(drag.ly||t.clientY);if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}else if(drag.mode==='screen'){const newX=Math.max(1.5,Math.min(12,drag.startX+dx*0.05));screenD.position.x=newX;S.dist=Math.max(0.2,newX*0.18);document.getElementById('sl-L').value=S.dist.toFixed(2);document.getElementById('lbl-L').textContent=S.dist.toFixed(2)+'m';updateBeam();fullUpdate();}drag.lx=t.clientX;drag.ly=t.clientY;}
   [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});},{passive:false});
 canvas.addEventListener('touchend',e=>{[...e.changedTouches].forEach(t=>{delete touches[t.identifier];});if(Object.keys(touches).length===0)drag=null;},{passive:false});
 
@@ -638,8 +698,7 @@ document.getElementById('btn-reset').addEventListener('click',()=>{
 // ═══════════════════════════════════════════════════════
 //  AR  (same pattern as single-slit)
 // ═══════════════════════════════════════════════════════
-let arMode=false, arScene=null, arEntities={}, arScale=0.55;
-let arDrag=null, arPinchDist0=null, arScale0=null;
+// (arMode and AR state vars declared at top of script)
 
 function showARStep(n){[1,2,3,4].forEach(i=>{const el=document.getElementById('ar-step'+i);if(el)el.style.display=i===n?'':'none';});}
 
