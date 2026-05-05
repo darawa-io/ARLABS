@@ -187,9 +187,9 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
     ✅ Camera ready!<br><br>
     Point at the marker.<br>The polarizers appear on it.<br><br>
     <strong>Your challenge:</strong><br>
-    Observe I₀ and I on the HUD.<br>
+    Observe I₁ and I₂ on the HUD.<br>
     Calculate the angle θ between<br>polarizers using Malus's Law:<br>
-    <span style="color:var(--violet);">I = I₀ · cos²(θ)</span><br><br>
+    <span style="color:var(--violet);">I₂ = I₁ · cos²(θ)</span><br><br>
     Enter your angle and validate!<br><br>
     <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 24px;border-radius:20px;border:1px solid rgba(77,255,160,.5);background:rgba(77,255,160,.12);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Got it — Start!</button>
   </span>
@@ -201,24 +201,30 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 <div id="hud">
   <h2>Measurements</h2>
   <div class="dr"><span class="dl">θ (angle)</span><span class="dv violet" id="val-theta">0°</span></div>
-  <div class="dr"><span class="dl">I₀ (after P₁)</span><span class="dv amber" id="val-I0">50.0 %</span></div>
-  <div class="dr"><span class="dl">I (after P₂)</span><span class="dv blue" id="val-I">50.0 %</span></div>
-  <div class="dr"><span class="dl">I / I₀</span><span class="dv" id="val-ratio" style="color:var(--green);">1.000</span></div>
+  <div class="dr"><span class="dl">I₀ (source)</span><span class="dv" style="color:#ffe088;" id="val-I0">100 %</span></div>
+  <div class="dr"><span class="dl">I₁ (after P₁)</span><span class="dv amber" id="val-I1">50.0 %</span></div>
+  <div class="dr"><span class="dl">I₂ (after P₂)</span><span class="dv blue" id="val-I">50.0 %</span></div>
+  <div class="dr"><span class="dl">I₂ / I₁</span><span class="dv" id="val-ratio" style="color:var(--green);">1.000</span></div>
   <div class="hdiv"></div>
   <div id="intensity-bars">
     <div class="ibar-row">
-      <span class="ibar-label" style="color:var(--amber);">I₀</span>
-      <div class="ibar-track"><div class="ibar-fill" id="bar-I0" style="background:var(--amber);width:50%;"></div></div>
-      <span class="ibar-val" id="bval-I0" style="color:var(--amber);">50%</span>
+      <span class="ibar-label" style="color:#ffe088;">I₀</span>
+      <div class="ibar-track"><div class="ibar-fill" id="bar-I0" style="background:#ffe088;width:100%;"></div></div>
+      <span class="ibar-val" id="bval-I0" style="color:#ffe088;">100%</span>
     </div>
     <div class="ibar-row">
-      <span class="ibar-label" style="color:var(--blue);">I</span>
+      <span class="ibar-label" style="color:var(--amber);">I₁</span>
+      <div class="ibar-track"><div class="ibar-fill" id="bar-I1" style="background:var(--amber);width:50%;"></div></div>
+      <span class="ibar-val" id="bval-I1" style="color:var(--amber);">50%</span>
+    </div>
+    <div class="ibar-row">
+      <span class="ibar-label" style="color:var(--blue);">I₂</span>
       <div class="ibar-track"><div class="ibar-fill" id="bar-I" style="background:var(--blue);width:50%;"></div></div>
       <span class="ibar-val" id="bval-I" style="color:var(--blue);">50%</span>
     </div>
   </div>
   <div class="hdiv"></div>
-  <div id="malus-box">I = I₀ · cos²(θ)<br>Malus's Law</div>
+  <div id="malus-box">I₂ = I₁ · cos²(θ)<br>Malus's Law</div>
 </div>
 
 <!-- Controls -->
@@ -252,12 +258,13 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 // ═══════════════════════════════════════════════════════
 const S = { theta: 0 };   // degrees — angle of P2 relative to P1
 
-// Malus's Law: I = I0 * cos²(θ)
-// After first polarizer: I0 = 0.5 * Iinc  (unpolarized → linear, half intensity)
-// After second polarizer: I = I0 * cos²(θ)
-// We express as percentage of Iinc: I0=50%, I=50*cos²(θ)%
-function I0pct(){ return 50; }
-function Ipct(){ return 50 * Math.pow(Math.cos(S.theta * Math.PI/180), 2); }
+// Malus's Law: I2 = I1 * cos²(θ)
+// I0 = source beam (100% = unpolarized, full intensity)
+// After first polarizer: I1 = 0.5 * I0  (unpolarized → linear, half intensity)
+// After second polarizer: I2 = I1 * cos²(θ)
+function I0pct(){ return 100; }  // source (unpolarized)
+function I1pct(){ return 50; }   // after P1
+function Ipct(){ return 50 * Math.pow(Math.cos(S.theta * Math.PI/180), 2); }  // after P2 = I2
 
 // ═══════════════════════════════════════════════════════
 //  RENDERER
@@ -386,16 +393,61 @@ const pol1 = buildPolarizer(0xfff5cc, 0xffc857, true);
 pol1.position.set(-2.5, 0.5, 0);
 root3.add(pol1);
 
-// P2 — rotatable (blue/violet, desktop shows arrow, AR hides it)
-const pol2Grp = new THREE.Group(); // wrapper for rotation around beam axis
+// P2 — rotatable: only ring + disc + lines + arrow rotate; stand stays fixed
+const pol2Grp = new THREE.Group(); // wrapper (fixed, holds stand)
 pol2Grp.position.set(2.5, 0.5, 0);
 root3.add(pol2Grp);
 
-let pol2Disc = null; // rebuilt when AR mode changes
+// P2 static stand (never rotates)
+{
+  const sMat=new THREE.MeshStandardMaterial({color:0x445566,metalness:0.78,roughness:0.28});
+  const sBase=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),sMat); sBase.position.set(0,-1.58,0); pol2Grp.add(sBase);
+  const sPost=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065,0.48,10),sMat); sPost.position.set(0,-1.28,0); pol2Grp.add(sPost);
+}
+
+// P2 rotating optical element (frame + disc + lines + arrow)
+const pol2Ring = new THREE.Group();
+pol2Grp.add(pol2Ring);
+
+let pol2Disc = null;
 function buildP2(showArrow){
-  while(pol2Grp.children.length) pol2Grp.remove(pol2Grp.children[0]);
-  pol2Disc = buildPolarizer(0xbbddff, 0x5bc8ff, showArrow);
-  pol2Grp.add(pol2Disc);
+  while(pol2Ring.children.length) pol2Ring.remove(pol2Ring.children[0]);
+
+  const color    = 0xbbddff;
+  const emissiveCol = 0x5bc8ff;
+
+  // Frame — torus ring
+  const frameMat=new THREE.MeshStandardMaterial({color:0x667788,metalness:0.85,roughness:0.15});
+  const frame=new THREE.Mesh(new THREE.TorusGeometry(1.1,0.12,14,60),frameMat);
+  frame.rotation.y=Math.PI/2; pol2Ring.add(frame);
+
+  // Polarizer disc
+  const discMat=new THREE.MeshPhysicalMaterial({
+    color:color, transmission:0.55, opacity:0.7, transparent:true,
+    roughness:0, metalness:0, ior:1.48, clearcoat:1.0,
+    side:THREE.DoubleSide, depthWrite:false,
+  });
+  const disc=new THREE.Mesh(new THREE.CircleGeometry(1.05,60),discMat);
+  disc.rotation.y=Math.PI/2; pol2Ring.add(disc);
+  pol2Disc = disc;
+
+  // Striations
+  const lineMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:1.2,transparent:true,opacity:0.60});
+  for(let i=-4;i<=4;i++){
+    const lm=new THREE.Mesh(new THREE.BoxGeometry(0.02,2.0,0.02),lineMat);
+    lm.position.set(0.05, 0, i*0.24); pol2Ring.add(lm);
+  }
+
+  // Arrow
+  if(showArrow){
+    const arrowMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:3.5});
+    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.7,10),arrowMat);
+    shaft.position.set(0.18, 0, 0); pol2Ring.add(shaft);
+    const head=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.38,12),arrowMat);
+    head.position.set(0.18, 1.04, 0); pol2Ring.add(head);
+    const tail=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.38,12),arrowMat);
+    tail.rotation.z=Math.PI; tail.position.set(0.18,-1.04,0); pol2Ring.add(tail);
+  }
 }
 buildP2(true); // desktop: show arrow
 
@@ -407,29 +459,33 @@ const beamGroup = new THREE.Group(); root3.add(beamGroup);
 function updateBeams(){
   while(beamGroup.children.length) beamGroup.remove(beamGroup.children[0]);
 
-  const i0 = I0pct()/100;   // 0..1
-  const i  = Ipct()/100;
+  const i1 = I1pct()/100;  // 0..1 after P1
+  const i2 = Ipct()/100;   // 0..1 after P2
 
+  // Single continuous beam from source to screen, three color segments
+  // All start/end at exact same x to avoid gaps; slightly larger radius for visibility
   function makeBeam(x1,x2,opacity,color){
     const len=x2-x1;
     const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity,side:THREE.DoubleSide,depthWrite:false});
-    const b=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,len,10),mat);
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(0.10,0.10,len,12),mat);
     b.rotation.z=Math.PI/2; b.position.set(x1+len/2,0.5,0); b.renderOrder=5; beamGroup.add(b);
     // Glow
     const gm=new THREE.MeshBasicMaterial({color,transparent:true,opacity:opacity*0.22,side:THREE.DoubleSide,depthWrite:false});
-    const bg=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,len,10),gm);
+    const bg=new THREE.Mesh(new THREE.CylinderGeometry(0.38,0.38,len,12),gm);
     bg.rotation.z=Math.PI/2; bg.position.set(x1+len/2,0.5,0); bg.renderOrder=4; beamGroup.add(bg);
   }
 
-  // Segment 1: source → P1 (unpolarized, full brightness, white-yellow)
-  makeBeam(-6.4,-3.6, 0.80, 0xfff5cc);
+  const srcX   = -6.4;  // light source front
+  const p1x    = -2.5;  // P1 center x
+  const p2x    =  2.5;  // P2 center x
+  const screenX=  6.0;  // screen x
 
-  // Segment 2: P1 → P2 (polarized, I0=50%, amber)
-  makeBeam(-1.4, 1.4, Math.max(0.1,i0*0.85), 0xffc857);
-
-  // Segment 3: P2 → screen (intensity after Malus, blue)
-  const screenX = 6.0;
-  makeBeam(3.6, screenX-0.15, Math.max(0.04, i*0.90), 0x5bc8ff);
+  // Segment I₀: source → P1 (unpolarized, white-yellow)
+  makeBeam(srcX, p1x, 0.82, 0xfff5cc);
+  // Segment I₁: P1 → P2 (polarized, amber)
+  makeBeam(p1x, p2x, Math.max(0.12, i1*0.85), 0xffc857);
+  // Segment I₂: P2 → screen (blue, intensity via Malus)
+  makeBeam(p2x, screenX, Math.max(0.05, i2*0.90), 0x5bc8ff);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -443,7 +499,7 @@ const screenTex=new THREE.CanvasTexture(screenTC);
 function paintScreen(){
   const ctx=screenTCtx, W=256, H=256;
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#020406'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#7a8090'; ctx.fillRect(0,0,W,H);
 
   const i=Ipct()/100;
   const r=Math.round(91*i+40*i), g2=Math.round(200*i+30*i), b=Math.round(255*i);
@@ -488,7 +544,7 @@ function paintScreen(){
   ctx.fillText((Ipct()).toFixed(1)+'%', W/2, H*0.76);
   ctx.shadowBlur=0;
   ctx.font='13px monospace'; ctx.fillStyle=`rgba(180,210,255,${textAlpha*0.65})`;
-  ctx.fillText('intensity after P₂', W/2, H*0.86);
+  ctx.fillText('I₂ (after P₂)', W/2, H*0.86);
 
   screenTex.needsUpdate=true;
 }
@@ -510,30 +566,33 @@ root3.add(screenLight);
 //  HUD UPDATER
 // ═══════════════════════════════════════════════════════
 function updateHUD(){
-  const th=S.theta, i0=I0pct(), i=Ipct();
-  const ratio=i/i0;
+  const th=S.theta, i0=I0pct(), i1=I1pct(), i2=Ipct();
+  const ratio=i2/i1;
   document.getElementById('val-theta').textContent=th.toFixed(0)+'°';
-  document.getElementById('val-I0').textContent=i0.toFixed(1)+' %';
-  document.getElementById('val-I').textContent=i.toFixed(1)+' %';
+  document.getElementById('val-I0').textContent=i0.toFixed(0)+' %';
+  document.getElementById('val-I1').textContent=i1.toFixed(1)+' %';
+  document.getElementById('val-I').textContent=i2.toFixed(1)+' %';
   document.getElementById('val-ratio').textContent=ratio.toFixed(3);
   document.getElementById('bar-I0').style.width=i0+'%';
   document.getElementById('bval-I0').textContent=i0.toFixed(0)+'%';
-  document.getElementById('bar-I').style.width=i+'%';
-  document.getElementById('bval-I').textContent=i.toFixed(1)+'%';
+  document.getElementById('bar-I1').style.width=i1+'%';
+  document.getElementById('bval-I1').textContent=i1.toFixed(0)+'%';
+  document.getElementById('bar-I').style.width=i2+'%';
+  document.getElementById('bval-I').textContent=i2.toFixed(1)+'%';
 }
 
 // ═══════════════════════════════════════════════════════
 //  FULL UPDATE
 // ═══════════════════════════════════════════════════════
 function fullUpdate(){
-  // Rotate P2 disk around X axis (beam axis) so it stays perpendicular to beam, parallel to P1
-  pol2Grp.rotation.x = S.theta * Math.PI/180;
+  // Rotate only P2 ring (optical part) around X axis — stand stays fixed
+  pol2Ring.rotation.x = S.theta * Math.PI/180;
   updateBeams();
   paintScreen();
   // Update screen dynamic light intensity
   const iNorm = Ipct()/100;
-  screenLight.intensity = iNorm * 5.5;
-  screenMat.emissiveIntensity = 0.5 + iNorm * 2.5;
+  screenLight.intensity = iNorm * 8.0;
+  screenMat.emissiveIntensity = 0.6 + iNorm * 3.0;
   updateHUD();
   if(arMode) syncAR();
 }
@@ -546,6 +605,8 @@ function drawLabels(){
   lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
   lctx.textAlign='center';
   function w2s(v){const c=v.clone().project(cam3);return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight};}
+
+  // Component labels
   const labels=[
     {p:new THREE.Vector3(-7,1.8,0),t:'LIGHT SOURCE',c:'#ffe088'},
     {p:new THREE.Vector3(-2.5,2.1,0),t:'POLARIZER P₁  ↕ vertical',c:'#ffc857'},
@@ -558,6 +619,23 @@ function drawLabels(){
     const tw=lctx.measureText(t).width;
     lctx.fillStyle='rgba(4,7,15,0.75)'; lctx.fillRect(s.x-tw/2-5,s.y-14,tw+10,18);
     lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=10; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
+  });
+
+  // Beam intensity captions — positioned along the beam between components
+  const beamLabels=[
+    {p:new THREE.Vector3(-5.0,-0.3,0), t:'I₀', sub:'(source)', c:'#ffe088'},
+    {p:new THREE.Vector3(0.0,-0.3,0),  t:'I₁', sub:'(after P₁)', c:'#ffc857'},
+    {p:new THREE.Vector3(4.4,-0.3,0),  t:'I₂', sub:'(after P₂)', c:'#5bc8ff'},
+  ];
+  beamLabels.forEach(({p,t,sub,c})=>{
+    const s=w2s(p);
+    lctx.font='700 14px "Space Mono",monospace';
+    lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=12;
+    lctx.fillText(t, s.x, s.y);
+    lctx.shadowBlur=0;
+    lctx.font='500 9px "Space Mono",monospace';
+    lctx.fillStyle='rgba(180,210,255,0.55)';
+    lctx.fillText(sub, s.x, s.y+13);
   });
 }
 
@@ -613,7 +691,7 @@ function validateQuiz(){
   const ok=err<=5; // within 5°
   document.getElementById('quiz-result').textContent=ok
     ?`✅ Correct! θ ≈ ${actual.toFixed(1)}°`
-    :`❌ Try again. Hint: I/I₀ = cos²(θ)`;
+    :`❌ Try again. Hint: I₂/I₁ = cos²(θ)`;
   document.getElementById('quiz-result').style.color=ok?'#4dffa0':'#ff5e72';
 }
 
@@ -645,7 +723,7 @@ function syncAR(){
 function paintScreenAR(cvs){
   const ctx=cvs.getContext('2d'),W=cvs.width,H=cvs.height;
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#020508'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#7a8090'; ctx.fillRect(0,0,W,H);
   const i=Ipct()/100;
   const r=Math.round(91*i),g2=Math.round(200*i),b=Math.round(255*i);
   const radius=Math.max(20,W*0.35*i);
@@ -667,14 +745,15 @@ function paintARHUD(cvs){
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle='rgba(8,12,24,0.82)'; ctx.roundRect(0,0,W,H,12); ctx.fill();
   ctx.strokeStyle='rgba(91,200,255,0.3)'; ctx.lineWidth=2; ctx.roundRect(1,1,W-2,H-2,11); ctx.stroke();
-  const i0=I0pct(), i=Ipct();
+  const i0=I0pct(), i1=I1pct(), i2=Ipct();
   ctx.font='bold 26px "Space Mono",monospace'; ctx.textAlign='center';
-  ctx.fillStyle='#ffc857'; ctx.fillText('I₀ = '+i0.toFixed(0)+'%',W/2,44);
-  ctx.fillStyle='#5bc8ff'; ctx.fillText('I  = '+i.toFixed(1)+'%',W/2,80);
+  ctx.fillStyle='#ffe088'; ctx.fillText('I₀ = '+i0.toFixed(0)+'%',W/2,36);
+  ctx.fillStyle='#ffc857'; ctx.fillText('I₁ = '+i1.toFixed(0)+'%',W/2,70);
+  ctx.fillStyle='#5bc8ff'; ctx.fillText('I₂ = '+i2.toFixed(1)+'%',W/2,106);
   ctx.fillStyle='rgba(180,120,255,0.9)'; ctx.font='22px "Space Mono",monospace';
-  ctx.fillText('I/I₀ = '+(i/i0).toFixed(3),W/2,116);
+  ctx.fillText('I₂/I₁ = '+(i2/i1).toFixed(3),W/2,142);
   ctx.font='18px "Space Mono",monospace'; ctx.fillStyle='rgba(180,200,255,0.5)';
-  ctx.fillText('Malus: I=I₀cos²θ',W/2,148);
+  ctx.fillText('Malus: I₂=I₁cos²θ',W/2,168);
   if(cvs.needsUpdate!==undefined) cvs.needsUpdate=true;
 }
 
@@ -850,21 +929,34 @@ function exitAR(){
 
 document.getElementById('ar-start-btn').addEventListener('click',function(){
   showARStep(2);
-  // Explicitly request camera permission first
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}})
+  // Request camera permission explicitly first, then hand off to AR.js
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}})
     .then(stream=>{
-      // Stop the test stream — AR.js will create its own
-      stream.getTracks().forEach(t=>t.stop());
-      loadAREngine();
+      // Keep the stream alive — attach to a hidden video so the browser doesn't revoke permission
+      let hiddenVid = document.getElementById('_ar_cam_seed');
+      if(!hiddenVid){
+        hiddenVid = document.createElement('video');
+        hiddenVid.id = '_ar_cam_seed';
+        hiddenVid.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+        hiddenVid.setAttribute('playsinline','');
+        hiddenVid.setAttribute('muted','');
+        document.body.appendChild(hiddenVid);
+      }
+      hiddenVid.srcObject = stream;
+      hiddenVid.play().catch(()=>{});
+      loadAREngine(stream);
     })
     .catch(err=>{
       console.warn('Camera permission error:',err);
-      // Try anyway — might work on desktop with default camera
-      loadAREngine();
+      // Try anyway — desktop may work without explicit grant
+      loadAREngine(null);
     });
 
-  function loadAREngine(){
+  function loadAREngine(permStream){
     function onLibsReady(){
+      // Release the seed stream — AR.js will open its own
+      const hv = document.getElementById('_ar_cam_seed');
+      if(hv && hv.srcObject){ hv.srcObject.getTracks().forEach(t=>t.stop()); hv.srcObject=null; }
       buildARScene();
       const s=document.getElementById('ar-status');
       s.style.display='block'; s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
