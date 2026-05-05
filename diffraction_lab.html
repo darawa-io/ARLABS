@@ -286,10 +286,12 @@ function drawSingleSlitPreview(){
   const W=cv.width,H=cv.height;
   const ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
-  const lam=532,slitW=0.08,dist=1.0;
+  // Narrow slit + longer L so multiple secondary bands fit in the card view
+  const lam=532, slitW=0.025, dist=1.5;
+  const halfRange=14; // mm shown
   const [r,g,b]=waveToRGB(lam);
   for(let px=0;px<H;px++){
-    const ymm=(px-H/2)*0.08;
+    const ymm=(px-H/2)*(2*halfRange/H);
     const beta=Math.PI*(slitW*1e-3)*(ymm*1e-3)/(lam*1e-9*dist);
     const I=sinc(beta)**2;
     const alpha=Math.min(1,Math.sqrt(I)*1.05);
@@ -298,8 +300,8 @@ function drawSingleSlitPreview(){
   }
   // ruler hint
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
-  for(let mm=-5;mm<=5;mm++){
-    const py=Math.round(H/2-mm*(H/10));
+  for(let mm=-halfRange;mm<=halfRange;mm+=4){
+    const py=Math.round(H/2-mm*(H/(2*halfRange)));
     if(py<0||py>H)continue;
     ctx.fillStyle=mm===0?'#ffdd66':'#5080a0';
     ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);
@@ -337,22 +339,24 @@ function drawGratingPreview(){
   const W=cv.width,H=cv.height;
   const ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
-  const lam=633,N=300,dist=1.0;
+  const lam=532,N=600,dist=1.0;   // 600 l/mm gives tighter maxima, more visible orders
   const d=1e-3/N;
   const [r,g,b]=waveToRGB(lam);
-  const sigma=1.1,sig2=2*sigma*sigma;
-  // Find orders
+  const halfRange=30; // mm — show ±30 mm so 5+ orders are visible
+  const sigma=0.5, sig2=2*sigma*sigma; // sharper peaks
+  const scale=H/(2*halfRange);
+  // Find grating orders within view
   const orders=[];
-  for(let m=-8;m<=8;m++){
+  for(let m=-12;m<=12;m++){
     const sinT=m*(lam*1e-9)/d;
     if(Math.abs(sinT)>=1)continue;
     const tanT=sinT/Math.sqrt(1-sinT*sinT);
     const ymm=tanT*dist*1e3;
-    if(Math.abs(ymm)>40)continue;
+    if(Math.abs(ymm)>halfRange)continue;
     const a=d*0.5;
     const beta2=Math.PI*a*sinT/(lam*1e-9);
     const env=Math.abs(beta2)<1e-9?1:sinc(beta2)**2;
-    orders.push({py:H/2-ymm*(H/80),env});
+    orders.push({py:H/2-ymm*scale, env});
   }
   for(let px=0;px<H;px++){
     let I=0;
@@ -363,8 +367,8 @@ function drawGratingPreview(){
     ctx.fillRect(0,px,W*0.72,1);
   }
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
-  for(let mm=-4;mm<=4;mm++){
-    const py=Math.round(H/2-mm*(H/80)*10);
+  for(let mm=-halfRange;mm<=halfRange;mm+=10){
+    const py=Math.round(H/2-mm*scale);
     if(py<0||py>H)continue;
     ctx.fillStyle=mm===0?'#ffdd66':'#7060a0';
     ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);
@@ -397,16 +401,17 @@ function drawSingleSlitPreviewLam(lam){
   const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
   const [r,g,b]=waveToRGB(lam);
+  const halfRange=14;
   for(let px=0;px<H;px++){
-    const ymm=(px-H/2)*0.08;
-    const beta=Math.PI*(0.08*1e-3)*(ymm*1e-3)/(lam*1e-9*1.0);
+    const ymm=(px-H/2)*(2*halfRange/H);
+    const beta=Math.PI*(0.025*1e-3)*(ymm*1e-3)/(lam*1e-9*1.5);
     const I=sinc(beta)**2;
     const alpha=Math.min(1,Math.sqrt(I)*1.05);
     ctx.fillStyle=`rgba(${r},${g},${b},${alpha})`;
     ctx.fillRect(0,px,W*0.72,1);
   }
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
-  for(let mm=-5;mm<=5;mm++){const py=Math.round(H/2-mm*(H/10));if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#5080a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
+  for(let mm=-halfRange;mm<=halfRange;mm+=4){const py=Math.round(H/2-mm*(H/(2*halfRange)));if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#5080a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
 }
 function drawDoubleSlitPreviewLam(lam){
   const cv=document.getElementById('c-ds'); if(!cv)return;
@@ -429,17 +434,18 @@ function drawGratingPreviewLam(lam){
   const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
   const [r,g,b]=waveToRGB(lam);
-  const d=1e-3/300,sigma=1.1,sig2=2*sigma*sigma;
+  const d=1e-3/600, sigma=0.5, sig2=2*sigma*sigma;
+  const halfRange=30, scale=H/(2*halfRange);
   const orders=[];
-  for(let m=-8;m<=8;m++){
+  for(let m=-12;m<=12;m++){
     const sinT=m*(lam*1e-9)/d;
     if(Math.abs(sinT)>=1)continue;
     const tanT=sinT/Math.sqrt(1-sinT*sinT);
     const ymm=tanT*1.0*1e3;
-    if(Math.abs(ymm)>40)continue;
+    if(Math.abs(ymm)>halfRange)continue;
     const beta2=Math.PI*(d*0.5)*sinT/(lam*1e-9);
     const env=Math.abs(beta2)<1e-9?1:sinc(beta2)**2;
-    orders.push({py:H/2-ymm*(H/80),env});
+    orders.push({py:H/2-ymm*scale,env});
   }
   for(let px=0;px<H;px++){
     let I=0;for(const o of orders){const dp=px-o.py;I+=o.env*Math.exp(-(dp*dp)/sig2);}
@@ -447,7 +453,7 @@ function drawGratingPreviewLam(lam){
     ctx.fillStyle=`rgba(${r},${g},${b},${I})`;ctx.fillRect(0,px,W*0.72,1);
   }
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
-  for(let mm=-4;mm<=4;mm++){const py=Math.round(H/2-mm*(H/80)*10);if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#7060a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
+  for(let mm=-halfRange;mm<=halfRange;mm+=10){const py=Math.round(H/2-mm*scale);if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#7060a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
 }
 animatePreviews();
 
@@ -1239,12 +1245,8 @@ function buildARScene(){
 
   sceneEl.appendChild(assets);
 
-  // Camera
-  const camEnt=document.createElement('a-entity');
-  camEnt.setAttribute('camera','');
-  sceneEl.appendChild(camEnt);
+  // Camera — must come AFTER marker, with look-controls disabled for AR.js
 
-  // Marker — scene content tracked live each frame
   const marker=document.createElement('a-marker');
   marker.setAttribute('preset','hiro');
   marker.setAttribute('smooth','true');
@@ -1426,6 +1428,10 @@ function buildARScene(){
 
   marker.appendChild(sg);
   sceneEl.appendChild(marker);
+  const camEnt=document.createElement('a-entity');
+  camEnt.setAttribute('camera','');
+  camEnt.setAttribute('look-controls','enabled: false');
+  sceneEl.appendChild(camEnt);
   wrap.appendChild(sceneEl);
   arScene=sceneEl;
 
@@ -2075,8 +2081,9 @@ const canvas=document.getElementById('mainCanvas');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.shadowMap.enabled=true;
-renderer.setClearColor(0x000000,0);
+renderer.setClearColor(0x111825,1);
 const scene3=new THREE.Scene();
+scene3.fog=new THREE.FogExp2(0x111825,0.018);
 const cam3=new THREE.PerspectiveCamera(52,1,0.1,300);
 let desktopTex=null;
 let arMode=false;
@@ -2087,29 +2094,29 @@ const lctx=labelCanvas.getContext('2d');
 function resizeDesktop(){ if(arMode)return; const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); labelCanvas.width=w; labelCanvas.height=h; }
 window.addEventListener('resize',resizeDesktop);
 
-// Lights — original dark-lab scheme
-scene3.add(new THREE.AmbientLight(0x1530a0, 5.0));
-const sun=new THREE.DirectionalLight(0xffffff,2.0); sun.position.set(5,15,8); sun.castShadow=true; scene3.add(sun);
-const rimL=new THREE.DirectionalLight(0x0044ff,0.9); rimL.position.set(-10,4,-5); scene3.add(rimL);
-const fill=new THREE.PointLight(0x2244ff,1.5,40); fill.position.set(0,8,5); scene3.add(fill);
+// Lights — bright neutral so colours read clearly (matches single slit)
+scene3.add(new THREE.AmbientLight(0xffffff,2.8));
+const sun=new THREE.DirectionalLight(0xfff8f0,2.5); sun.position.set(8,18,10); sun.castShadow=true; scene3.add(sun);
+const fill=new THREE.DirectionalLight(0xe0eeff,1.2); fill.position.set(-12,6,-4); scene3.add(fill);
+const under=new THREE.PointLight(0xffffff,1.0,35); under.position.set(0,4,6); scene3.add(under);
 
 const orb={theta:0.4,phi:0.22,radius:22,cx:0,cy:0.5,cz:0};
 function applyOrbit(){ orb.phi=Math.max(-Math.PI/8,Math.min(Math.PI/4,orb.phi)); const r=orb.radius,p=orb.phi,t=orb.theta; cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t),orb.cy+r*Math.sin(p),orb.cz+r*Math.cos(p)*Math.cos(t)); cam3.lookAt(orb.cx,orb.cy,orb.cz); }
 applyOrbit();
 
-// Floor — light grey lab bench
-const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x050810,roughness:1}));
+// Floor + grid — matching single slit scheme
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x1a2235,roughness:0.95}));
 floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.6; floorM.receiveShadow=true; scene3.add(floorM);
-const gridM=new THREE.GridHelper(80,80,0x0a1535,0x0a1535); gridM.position.y=-2.58; scene3.add(gridM);
+const gridM=new THREE.GridHelper(80,80,0x2a3a55,0x1e2e48); gridM.position.y=-2.58; scene3.add(gridM);
 
 const root3=new THREE.Group(); scene3.add(root3);
 const CM=0.1;
 
 // Optical axis
-{ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]); const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x102050,dashSize:0.5,gapSize:0.3})); l.computeLineDistances(); root3.add(l); }
+{ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]); const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x4488aa,dashSize:0.5,gapSize:0.3})); l.computeLineDistances(); root3.add(l); }
 
-// Rail — original dark blue-grey
-const railMat=new THREE.MeshStandardMaterial({color:0x0d2040,metalness:0.85,roughness:0.2});
+// Rail — matching single slit teal-blue
+const railMat=new THREE.MeshStandardMaterial({color:0x3a5a78,metalness:0.80,roughness:0.25});
 [[-0.50,0.12,0.18],[-0.44,0.06,0.50],[-0.56,0.06,0.50]].forEach(([y,h,d])=>{
   const m=new THREE.Mesh(new THREE.BoxGeometry(38,h,d),railMat); m.position.set(0,y,0); root3.add(m);
 });
@@ -2137,41 +2144,44 @@ const railMat=new THREE.MeshStandardMaterial({color:0x0d2040,metalness:0.85,roug
   rulerMesh.rotation.x=-Math.PI/2; rulerMesh.position.set(0,-0.41,0); rulerMesh.renderOrder=1; root3.add(rulerMesh);
 }
 
-// ── LASER — original dark body
+// ── LASER — matching single slit silver body
 const LASER_X=-35*CM;
 function buildLaser(){
   const g=new THREE.Group();
-  const bodyMat=new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.85,roughness:0.2});
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,2.5,16),bodyMat);
-  body.rotation.z=Math.PI/2; body.position.set(0,0.5,0); g.add(body);
-  const ringMat=new THREE.MeshStandardMaterial({color:0x334455,metalness:0.95,roughness:0.1});
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.37,0.07,8,24),ringMat);
+  const bodyMat=new THREE.MeshStandardMaterial({color:0x8899aa,metalness:0.90,roughness:0.15});
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,2.5,20),bodyMat);
+  body.rotation.z=Math.PI/2; body.position.set(0,0.5,0); body.castShadow=true; g.add(body);
+  const bandMat=new THREE.MeshStandardMaterial({color:0xff6600,metalness:0.3,roughness:0.5,emissive:0xff3300,emissiveIntensity:0.3});
+  const band=new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.36,0.22,20),bandMat);
+  band.rotation.z=Math.PI/2; band.position.set(-0.5,0.5,0); g.add(band);
+  const ringMat=new THREE.MeshStandardMaterial({color:0x445566,metalness:0.98,roughness:0.05});
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.37,0.07,8,28),ringMat);
   ring.rotation.y=Math.PI/2; ring.position.set(1.26,0.5,0); g.add(ring);
-  const emitMat=new THREE.MeshStandardMaterial({color:0xff4466,emissive:0xff2244,emissiveIntensity:4.0});
-  const emit=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),emitMat);
-  emit.name='emitter'; emit.position.set(1.3,0.5,0); g.add(emit);
-  const postMat=new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
-  const base=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),postMat); base.position.set(0,-0.44,0); g.add(base);
-  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.9,8),postMat); post.position.set(0,0,0); g.add(post);
+  const emitMat=new THREE.MeshStandardMaterial({color:0xff4466,emissive:0xff2244,emissiveIntensity:5.0});
+  const emit=new THREE.Mesh(new THREE.SphereGeometry(0.13,14,14),emitMat);
+  emit.name='emitter'; emit.position.set(1.31,0.5,0); g.add(emit);
+  const postMat=new THREE.MeshStandardMaterial({color:0x445566,metalness:0.82,roughness:0.22});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.15,0.55),postMat); base.position.set(0,-0.44,0); g.add(base);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.9,10),postMat); post.position.set(0,-0.0,0); g.add(post);
   return g;
 }
 const laserD=buildLaser(); laserD.position.set(LASER_X,0,0); root3.add(laserD);
 
-// ── DOUBLE SLIT (three plates, two gaps)
+// ── DOUBLE SLIT (three plates, two gaps) — matching single slit silver/gold palette
 function buildDoubleSlit(){
   const g=new THREE.Group();
-  const plateMat=new THREE.MeshStandardMaterial({color:0x223344,metalness:0.9,roughness:0.15});
-  const edgeMat=new THREE.MeshStandardMaterial({color:0x445566,metalness:0.95,roughness:0.05,emissive:0x112233,emissiveIntensity:0.5});
-  const topP=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.4,0.1),plateMat); topP.name='topPlate'; g.add(topP);
-  const midP=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.18,0.1),plateMat); midP.name='midPlate'; g.add(midP);
-  const botP=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.4,0.1),plateMat); botP.name='botPlate'; g.add(botP);
-  const te=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); te.name='topEdge'; g.add(te);
-  const mte=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); mte.name='midTopEdge'; g.add(mte);
-  const mbe=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); mbe.name='midBotEdge'; g.add(mbe);
-  const be=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.14),edgeMat); be.name='botEdge'; g.add(be);
-  const standMat=new THREE.MeshStandardMaterial({color:0x1a2a3a,metalness:0.8,roughness:0.25});
-  const base=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),standMat); base.position.set(0,-2.1,0); g.add(base);
-  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,1.6,8),standMat); post.position.set(0,-1.3,0); g.add(post);
+  const plateMat=new THREE.MeshStandardMaterial({color:0x99aabb,metalness:0.92,roughness:0.10});
+  const edgeMat=new THREE.MeshStandardMaterial({color:0xffcc44,metalness:0.6,roughness:0.2,emissive:0xffaa00,emissiveIntensity:0.8});
+  const topP=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.4,0.12),plateMat); topP.name='topPlate'; topP.castShadow=true; g.add(topP);
+  const midP=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.18,0.12),plateMat); midP.name='midPlate'; g.add(midP);
+  const botP=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.4,0.12),plateMat); botP.name='botPlate'; botP.castShadow=true; g.add(botP);
+  const te=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.16),edgeMat); te.name='topEdge'; g.add(te);
+  const mte=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.16),edgeMat); mte.name='midTopEdge'; g.add(mte);
+  const mbe=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.16),edgeMat); mbe.name='midBotEdge'; g.add(mbe);
+  const be=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.16),edgeMat); be.name='botEdge'; g.add(be);
+  const standMat=new THREE.MeshStandardMaterial({color:0x2a6678,metalness:0.78,roughness:0.28});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.15,0.55),standMat); base.position.set(0,-2.1,0); g.add(base);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,1.6,10),standMat); post.position.set(0,-1.3,0); g.add(post);
   return g;
 }
 const slitD=buildDoubleSlit(); root3.add(slitD);
@@ -2211,16 +2221,16 @@ function updateSlitGeometry(){
   if(be ){ be.position.set(0,  botSlitBot, 0); }
 }
 
-// ── SCREEN
+// ── SCREEN — matching single slit warm grey stand + cream frame
 desktopTex=new THREE.CanvasTexture(screenTC);
 function buildScreen(){
   const g=new THREE.Group(); g.userData.type='screen';
-  const standMat=new THREE.MeshStandardMaterial({color:0x0a1e2a,metalness:0.8,roughness:0.25});
-  const base=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),standMat); base.position.set(0,-0.44,0); g.add(base);
-  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.5,8),standMat); post.position.set(0,-0.16,0); g.add(post);
-  const frameMat=new THREE.MeshStandardMaterial({color:0x1a3040,metalness:0.75,roughness:0.3});
-  const frame=new THREE.Mesh(new THREE.BoxGeometry(0.1,5.2,4.2),frameMat); frame.position.y=2.1; g.add(frame);
-  const screenMat=new THREE.MeshStandardMaterial({map:desktopTex,roughness:0.8,metalness:0,side:THREE.DoubleSide,emissive:0x010203,emissiveIntensity:0.3});
+  const standMat=new THREE.MeshStandardMaterial({color:0x5a6a7a,metalness:0.75,roughness:0.30});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.15,0.55),standMat); base.position.set(0,-0.44,0); base.castShadow=true; g.add(base);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.5,10),standMat); post.position.set(0,-0.16,0); g.add(post);
+  const frameMat=new THREE.MeshStandardMaterial({color:0xdde8f0,metalness:0.15,roughness:0.6});
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(0.12,5.3,4.3),frameMat); frame.position.y=2.1; frame.castShadow=true; g.add(frame);
+  const screenMat=new THREE.MeshStandardMaterial({map:desktopTex,roughness:0.75,metalness:0,side:THREE.DoubleSide,emissive:0x050a10,emissiveIntensity:0.8});
   const panel=new THREE.Mesh(new THREE.PlaneGeometry(4,5),screenMat);
   panel.rotation.y=Math.PI/2; panel.position.y=2.1; g.add(panel);
   // Hitbox for drag
@@ -2370,8 +2380,6 @@ function buildARScene(){
 
   sceneEl.appendChild(assets);
 
-  const camEnt=document.createElement('a-entity'); camEnt.setAttribute('camera',''); sceneEl.appendChild(camEnt);
-
   const marker=document.createElement('a-marker');
   marker.setAttribute('preset','hiro');
   marker.setAttribute('smooth','true'); marker.setAttribute('smoothCount','5');
@@ -2477,7 +2485,13 @@ function buildARScene(){
   const beamEnt=document.createElement('a-cylinder'); beamEnt.setAttribute('id','ar-beam'); beamEnt.setAttribute('rotation','0 0 90'); beamEnt.setAttribute('radius','0.016'); beamEnt.setAttribute('color',waveToRGB(S.lambda)); beamEnt.setAttribute('opacity','0.65'); beamEnt.setAttribute('transparent','true'); sg.appendChild(beamEnt);
   const beamGlow=document.createElement('a-cylinder'); beamGlow.setAttribute('id','ar-beam-glow'); beamGlow.setAttribute('rotation','0 0 90'); beamGlow.setAttribute('radius','0.08'); beamGlow.setAttribute('color',waveToRGB(S.lambda)); beamGlow.setAttribute('opacity','0.10'); beamGlow.setAttribute('transparent','true'); sg.appendChild(beamGlow);
 
-  marker.appendChild(sg); sceneEl.appendChild(marker); wrap.appendChild(sceneEl);
+  marker.appendChild(sg);
+  sceneEl.appendChild(marker);
+  const camEnt=document.createElement('a-entity');
+  camEnt.setAttribute('camera','');
+  camEnt.setAttribute('look-controls','enabled: false');
+  sceneEl.appendChild(camEnt);
+  wrap.appendChild(sceneEl);
   arScene=sceneEl;
   arEntities={ laserDot, screen:screenEnt, screenPanel:scrPanel, screenCvs, beam:beamEnt, beamGlow, scaleGroup:sg, beamHeight:BEAM_Y };
   syncARPositions();
@@ -2787,7 +2801,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
   <div class="sep"></div>
   <div class="sw">
     <span>L=</span>
-    <input type="range" id="sl-L" min="0.5" max="2.0" value="1.0" step="0.02" style="width:70px;">
+    <input type="range" id="sl-L" min="0.1" max="2.0" value="1.0" step="0.02" style="width:70px;">
     <span id="lbl-L">1.00m</span>
   </div>
   <div class="sep"></div>
@@ -3261,8 +3275,8 @@ canvas.addEventListener('mousemove',e=>{
   const dx=e.clientX-drag.lx, dy=e.clientY-(drag.ly||e.clientY);
   if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();drag.lx=e.clientX;drag.ly=e.clientY;}
   else if(drag.mode==='screen'){
-    const newX=Math.max(1.5,Math.min(12,drag.startX+dx*0.05));
-    screenD.position.x=newX; S.dist=Math.max(0.2, newX*0.18);
+    const newX=Math.max(0.55,Math.min(12,drag.startX+dx*0.05));
+    screenD.position.x=newX; S.dist=Math.max(0.1, newX*0.18);
     document.getElementById('sl-L').value=S.dist.toFixed(2);
     document.getElementById('lbl-L').textContent=S.dist.toFixed(2)+'m';
     updateBeam(); fullUpdate();
@@ -3279,7 +3293,7 @@ canvas.addEventListener('touchstart',e=>{e.preventDefault();[...e.changedTouches
   if(Object.keys(touches).length===1){const t=e.changedTouches[0];const hits=hitTest(t.clientX,t.clientY);let f=false;for(const h of hits){if(h.object.userData.target==='screen'){drag={mode:'screen',lx:t.clientX,startX:screenD.position.x};f=true;break;}} if(!f)drag={mode:'orbit',lx:t.clientX,ly:t.clientY};}},{passive:false});
 canvas.addEventListener('touchmove',e=>{e.preventDefault();
   if(Object.keys(touches).length>=2){const ta=[...e.changedTouches];if(ta.length>=2){const p0=touches[ta[0].identifier]||{x:ta[0].clientX,y:ta[0].clientY},p1=touches[ta[1].identifier]||{x:ta[1].clientX,y:ta[1].clientY};const od=Math.hypot(p0.x-p1.x,p0.y-p1.y),nd=Math.hypot(ta[0].clientX-ta[1].clientX,ta[0].clientY-ta[1].clientY);if(od>1){orb.radius=Math.max(6,Math.min(55,orb.radius*(od/nd)));applyOrbit();}}}
-  else if(drag){const t=e.changedTouches[0];const dx=t.clientX-drag.lx,dy=t.clientY-(drag.ly||t.clientY);if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}else if(drag.mode==='screen'){const newX=Math.max(1.5,Math.min(12,drag.startX+dx*0.05));screenD.position.x=newX;S.dist=Math.max(0.2,newX*0.18);document.getElementById('sl-L').value=S.dist.toFixed(2);document.getElementById('lbl-L').textContent=S.dist.toFixed(2)+'m';updateBeam();fullUpdate();}drag.lx=t.clientX;drag.ly=t.clientY;}
+  else if(drag){const t=e.changedTouches[0];const dx=t.clientX-drag.lx,dy=t.clientY-(drag.ly||t.clientY);if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}else if(drag.mode==='screen'){const newX=Math.max(0.55,Math.min(12,drag.startX+dx*0.05));screenD.position.x=newX;S.dist=Math.max(0.1,newX*0.18);document.getElementById('sl-L').value=S.dist.toFixed(2);document.getElementById('lbl-L').textContent=S.dist.toFixed(2)+'m';updateBeam();fullUpdate();}drag.lx=t.clientX;drag.ly=t.clientY;}
   [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});},{passive:false});
 canvas.addEventListener('touchend',e=>{[...e.changedTouches].forEach(t=>{delete touches[t.identifier];});if(Object.keys(touches).length===0)drag=null;},{passive:false});
 
@@ -3451,8 +3465,11 @@ function buildARScene(){
     arEntities.screenPanel=sp; arEntities.canvasEl=screenCvs; }
 
   marker.appendChild(sg);
-  const camEnt=document.createElement('a-entity'); camEnt.setAttribute('camera',''); sceneEl.appendChild(camEnt);
   sceneEl.appendChild(marker);
+  const camEnt=document.createElement('a-entity');
+  camEnt.setAttribute('camera','');
+  camEnt.setAttribute('look-controls','enabled: false');
+  sceneEl.appendChild(camEnt);
   wrap.appendChild(sceneEl);
   arScene=sceneEl; arEntities.scaleGroup=sg;
 
