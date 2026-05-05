@@ -27,8 +27,10 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 #labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
 
 /* ── AR wrap ── */
-#arWrap{display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;}
+#arWrap{display:none;position:fixed;inset:0;z-index:50;width:100vw;height:100vh;background:#000;}
 #arWrap.show{display:block;}
+/* Ensure a-scene video canvas fills the wrap */
+#arWrap canvas, #arWrap video{width:100%!important;height:100%!important;}
 
 /* ── HUD ── */
 #hud{
@@ -58,10 +60,10 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 /* ── Validate quiz (AR mode) ── */
 #quiz-box{
   display:none;
-  position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
   background:rgba(10,14,28,0.95);backdrop-filter:blur(20px);
   border:1px solid rgba(180,120,255,0.25);border-radius:16px;
-  padding:16px 20px;z-index:10;
+  padding:16px 20px;z-index:200;
   font-family:'Space Mono',monospace;font-size:11px;
   color:var(--violet);text-align:center;white-space:nowrap;
 }
@@ -85,7 +87,7 @@ body.ar-active #quiz-box{display:block;}
 #ar-instructions{
   display:none;background:rgba(10,14,28,0.96);backdrop-filter:blur(20px);
   border:1px solid rgba(80,200,255,0.25);border-radius:18px;
-  padding:24px 28px;z-index:22;max-width:360px;width:90%;
+  padding:24px 28px;z-index:300;max-width:360px;width:90%;
   font-family:'Space Mono',monospace;font-size:11px;color:#7fffb2;
   line-height:1.9;text-align:center;
   position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
@@ -96,7 +98,7 @@ body.ar-active #quiz-box{display:block;}
 /* ── AR status ── */
 #ar-status{
   display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);
-  z-index:100;padding:7px 18px;border-radius:20px;
+  z-index:200;padding:7px 18px;border-radius:20px;
   font-family:'Space Mono',monospace;font-size:11px;
   letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;
 }
@@ -132,6 +134,10 @@ body.ar-active #hint{display:none;}
 #title h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
 #title p{font-size:10px;color:rgba(180,200,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
 
+/* hide desktop canvases in AR mode */
+body.ar-active #mainCanvas,
+body.ar-active #labelCanvas { display: none !important; }
+
 .ctrl-ar-hide{}
 body.ar-active .ctrl-ar-hide{display:none!important;}
 </style>
@@ -148,27 +154,30 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
     style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;">✕</button>
   <strong>AR Mode — Polarization Lab</strong><br><br>
   <span id="ar-step1">
-    Print or display this Hiro marker (A5+):<br><br>
-    <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
-      style="width:130px;height:130px;display:block;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;">
-      <rect width="280" height="280" fill="black"/>
+    Print or display this <strong>HIRO</strong> marker (A5+):<br><br>
+    <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png"
+      style="width:130px;height:130px;display:block;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;image-rendering:pixelated;"
+      alt="Hiro AR marker"
+      onerror="this.style.display='none';document.getElementById('hiro-fallback').style.display='block';">
+    <!-- Fallback SVG in case image can't load -->
+    <svg id="hiro-fallback" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
+      style="display:none;width:130px;height:130px;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;">
+      <rect width="280" height="280" fill="white"/>
+      <rect x="20" y="20" width="240" height="240" fill="black"/>
       <rect x="40" y="40" width="200" height="200" fill="white"/>
-      <rect x="40"  y="40"  width="33" height="33" fill="black"/>
-      <rect x="106" y="40"  width="34" height="33" fill="black"/>
-      <rect x="140" y="40"  width="33" height="33" fill="black"/>
-      <rect x="173" y="73"  width="34" height="34" fill="black"/>
-      <rect x="207" y="73"  width="33" height="34" fill="black"/>
-      <rect x="73"  y="107" width="33" height="33" fill="black"/>
-      <rect x="106" y="107" width="34" height="33" fill="black"/>
-      <rect x="173" y="140" width="34" height="33" fill="black"/>
-      <rect x="207" y="140" width="33" height="33" fill="black"/>
-      <rect x="73"  y="173" width="33" height="34" fill="black"/>
-      <rect x="106" y="173" width="34" height="34" fill="black"/>
-      <rect x="173" y="207" width="34" height="33" fill="black"/>
-      <rect x="207" y="207" width="33" height="33" fill="black"/>
+      <!-- HIRO inner pattern -->
+      <rect x="60" y="60" width="160" height="160" fill="black"/>
+      <rect x="80" y="80" width="40" height="40" fill="white"/>
+      <rect x="160" y="80" width="40" height="40" fill="white"/>
+      <rect x="80" y="160" width="40" height="40" fill="white"/>
+      <rect x="160" y="160" width="40" height="40" fill="white"/>
+      <rect x="120" y="120" width="40" height="40" fill="white"/>
     </svg>
     <small style="color:rgba(255,200,100,.85);font-size:10px;display:block;margin-bottom:6px;">
-      ⚠️ Exact pattern required
+      ⚠️ Must be the official HIRO marker
+    </small>
+    <small style="color:rgba(180,200,255,0.6);font-size:9px;display:block;margin-bottom:10px;">
+      Camera permission required — allow when prompted
     </small>
     Place flat on table, then tap:<br><br>
     <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Open Camera</button>
@@ -328,39 +337,40 @@ root3.add(lightSourceGrp);
 function buildPolarizer(color, emissiveCol, showArrow){
   const g=new THREE.Group();
 
-  // Frame
+  // Frame — torus ring, face perpendicular to beam (X-axis): normal along X → rotation.y = PI/2
   const frameMat=new THREE.MeshStandardMaterial({color:0x667788,metalness:0.85,roughness:0.15});
   const frame=new THREE.Mesh(new THREE.TorusGeometry(1.1,0.12,14,60),frameMat);
-  frame.rotation.x=Math.PI/2; g.add(frame);
+  frame.rotation.y=Math.PI/2; g.add(frame);
 
-  // Polarizer disc — semi-transparent with slight tint
+  // Polarizer disc — semi-transparent, face along X
   const discMat=new THREE.MeshPhysicalMaterial({
     color:color, transmission:0.55, opacity:0.7, transparent:true,
     roughness:0, metalness:0, ior:1.48, clearcoat:1.0,
     side:THREE.DoubleSide, depthWrite:false,
   });
   const disc=new THREE.Mesh(new THREE.CircleGeometry(1.05,60),discMat);
-  disc.rotation.x=Math.PI/2; g.add(disc);
+  disc.rotation.y=Math.PI/2; g.add(disc);
 
-  // Polarization direction lines (striations)
-  const lineMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:1.2,transparent:true,opacity:0.55});
+  // Polarization direction lines (striations) — vertical lines in YZ plane, offset along X slightly
+  const lineMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:1.2,transparent:true,opacity:0.60});
   for(let i=-4;i<=4;i++){
-    const lm=new THREE.Mesh(new THREE.BoxGeometry(0.02,2.0,0.01),lineMat);
-    lm.position.set(i*0.24,0,0.01); lm.rotation.x=Math.PI/2; g.add(lm);
+    const lm=new THREE.Mesh(new THREE.BoxGeometry(0.02,2.0,0.02),lineMat);
+    // Lines lie in the disc plane: shift along Z, stand along Y
+    lm.position.set(0.05, 0, i*0.24); g.add(lm);
   }
 
-  // Polarization direction arrow (only on P1 always, on P2 in desktop mode)
+  // Polarization direction arrow — vertical (along Y) in disc plane, offset along X
   if(showArrow){
-    const arrowMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:3.0});
-    // Arrow shaft
-    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1.6,10),arrowMat);
-    shaft.position.y=0; shaft.rotation.x=Math.PI/2; shaft.position.z=0.15; g.add(shaft);
-    // Arrow head
-    const head=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.35,12),arrowMat);
-    head.position.set(0,0.95,0.15); head.rotation.x=Math.PI/2; g.add(head);
-    // Arrow tail
-    const tail=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.35,12),arrowMat);
-    tail.position.set(0,-0.95,0.15); tail.rotation.x=-Math.PI/2; g.add(tail);
+    const arrowMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:3.5});
+    // Arrow shaft along Y
+    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.7,10),arrowMat);
+    shaft.position.set(0.18, 0, 0); g.add(shaft);
+    // Arrow head (top)
+    const head=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.38,12),arrowMat);
+    head.position.set(0.18, 1.04, 0); g.add(head);
+    // Arrow tail (bottom)
+    const tail=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.38,12),arrowMat);
+    tail.rotation.z=Math.PI; tail.position.set(0.18,-1.04,0); g.add(tail);
   }
 
   // Stand
@@ -433,43 +443,68 @@ const screenTex=new THREE.CanvasTexture(screenTC);
 function paintScreen(){
   const ctx=screenTCtx, W=256, H=256;
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#030608'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#020406'; ctx.fillRect(0,0,W,H);
 
   const i=Ipct()/100;
-  const r=Math.round(91*i), g2=Math.round(200*i), b=Math.round(255*i);
-  const radius=Math.max(12, 80*i);
-  const bright=Math.max(0.05, i);
+  const r=Math.round(91*i+40*i), g2=Math.round(200*i+30*i), b=Math.round(255*i);
+  const radius=Math.max(20, 110*i);
+  const bright=Math.max(0.0, i);
 
-  // Glow circle
-  const grd=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius*1.8);
-  grd.addColorStop(0,`rgba(${r},${g2},${b},${bright})`);
-  grd.addColorStop(0.5,`rgba(${r},${g2},${b},${bright*0.4})`);
-  grd.addColorStop(1,'transparent');
-  ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+  // Outer ambient glow
+  const amb=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W*0.55);
+  amb.addColorStop(0,`rgba(${r},${g2},${b},${bright*0.55})`);
+  amb.addColorStop(0.7,`rgba(${r},${g2},${b},${bright*0.18})`);
+  amb.addColorStop(1,'transparent');
+  ctx.fillStyle=amb; ctx.fillRect(0,0,W,H);
 
-  // Core bright spot
-  const core=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius);
-  core.addColorStop(0,`rgba(${r+100},${g2+40},255,${Math.min(1,bright*1.8)})`);
-  core.addColorStop(1,`rgba(${r},${g2},${b},0)`);
-  ctx.fillStyle=core; ctx.fillRect(0,0,W,H);
+  if(i>0.005){
+    // Main glow circle
+    const grd=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius*1.4);
+    grd.addColorStop(0,`rgba(${r},${g2},${b},${Math.min(1,bright*0.95)})`);
+    grd.addColorStop(0.5,`rgba(${r},${g2},${b},${bright*0.55})`);
+    grd.addColorStop(1,'transparent');
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
 
-  // Intensity percentage text
-  ctx.font='bold 28px monospace'; ctx.textAlign='center';
-  ctx.fillStyle=`rgba(${r},${g2},${b},${Math.min(1,bright*3)})`;
-  ctx.fillText((Ipct()).toFixed(1)+'%', W/2, H*0.82);
-  ctx.font='14px monospace'; ctx.fillStyle='rgba(180,210,255,0.4)';
-  ctx.fillText('intensity', W/2, H*0.88);
+    // Bright core
+    const core=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius*0.55);
+    core.addColorStop(0,`rgba(255,255,255,${Math.min(1,bright*1.5)})`);
+    core.addColorStop(0.4,`rgba(${Math.min(255,r+80)},${Math.min(255,g2+60)},255,${Math.min(1,bright*1.1)})`);
+    core.addColorStop(1,`rgba(${r},${g2},${b},0)`);
+    ctx.fillStyle=core; ctx.fillRect(0,0,W,H);
+  }
+
+  // Screen border glow when lit
+  if(i>0.05){
+    ctx.strokeStyle=`rgba(${r},${g2},${b},${bright*0.7})`;
+    ctx.lineWidth=6;
+    ctx.strokeRect(3,3,W-6,H-6);
+  }
+
+  // Intensity percentage text — large, always visible
+  const textAlpha=Math.max(0.35, Math.min(1, bright*3+0.15));
+  ctx.font='bold 36px monospace'; ctx.textAlign='center';
+  ctx.fillStyle=`rgba(${Math.max(r,80)},${Math.max(g2,120)},255,${textAlpha})`;
+  ctx.shadowColor=`rgba(${r},${g2},255,${textAlpha*0.8})`; ctx.shadowBlur=12;
+  ctx.fillText((Ipct()).toFixed(1)+'%', W/2, H*0.76);
+  ctx.shadowBlur=0;
+  ctx.font='13px monospace'; ctx.fillStyle=`rgba(180,210,255,${textAlpha*0.65})`;
+  ctx.fillText('intensity after P₂', W/2, H*0.86);
 
   screenTex.needsUpdate=true;
 }
 
 // Screen panel
-const screenMat=new THREE.MeshStandardMaterial({map:screenTex,roughness:0.7,metalness:0,side:THREE.DoubleSide,emissive:0x020510,emissiveIntensity:0.9});
+const screenMat=new THREE.MeshStandardMaterial({map:screenTex,roughness:0.55,metalness:0,side:THREE.DoubleSide,emissiveMap:screenTex,emissive:new THREE.Color(0x5bc8ff),emissiveIntensity:1.8});
 const screenPanel=new THREE.Mesh(new THREE.PlaneGeometry(2.8,3.2),screenMat);
 screenPanel.rotation.y=Math.PI/2; screenPanel.position.set(6,0.5,0);
 const screenFrame=new THREE.Mesh(new THREE.BoxGeometry(0.1,3.4,3.0),new THREE.MeshStandardMaterial({color:0xdde8f0,metalness:0.2,roughness:0.6}));
 screenFrame.position.set(6,0.5,0);
 root3.add(screenPanel); root3.add(screenFrame);
+
+// Dynamic screen point light for illumination effect
+const screenLight = new THREE.PointLight(0x5bc8ff, 0, 5);
+screenLight.position.set(5.5, 0.5, 0);
+root3.add(screenLight);
 
 // ═══════════════════════════════════════════════════════
 //  HUD UPDATER
@@ -491,10 +526,14 @@ function updateHUD(){
 //  FULL UPDATE
 // ═══════════════════════════════════════════════════════
 function fullUpdate(){
-  // Rotate P2 disk around X axis (beam axis = Z in local space)
-  pol2Grp.rotation.z = S.theta * Math.PI/180;
+  // Rotate P2 disk around X axis (beam axis) so it stays perpendicular to beam, parallel to P1
+  pol2Grp.rotation.x = S.theta * Math.PI/180;
   updateBeams();
   paintScreen();
+  // Update screen dynamic light intensity
+  const iNorm = Ipct()/100;
+  screenLight.intensity = iNorm * 5.5;
+  screenMat.emissiveIntensity = 0.5 + iNorm * 2.5;
   updateHUD();
   if(arMode) syncAR();
 }
@@ -647,11 +686,12 @@ function buildARScene(){
 
   const sceneEl=document.createElement('a-scene');
   sceneEl.setAttribute('embedded','');
-  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.50;');
-  sceneEl.setAttribute('renderer','antialias:true;precision:medium;');
+  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.75;trackingMethod:best;');
+  sceneEl.setAttribute('renderer','antialias:true;precision:medium;logarithmicDepthBuffer:true;');
   sceneEl.setAttribute('vr-mode-ui','enabled:false');
   sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
-  sceneEl.style.cssText='width:100%;height:100%;display:block;';
+  // Critical: make a-scene fill the arWrap, not the whole page
+  sceneEl.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:block;overflow:hidden;';
 
   // Assets
   const assets=document.createElement('a-assets');
@@ -810,21 +850,36 @@ function exitAR(){
 
 document.getElementById('ar-start-btn').addEventListener('click',function(){
   showARStep(2);
-  function onLibsReady(){
-    buildARScene();
-    const s=document.getElementById('ar-status');
-    s.style.display='block'; s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
-    showARStep(3);
-    fullUpdate(); // apply random theta to AR scene
+  // Explicitly request camera permission first
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}})
+    .then(stream=>{
+      // Stop the test stream — AR.js will create its own
+      stream.getTracks().forEach(t=>t.stop());
+      loadAREngine();
+    })
+    .catch(err=>{
+      console.warn('Camera permission error:',err);
+      // Try anyway — might work on desktop with default camera
+      loadAREngine();
+    });
+
+  function loadAREngine(){
+    function onLibsReady(){
+      buildARScene();
+      const s=document.getElementById('ar-status');
+      s.style.display='block'; s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+      showARStep(3);
+      fullUpdate(); // apply random theta to AR scene
+    }
+    if(window.AFRAME&&window.AFRAME.version){onLibsReady();return;}
+    function loadScript(urls,done,fail){if(!urls.length){fail();return;}const s=document.createElement('script');s.src=urls[0];s.setAttribute('data-arscript','1');s.onload=done;s.onerror=()=>loadScript(urls.slice(1),done,fail);document.head.appendChild(s);}
+    loadScript(
+      ['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js'],
+      ()=>loadScript(
+        ['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'],
+        onLibsReady,()=>alert('Could not load AR engine.')),
+      ()=>alert('Could not load A-Frame.'));
   }
-  if(window.AFRAME&&window.AFRAME.version){onLibsReady();return;}
-  function loadScript(urls,done,fail){if(!urls.length){fail();return;}const s=document.createElement('script');s.src=urls[0];s.setAttribute('data-arscript','1');s.onload=done;s.onerror=()=>loadScript(urls.slice(1),done,fail);document.head.appendChild(s);}
-  loadScript(
-    ['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js'],
-    ()=>loadScript(
-      ['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'],
-      onLibsReady,()=>alert('Could not load AR engine.')),
-    ()=>alert('Could not load A-Frame.'));
 });
 
 document.getElementById('btn-ar').addEventListener('click',()=>{if(!arMode)enterAR();else exitAR();});
