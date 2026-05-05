@@ -20,9 +20,9 @@
   --muted:rgba(180,210,255,0.45);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
 
-#mainCanvas{position:absolute;inset:0;z-index:1;}
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
 #labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
 #arWrap{display:none;position:fixed;inset:0;z-index:50;width:100vw;height:100vh;background:#000;}
 #arWrap.show{display:block;}
@@ -165,7 +165,7 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
   <span id="quiz-result"></span>
 </div>
 
-<div id="hint">drag to orbit · scroll to zoom · slider to rotate P₂ · E-field waves travel source → screen</div>
+<div id="hint">🖐️ 1 finger: rotate view · ✌️ 2 fingers: pinch to zoom · ☝️ slider: rotate P₂</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -177,15 +177,14 @@ function I0pct(){ return 100; }
 function I1pct(){ return 50; }
 function Ipct(){ 
   const cosTheta = Math.cos(S.theta * Math.PI/180);
-  // At exactly 90°, intensity should be 0
   if(Math.abs(S.theta - 90) < 0.01) return 0;
   return 50 * cosTheta * cosTheta;
 }
 
 const canvas = document.getElementById('mainCanvas');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5)); // Lower pixel ratio for performance
-renderer.shadowMap.enabled = false; // Disable shadows for performance
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+renderer.shadowMap.enabled = false;
 renderer.setClearColor(0x07090f, 1);
 const scene3 = new THREE.Scene();
 scene3.fog = new THREE.FogExp2(0x07090f, 0.02);
@@ -193,7 +192,7 @@ const cam3 = new THREE.PerspectiveCamera(52,1,0.1,200);
 const labelCanvas = document.getElementById('labelCanvas');
 const lctx = labelCanvas.getContext('2d');
 let arMode = false;
-let lastEFrameTime = 0;
+let frameSkip = 0;
 
 function resize(){
   if(arMode) return;
@@ -204,7 +203,6 @@ function resize(){
 }
 resize(); window.addEventListener('resize', resize);
 
-// Simplified lighting for performance
 scene3.add(new THREE.AmbientLight(0xffffff, 2.5));
 const sun=new THREE.DirectionalLight(0xfff8f0,1.2); sun.position.set(5,10,5); scene3.add(sun);
 
@@ -300,26 +298,24 @@ function updateBeams(){
   if(i2 > 0.01) makeBeam(2.5, 6.0, Math.max(0.05, i2*0.85), 0x5bc8ff);
 }
 
-// ========== OPTIMIZED E-FIELD ANIMATION (50% slower, fewer lines) ==========
 const efieldGroup = new THREE.Group();
 root3.add(efieldGroup);
-let frameSkip = 0;
+let lastUpdate = 0;
 
 function updateEField() {
-  // Reduce update frequency for performance (update every 2 frames)
-  frameSkip++;
-  if(frameSkip < 2) return;
-  frameSkip = 0;
+  const now = Date.now();
+  if(now - lastUpdate < 40) return; // ~25fps for animation
+  lastUpdate = now;
   
   while(efieldGroup.children.length) efieldGroup.remove(efieldGroup.children[0]);
   
-  const time = Date.now() * 0.0025; // 50% slower (was 0.005)
+  const time = now * 0.0025;
   const i1 = I1pct()/100;
   const i2 = Ipct()/100;
   const thetaRad = S.theta * Math.PI/180;
   const isCrossed = Math.abs(S.theta - 90) < 0.5 || i2 < 0.01;
   
-  // Segment 1: Unpolarized (fewer lines for performance)
+  // Segment 1: Unpolarized
   for(let i = 0; i < 20; i++){
     const t = i / 19;
     const x = -6.0 + t * 3.5;
@@ -335,7 +331,7 @@ function updateEField() {
     }
   }
   
-  // Segment 2: Vertically polarized (always visible if i1 > 0)
+  // Segment 2: Vertically polarized
   if(i1 > 0.05){
     for(let i = 0; i < 22; i++){
       const t = i / 21;
@@ -352,7 +348,7 @@ function updateEField() {
     }
   }
   
-  // Segment 3: Polarized at angle θ (only if not crossed and intensity > 0)
+  // Segment 3: Polarized at angle θ
   if(!isCrossed && i2 > 0.02){
     for(let i = 0; i < 22; i++){
       const t = i / 21;
@@ -372,7 +368,7 @@ function updateEField() {
   }
 }
 
-// SCREEN - PURE BLACK (#000000)
+// SCREEN - PURE BLACK
 const screenTC = document.createElement('canvas');
 screenTC.width = screenTC.height = 512;
 const screenTCtx = screenTC.getContext('2d');
@@ -380,7 +376,6 @@ const screenTex = new THREE.CanvasTexture(screenTC);
 
 function paintScreen(){
   const ctx = screenTCtx, W = 512, H = 512;
-  // Pure black background
   ctx.fillStyle = '#000000';
   ctx.fillRect(0,0,W,H);
   
@@ -457,8 +452,8 @@ function drawLabels(){
   function w2s(v){const c=v.clone().project(cam3);return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight};}
   const labels=[
     {p:new THREE.Vector3(-7,1.6,0),t:'LIGHT SOURCE',c:'#ffe088'},
-    {p:new THREE.Vector3(-2.5,1.9,0),t:'POLARIZER P₁  ↕',c:'#ffc857'},
-    {p:new THREE.Vector3(2.5,1.9,0), t:`ANALYZER P₂  θ=${S.theta.toFixed(0)}°`,c:'#5bc8ff'},
+    {p:new THREE.Vector3(-2.5,1.9,0),t:'POLARIZER P₁',c:'#ffc857'},
+    {p:new THREE.Vector3(2.5,1.9,0), t:`ANALYZER P₂  ${S.theta.toFixed(0)}°`,c:'#5bc8ff'},
     {p:new THREE.Vector3(6,2.0,0),   t:'SCREEN',c:'#aaddff'},
   ];
   labels.forEach(({p,t,c})=>{
@@ -470,45 +465,106 @@ function drawLabels(){
   });
 }
 
-const orb={theta:0.05,phi:0.20,radius:18,cx:0,cy:0.3,cz:0};
+// ========== TOUCH-FRIENDLY ORBIT CONTROLS (iPad compatible) ==========
+const orb = { theta: 0.05, phi: 0.20, radius: 18, cx: 0, cy: 0.3, cz: 0 };
 function applyOrbit(){
-  orb.phi=Math.max(-Math.PI/5,Math.min(Math.PI/3.5,orb.phi));
-  const r=orb.radius,p=orb.phi,t=orb.theta;
-  cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t),orb.cy+r*Math.sin(p),orb.cz+r*Math.cos(p)*Math.cos(t));
-  cam3.lookAt(orb.cx,orb.cy,orb.cz);
+  orb.phi = Math.max(-Math.PI/5, Math.min(Math.PI/3.5, orb.phi));
+  const r = orb.radius, p = orb.phi, t = orb.theta;
+  cam3.position.set(orb.cx + r * Math.cos(p) * Math.sin(t), orb.cy + r * Math.sin(p), orb.cz + r * Math.cos(p) * Math.cos(t));
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
 }
 applyOrbit();
-let drag=null;
-canvas.addEventListener('mousedown',e=>{if(arMode)return;drag={lx:e.clientX,ly:e.clientY};});
-canvas.addEventListener('mousemove',e=>{if(!drag||arMode)return;const dx=e.clientX-drag.lx,dy=e.clientY-drag.ly;orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();drag.lx=e.clientX;drag.ly=e.clientY;});
-canvas.addEventListener('mouseup',()=>{drag=null;});
-canvas.addEventListener('wheel',e=>{if(arMode)return;orb.radius=Math.max(6,Math.min(40,orb.radius+e.deltaY*0.03));applyOrbit();e.preventDefault();});
 
-document.getElementById('sl-theta').addEventListener('input',function(){
-  S.theta=parseFloat(this.value);
-  document.getElementById('lbl-theta').textContent=S.theta.toFixed(0)+'°';
+let dragStart = null;
+let pinchStartDist = 0;
+let pinchStartRadius = orb.radius;
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  if(e.touches.length === 1) {
+    dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  } else if(e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    pinchStartDist = Math.hypot(dx, dy);
+    pinchStartRadius = orb.radius;
+    dragStart = null;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if(e.touches.length === 1 && dragStart) {
+    const dx = e.touches[0].clientX - dragStart.x;
+    const dy = e.touches[0].clientY - dragStart.y;
+    orb.theta -= dx * 0.005;
+    orb.phi += dy * 0.005;
+    applyOrbit();
+    dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  } else if(e.touches.length === 2 && pinchStartDist > 0) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const newDist = Math.hypot(dx, dy);
+    const scale = pinchStartDist / newDist;
+    orb.radius = Math.max(6, Math.min(40, pinchStartRadius * scale));
+    applyOrbit();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  if(e.touches.length === 0) {
+    dragStart = null;
+    pinchStartDist = 0;
+  }
+}, { passive: false });
+
+// Mouse support for desktop
+canvas.addEventListener('mousedown', (e) => {
+  if(arMode) return;
+  dragStart = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mousemove', (e) => {
+  if(!dragStart || arMode) return;
+  const dx = e.clientX - dragStart.x;
+  const dy = e.clientY - dragStart.y;
+  orb.theta -= dx * 0.005;
+  orb.phi += dy * 0.005;
+  applyOrbit();
+  dragStart = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mouseup', () => { dragStart = null; });
+canvas.addEventListener('wheel', (e) => {
+  if(arMode) return;
+  orb.radius = Math.max(6, Math.min(40, orb.radius + e.deltaY * 0.015));
+  applyOrbit();
+  e.preventDefault();
+});
+
+document.getElementById('sl-theta').addEventListener('input', function(){
+  S.theta = parseFloat(this.value);
+  document.getElementById('lbl-theta').textContent = S.theta.toFixed(0) + '°';
   fullUpdate();
 });
-document.getElementById('btn-reset').addEventListener('click',()=>{
-  S.theta=0;
-  document.getElementById('sl-theta').value=0;
-  document.getElementById('lbl-theta').textContent='0°';
+document.getElementById('btn-reset').addEventListener('click', () => {
+  S.theta = 0;
+  document.getElementById('sl-theta').value = 0;
+  document.getElementById('lbl-theta').textContent = '0°';
   fullUpdate();
 });
 
 function validateQuiz(){
-  const guess=parseFloat(document.getElementById('quiz-input').value);
-  const actual=S.theta;
-  if(isNaN(guess)){document.getElementById('quiz-result').textContent='Enter a value.';document.getElementById('quiz-result').style.color='#ff5e72';return;}
-  const err=Math.abs(guess-actual);
-  const ok=err<=5;
-  document.getElementById('quiz-result').textContent=ok ? `✅ Correct! θ ≈ ${actual.toFixed(1)}°` : `❌ Try again. Hint: I₂/I₁ = cos²(θ)`;
-  document.getElementById('quiz-result').style.color=ok?'#4dffa0':'#ff5e72';
+  const guess = parseFloat(document.getElementById('quiz-input').value);
+  const actual = S.theta;
+  if(isNaN(guess)){ document.getElementById('quiz-result').textContent = 'Enter a value.'; document.getElementById('quiz-result').style.color = '#ff5e72'; return; }
+  const err = Math.abs(guess - actual);
+  const ok = err <= 5;
+  document.getElementById('quiz-result').textContent = ok ? `✅ Correct! θ ≈ ${actual.toFixed(1)}°` : `❌ Try again. Hint: I₂/I₁ = cos²(θ)`;
+  document.getElementById('quiz-result').style.color = ok ? '#4dffa0' : '#ff5e72';
 }
 
-function exitAR(){ arMode=false; location.reload(); }
-window.exitAR=exitAR;
-document.getElementById('btn-ar').addEventListener('click',()=>{
+function exitAR(){ arMode = false; location.reload(); }
+window.exitAR = exitAR;
+document.getElementById('btn-ar').addEventListener('click', () => {
   alert("AR Mode: Point camera at HIRO marker.\n\nWhen θ=90°, no light passes through P₂ and no E-field appears after it.");
 });
 
