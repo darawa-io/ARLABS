@@ -131,7 +131,50 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 <div id="arWrap"></div>
 <div id="ar-status"></div>
 
-<div id="ar-instructions">...</div>
+<div id="ar-instructions">
+  <button onclick="document.getElementById('ar-instructions').classList.remove('show');if(window.arMode)exitAR();"
+    style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;">✕</button>
+  <strong>AR Mode — Polarization Lab</strong><br><br>
+  <span id="ar-step1">
+    Print or display this <strong>HIRO</strong> marker (A5+):<br><br>
+    <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png"
+      style="width:130px;height:130px;display:block;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;image-rendering:pixelated;"
+      alt="Hiro AR marker"
+      onerror="this.style.display='none';document.getElementById('hiro-fallback').style.display='block';">
+    <svg id="hiro-fallback" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
+      style="display:none;width:130px;height:130px;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;">
+      <rect width="280" height="280" fill="white"/>
+      <rect x="20" y="20" width="240" height="240" fill="black"/>
+      <rect x="40" y="40" width="200" height="200" fill="white"/>
+      <rect x="60" y="60" width="160" height="160" fill="black"/>
+      <rect x="80" y="80" width="40" height="40" fill="white"/>
+      <rect x="160" y="80" width="40" height="40" fill="white"/>
+      <rect x="80" y="160" width="40" height="40" fill="white"/>
+      <rect x="160" y="160" width="40" height="40" fill="white"/>
+      <rect x="120" y="120" width="40" height="40" fill="white"/>
+    </svg>
+    <small style="color:rgba(255,200,100,.85);font-size:10px;display:block;margin-bottom:6px;">
+      ⚠️ Must be the official HIRO marker
+    </small>
+    <small style="color:rgba(180,200,255,0.6);font-size:9px;display:block;margin-bottom:10px;">
+      Camera permission required — allow when prompted
+    </small>
+    Place flat on table, then tap:<br><br>
+    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Open Camera & Start AR</button>
+  </span>
+  <span id="ar-step2" style="display:none;">⏳ Loading AR engine…<br><small style="color:rgba(127,255,178,.5);">first load ~5 s</small></span>
+  <span id="ar-step3" style="display:none;">
+    ✅ Camera ready!<br><br>
+    Point at the marker.<br>The polarizers appear on it.<br><br>
+    <strong>Your challenge:</strong><br>
+    Observe I₁ and I₂ on the HUD.<br>
+    Calculate the angle θ between<br>polarizers using Malus's Law:<br>
+    <span style="color:var(--violet);">I₂ = I₁ · cos²(θ)</span><br><br>
+    Enter your angle and validate!<br><br>
+    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 24px;border-radius:20px;border:1px solid rgba(77,255,160,.5);background:rgba(77,255,160,.12);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Got it — Start!</button>
+  </span>
+</div>
+
 <div id="title"><h1>POLARIZATION LAB</h1><p>Malus's Law Experiment | E-field Waves</p></div>
 
 <div id="hud">
@@ -192,7 +235,6 @@ const cam3 = new THREE.PerspectiveCamera(52,1,0.1,200);
 const labelCanvas = document.getElementById('labelCanvas');
 const lctx = labelCanvas.getContext('2d');
 let arMode = false;
-let frameSkip = 0;
 
 function resize(){
   if(arMode) return;
@@ -304,7 +346,7 @@ let lastUpdate = 0;
 
 function updateEField() {
   const now = Date.now();
-  if(now - lastUpdate < 40) return; // ~25fps for animation
+  if(now - lastUpdate < 40) return;
   lastUpdate = now;
   
   while(efieldGroup.children.length) efieldGroup.remove(efieldGroup.children[0]);
@@ -315,7 +357,6 @@ function updateEField() {
   const thetaRad = S.theta * Math.PI/180;
   const isCrossed = Math.abs(S.theta - 90) < 0.5 || i2 < 0.01;
   
-  // Segment 1: Unpolarized
   for(let i = 0; i < 20; i++){
     const t = i / 19;
     const x = -6.0 + t * 3.5;
@@ -331,7 +372,6 @@ function updateEField() {
     }
   }
   
-  // Segment 2: Vertically polarized
   if(i1 > 0.05){
     for(let i = 0; i < 22; i++){
       const t = i / 21;
@@ -348,7 +388,6 @@ function updateEField() {
     }
   }
   
-  // Segment 3: Polarized at angle θ
   if(!isCrossed && i2 > 0.02){
     for(let i = 0; i < 22; i++){
       const t = i / 21;
@@ -368,7 +407,6 @@ function updateEField() {
   }
 }
 
-// SCREEN - PURE BLACK
 const screenTC = document.createElement('canvas');
 screenTC.width = screenTC.height = 512;
 const screenTCtx = screenTC.getContext('2d');
@@ -450,11 +488,12 @@ function drawLabels(){
   lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
   lctx.textAlign='center';
   function w2s(v){const c=v.clone().project(cam3);return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight};}
-  const labels=[
-    {p:new THREE.Vector3(-7,1.6,0),t:'LIGHT SOURCE',c:'#ffe088'},
-    {p:new THREE.Vector3(-2.5,1.9,0),t:'POLARIZER P₁',c:'#ffc857'},
-    {p:new THREE.Vector3(2.5,1.9,0), t:`ANALYZER P₂  ${S.theta.toFixed(0)}°`,c:'#5bc8ff'},
-    {p:new THREE.Vector3(6,2.0,0),   t:'SCREEN',c:'#aaddff'},
+  
+  const labels = [
+    {p:new THREE.Vector3(-7,1.6,0), t:'LIGHT SOURCE', c:'#ffe088'},
+    {p:new THREE.Vector3(-2.5,1.9,0), t:'POLARIZER P₁', c:'#ffc857'},
+    {p:new THREE.Vector3(2.5,1.9,0), t:`ANALYZER P₂  ${S.theta.toFixed(0)}°`, c:'#5bc8ff'},
+    {p:new THREE.Vector3(6,2.0,0), t:'SCREEN', c:'#aaddff'}
   ];
   labels.forEach(({p,t,c})=>{
     const s=w2s(p);
@@ -463,9 +502,23 @@ function drawLabels(){
     lctx.fillStyle='rgba(4,7,15,0.7)'; lctx.fillRect(s.x-tw/2-4,s.y-12,tw+8,16);
     lctx.fillStyle=c; lctx.shadowBlur=6; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
   });
+  
+  // Beam intensity labels I₀, I₁, I₂
+  const beamLabels = [
+    {p:new THREE.Vector3(-4.5, -0.2, 0), t:'I₀ = 100%', c:'#ffe088'},
+    {p:new THREE.Vector3(0, -0.2, 0), t:'I₁ = 50%', c:'#ffc857'},
+    {p:new THREE.Vector3(4.3, -0.2, 0), t:`I₂ = ${Ipct().toFixed(1)}%`, c:'#5bc8ff'}
+  ];
+  beamLabels.forEach(({p,t,c})=>{
+    const s=w2s(p);
+    lctx.font='bold 12px "Space Mono",monospace';
+    lctx.fillStyle=c; lctx.shadowBlur=8;
+    lctx.fillText(t, s.x, s.y);
+    lctx.shadowBlur=0;
+  });
 }
 
-// ========== TOUCH-FRIENDLY ORBIT CONTROLS (iPad compatible) ==========
+// Touch-friendly orbit controls
 const orb = { theta: 0.05, phi: 0.20, radius: 18, cx: 0, cy: 0.3, cz: 0 };
 function applyOrbit(){
   orb.phi = Math.max(-Math.PI/5, Math.min(Math.PI/3.5, orb.phi));
@@ -518,7 +571,6 @@ canvas.addEventListener('touchend', (e) => {
   }
 }, { passive: false });
 
-// Mouse support for desktop
 canvas.addEventListener('mousedown', (e) => {
   if(arMode) return;
   dragStart = { x: e.clientX, y: e.clientY };
@@ -562,10 +614,85 @@ function validateQuiz(){
   document.getElementById('quiz-result').style.color = ok ? '#4dffa0' : '#ff5e72';
 }
 
-function exitAR(){ arMode = false; location.reload(); }
+// AR Mode implementation
+function enterAR() {
+  arMode = true;
+  document.getElementById('arWrap').classList.add('show');
+  document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('hint').style.display = 'none';
+  document.body.classList.add('ar-active');
+}
+
+function exitAR() {
+  arMode = false;
+  document.getElementById('arWrap').classList.remove('show');
+  document.getElementById('ar-instructions').classList.remove('show');
+  document.getElementById('hint').style.display = '';
+  document.body.classList.remove('ar-active');
+  resize();
+  applyOrbit();
+}
+
 window.exitAR = exitAR;
+
+document.getElementById('ar-start-btn').addEventListener('click', () => {
+  const step1 = document.getElementById('ar-step1');
+  const step2 = document.getElementById('ar-step2');
+  const step3 = document.getElementById('ar-step3');
+  step1.style.display = 'none';
+  step2.style.display = 'block';
+  
+  // Load A-Frame and AR.js
+  function loadAR() {
+    const wrap = document.getElementById('arWrap');
+    wrap.innerHTML = '';
+    
+    const scene = document.createElement('a-scene');
+    scene.setAttribute('embedded', '');
+    scene.setAttribute('arjs', 'sourceType:webcam;debugUIEnabled:false;detectionMode:mono;');
+    scene.setAttribute('vr-mode-ui', 'enabled:false');
+    scene.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:block;';
+    
+    const marker = document.createElement('a-marker');
+    marker.setAttribute('preset', 'hiro');
+    
+    const box = document.createElement('a-box');
+    box.setAttribute('position', '0 0.5 0');
+    box.setAttribute('material', 'color: #5bc8ff; opacity:0.8');
+    box.setAttribute('scale', '0.5 0.5 0.5');
+    marker.appendChild(box);
+    
+    scene.appendChild(marker);
+    wrap.appendChild(scene);
+    
+    step2.style.display = 'none';
+    step3.style.display = 'block';
+    document.getElementById('ar-status').style.display = 'block';
+    document.getElementById('ar-status').textContent = '🔍 SCANNING for HIRO marker...';
+    document.getElementById('ar-status').style.background = 'rgba(255,180,0,.15)';
+  }
+  
+  if(window.AFRAME) {
+    loadAR();
+  } else {
+    const script = document.createElement('script');
+    script.src = 'https://aframe.io/releases/1.4.0/aframe.min.js';
+    script.onload = () => {
+      const arScript = document.createElement('script');
+      arScript.src = 'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js';
+      arScript.onload = loadAR;
+      document.head.appendChild(arScript);
+    };
+    document.head.appendChild(script);
+  }
+});
+
 document.getElementById('btn-ar').addEventListener('click', () => {
-  alert("AR Mode: Point camera at HIRO marker.\n\nWhen θ=90°, no light passes through P₂ and no E-field appears after it.");
+  if(!arMode) {
+    enterAR();
+  } else {
+    exitAR();
+  }
 });
 
 function animate(){
