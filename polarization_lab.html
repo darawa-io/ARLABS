@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Polarization Lab</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);}
+
+/* ── Canvases ── */
+#mainCanvas{position:absolute;inset:0;z-index:1;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+/* ── AR wrap ── */
+#arWrap{display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;}
+#arWrap.show{display:block;}
+
+/* ── HUD ── */
+#hud{
+  position:absolute;top:20px;right:20px;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:18px;
+  padding:18px;min-width:232px;z-index:10;
+}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
+.dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
+.dv.amber{color:var(--amber);}
+.dv.blue{color:var(--blue);}
+.dv.violet{color:var(--violet);}
+.hdiv{height:1px;background:var(--border);margin:10px 0;}
+#malus-box{padding:9px;border-radius:9px;background:rgba(180,120,255,0.06);border:1px solid rgba(180,120,255,0.18);font-size:11px;font-family:'Space Mono',monospace;color:rgba(200,160,255,0.85);line-height:2.0;text-align:center;}
+
+/* ── Intensity bars ── */
+#intensity-bars{padding:10px 0 2px;}
+.ibar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ibar-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}
+.ibar-track{flex:1;height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden;}
+.ibar-fill{height:100%;border-radius:5px;transition:width 0.2s;}
+.ibar-val{font-family:'Space Mono',monospace;font-size:10px;width:40px;text-align:right;flex-shrink:0;}
+
+/* ── Validate quiz (AR mode) ── */
+#quiz-box{
+  display:none;
+  position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+  background:rgba(10,14,28,0.95);backdrop-filter:blur(20px);
+  border:1px solid rgba(180,120,255,0.25);border-radius:16px;
+  padding:16px 20px;z-index:10;
+  font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--violet);text-align:center;white-space:nowrap;
+}
+body.ar-active #quiz-box{display:block;}
+#quiz-box input[type=number]{
+  width:80px;padding:6px 10px;margin:0 8px;
+  border-radius:8px;border:1px solid rgba(180,120,255,0.4);
+  background:rgba(0,0,0,0.5);color:#fff;
+  font-family:'Space Mono',monospace;font-size:12px;text-align:center;
+}
+#quiz-btn{
+  padding:6px 16px;border-radius:12px;
+  border:1px solid rgba(180,120,255,0.5);
+  background:rgba(180,120,255,0.15);color:var(--violet);
+  font-family:'Space Mono',monospace;font-size:10px;
+  cursor:pointer;letter-spacing:1px;
+}
+#quiz-result{display:block;margin-top:8px;font-size:11px;min-height:16px;}
+
+/* ── AR instructions ── */
+#ar-instructions{
+  display:none;background:rgba(10,14,28,0.96);backdrop-filter:blur(20px);
+  border:1px solid rgba(80,200,255,0.25);border-radius:18px;
+  padding:24px 28px;z-index:22;max-width:360px;width:90%;
+  font-family:'Space Mono',monospace;font-size:11px;color:#7fffb2;
+  line-height:1.9;text-align:center;
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+}
+#ar-instructions.show{display:block;}
+#ar-instructions strong{color:#fff;}
+
+/* ── AR status ── */
+#ar-status{
+  display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  z-index:100;padding:7px 18px;border-radius:20px;
+  font-family:'Space Mono',monospace;font-size:11px;
+  letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;
+}
+
+/* ── Controls ── */
+#controls{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  display:flex;gap:8px;align-items:center;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:50px;
+  padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 40px);
+}
+.btn{padding:7px 16px;border-radius:30px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.18);border-color:var(--green);color:#fff;}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:90px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+
+/* hide HUD + show quiz label when AR active */
+body.ar-active #hud{display:none;}
+
+/* hint */
+#hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+body.ar-active #hint{display:none;}
+
+/* title */
+#title{position:absolute;top:20px;left:20px;z-index:5;}
+#title h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
+#title p{font-size:10px;color:rgba(180,200,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+
+.ctrl-ar-hide{}
+body.ar-active .ctrl-ar-hide{display:none!important;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+<div id="arWrap"></div>
+<div id="ar-status"></div>
+
+<!-- AR Instructions -->
+<div id="ar-instructions">
+  <button onclick="document.getElementById('ar-instructions').classList.remove('show');if(window.arMode)exitAR();"
+    style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;">✕</button>
+  <strong>AR Mode — Polarization Lab</strong><br><br>
+  <span id="ar-step1">
+    Print or display this Hiro marker (A5+):<br><br>
+    <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
+      style="width:130px;height:130px;display:block;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;">
+      <rect width="280" height="280" fill="black"/>
+      <rect x="40" y="40" width="200" height="200" fill="white"/>
+      <rect x="40"  y="40"  width="33" height="33" fill="black"/>
+      <rect x="106" y="40"  width="34" height="33" fill="black"/>
+      <rect x="140" y="40"  width="33" height="33" fill="black"/>
+      <rect x="173" y="73"  width="34" height="34" fill="black"/>
+      <rect x="207" y="73"  width="33" height="34" fill="black"/>
+      <rect x="73"  y="107" width="33" height="33" fill="black"/>
+      <rect x="106" y="107" width="34" height="33" fill="black"/>
+      <rect x="173" y="140" width="34" height="33" fill="black"/>
+      <rect x="207" y="140" width="33" height="33" fill="black"/>
+      <rect x="73"  y="173" width="33" height="34" fill="black"/>
+      <rect x="106" y="173" width="34" height="34" fill="black"/>
+      <rect x="173" y="207" width="34" height="33" fill="black"/>
+      <rect x="207" y="207" width="33" height="33" fill="black"/>
+    </svg>
+    <small style="color:rgba(255,200,100,.85);font-size:10px;display:block;margin-bottom:6px;">
+      ⚠️ Exact pattern required
+    </small>
+    Place flat on table, then tap:<br><br>
+    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Open Camera</button>
+  </span>
+  <span id="ar-step2" style="display:none;">⏳ Loading AR engine…<br><small style="color:rgba(127,255,178,.5);">first load ~5 s</small></span>
+  <span id="ar-step3" style="display:none;">
+    ✅ Camera ready!<br><br>
+    Point at the marker.<br>The polarizers appear on it.<br><br>
+    <strong>Your challenge:</strong><br>
+    Observe I₀ and I on the HUD.<br>
+    Calculate the angle θ between<br>polarizers using Malus's Law:<br>
+    <span style="color:var(--violet);">I = I₀ · cos²(θ)</span><br><br>
+    Enter your angle and validate!<br><br>
+    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 24px;border-radius:20px;border:1px solid rgba(77,255,160,.5);background:rgba(77,255,160,.12);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Got it — Start!</button>
+  </span>
+</div>
+
+<div id="title"><h1>POLARIZATION LAB</h1><p>Malus's Law Experiment</p></div>
+
+<!-- HUD -->
+<div id="hud">
+  <h2>Measurements</h2>
+  <div class="dr"><span class="dl">θ (angle)</span><span class="dv violet" id="val-theta">0°</span></div>
+  <div class="dr"><span class="dl">I₀ (after P₁)</span><span class="dv amber" id="val-I0">50.0 %</span></div>
+  <div class="dr"><span class="dl">I (after P₂)</span><span class="dv blue" id="val-I">50.0 %</span></div>
+  <div class="dr"><span class="dl">I / I₀</span><span class="dv" id="val-ratio" style="color:var(--green);">1.000</span></div>
+  <div class="hdiv"></div>
+  <div id="intensity-bars">
+    <div class="ibar-row">
+      <span class="ibar-label" style="color:var(--amber);">I₀</span>
+      <div class="ibar-track"><div class="ibar-fill" id="bar-I0" style="background:var(--amber);width:50%;"></div></div>
+      <span class="ibar-val" id="bval-I0" style="color:var(--amber);">50%</span>
+    </div>
+    <div class="ibar-row">
+      <span class="ibar-label" style="color:var(--blue);">I</span>
+      <div class="ibar-track"><div class="ibar-fill" id="bar-I" style="background:var(--blue);width:50%;"></div></div>
+      <span class="ibar-val" id="bval-I" style="color:var(--blue);">50%</span>
+    </div>
+  </div>
+  <div class="hdiv"></div>
+  <div id="malus-box">I = I₀ · cos²(θ)<br>Malus's Law</div>
+</div>
+
+<!-- Controls -->
+<div id="controls">
+  <div class="sw ctrl-ar-hide">
+    <span>θ=</span>
+    <input type="range" id="sl-theta" min="0" max="90" value="0" step="1">
+    <span id="lbl-theta">0°</span>
+  </div>
+  <div class="sep ctrl-ar-hide"></div>
+  <button class="btn green" id="btn-ar">📷 AR Mode</button>
+  <button class="btn ctrl-ar-hide" id="btn-reset">Reset</button>
+</div>
+
+<!-- AR Quiz -->
+<div id="quiz-box">
+  <span style="color:var(--muted);">Your calculated θ:</span>
+  <input id="quiz-input" type="number" min="0" max="90" step="0.5" placeholder="e.g. 45">°
+  <button class="btn" id="quiz-btn" onclick="validateQuiz()">Validate</button>
+  <span id="quiz-result"></span>
+</div>
+
+<div id="hint">drag to orbit · scroll to zoom · slider to rotate P₂</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const S = { theta: 0 };   // degrees — angle of P2 relative to P1
+
+// Malus's Law: I = I0 * cos²(θ)
+// After first polarizer: I0 = 0.5 * Iinc  (unpolarized → linear, half intensity)
+// After second polarizer: I = I0 * cos²(θ)
+// We express as percentage of Iinc: I0=50%, I=50*cos²(θ)%
+function I0pct(){ return 50; }
+function Ipct(){ return 50 * Math.pow(Math.cos(S.theta * Math.PI/180), 2); }
+
+// ═══════════════════════════════════════════════════════
+//  RENDERER
+// ═══════════════════════════════════════════════════════
+const canvas   = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.setClearColor(0x07090f, 1);
+
+const scene3 = new THREE.Scene();
+scene3.fog   = new THREE.FogExp2(0x07090f, 0.022);
+const cam3   = new THREE.PerspectiveCamera(52,1,0.1,200);
+
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx        = labelCanvas.getContext('2d');
+
+let arMode = false;
+
+function resize(){
+  if(arMode) return;
+  const w=window.innerWidth, h=window.innerHeight;
+  renderer.setSize(w,h);
+  cam3.aspect=w/h; cam3.updateProjectionMatrix();
+  labelCanvas.width=w; labelCanvas.height=h;
+}
+resize(); window.addEventListener('resize', resize);
+
+// ── Lights ──
+scene3.add(new THREE.AmbientLight(0xffffff, 3.5));
+const sun=new THREE.DirectionalLight(0xfff8f0,2.0); sun.position.set(6,14,8); sun.castShadow=true; scene3.add(sun);
+const fill=new THREE.DirectionalLight(0xaaddff,0.8); fill.position.set(-8,4,-4); scene3.add(fill);
+
+// ── Floor ──
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0x0d1020,roughness:0.95}));
+floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.2; floorM.receiveShadow=true; scene3.add(floorM);
+const grid=new THREE.GridHelper(60,60,0x1a2540,0x121c30); grid.position.y=-2.18; scene3.add(grid);
+
+const root3=new THREE.Group(); scene3.add(root3);
+
+// Optical axis
+{const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-10,0,0),new THREE.Vector3(10,0,0)]);
+ const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x3a6070,dashSize:.5,gapSize:.3}));l.computeLineDistances();root3.add(l);}
+
+// ── Rail ──
+const railMat=new THREE.MeshStandardMaterial({color:0x3a5070,metalness:0.82,roughness:0.22});
+const rail=new THREE.Mesh(new THREE.BoxGeometry(18,0.12,0.22),railMat); rail.position.set(0,-0.42,0); root3.add(rail);
+
+// ═══════════════════════════════════════════════════════
+//  LIGHT SOURCE
+// ═══════════════════════════════════════════════════════
+const lightSourceGrp = new THREE.Group();
+lightSourceGrp.position.set(-7, 0, 0);
+
+// Bulb housing — cylindrical lamp
+const houseMat=new THREE.MeshStandardMaterial({color:0x223344,metalness:0.8,roughness:0.2});
+const house=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,1.2,20),houseMat);
+house.rotation.z=Math.PI/2; house.position.y=0.5; lightSourceGrp.add(house);
+
+// Glowing lens
+const lensMat=new THREE.MeshStandardMaterial({color:0xfffbe8,emissive:0xffeeaa,emissiveIntensity:3.0,roughness:0,metalness:0,transparent:true,opacity:0.92});
+const lensB=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,20),lensMat);
+lensB.position.set(0.62,0.5,0); lightSourceGrp.add(lensB);
+
+// Point light inside the source
+const bulbLight=new THREE.PointLight(0xfff5cc,4,8); bulbLight.position.set(0.62,0.5,0); lightSourceGrp.add(bulbLight);
+
+// Stand
+const stMat=new THREE.MeshStandardMaterial({color:0x445566,metalness:0.75,roughness:0.28});
+const stBase=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),stMat); stBase.position.set(0,-0.38,0); lightSourceGrp.add(stBase);
+const stPost=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.8,10),stMat); stPost.position.set(0,0.04,0); lightSourceGrp.add(stPost);
+root3.add(lightSourceGrp);
+
+// ═══════════════════════════════════════════════════════
+//  POLARIZER BUILDER
+// ═══════════════════════════════════════════════════════
+function buildPolarizer(color, emissiveCol, showArrow){
+  const g=new THREE.Group();
+
+  // Frame
+  const frameMat=new THREE.MeshStandardMaterial({color:0x667788,metalness:0.85,roughness:0.15});
+  const frame=new THREE.Mesh(new THREE.TorusGeometry(1.1,0.12,14,60),frameMat);
+  frame.rotation.x=Math.PI/2; g.add(frame);
+
+  // Polarizer disc — semi-transparent with slight tint
+  const discMat=new THREE.MeshPhysicalMaterial({
+    color:color, transmission:0.55, opacity:0.7, transparent:true,
+    roughness:0, metalness:0, ior:1.48, clearcoat:1.0,
+    side:THREE.DoubleSide, depthWrite:false,
+  });
+  const disc=new THREE.Mesh(new THREE.CircleGeometry(1.05,60),discMat);
+  disc.rotation.x=Math.PI/2; g.add(disc);
+
+  // Polarization direction lines (striations)
+  const lineMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:1.2,transparent:true,opacity:0.55});
+  for(let i=-4;i<=4;i++){
+    const lm=new THREE.Mesh(new THREE.BoxGeometry(0.02,2.0,0.01),lineMat);
+    lm.position.set(i*0.24,0,0.01); lm.rotation.x=Math.PI/2; g.add(lm);
+  }
+
+  // Polarization direction arrow (only on P1 always, on P2 in desktop mode)
+  if(showArrow){
+    const arrowMat=new THREE.MeshStandardMaterial({color:emissiveCol,emissive:emissiveCol,emissiveIntensity:3.0});
+    // Arrow shaft
+    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1.6,10),arrowMat);
+    shaft.position.y=0; shaft.rotation.x=Math.PI/2; shaft.position.z=0.15; g.add(shaft);
+    // Arrow head
+    const head=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.35,12),arrowMat);
+    head.position.set(0,0.95,0.15); head.rotation.x=Math.PI/2; g.add(head);
+    // Arrow tail
+    const tail=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.35,12),arrowMat);
+    tail.position.set(0,-0.95,0.15); tail.rotation.x=-Math.PI/2; g.add(tail);
+  }
+
+  // Stand
+  const sMat=new THREE.MeshStandardMaterial({color:0x445566,metalness:0.78,roughness:0.28});
+  const sBase=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.5),sMat); sBase.position.set(0,-1.58,0); g.add(sBase);
+  const sPost=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065,0.48,10),sMat); sPost.position.set(0,-1.28,0); g.add(sPost);
+
+  return g;
+}
+
+// P1 — fixed, vertical polarization (amber, always shows arrow)
+const pol1 = buildPolarizer(0xfff5cc, 0xffc857, true);
+pol1.position.set(-2.5, 0.5, 0);
+root3.add(pol1);
+
+// P2 — rotatable (blue/violet, desktop shows arrow, AR hides it)
+const pol2Grp = new THREE.Group(); // wrapper for rotation around beam axis
+pol2Grp.position.set(2.5, 0.5, 0);
+root3.add(pol2Grp);
+
+let pol2Disc = null; // rebuilt when AR mode changes
+function buildP2(showArrow){
+  while(pol2Grp.children.length) pol2Grp.remove(pol2Grp.children[0]);
+  pol2Disc = buildPolarizer(0xbbddff, 0x5bc8ff, showArrow);
+  pol2Grp.add(pol2Disc);
+}
+buildP2(true); // desktop: show arrow
+
+// ═══════════════════════════════════════════════════════
+//  LIGHT BEAMS (three segments: source→P1, P1→P2, P2→screen)
+// ═══════════════════════════════════════════════════════
+const beamGroup = new THREE.Group(); root3.add(beamGroup);
+
+function updateBeams(){
+  while(beamGroup.children.length) beamGroup.remove(beamGroup.children[0]);
+
+  const i0 = I0pct()/100;   // 0..1
+  const i  = Ipct()/100;
+
+  function makeBeam(x1,x2,opacity,color){
+    const len=x2-x1;
+    const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity,side:THREE.DoubleSide,depthWrite:false});
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,len,10),mat);
+    b.rotation.z=Math.PI/2; b.position.set(x1+len/2,0.5,0); b.renderOrder=5; beamGroup.add(b);
+    // Glow
+    const gm=new THREE.MeshBasicMaterial({color,transparent:true,opacity:opacity*0.22,side:THREE.DoubleSide,depthWrite:false});
+    const bg=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,len,10),gm);
+    bg.rotation.z=Math.PI/2; bg.position.set(x1+len/2,0.5,0); bg.renderOrder=4; beamGroup.add(bg);
+  }
+
+  // Segment 1: source → P1 (unpolarized, full brightness, white-yellow)
+  makeBeam(-6.4,-3.6, 0.80, 0xfff5cc);
+
+  // Segment 2: P1 → P2 (polarized, I0=50%, amber)
+  makeBeam(-1.4, 1.4, Math.max(0.1,i0*0.85), 0xffc857);
+
+  // Segment 3: P2 → screen (intensity after Malus, blue)
+  const screenX = 6.0;
+  makeBeam(3.6, screenX-0.15, Math.max(0.04, i*0.90), 0x5bc8ff);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN
+// ═══════════════════════════════════════════════════════
+const screenTC=document.createElement('canvas');
+screenTC.width=screenTC.height=256;
+const screenTCtx=screenTC.getContext('2d');
+const screenTex=new THREE.CanvasTexture(screenTC);
+
+function paintScreen(){
+  const ctx=screenTCtx, W=256, H=256;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#030608'; ctx.fillRect(0,0,W,H);
+
+  const i=Ipct()/100;
+  const r=Math.round(91*i), g2=Math.round(200*i), b=Math.round(255*i);
+  const radius=Math.max(12, 80*i);
+  const bright=Math.max(0.05, i);
+
+  // Glow circle
+  const grd=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius*1.8);
+  grd.addColorStop(0,`rgba(${r},${g2},${b},${bright})`);
+  grd.addColorStop(0.5,`rgba(${r},${g2},${b},${bright*0.4})`);
+  grd.addColorStop(1,'transparent');
+  ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+
+  // Core bright spot
+  const core=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius);
+  core.addColorStop(0,`rgba(${r+100},${g2+40},255,${Math.min(1,bright*1.8)})`);
+  core.addColorStop(1,`rgba(${r},${g2},${b},0)`);
+  ctx.fillStyle=core; ctx.fillRect(0,0,W,H);
+
+  // Intensity percentage text
+  ctx.font='bold 28px monospace'; ctx.textAlign='center';
+  ctx.fillStyle=`rgba(${r},${g2},${b},${Math.min(1,bright*3)})`;
+  ctx.fillText((Ipct()).toFixed(1)+'%', W/2, H*0.82);
+  ctx.font='14px monospace'; ctx.fillStyle='rgba(180,210,255,0.4)';
+  ctx.fillText('intensity', W/2, H*0.88);
+
+  screenTex.needsUpdate=true;
+}
+
+// Screen panel
+const screenMat=new THREE.MeshStandardMaterial({map:screenTex,roughness:0.7,metalness:0,side:THREE.DoubleSide,emissive:0x020510,emissiveIntensity:0.9});
+const screenPanel=new THREE.Mesh(new THREE.PlaneGeometry(2.8,3.2),screenMat);
+screenPanel.rotation.y=Math.PI/2; screenPanel.position.set(6,0.5,0);
+const screenFrame=new THREE.Mesh(new THREE.BoxGeometry(0.1,3.4,3.0),new THREE.MeshStandardMaterial({color:0xdde8f0,metalness:0.2,roughness:0.6}));
+screenFrame.position.set(6,0.5,0);
+root3.add(screenPanel); root3.add(screenFrame);
+
+// ═══════════════════════════════════════════════════════
+//  HUD UPDATER
+// ═══════════════════════════════════════════════════════
+function updateHUD(){
+  const th=S.theta, i0=I0pct(), i=Ipct();
+  const ratio=i/i0;
+  document.getElementById('val-theta').textContent=th.toFixed(0)+'°';
+  document.getElementById('val-I0').textContent=i0.toFixed(1)+' %';
+  document.getElementById('val-I').textContent=i.toFixed(1)+' %';
+  document.getElementById('val-ratio').textContent=ratio.toFixed(3);
+  document.getElementById('bar-I0').style.width=i0+'%';
+  document.getElementById('bval-I0').textContent=i0.toFixed(0)+'%';
+  document.getElementById('bar-I').style.width=i+'%';
+  document.getElementById('bval-I').textContent=i.toFixed(1)+'%';
+}
+
+// ═══════════════════════════════════════════════════════
+//  FULL UPDATE
+// ═══════════════════════════════════════════════════════
+function fullUpdate(){
+  // Rotate P2 disk around X axis (beam axis = Z in local space)
+  pol2Grp.rotation.z = S.theta * Math.PI/180;
+  updateBeams();
+  paintScreen();
+  updateHUD();
+  if(arMode) syncAR();
+}
+
+// ═══════════════════════════════════════════════════════
+//  LABELS
+// ═══════════════════════════════════════════════════════
+function drawLabels(){
+  if(arMode){lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);return;}
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  lctx.textAlign='center';
+  function w2s(v){const c=v.clone().project(cam3);return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight};}
+  const labels=[
+    {p:new THREE.Vector3(-7,1.8,0),t:'LIGHT SOURCE',c:'#ffe088'},
+    {p:new THREE.Vector3(-2.5,2.1,0),t:'POLARIZER P₁  ↕ vertical',c:'#ffc857'},
+    {p:new THREE.Vector3(2.5,2.1,0), t:`ANALYZER P₂  θ=${S.theta.toFixed(0)}°`,c:'#5bc8ff'},
+    {p:new THREE.Vector3(6,2.2,0),   t:'SCREEN',c:'#aaddff'},
+  ];
+  labels.forEach(({p,t,c})=>{
+    const s=w2s(p);
+    lctx.font='600 11px "Space Mono",monospace';
+    const tw=lctx.measureText(t).width;
+    lctx.fillStyle='rgba(4,7,15,0.75)'; lctx.fillRect(s.x-tw/2-5,s.y-14,tw+10,18);
+    lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=10; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  ORBIT + DRAG
+// ═══════════════════════════════════════════════════════
+const orb={theta:0.05,phi:0.20,radius:18,cx:0,cy:0.3,cz:0};
+function applyOrbit(){
+  orb.phi=Math.max(-Math.PI/5,Math.min(Math.PI/3.5,orb.phi));
+  const r=orb.radius,p=orb.phi,t=orb.theta;
+  cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t),orb.cy+r*Math.sin(p),orb.cz+r*Math.cos(p)*Math.cos(t));
+  cam3.lookAt(orb.cx,orb.cy,orb.cz);
+}
+applyOrbit();
+
+let drag=null;
+const touches={};
+canvas.addEventListener('mousedown',e=>{if(arMode)return;drag={lx:e.clientX,ly:e.clientY};});
+canvas.addEventListener('mousemove',e=>{if(!drag||arMode)return;const dx=e.clientX-drag.lx,dy=e.clientY-drag.ly;orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();drag.lx=e.clientX;drag.ly=e.clientY;});
+canvas.addEventListener('mouseup',()=>{drag=null;});
+canvas.addEventListener('mouseleave',()=>{drag=null;});
+canvas.addEventListener('wheel',e=>{if(arMode)return;orb.radius=Math.max(6,Math.min(40,orb.radius+e.deltaY*0.03));applyOrbit();e.preventDefault();},{passive:false});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('touchstart',e=>{e.preventDefault();[...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});if(Object.keys(touches).length===1){const t=e.changedTouches[0];drag={lx:t.clientX,ly:t.clientY};}},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();if(Object.keys(touches).length>=2){const ta=[...e.changedTouches];if(ta.length>=2){const p0=touches[ta[0].identifier]||{x:ta[0].clientX,y:ta[0].clientY},p1=touches[ta[1].identifier]||{x:ta[1].clientX,y:ta[1].clientY};const od=Math.hypot(p0.x-p1.x,p0.y-p1.y),nd=Math.hypot(ta[0].clientX-ta[1].clientX,ta[0].clientY-ta[1].clientY);if(od>1){orb.radius=Math.max(6,Math.min(40,orb.radius*(od/nd)));applyOrbit();}}}else if(drag){const t=e.changedTouches[0];orb.theta-=(t.clientX-drag.lx)*0.003;orb.phi+=(t.clientY-drag.ly)*0.003;applyOrbit();drag.lx=t.clientX;drag.ly=t.clientY;}[...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});},{passive:false});
+canvas.addEventListener('touchend',e=>{[...e.changedTouches].forEach(t=>{delete touches[t.identifier];});if(!Object.keys(touches).length)drag=null;},{passive:false});
+
+// ═══════════════════════════════════════════════════════
+//  SLIDER
+// ═══════════════════════════════════════════════════════
+document.getElementById('sl-theta').addEventListener('input',function(){
+  S.theta=parseFloat(this.value);
+  document.getElementById('lbl-theta').textContent=S.theta.toFixed(0)+'°';
+  fullUpdate();
+});
+
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  S.theta=0;
+  document.getElementById('sl-theta').value=0;
+  document.getElementById('lbl-theta').textContent='0°';
+  fullUpdate();
+});
+
+// ═══════════════════════════════════════════════════════
+//  AR — quiz validation
+// ═══════════════════════════════════════════════════════
+function validateQuiz(){
+  const guess=parseFloat(document.getElementById('quiz-input').value);
+  const actual=S.theta;
+  if(isNaN(guess)){document.getElementById('quiz-result').textContent='Enter a value.';document.getElementById('quiz-result').style.color='#ff5e72';return;}
+  const err=Math.abs(guess-actual);
+  const pct=actual>0?(err/actual)*100:err;
+  const ok=err<=5; // within 5°
+  document.getElementById('quiz-result').textContent=ok
+    ?`✅ Correct! θ ≈ ${actual.toFixed(1)}°`
+    :`❌ Try again. Hint: I/I₀ = cos²(θ)`;
+  document.getElementById('quiz-result').style.color=ok?'#4dffa0':'#ff5e72';
+}
+
+// ═══════════════════════════════════════════════════════
+//  AR SCENE
+// ═══════════════════════════════════════════════════════
+let arScene=null, arEntities={};
+let arDrag=null,arPinch0=null,arScale0=null,arScaleVal=0.45;
+
+function syncAR(){
+  if(!arEntities.p2) return;
+  // Rotate P2 entity
+  const rot=S.theta;
+  arEntities.p2.setAttribute('rotation',`0 0 ${rot}`);
+  // Update beam opacities
+  const i=Ipct()/100;
+  if(arEntities.beam2) arEntities.beam2.setAttribute('opacity',String(Math.max(0.08,i*0.85)));
+  if(arEntities.beam2glow) arEntities.beam2glow.setAttribute('opacity',String(Math.max(0.02,i*0.18)));
+  // Update screen canvas
+  if(arEntities.screenCvs){
+    paintScreenAR(arEntities.screenCvs);
+    if(arEntities.screenPanel&&arEntities.screenPanel.components&&arEntities.screenPanel.components.material&&arEntities.screenPanel.components.material.material)
+      arEntities.screenPanel.components.material.material.map.needsUpdate=true;
+  }
+  // Update AR HUD overlay
+  if(arEntities.hudCvs) paintARHUD(arEntities.hudCvs);
+}
+
+function paintScreenAR(cvs){
+  const ctx=cvs.getContext('2d'),W=cvs.width,H=cvs.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#020508'; ctx.fillRect(0,0,W,H);
+  const i=Ipct()/100;
+  const r=Math.round(91*i),g2=Math.round(200*i),b=Math.round(255*i);
+  const radius=Math.max(20,W*0.35*i);
+  const grd=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius*1.8);
+  grd.addColorStop(0,`rgba(${r},${g2},${b},${Math.max(0.05,i)})`);
+  grd.addColorStop(1,'transparent');
+  ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+  const core=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,radius);
+  core.addColorStop(0,`rgba(200,230,255,${Math.min(1,i*1.8)})`);
+  core.addColorStop(1,'transparent');
+  ctx.fillStyle=core; ctx.fillRect(0,0,W,H);
+  ctx.font='bold 40px monospace'; ctx.textAlign='center';
+  ctx.fillStyle=`rgba(${r},${g2},${b},${Math.min(1,i*3+0.2)})`;
+  ctx.fillText((Ipct()).toFixed(1)+'%',W/2,H*0.78);
+}
+
+function paintARHUD(cvs){
+  const ctx=cvs.getContext('2d'),W=cvs.width,H=cvs.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(8,12,24,0.82)'; ctx.roundRect(0,0,W,H,12); ctx.fill();
+  ctx.strokeStyle='rgba(91,200,255,0.3)'; ctx.lineWidth=2; ctx.roundRect(1,1,W-2,H-2,11); ctx.stroke();
+  const i0=I0pct(), i=Ipct();
+  ctx.font='bold 26px "Space Mono",monospace'; ctx.textAlign='center';
+  ctx.fillStyle='#ffc857'; ctx.fillText('I₀ = '+i0.toFixed(0)+'%',W/2,44);
+  ctx.fillStyle='#5bc8ff'; ctx.fillText('I  = '+i.toFixed(1)+'%',W/2,80);
+  ctx.fillStyle='rgba(180,120,255,0.9)'; ctx.font='22px "Space Mono",monospace';
+  ctx.fillText('I/I₀ = '+(i/i0).toFixed(3),W/2,116);
+  ctx.font='18px "Space Mono",monospace'; ctx.fillStyle='rgba(180,200,255,0.5)';
+  ctx.fillText('Malus: I=I₀cos²θ',W/2,148);
+  if(cvs.needsUpdate!==undefined) cvs.needsUpdate=true;
+}
+
+function buildARScene(){
+  const wrap=document.getElementById('arWrap');
+  const old=wrap.querySelector('a-scene');
+  if(old){old.querySelectorAll('video').forEach(v=>{if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}});wrap.removeChild(old);}
+  arScene=null; arEntities={};
+
+  const sceneEl=document.createElement('a-scene');
+  sceneEl.setAttribute('embedded','');
+  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.50;');
+  sceneEl.setAttribute('renderer','antialias:true;precision:medium;');
+  sceneEl.setAttribute('vr-mode-ui','enabled:false');
+  sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
+  sceneEl.style.cssText='width:100%;height:100%;display:block;';
+
+  // Assets
+  const assets=document.createElement('a-assets');
+
+  const screenCvs=document.createElement('canvas');
+  screenCvs.id='ar-scr'; screenCvs.width=screenCvs.height=256;
+  paintScreenAR(screenCvs); assets.appendChild(screenCvs);
+
+  const hudCvs=document.createElement('canvas');
+  hudCvs.id='ar-hud'; hudCvs.width=512; hudCvs.height=180;
+  paintARHUD(hudCvs); assets.appendChild(hudCvs);
+
+  sceneEl.appendChild(assets);
+
+  const marker=document.createElement('a-marker');
+  marker.setAttribute('preset','hiro');
+  marker.setAttribute('smooth','true'); marker.setAttribute('smoothCount','5');
+  marker.addEventListener('markerFound',()=>{const s=document.getElementById('ar-status');s.textContent='✅ MARKER DETECTED';s.style.background='rgba(77,255,160,.15)';s.style.border='1px solid rgba(77,255,160,.4)';s.style.color='#4dffa0';});
+  marker.addEventListener('markerLost', ()=>{const s=document.getElementById('ar-status');s.textContent='🔍 SCANNING…';s.style.background='rgba(255,180,0,.12)';s.style.border='1px solid rgba(255,180,0,.4)';s.style.color='#ffb400';});
+
+  const sg=document.createElement('a-entity');
+  sg.setAttribute('id','ar-sg');
+  sg.setAttribute('scale',`${arScaleVal} ${arScaleVal} ${arScaleVal}`);
+
+  const SC=0.1; // scene units → AR metres
+
+  // Rail
+  function mkBox(w,h,d,col,op){const b=document.createElement('a-box');b.setAttribute('width',w);b.setAttribute('height',h);b.setAttribute('depth',d);b.setAttribute('color',col);b.setAttribute('opacity',String(op));return b;}
+
+  const rail2=mkBox('14','0.10','0.20','#3a5070',0.85); rail2.setAttribute('position','0 0 0'); sg.appendChild(rail2);
+
+  // Light source
+  function addLS(){
+    const e=document.createElement('a-entity'); e.setAttribute('position','-5.5 0.4 0');
+    const h=mkBox('1.2','0.70','0.70','#223344',0.9); h.setAttribute('position','0 0 0'); e.appendChild(h);
+    const s=document.createElement('a-sphere'); s.setAttribute('radius','0.35'); s.setAttribute('position','0.62 0 0'); s.setAttribute('color','#fff8cc'); s.setAttribute('emissive','#ffeeaa'); s.setAttribute('emissive-intensity','2'); e.appendChild(s);
+    const base=mkBox('0.45','0.13','0.45','#445566',0.9); base.setAttribute('position','0 -0.54 0'); e.appendChild(base);
+    sg.appendChild(e);
+  }
+  addLS();
+
+  // Beams
+  function addBeam(x1,x2,col,opac,id1,id2){
+    const len=x2-x1, cx=(x1+x2)/2;
+    const b=document.createElement('a-cylinder'); b.setAttribute('radius','0.06'); b.setAttribute('height',String(len)); b.setAttribute('color',col); b.setAttribute('opacity',String(opac)); b.setAttribute('rotation','0 0 90'); b.setAttribute('position',`${cx} 0.4 0`); b.setAttribute('material',`transparent:true;side:double;`); if(id1)b.setAttribute('id',id1); sg.appendChild(b);
+    const g=document.createElement('a-cylinder'); g.setAttribute('radius','0.22'); g.setAttribute('height',String(len)); g.setAttribute('color',col); g.setAttribute('opacity',String(opac*0.20)); g.setAttribute('rotation','0 0 90'); g.setAttribute('position',`${cx} 0.4 0`); g.setAttribute('material',`transparent:true;side:double;`); if(id2)g.setAttribute('id',id2); sg.appendChild(g);
+    return [b,g];
+  }
+  addBeam(-4.9,-2.9,'#fff5cc',0.80,null,null);  // segment 1 (always full)
+  addBeam(-1.3,1.3,'#ffc857',0.65,null,null);    // segment 2 (P1→P2)
+  const [b2,b2g]=addBeam(2.9,5.2,'#5bc8ff',Ipct()/100*0.85,'ar-beam2','ar-beam2g');
+  arEntities.beam2=b2; arEntities.beam2glow=b2g;
+
+  // Polarizer helper
+  function addPol(xpos,rotZ,col,emissive,showArrow,idName){
+    const pe=document.createElement('a-entity');
+    pe.setAttribute('position',`${xpos} 0.4 0`);
+    pe.setAttribute('rotation',`0 0 ${rotZ}`);
+    if(idName) pe.setAttribute('id',idName);
+    // Torus frame
+    const t=document.createElement('a-torus'); t.setAttribute('radius','1.1'); t.setAttribute('radius-tubular','0.10'); t.setAttribute('color','#667788'); t.setAttribute('rotation','90 0 0'); pe.appendChild(t);
+    // Disc
+    const disc=document.createElement('a-circle'); disc.setAttribute('radius','1.06'); disc.setAttribute('color',col); disc.setAttribute('opacity','0.55'); disc.setAttribute('rotation','90 0 0'); disc.setAttribute('material',`transparent:true;side:double;`); pe.appendChild(disc);
+    // Lines
+    for(let i=-3;i<=3;i++){const l=mkBox('0.025','1.90','0.015',emissive,0.50);l.setAttribute('position',`${i*0.30} 0 0.02`);l.setAttribute('rotation','90 0 0');pe.appendChild(l);}
+    // Arrow only when showArrow
+    if(showArrow){
+      const ar=document.createElement('a-entity'); ar.setAttribute('position','0 0 0.15');
+      const sh=document.createElement('a-cylinder'); sh.setAttribute('radius','0.06'); sh.setAttribute('height','1.8'); sh.setAttribute('color',emissive); sh.setAttribute('emissive',emissive); sh.setAttribute('emissive-intensity','1.5'); sh.setAttribute('rotation','90 0 0'); ar.appendChild(sh);
+      const hd=document.createElement('a-cone'); hd.setAttribute('radius-bottom','0.15'); hd.setAttribute('height','0.4'); hd.setAttribute('color',emissive); hd.setAttribute('emissive',emissive); hd.setAttribute('emissive-intensity','1.5'); hd.setAttribute('position','0 1.0 0'); hd.setAttribute('rotation','90 0 0'); ar.appendChild(hd);
+      const tl=document.createElement('a-cone'); tl.setAttribute('radius-bottom','0.15'); tl.setAttribute('height','0.4'); tl.setAttribute('color',emissive); tl.setAttribute('emissive',emissive); tl.setAttribute('emissive-intensity','1.5'); tl.setAttribute('position','0 -1.0 0'); tl.setAttribute('rotation','-90 0 0'); ar.appendChild(tl);
+      pe.appendChild(ar);
+    }
+    // Stand
+    const sb=mkBox('0.45','0.13','0.45','#445566',0.9); sb.setAttribute('position','0 -1.55 0'); pe.appendChild(sb);
+    sg.appendChild(pe);
+    return pe;
+  }
+
+  addPol(-2.0, 0,     '#fff5cc','#ffc857',true,  null);       // P1 — arrow always shown
+  const p2ent=addPol( 2.0, S.theta,'#bbddff','#5bc8ff',false, 'ar-p2'); // P2 — NO arrow in AR
+  arEntities.p2=p2ent;
+
+  // Screen
+  {const se=document.createElement('a-entity'); se.setAttribute('position','5.5 0.4 0');
+   const sf=mkBox('0.10','3.4','3.0','#dde8f0',0.85); sf.setAttribute('position','0 0 0'); se.appendChild(sf);
+   const sp=document.createElement('a-plane'); sp.setAttribute('id','ar-scrp'); sp.setAttribute('width','2.8'); sp.setAttribute('height','3.2'); sp.setAttribute('rotation','0 90 0'); sp.setAttribute('src','#ar-scr'); sp.setAttribute('material','transparent:false;side:double;'); se.appendChild(sp);
+   sg.appendChild(se);
+   arEntities.screenPanel=sp; arEntities.screenCvs=screenCvs;}
+
+  // AR HUD panel (floating above scene)
+  {const hp=document.createElement('a-plane'); hp.setAttribute('width','4.5'); hp.setAttribute('height','1.6'); hp.setAttribute('position','0 3.2 0'); hp.setAttribute('rotation','0 0 0'); hp.setAttribute('src','#ar-hud'); hp.setAttribute('material','transparent:false;shader:flat;side:double;'); sg.appendChild(hp); arEntities.hudCvs=hudCvs;}
+
+  // Camera
+  const camEnt=document.createElement('a-entity'); camEnt.setAttribute('camera',''); sceneEl.appendChild(camEnt);
+  marker.appendChild(sg);
+  sceneEl.appendChild(marker);
+  wrap.appendChild(sceneEl);
+  arScene=sceneEl; arEntities.scaleGroup=sg;
+
+  // Touch: pinch-to-zoom + drag to rotate P2
+  wrap.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===2){arDrag=null;arPinch0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);arScale0=arScaleVal;return;}
+    if(e.touches.length===1) arDrag={lx:e.touches[0].clientX};
+  },{passive:false});
+  wrap.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===2&&arPinch0!==null){const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);arScaleVal=Math.max(0.05,Math.min(2.5,arScale0*(nd/arPinch0)));sg.setAttribute('scale',`${arScaleVal} ${arScaleVal} ${arScaleVal}`);return;}
+    if(arDrag&&e.touches.length===1){
+      const dx=e.touches[0].clientX-arDrag.lx;
+      S.theta=Math.max(0,Math.min(90,S.theta+dx*0.3));
+      arDrag.lx=e.touches[0].clientX;
+      fullUpdate();
+    }
+  },{passive:false});
+  wrap.addEventListener('touchend',e=>{if(e.touches.length<2){arPinch0=null;arScale0=null;}if(!e.touches.length)arDrag=null;},{passive:false});
+}
+
+function showARStep(n){[1,2,3].forEach(i=>{const el=document.getElementById('ar-step'+i);if(el)el.style.display=i===n?'':'none';});}
+
+function enterAR(){
+  arMode=true;
+  document.getElementById('arWrap').classList.add('show');
+  document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('hint').style.display='none';
+  document.body.classList.add('ar-active');
+  // Rebuild P2 without arrow for AR
+  buildP2(false);
+  showARStep(1);
+  document.getElementById('btn-ar').textContent='✕ Exit AR';
+  document.getElementById('btn-ar').classList.add('on');
+  // Random angle for AR challenge (30–75°)
+  S.theta=Math.round(30+Math.random()*45);
+}
+
+function exitAR(){
+  arMode=false;
+  document.getElementById('arWrap').classList.remove('show');
+  const wrap=document.getElementById('arWrap'); wrap.innerHTML=''; arScene=null; arEntities={};
+  document.getElementById('ar-instructions').classList.remove('show');
+  document.getElementById('ar-status').style.display='none';
+  document.getElementById('hint').style.display='';
+  document.body.classList.remove('ar-active');
+  // Restore P2 with arrow for desktop
+  buildP2(true);
+  document.getElementById('btn-ar').textContent='📷 AR Mode';
+  document.getElementById('btn-ar').classList.remove('on');
+  document.getElementById('quiz-result').textContent='';
+  S.theta=0;
+  document.getElementById('sl-theta').value=0;
+  document.getElementById('lbl-theta').textContent='0°';
+  fullUpdate();
+  resize(); applyOrbit();
+}
+
+document.getElementById('ar-start-btn').addEventListener('click',function(){
+  showARStep(2);
+  function onLibsReady(){
+    buildARScene();
+    const s=document.getElementById('ar-status');
+    s.style.display='block'; s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+    showARStep(3);
+    fullUpdate(); // apply random theta to AR scene
+  }
+  if(window.AFRAME&&window.AFRAME.version){onLibsReady();return;}
+  function loadScript(urls,done,fail){if(!urls.length){fail();return;}const s=document.createElement('script');s.src=urls[0];s.setAttribute('data-arscript','1');s.onload=done;s.onerror=()=>loadScript(urls.slice(1),done,fail);document.head.appendChild(s);}
+  loadScript(
+    ['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js'],
+    ()=>loadScript(
+      ['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'],
+      onLibsReady,()=>alert('Could not load AR engine.')),
+    ()=>alert('Could not load A-Frame.'));
+});
+
+document.getElementById('btn-ar').addEventListener('click',()=>{if(!arMode)enterAR();else exitAR();});
+window.arMode=false;
+Object.defineProperty(window,'arMode',{get:()=>arMode,set:v=>{arMode=v;}});
+
+// ═══════════════════════════════════════════════════════
+//  RENDER LOOP
+// ═══════════════════════════════════════════════════════
+function desktopLoop(){
+  if(arMode)return;
+  requestAnimationFrame(desktopLoop);
+  drawLabels();
+  renderer.render(scene3,cam3);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+{const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h);cam3.aspect=w/h;cam3.updateProjectionMatrix();labelCanvas.width=w;labelCanvas.height=h;}
+fullUpdate();
+desktopLoop();
+</script>
+</body>
+</html>
