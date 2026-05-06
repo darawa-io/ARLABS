@@ -286,23 +286,26 @@ function drawSingleSlitPreview(){
   const W=cv.width,H=cv.height;
   const ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
-  // Narrow slit + longer L so multiple secondary bands fit in the card view
-  const lam=532, slitW=0.025, dist=1.5;
-  const halfRange=14; // mm shown
+  // Parameters tuned so central band fills ~40% of height, secondary bands visible
+  const lam=532, slitW=0.08, dist=1.0;  // wider slit → narrower central band
+  const halfRange=10; // mm shown — tight window so bands fill the card
   const [r,g,b]=waveToRGB(lam);
-  for(let px=0;px<H;px++){
-    const ymm=(px-H/2)*(2*halfRange/H);
+  const patW=W*0.72;
+  for(let py=0;py<H;py++){
+    const ymm=(py-H/2)*(2*halfRange/H);
     const beta=Math.PI*(slitW*1e-3)*(ymm*1e-3)/(lam*1e-9*dist);
     const I=sinc(beta)**2;
-    const alpha=Math.min(1,Math.sqrt(I)*1.05);
+    // Gamma: central band saturated white, secondary ~30% brightness, tertiary ~10%
+    const alpha=Math.min(1, Math.pow(I, 0.45) * 1.05);
+    if(alpha<0.01) continue;
     ctx.fillStyle=`rgba(${r},${g},${b},${alpha})`;
-    ctx.fillRect(0,px,W*0.72,1);
+    ctx.fillRect(0,py,patW,1);
   }
-  // ruler hint
+  // Ruler strip
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
-  for(let mm=-halfRange;mm<=halfRange;mm+=4){
+  for(let mm=-halfRange;mm<=halfRange;mm+=2){
     const py=Math.round(H/2-mm*(H/(2*halfRange)));
-    if(py<0||py>H)continue;
+    if(py<0||py>H) continue;
     ctx.fillStyle=mm===0?'#ffdd66':'#5080a0';
     ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);
   }
@@ -339,22 +342,21 @@ function drawGratingPreview(){
   const W=cv.width,H=cv.height;
   const ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
-  const lam=532,N=600,dist=1.0;   // 600 l/mm gives tighter maxima, more visible orders
+  const lam=532, N=300, dist=1.0;   // 300 l/mm → wider spacing → more orders visible
   const d=1e-3/N;
   const [r,g,b]=waveToRGB(lam);
-  const halfRange=30; // mm — show ±30 mm so 5+ orders are visible
-  const sigma=0.5, sig2=2*sigma*sigma; // sharper peaks
+  const halfRange=55; // mm — wide view to capture 5+ orders
+  const sigma=0.55, sig2=2*sigma*sigma;
   const scale=H/(2*halfRange);
-  // Find grating orders within view
   const orders=[];
-  for(let m=-12;m<=12;m++){
+  for(let m=-20;m<=20;m++){
     const sinT=m*(lam*1e-9)/d;
-    if(Math.abs(sinT)>=1)continue;
+    if(Math.abs(sinT)>=1) continue;
     const tanT=sinT/Math.sqrt(1-sinT*sinT);
     const ymm=tanT*dist*1e3;
-    if(Math.abs(ymm)>halfRange)continue;
-    const a=d*0.5;
-    const beta2=Math.PI*a*sinT/(lam*1e-9);
+    if(Math.abs(ymm)>halfRange) continue;
+    // Single-slit envelope (a = d/2)
+    const beta2=Math.PI*(d*0.5)*sinT/(lam*1e-9);
     const env=Math.abs(beta2)<1e-9?1:sinc(beta2)**2;
     orders.push({py:H/2-ymm*scale, env});
   }
@@ -362,14 +364,14 @@ function drawGratingPreview(){
     let I=0;
     for(const o of orders){ const dp=px-o.py; I+=o.env*Math.exp(-(dp*dp)/sig2); }
     I=Math.min(1,I);
-    if(I<0.02)continue;
+    if(I<0.015) continue;
     ctx.fillStyle=`rgba(${r},${g},${b},${I})`;
     ctx.fillRect(0,px,W*0.72,1);
   }
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
   for(let mm=-halfRange;mm<=halfRange;mm+=10){
     const py=Math.round(H/2-mm*scale);
-    if(py<0||py>H)continue;
+    if(py<0||py>H) continue;
     ctx.fillStyle=mm===0?'#ffdd66':'#7060a0';
     ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);
   }
@@ -401,17 +403,18 @@ function drawSingleSlitPreviewLam(lam){
   const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
   const [r,g,b]=waveToRGB(lam);
-  const halfRange=14;
-  for(let px=0;px<H;px++){
-    const ymm=(px-H/2)*(2*halfRange/H);
-    const beta=Math.PI*(0.025*1e-3)*(ymm*1e-3)/(lam*1e-9*1.5);
+  const halfRange=10, patW=W*0.72;
+  for(let py=0;py<H;py++){
+    const ymm=(py-H/2)*(2*halfRange/H);
+    const beta=Math.PI*(0.08*1e-3)*(ymm*1e-3)/(lam*1e-9*1.0);
     const I=sinc(beta)**2;
-    const alpha=Math.min(1,Math.sqrt(I)*1.05);
+    const alpha=Math.min(1,Math.pow(I,0.45)*1.05);
+    if(alpha<0.01) continue;
     ctx.fillStyle=`rgba(${r},${g},${b},${alpha})`;
-    ctx.fillRect(0,px,W*0.72,1);
+    ctx.fillRect(0,py,patW,1);
   }
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
-  for(let mm=-halfRange;mm<=halfRange;mm+=4){const py=Math.round(H/2-mm*(H/(2*halfRange)));if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#5080a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
+  for(let mm=-10;mm<=10;mm+=2){const py=Math.round(H/2-mm*(H/20));if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#5080a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
 }
 function drawDoubleSlitPreviewLam(lam){
   const cv=document.getElementById('c-ds'); if(!cv)return;
@@ -434,10 +437,10 @@ function drawGratingPreviewLam(lam){
   const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
   ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
   const [r,g,b]=waveToRGB(lam);
-  const d=1e-3/600, sigma=0.5, sig2=2*sigma*sigma;
-  const halfRange=30, scale=H/(2*halfRange);
+  const d=1e-3/300, sigma=0.55, sig2=2*sigma*sigma;
+  const halfRange=55, scale=H/(2*halfRange);
   const orders=[];
-  for(let m=-12;m<=12;m++){
+  for(let m=-20;m<=20;m++){
     const sinT=m*(lam*1e-9)/d;
     if(Math.abs(sinT)>=1)continue;
     const tanT=sinT/Math.sqrt(1-sinT*sinT);
@@ -449,11 +452,11 @@ function drawGratingPreviewLam(lam){
   }
   for(let px=0;px<H;px++){
     let I=0;for(const o of orders){const dp=px-o.py;I+=o.env*Math.exp(-(dp*dp)/sig2);}
-    I=Math.min(1,I);if(I<0.02)continue;
+    I=Math.min(1,I);if(I<0.015)continue;
     ctx.fillStyle=`rgba(${r},${g},${b},${I})`;ctx.fillRect(0,px,W*0.72,1);
   }
   ctx.fillStyle='rgba(8,15,35,0.92)'; ctx.fillRect(W*0.72,0,W*0.28,H);
-  for(let mm=-halfRange;mm<=halfRange;mm+=10){const py=Math.round(H/2-mm*scale);if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#7060a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
+  for(let mm=-55;mm<=55;mm+=10){const py=Math.round(H/2-mm*scale);if(py<0||py>H)continue;ctx.fillStyle=mm===0?'#ffdd66':'#7060a0';ctx.fillRect(W*0.72,py,mm===0?W*0.12:W*0.07,mm===0?2:1);}
 }
 animatePreviews();
 
@@ -2691,8 +2694,10 @@ body.ar-active #mainCanvas,body.ar-active #labelCanvas{display:none!important;}
 #ar-instructions a{color:#64c8ff;text-decoration:underline;}
 /* AR status */
 #ar-status{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;padding:7px 18px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;transition:all .3s;}
-/* Controls */
-#controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(8,18,35,.9);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.2);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
+/* hide desktop scene and controls sliders when AR active */
+body.ar-active #simWrap{display:none!important;}
+body.ar-active #mainCanvas,body.ar-active #labelCanvas{display:none!important;}
+#controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(8,18,35,.9);backdrop-filter:blur(20px);border:1px solid rgba(120,180,255,.2);border-radius:50px;padding:8px 16px;z-index:60;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
 .btn{padding:7px 14px;border-radius:30px;border:1px solid rgba(120,180,255,.3);background:rgba(120,180,255,.08);color:#78c8ff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;}
 .btn:hover{background:rgba(120,180,255,.2);}
 .btn.on{background:rgba(120,180,255,.28);border-color:#78c8ff;color:#fff;}
@@ -2713,8 +2718,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 </style>
 </head>
 <body>
-<canvas id="mainCanvas"></canvas>
-<canvas id="labelCanvas"></canvas>
+<div id="simWrap" style="position:absolute;inset:0;z-index:1;">
+<canvas id="mainCanvas" style="position:absolute;inset:0;"></canvas>
+<canvas id="labelCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:3;"></canvas>
+</div>
 <div id="arWrap"></div>
 <div id="ar-status"></div>
 
@@ -3503,6 +3510,9 @@ function enterAR(){
   document.getElementById('ar-status').style.display='none';
   document.getElementById('hint').style.display='none';
   document.body.classList.add('ar-active');
+  // Explicitly hide desktop scene so it can't bleed through
+  const sw=document.getElementById('simWrap'); if(sw) sw.style.display='none';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='none');
   showARStep(1);
   document.getElementById('btn-ar').textContent='✕ Exit AR'; document.getElementById('btn-ar').classList.add('on');
 }
@@ -3516,6 +3526,8 @@ function exitAR(){
   const s=document.getElementById('ar-status'); s.style.display='none';
   document.getElementById('hint').style.display='';
   document.body.classList.remove('ar-active');
+  const sw=document.getElementById('simWrap'); if(sw) sw.style.display='';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='');
   document.getElementById('btn-ar').textContent='📷 AR Mode'; document.getElementById('btn-ar').classList.remove('on');
   resize(); applyOrbit(); requestAnimationFrame(desktopLoop);
 }
