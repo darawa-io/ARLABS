@@ -84,11 +84,10 @@
             margin-bottom: 0.75rem;
         }
 
-        /* WORKSPACE CONTAINER - EXACT MATCH TO image_c36a32.jpg */
+        /* WORKSPACE CONTAINER */
         #simContainer {
             width: 100%;
-            height: 100%;
-            min-height: 680px;
+            height: 680px;
             background-color: #050505;
             background-image: 
                 radial-gradient(circle at 50% 50%, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%),
@@ -104,7 +103,7 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Central Placeholder UI - Refined for exact alignment */
+        /* Central Placeholder UI */
         .placeholder-glass {
             background: rgba(18, 18, 18, 0.75);
             backdrop-filter: blur(25px);
@@ -120,7 +119,6 @@
             box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
         }
 
-        /* Icon from image_c36a32.jpg */
         .central-icon {
             width: 84px;
             height: 84px;
@@ -134,7 +132,7 @@
             color: var(--primary-gold);
         }
 
-        /* "SCANNING ENVIRONMENT" Animated Overlay from image_c3da6d.png */
+        /* "SCANNING ENVIRONMENT" Animated Overlay */
         .scanning-overlay {
             position: absolute;
             inset: 0;
@@ -172,13 +170,25 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Sim Frame */
+        /* Sim Frame FIX */
         .sim-frame-wrapper {
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 50;
             background: white;
             animation: fadeIn 0.5s ease-in-out;
+            border-radius: 40px;
+            overflow: hidden;
+        }
+
+        .scaled-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
         }
 
         @keyframes fadeIn {
@@ -230,7 +240,7 @@
     <nav class="container mx-auto px-8 py-8 flex justify-between items-center relative z-50">
         <div class="flex items-center gap-4">
             <div class="w-[60px] h-[60px]">
-                <img src="assets/logo1.png" alt="Logo" class="w-full h-full object-contain mix-blend-mode-multiply" onerror="this.src='https://via.placeholder.com/60'">
+                <img src="https://darawa-io.github.io/ARLABS/logo1.png" alt="Logo" class="w-full h-full object-contain mix-blend-mode-multiply" onerror="this.src='https://via.placeholder.com/60'">
             </div>
             <div class="flex flex-col">
                 <span class="font-black text-xl text-[#0A4A7F] tracking-tighter">DARAWA</span>
@@ -257,7 +267,7 @@
             </p>
         </div>
         <div class="hero-image-underlay">
-            <img src="assets/hero.png" alt="Physics" onerror="this.style.display='none'">
+            <img src="https://darawa-io.github.io/ARLABS/hero.png" alt="Physics" onerror="this.style.display='none'">
         </div>
     </section>
 
@@ -267,15 +277,15 @@
             <!-- Sidebar -->
             <div class="grid grid-cols-1 gap-6 h-fit">
                 <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html')">
-                    <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
+                    <img src="https://darawa-io.github.io/ARLABS/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
                 </div>
                 <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html')">
-                    <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
+                    <img src="https://darawa-io.github.io/ARLABS/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
                 </div>
                 <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html')">
-                    <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
+                    <img src="https://darawa-io.github.io/ARLABS/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
                 </div>
             </div>
@@ -284,7 +294,6 @@
             <div class="lg:col-span-3">
                 <div class="bg-white rounded-[50px] p-3 shadow-2xl">
                     <div id="simContainer">
-                        <!-- Scanning Background Effects -->
                         <div class="scanning-overlay">
                             <div class="scanning-circle">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white" class="opacity-40">
@@ -294,7 +303,6 @@
                             <span class="scanning-text">Scanning Environment</span>
                         </div>
 
-                        <!-- Central Message Box (image_c36a32.jpg) -->
                         <div class="placeholder-glass">
                             <div class="central-icon">
                                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
@@ -352,16 +360,14 @@
             workspaceStatus.innerText = "Status: Module Active";
             currentSimUrl = url;
 
-            // Remove existing frame if any
             const oldFrame = container.querySelector('.sim-frame-wrapper');
             if (oldFrame) oldFrame.remove();
 
-            // Append new frame
-            container.innerHTML += `
-                <div class="sim-frame-wrapper">
-                    <iframe src="${url}" class="scaled-iframe" allowfullscreen></iframe>
-                </div>`;
+            const frameWrapper = document.createElement('div');
+            frameWrapper.className = 'sim-frame-wrapper';
+            frameWrapper.innerHTML = `<iframe src="${url}" class="scaled-iframe" allowfullscreen></iframe>`;
             
+            container.appendChild(frameWrapper);
             openTabBtn.classList.remove('hidden');
         }
 
