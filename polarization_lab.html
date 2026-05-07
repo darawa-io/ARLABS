@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Polarization Lab | Malus's Law | E-field Animation</title>
+<!-- A-Frame + AR.js loaded eagerly so custom elements are registered before buildARScene() runs -->
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.3.0/dist/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -24,14 +27,17 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 
 #mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
 #labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
-#arWrap{display:none;position:fixed;inset:0;z-index:50;width:100vw;height:100vh;background:#000;overflow:hidden;}
+#arWrap{display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;}
 #arWrap.show{display:block;}
+#arWrap a-scene{width:100%!important;height:100%!important;position:fixed!important;top:0!important;left:0!important;z-index:0!important;}
+/* AR.js injects video + its canvas directly into body — keep them below our UI */
+body.ar-active > video, body.ar-active > canvas:not(#mainCanvas):not(#labelCanvas){position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:1!important;object-fit:cover!important;}
 
 #hud{
   position:absolute;top:20px;right:20px;
   background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
   border:1px solid var(--border);border-radius:18px;
-  padding:18px;min-width:232px;z-index:10;
+  padding:18px;min-width:232px;z-index:300;
 }
 #hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
 .dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
@@ -50,42 +56,20 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 .ibar-fill{height:100%;border-radius:5px;transition:width 0.2s;}
 .ibar-val{font-family:'Space Mono',monospace;font-size:10px;width:40px;text-align:right;flex-shrink:0;}
 
-#quiz-box{
-  display:none;
-  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-  background:rgba(10,14,28,0.95);backdrop-filter:blur(20px);
-  border:1px solid rgba(180,120,255,0.25);border-radius:16px;
-  padding:16px 20px;z-index:200;
-  font-family:'Space Mono',monospace;font-size:11px;
-  color:var(--violet);text-align:center;
-  min-width:230px;
-}
-body.ar-active #quiz-box{display:block;}
-
-#ar-instructions{
-  display:none;background:rgba(10,14,28,0.96);backdrop-filter:blur(20px);
-  border:1px solid rgba(80,200,255,0.25);border-radius:18px;
-  padding:24px 28px;z-index:300;max-width:360px;width:90%;
-  font-family:'Space Mono',monospace;font-size:11px;color:#7fffb2;
-  line-height:1.9;text-align:center;
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-}
+#ar-instructions{display:none;}
 #ar-instructions.show{display:block;}
-#ar-instructions strong{color:#fff;}
 
-#ar-status{
-  display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);
-  z-index:200;padding:7px 18px;border-radius:20px;
-  font-family:'Space Mono',monospace;font-size:11px;
-  letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;
-}
-
+body.ar-active #hud{display:none!important;}
+body.ar-active #ar-theta-pill,
+body.ar-active #ar-i0-pill,
+body.ar-active #ar-i1-pill{display:block!important;}
+body.ar-active #simWrap{display:none!important;}
 #controls{
   position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
   display:flex;gap:8px;align-items:center;
   background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
   border:1px solid var(--border);border-radius:50px;
-  padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;
+  padding:8px 16px;z-index:300;flex-wrap:wrap;justify-content:center;
   max-width:calc(100vw - 40px);
 }
 .btn{padding:7px 16px;border-radius:30px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
@@ -98,71 +82,61 @@ body.ar-active #quiz-box{display:block;}
 input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:90px;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
 
-body.ar-active #hud{display:none;}
 #hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
 body.ar-active #hint{display:none;}
 
-#title{position:absolute;top:20px;left:20px;z-index:5;}
+#title{position:absolute;top:20px;left:20px;z-index:300;}
 #title h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
 #title p{font-size:10px;color:rgba(180,200,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
 
-body.ar-active #mainCanvas,
-body.ar-active #labelCanvas { display: none !important; }
 .ctrl-ar-hide{}
 body.ar-active .ctrl-ar-hide{display:none!important;}
 </style>
 </head>
 <body>
-<canvas id="mainCanvas"></canvas>
-<canvas id="labelCanvas"></canvas>
-<div id="arWrap">
-  <!-- AR.js / A-Frame scene injected here when AR mode starts -->
-</div>
-<button id="ar-exit-btn" onclick="exitAR()" style="display:none;position:fixed;top:16px;right:16px;z-index:1000;padding:10px 18px;border-radius:30px;border:1px solid rgba(255,100,100,.6);background:rgba(20,5,5,0.88);color:#ff7070;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);">✕ Exit AR</button>
-<div id="ar-status"></div>
+<div id="simWrap" style="position:absolute;inset:0;z-index:1;"><canvas id="mainCanvas"></canvas><canvas id="labelCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:3;"></canvas></div>
+<div id="arWrap" style="display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;"></div>
 
-<div id="ar-instructions">
-  <button onclick="document.getElementById('ar-instructions').classList.remove('show');if(window.arMode)exitAR();"
-    style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;">✕</button>
-  <strong>AR Mode — Polarization Lab</strong><br><br>
+<!-- AR status pill -->
+<div id="ar-status" style="display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;padding:7px 18px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;transition:all 0.3s;">🔍 SCANNING FOR MARKER…</div>
+
+<!-- AR info pills -->
+<div id="ar-theta-pill" style="display:none;position:fixed;top:20px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(7,9,15,.94);border:1px solid rgba(180,120,255,.45);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(200,180,255,.75);white-space:nowrap;">θ &nbsp;<span id="ar-theta-val" style="color:#b57aff;font-weight:700;">= 0°</span></div>
+<div id="ar-i0-pill" style="display:none;position:fixed;top:54px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(7,9,15,.94);border:1px solid rgba(255,220,100,.35);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(255,230,160,.75);white-space:nowrap;">I₀ &nbsp;<span style="color:#ffe088;font-weight:700;">= 100%</span></div>
+<div id="ar-i1-pill" style="display:none;position:fixed;top:88px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(7,9,15,.94);border:1px solid rgba(255,200,80,.38);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(255,210,130,.75);white-space:nowrap;">I₁ &nbsp;<span style="color:#ffc857;font-weight:700;">= 50%</span></div>
+<!-- AR instructions modal -->
+<div id="ar-instructions" style="display:none;background:rgba(7,9,15,.97);backdrop-filter:blur(16px);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:24px 26px;z-index:20;max-width:340px;width:90%;font-family:'Space Mono',monospace;font-size:11px;color:#4dffa0;line-height:1.9;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);">
+  <button onclick="document.getElementById('ar-instructions').classList.remove('show');exitAR();" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;">✕</button>
+  <strong style="color:#fff;">AR Mode — Polarization Lab</strong><br><br>
   <span id="ar-step1">
-    Point your camera at the <strong>Hiro marker</strong>.<br>
-    The simulation overlays automatically.<br><br>
-    <!-- Real Hiro marker: thick black border, white interior, kanji-like image inside -->
-    <div style="margin:0 auto 14px;width:120px;height:120px;">
-      <svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-        <!-- Outer black border (25% each side = 25px) -->
-        <rect width="100" height="100" fill="black"/>
-        <!-- White inner area -->
-        <rect x="25" y="25" width="50" height="50" fill="white"/>
-        <!-- Hiro inner image — approximate kanji strokes in the inner 50% zone -->
-        <!-- Horizontal top bar -->
-        <rect x="32" y="30" width="36" height="5" fill="black"/>
-        <!-- Vertical left stroke -->
-        <rect x="32" y="30" width="5" height="20" fill="black"/>
-        <!-- Middle horizontal -->
-        <rect x="32" y="44" width="36" height="4" fill="black"/>
-        <!-- Vertical right stroke -->
-        <rect x="63" y="30" width="5" height="20" fill="black"/>
-        <!-- Lower left diagonal-ish -->
-        <rect x="32" y="52" width="5" height="18" fill="black"/>
-        <!-- Lower right flare -->
-        <rect x="48" y="55" width="18" height="4" fill="black"/>
-        <rect x="62" y="55" width="4" height="14" fill="black"/>
-        <!-- Bottom tick left -->
-        <rect x="29" y="67" width="12" height="4" fill="black"/>
-      </svg>
-    </div>
-    <small style="color:rgba(180,200,255,0.6);font-size:10px;display:block;margin-bottom:12px;">
-      Print or display on screen (min 8×8 cm).<br>
-      Hold flat &amp; well-lit, avoid glare.<br>
-      <a href="https://ar-js-org.github.io/AR.js/data/images/hiro.png" target="_blank" style="color:#5bc8ff;">Download official Hiro marker ↗</a><br>
-      Camera permission required.
-    </small>
-    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Open Camera</button>
+    Print or display the Hiro marker (A5 or larger):<br><br>
+    <img src="https://ar-js-org.github.io/AR.js/data/images/hiro.png" alt="Hiro marker"
+         style="width:150px;height:150px;display:block;margin:0 auto 8px;border:6px solid white;background:white;border-radius:4px;"
+         onerror="this.style.display='none'"/>
+    <small style="color:rgba(255,200,100,.9);font-size:10px;display:block;margin-bottom:8px;">⚠️ This exact pattern is required</small>
+    Place flat on table, then tap:<br><br>
+    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.7);background:rgba(77,255,160,.18);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Open Camera</button>
   </span>
-  <span id="ar-step2" style="display:none;">⏳ Opening camera…</span>
-  <span id="ar-step3" style="display:none;"></span>
+  <span id="ar-step2" style="display:none;">⏳ Loading AR engine…<br><small style="color:rgba(77,255,160,.5);">(first load ~5–10 s)</small></span>
+  <span id="ar-step3" style="display:none;">
+    ✅ Camera ready!<br><br>Point at the <strong>Hiro marker</strong>.<br>The experiment appears on it.<br><br>
+    <button onclick="showARStep(4)" style="padding:8px 22px;border-radius:20px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">Guide →</button>
+    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Close</button>
+  </span>
+  <span id="ar-step4" style="display:none;text-align:left;line-height:2.0;">
+    <strong style="display:block;text-align:center;margin-bottom:8px;">📋 Experiment Steps</strong>
+    <span style="color:rgba(255,255,255,.8);">
+      1️⃣ &nbsp;Read <b>θ</b> from the angle pill (top right).<br>
+      2️⃣ &nbsp;I₀ = 100 % &nbsp;→&nbsp; I₁ = 50 % (given).<br>
+      3️⃣ &nbsp;Apply <b>Malus's Law:</b> I₂ = I₁ · cos²(θ).<br>
+      4️⃣ &nbsp;Use the slider to rotate P₂ and observe.<br>
+      5️⃣ &nbsp;The screen shows only brightness — calculate I₂!
+    </span><br>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button onclick="showARStep(3)" style="padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">← Back</button>
+      <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="flex:1;padding:8px 22px;border-radius:20px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Got it!</button>
+    </div>
+  </span>
 </div>
 
 <div id="title"><h1>POLARIZATION LAB</h1><p>Malus's Law Experiment | E-field Waves</p></div>
@@ -185,31 +159,17 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 </div>
 
 <div id="controls">
-  <div class="sw ctrl-ar-hide"><span>θ=</span><input type="range" id="sl-theta" min="0" max="90" value="0" step="1"><span id="lbl-theta">0°</span></div>
+  <div class="sw"><span>θ=</span><input type="range" id="sl-theta" min="0" max="90" value="0" step="1"><span id="lbl-theta">0°</span></div>
   <div class="sep ctrl-ar-hide"></div>
   <button class="btn green" id="btn-ar">📷 AR Mode</button>
+  <button class="btn" id="btn-guide" style="display:none;" onclick="toggleARGuide()">📋 Guide</button>
+  <div class="sep"></div>
   <button class="btn ctrl-ar-hide" id="btn-reset">Reset</button>
 </div>
 
-<div id="quiz-box">
-  <div style="color:var(--muted);margin-bottom:8px;font-size:10px;">TARGET I₂</div>
-  <div id="quiz-target" style="font-size:20px;color:var(--violet);font-weight:700;margin-bottom:6px;">—</div>
-  <div style="color:var(--muted);font-size:10px;margin-bottom:10px;">Rotate P₂ until I₂ matches the target</div>
-  <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:10px;">
-    <button id="ar-p2-ccw" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(91,200,255,.5);background:rgba(91,200,255,.1);color:#5bc8ff;font-size:20px;cursor:pointer;">↺</button>
-    <div style="text-align:center;">
-      <div style="font-size:16px;color:#5bc8ff;font-weight:700;" id="ar-theta-display">0°</div>
-      <div style="font-size:10px;color:var(--muted);">θ</div>
-    </div>
-    <button id="ar-p2-cw" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(91,200,255,.5);background:rgba(91,200,255,.1);color:#5bc8ff;font-size:20px;cursor:pointer;">↻</button>
-  </div>
-  <div style="font-size:12px;color:var(--amber);margin-bottom:8px;">I₂ = <span id="ar-i2-display">50.0</span>%</div>
-  <button class="btn" id="quiz-btn" onclick="validateQuiz()">✓ Validate</button>
-  <span id="quiz-result" style="display:block;margin-top:8px;font-size:11px;min-height:16px;"></span>
-</div>
+
 
 <div id="hint">🖐️ 1 finger: rotate view · ✌️ 2 fingers: pinch to zoom · ☝️ slider: rotate P₂</div>
-<div id="ar-hint" style="display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.35);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;">👈 swipe left/right on camera view to rotate P₂ · tap ↺ ↻ for precise steps</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -501,17 +461,7 @@ function paintScreen(){
     ctx.fillRect(0,0,W,H);
   }
   
-  const textAlpha = Math.min(0.92, Ipct()/100 * 1.4 + 0.15);
-  ctx.font = 'bold 44px "Space Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = `rgba(190, 220, 255, ${textAlpha})`;
-  ctx.shadowColor = `rgba(91, 180, 255, ${textAlpha * 0.6})`;
-  ctx.shadowBlur = 10;
-  ctx.fillText((Ipct()).toFixed(1) + '%', W/2, H - 55);
-  ctx.font = '13px "Space Mono", monospace';
-  ctx.fillStyle = `rgba(150, 185, 230, ${textAlpha * 0.6})`;
-  ctx.fillText('I₂ (after P₂)', W/2, H - 24);
-  ctx.shadowBlur = 0;
+  // Percentage intentionally hidden — student must calculate from Malus's Law
   
   screenTex.needsUpdate = true;
 }
@@ -544,6 +494,7 @@ function fullUpdate(){
   screenLight.intensity = iNorm * 5.5;
   screenMat.emissiveIntensity = 0.25 + iNorm * 1.8;
   updateHUD();
+  if(arMode) syncAR();
 }
 
 function drawLabels(){
@@ -667,364 +618,310 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   fullUpdate();
 });
 
-let quizTarget = null; // % intensity target set when AR starts
-
-function updateARQuizUI(){
-  document.getElementById('ar-theta-display').textContent = S.theta.toFixed(0) + '°';
-  document.getElementById('ar-i2-display').textContent = Ipct().toFixed(1);
-}
-
-function validateQuiz(){
-  if(quizTarget === null){ document.getElementById('quiz-result').textContent = 'No target set.'; return; }
-  const current = Ipct();
-  const err = Math.abs(current - quizTarget);
-  const ok = err <= 2.5; // within 2.5 percentage points
-  document.getElementById('quiz-result').textContent = ok
-    ? `✅ Correct! θ = ${S.theta.toFixed(1)}° → I₂ ≈ ${current.toFixed(1)}%`
-    : `❌ Not quite. I₂ = ${current.toFixed(1)}% vs target ${quizTarget.toFixed(1)}%`;
-  document.getElementById('quiz-result').style.color = ok ? '#4dffa0' : '#ff5e72';
-}
+// (quiz validation removed — students calculate I₂ = I₁·cos²θ themselves)
 
 // ════════════════════════════════════════════════════════════
-// AR MODE — AR.js (A-Frame) real Hiro marker detection
+// AR MODE — AR.js (A-Frame) real Hiro marker · double-slit style
 // ════════════════════════════════════════════════════════════
-let arAnimId = null;
+let arScene = null, arEntities = {}, arScale = 0.44;
+let arPinchDist0 = null, arScale0 = null;
 
-function enterAR() {
-  arMode = true;
-  document.getElementById('hint').style.display = 'none';
-  document.getElementById('ar-hint').style.display = 'block';
-  document.body.classList.add('ar-active');
-}
+const btnAR = document.getElementById('btn-ar');
+function showARStep(n){ [1,2,3,4].forEach(i=>{ const el=document.getElementById('ar-step'+i); if(el)el.style.display=(i===n?'':'none'); }); }
+function toggleARGuide(){ const p=document.getElementById('ar-instructions'); p.classList.contains('show')?p.classList.remove('show'):(showARStep(3),p.classList.add('show')); }
 
-function exitAR() {
-  if(arAnimId){ cancelAnimationFrame(arAnimId); arAnimId = null; }
+function buildARScene(){
   const wrap = document.getElementById('arWrap');
-  wrap.innerHTML = '';
-  wrap.classList.remove('show');
-  document.getElementById('ar-exit-btn').style.display = 'none';
+  wrap.innerHTML = ''; wrap.classList.add('show');
+  arScale = 0.44;
+
+  const sceneEl = document.createElement('a-scene');
+  // No 'embedded' — let AR.js go fullscreen so its video element is positioned correctly
+  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono_and_matrix;patternRatio:0.75;');
+  sceneEl.setAttribute('renderer','antialias:true;precision:medium;logarithmicDepthBuffer:true;');
+  sceneEl.setAttribute('vr-mode-ui','enabled:false');
+  sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
+  sceneEl.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;';
+
+  const assets = document.createElement('a-assets');
+  assets.setAttribute('timeout','10000');
+
+  // Screen canvas — copy from the Three.js screenTC (without the percentage text)
+  const screenCvs = document.createElement('canvas');
+  screenCvs.id = 'ar-screen-cvs'; screenCvs.width = screenCvs.height = 512;
+  screenCvs.getContext('2d').drawImage(screenTC, 0, 0, 512, 512);
+  assets.appendChild(screenCvs);
+  sceneEl.appendChild(assets);
+
+  const camEnt = document.createElement('a-entity'); camEnt.setAttribute('camera',''); sceneEl.appendChild(camEnt);
+
+  const marker = document.createElement('a-marker');
+  marker.setAttribute('preset','hiro');
+  marker.setAttribute('smooth','true'); marker.setAttribute('smoothCount','5');
+  marker.setAttribute('smoothTolerance','0.01'); marker.setAttribute('smoothThreshold','2');
+  marker.addEventListener('markerFound', ()=>{
+    const s=document.getElementById('ar-status');
+    s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(77,255,160,.18)';
+    s.style.border='1px solid rgba(77,255,160,.5)'; s.style.color='#4dffa0';
+  });
+  marker.addEventListener('markerLost', ()=>{
+    const s=document.getElementById('ar-status');
+    s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)';
+    s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+  });
+
+  // Scale group — everything lives here so pinch-to-zoom works
+  const sg = document.createElement('a-entity');
+  sg.setAttribute('id','ar-scale-group');
+  sg.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
+
+  function mkBox(w,h,d,col,met,rou){ const b=document.createElement('a-box'); b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d); b.setAttribute('color',col); if(met!=null)b.setAttribute('metalness',met); if(rou!=null)b.setAttribute('roughness',rou); return b; }
+
+  // ── Scene geometry (all positions relative to marker centre) ──
+  // Desktop world:  light source at x=-7, P1 at x=-2.5, P2 at x=2.5, screen at x=6
+  // AR scale factor: 1 desktop unit ≈ 0.18 AR units (marker ≈ 0.18m wide)
+  // So desktop span [-7..6] ≈ 13 units → AR span [-1.26..1.08]
+  const D2A = 0.135; // desktop → AR coordinate scale
+  const BEAM_Y = 0.28; // beam height above marker surface in AR units
+
+  // Rail
+  const railW = mkBox('2.0','0.025','0.045','#3a5070','0.7','0.3');
+  railW.setAttribute('position',`-0.09 ${BEAM_Y - 0.08} 0`); sg.appendChild(railW);
+
+  // Helper: optical stand (post + base)
+  function makeStand(xPos, col){
+    const g = document.createElement('a-entity'); g.setAttribute('position',`${xPos} 0 0`);
+    const base = mkBox('0.10','0.025','0.10',col,'0.7','0.3'); base.setAttribute('position',`0 ${BEAM_Y-0.22} 0`); g.appendChild(base);
+    const post = document.createElement('a-cylinder'); post.setAttribute('position',`0 ${BEAM_Y-0.11} 0`); post.setAttribute('radius','0.012'); post.setAttribute('height','0.095'); post.setAttribute('color',col); post.setAttribute('metalness','0.7'); g.appendChild(post);
+    return g;
+  }
+
+  // ── LIGHT SOURCE ──
+  const LS_X = -7 * D2A;
+  const lsEnt = makeStand(LS_X, '#223344');
+  const lsBody = document.createElement('a-cylinder');
+  lsBody.setAttribute('rotation','0 0 90'); lsBody.setAttribute('radius','0.075'); lsBody.setAttribute('height','0.160');
+  lsBody.setAttribute('color','#223344'); lsBody.setAttribute('metalness','0.7');
+  lsBody.setAttribute('position',`0 ${BEAM_Y} 0`); lsEnt.appendChild(lsBody);
+  const lsLens = document.createElement('a-sphere');
+  lsLens.setAttribute('radius','0.052'); lsLens.setAttribute('color','#fffbe8');
+  lsLens.setAttribute('emissive','#ffeeaa'); lsLens.setAttribute('emissive-intensity','3.0');
+  lsLens.setAttribute('position',`0.086 ${BEAM_Y} 0`); lsEnt.appendChild(lsLens);
+  sg.appendChild(lsEnt);
+
+  // ── POLARIZER P1 (fixed, amber) ──
+  const P1_X = -2.5 * D2A;
+  const p1Ent = makeStand(P1_X, '#445566');
+  // Torus frame
+  const p1Torus = document.createElement('a-torus');
+  p1Torus.setAttribute('radius','0.150'); p1Torus.setAttribute('tube','0.016');
+  p1Torus.setAttribute('segments-tubular','32'); p1Torus.setAttribute('rotation','0 90 0');
+  p1Torus.setAttribute('color','#667788'); p1Torus.setAttribute('metalness','0.8');
+  p1Torus.setAttribute('position',`0 ${BEAM_Y} 0`); p1Ent.appendChild(p1Torus);
+  // Disc
+  const p1Disc = document.createElement('a-circle');
+  p1Disc.setAttribute('radius','0.145'); p1Disc.setAttribute('rotation','0 90 0');
+  p1Disc.setAttribute('color','#fff5cc');
+  p1Disc.setAttribute('material','side:double;transparent:true;opacity:0.55;color:#fff5cc;');
+  p1Disc.setAttribute('position',`0 ${BEAM_Y} 0`); p1Ent.appendChild(p1Disc);
+  // Polarization axis line (vertical = 0°)
+  const p1Axis = mkBox('0.008','0.240','0.008','#ffc857','0.2','0.8');
+  p1Axis.setAttribute('emissive','#ffc857'); p1Axis.setAttribute('emissive-intensity','1.5');
+  p1Axis.setAttribute('position',`0.014 ${BEAM_Y} 0`); p1Ent.appendChild(p1Axis);
+  sg.appendChild(p1Ent);
+
+  // ── POLARIZER P2 (rotatable, blue) ──
+  const P2_X = 2.5 * D2A;
+  const p2Ent = makeStand(P2_X, '#445566');
+  // Ring group — this entity gets rotation.z updated when θ changes
+  const p2Ring = document.createElement('a-entity');
+  p2Ring.setAttribute('id','ar-p2-ring');
+  p2Ring.setAttribute('position',`0 ${BEAM_Y} 0`);
+  const p2Torus = document.createElement('a-torus');
+  p2Torus.setAttribute('radius','0.150'); p2Torus.setAttribute('tube','0.016');
+  p2Torus.setAttribute('segments-tubular','32'); p2Torus.setAttribute('rotation','0 90 0');
+  p2Torus.setAttribute('color','#667788'); p2Torus.setAttribute('metalness','0.8'); p2Ring.appendChild(p2Torus);
+  const p2Disc = document.createElement('a-circle');
+  p2Disc.setAttribute('radius','0.145'); p2Disc.setAttribute('rotation','0 90 0');
+  p2Disc.setAttribute('material','side:double;transparent:true;opacity:0.55;color:#bbddff;'); p2Ring.appendChild(p2Disc);
+  const p2Axis = mkBox('0.008','0.240','0.008','#5bc8ff','0.2','0.8');
+  p2Axis.setAttribute('id','ar-p2-axis');
+  p2Axis.setAttribute('emissive','#5bc8ff'); p2Axis.setAttribute('emissive-intensity','1.5');
+  p2Axis.setAttribute('position','0.014 0 0'); p2Ring.appendChild(p2Axis);
+  p2Ent.appendChild(p2Ring); sg.appendChild(p2Ent);
+
+  // ── SCREEN ──
+  const SC_X = 6 * D2A;
+  const scEnt = makeStand(SC_X, '#3a4558');
+  const SCREEN_H = 0.55, SCREEN_W = 0.48;
+  const scFrame = mkBox('0.018',String(SCREEN_H+0.02),String(SCREEN_W+0.02),'#3a4558','0.55','0.45');
+  scFrame.setAttribute('position',`0 ${BEAM_Y + SCREEN_H*0.18} 0`); scEnt.appendChild(scFrame);
+  const scPanel = document.createElement('a-plane');
+  scPanel.setAttribute('id','ar-screen-panel');
+  scPanel.setAttribute('width',String(SCREEN_W)); scPanel.setAttribute('height',String(SCREEN_H));
+  scPanel.setAttribute('rotation','0 90 0');
+  scPanel.setAttribute('position',`0 ${BEAM_Y + SCREEN_H*0.18} 0`);
+  scPanel.setAttribute('src','#ar-screen-cvs');
+  scPanel.setAttribute('material','src:#ar-screen-cvs;side:double;emissive:#111;emissive-intensity:0.4;');
+  scEnt.appendChild(scPanel); sg.appendChild(scEnt);
+
+  // ── BEAMS ──
+  // Beam 0: light source → P1
+  const bm0 = document.createElement('a-cylinder'); bm0.setAttribute('id','ar-beam0');
+  bm0.setAttribute('rotation','0 0 90'); bm0.setAttribute('radius','0.014');
+  bm0.setAttribute('color','#fff5cc'); bm0.setAttribute('opacity','0.75'); bm0.setAttribute('transparent','true');
+  const bm0Len = P1_X - LS_X - 0.09;
+  bm0.setAttribute('height', bm0Len.toFixed(3));
+  bm0.setAttribute('position',`${LS_X + 0.09 + bm0Len/2} ${BEAM_Y} 0`); sg.appendChild(bm0);
+  const bm0g = document.createElement('a-cylinder');
+  bm0g.setAttribute('rotation','0 0 90'); bm0g.setAttribute('radius','0.048');
+  bm0g.setAttribute('color','#fff5cc'); bm0g.setAttribute('opacity','0.10'); bm0g.setAttribute('transparent','true');
+  bm0g.setAttribute('height', bm0Len.toFixed(3));
+  bm0g.setAttribute('position',`${LS_X + 0.09 + bm0Len/2} ${BEAM_Y} 0`); sg.appendChild(bm0g);
+
+  // Beam 1: P1 → P2 (amber, always 50%)
+  const bm1Len = P2_X - P1_X - 0.03;
+  const bm1 = document.createElement('a-cylinder'); bm1.setAttribute('id','ar-beam1');
+  bm1.setAttribute('rotation','0 0 90'); bm1.setAttribute('radius','0.014');
+  bm1.setAttribute('color','#ffc857'); bm1.setAttribute('opacity','0.70'); bm1.setAttribute('transparent','true');
+  bm1.setAttribute('height', bm1Len.toFixed(3));
+  bm1.setAttribute('position',`${P1_X + 0.015 + bm1Len/2} ${BEAM_Y} 0`); sg.appendChild(bm1);
+  const bm1g = document.createElement('a-cylinder');
+  bm1g.setAttribute('rotation','0 0 90'); bm1g.setAttribute('radius','0.048');
+  bm1g.setAttribute('color','#ffc857'); bm1g.setAttribute('opacity','0.10'); bm1g.setAttribute('transparent','true');
+  bm1g.setAttribute('height', bm1Len.toFixed(3));
+  bm1g.setAttribute('position',`${P1_X + 0.015 + bm1Len/2} ${BEAM_Y} 0`); sg.appendChild(bm1g);
+
+  // Beam 2: P2 → screen (blue, intensity-dependent)
+  const bm2Len = SC_X - P2_X - 0.02;
+  const bm2 = document.createElement('a-cylinder'); bm2.setAttribute('id','ar-beam2');
+  bm2.setAttribute('rotation','0 0 90'); bm2.setAttribute('radius','0.014');
+  bm2.setAttribute('color','#5bc8ff'); bm2.setAttribute('opacity','0.70'); bm2.setAttribute('transparent','true');
+  bm2.setAttribute('height', bm2Len.toFixed(3));
+  bm2.setAttribute('position',`${P2_X + 0.015 + bm2Len/2} ${BEAM_Y} 0`); sg.appendChild(bm2);
+  const bm2g = document.createElement('a-cylinder');
+  bm2g.setAttribute('id','ar-beam2-glow'); bm2g.setAttribute('rotation','0 0 90'); bm2g.setAttribute('radius','0.048');
+  bm2g.setAttribute('color','#5bc8ff'); bm2g.setAttribute('opacity','0.10'); bm2g.setAttribute('transparent','true');
+  bm2g.setAttribute('height', bm2Len.toFixed(3));
+  bm2g.setAttribute('position',`${P2_X + 0.015 + bm2Len/2} ${BEAM_Y} 0`); sg.appendChild(bm2g);
+
+  marker.appendChild(sg); sceneEl.appendChild(marker);
+  wrap.appendChild(sceneEl);
+  arScene = sceneEl;
+  arEntities = { p2Ring, beam2: bm2, beam2Glow: bm2g, screenPanel: scPanel, screenCvs, scaleGroup: sg };
+
+  syncAR();
+
+  wrap.addEventListener('touchstart', onARTouch, {passive:false});
+  wrap.addEventListener('touchmove',  onARTouchMove, {passive:false});
+  wrap.addEventListener('touchend',   onARTouchEnd, {passive:false});
+}
+
+function syncAR(){
+  if(!arEntities.p2Ring) return;
+  // Rotate P2 ring around the beam axis (x-axis in local space = rotation around Z in A-Frame since Y is up)
+  arEntities.p2Ring.setAttribute('rotation', `0 90 ${S.theta}`);
+  // Beam 2 opacity scales with I2
+  const i2 = Ipct()/100;
+  const op = Math.max(0.04, i2 * 0.85).toFixed(2);
+  const opg = Math.max(0.02, i2 * 0.14).toFixed(2);
+  if(arEntities.beam2){ arEntities.beam2.setAttribute('opacity', op); arEntities.beam2.setAttribute('visible', i2>0.01 ? 'true':'false'); }
+  if(arEntities.beam2Glow){ arEntities.beam2Glow.setAttribute('opacity', opg); arEntities.beam2Glow.setAttribute('visible', i2>0.01 ? 'true':'false'); }
+  // Sync screen texture (brightness without percentage text — already handled in paintScreen)
+  syncARTexture();
+  // Update theta pill
+  const pill = document.getElementById('ar-theta-val');
+  if(pill) pill.textContent = `= ${S.theta.toFixed(0)}°`;
+}
+
+function syncARTexture(){
+  if(!arEntities.screenCvs) return;
+  arEntities.screenCvs.getContext('2d').drawImage(screenTC, 0, 0, 512, 512);
+  const mat = arEntities.screenPanel && arEntities.screenPanel.components && arEntities.screenPanel.components.material;
+  if(mat && mat.material && mat.material.map) mat.material.map.needsUpdate = true;
+}
+
+// AR touch: pinch to scale the scene
+function onARTouch(e){
+  e.preventDefault();
+  if(e.touches.length===2){
+    arPinchDist0 = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    arScale0 = arScale;
+  }
+}
+function onARTouchMove(e){
+  e.preventDefault();
+  if(e.touches.length===2 && arPinchDist0!==null){
+    const nd = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    arScale = Math.max(0.05, Math.min(3.0, arScale0*(nd/arPinchDist0)));
+    if(arEntities.scaleGroup) arEntities.scaleGroup.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
+  }
+}
+function onARTouchEnd(e){ if(e.touches.length<2){arPinchDist0=null; arScale0=null;} }
+
+function enterAR(){
+  arMode = true;
+  document.getElementById('simWrap').style.display = 'none';
+  document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('ar-status').style.display = 'block';
+  document.getElementById('hint').style.display = 'none';
+  document.body.classList.add('ar-active');
+  floorM.visible = false; grid.visible = false;
+  document.getElementById('btn-guide').style.display = '';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='none');
+  showARStep(1);
+  btnAR.textContent = '✕ Exit AR'; btnAR.classList.add('on');
+}
+
+function exitAR(){
+  arMode = false;
+  document.querySelectorAll('video').forEach(v=>{ if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null;} });
+  document.getElementById('simWrap').style.display = '';
+  const wrap = document.getElementById('arWrap'); wrap.classList.remove('show'); wrap.innerHTML = '';
+  arScene = null; arEntities = {};
   document.getElementById('ar-instructions').classList.remove('show');
   document.getElementById('ar-status').style.display = 'none';
   document.getElementById('hint').style.display = '';
-  document.getElementById('ar-hint').style.display = 'none';
+  document.getElementById('btn-guide').style.display = 'none';
+  document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='');
   document.body.classList.remove('ar-active');
-  arMode = false;
-  document.getElementById('ar-step1').style.display = '';
-  document.getElementById('ar-step2').style.display = 'none';
-  document.getElementById('ar-step3').style.display = 'none';
-  resize(); applyOrbit();
+  floorM.visible = true; grid.visible = true;
+  btnAR.textContent = '📷 AR Mode'; btnAR.classList.remove('on');
+  const w=window.innerWidth, h=window.innerHeight;
+  renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix();
+  labelCanvas.width=w; labelCanvas.height=h;
+  applyOrbit(); requestAnimationFrame(animate);
 }
 window.exitAR = exitAR;
 
-// Draw the 2-D polarizer overlay on the AR canvas overlay
-function drawAROverlay2D(ctx, x, y, size) {
-  const r = size * 0.38;
-
-  // Glowing border square
-  ctx.strokeStyle = '#4dffa0';
-  ctx.lineWidth = 3;
-  ctx.shadowColor = '#4dffa0'; ctx.shadowBlur = 12;
-  ctx.strokeRect(x - size/2, y - size/2, size, size);
-  ctx.shadowBlur = 0;
-
-  // P1 circle (amber)
-  ctx.beginPath();
-  ctx.arc(x - size*0.22, y, r*0.55, 0, Math.PI*2);
-  ctx.strokeStyle = 'rgba(255,200,80,0.85)'; ctx.lineWidth = 2.5;
-  ctx.shadowColor = '#ffc857'; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
-  ctx.beginPath();
-  ctx.moveTo(x - size*0.22, y - r*0.45);
-  ctx.lineTo(x - size*0.22, y + r*0.45);
-  ctx.strokeStyle = 'rgba(255,200,80,0.9)'; ctx.lineWidth = 2; ctx.stroke();
-
-  // P2 circle (blue, rotated by θ)
-  const angleRad = S.theta * Math.PI / 180;
-  ctx.beginPath();
-  ctx.arc(x + size*0.22, y, r*0.55, 0, Math.PI*2);
-  ctx.strokeStyle = 'rgba(91,200,255,0.85)'; ctx.lineWidth = 2.5;
-  ctx.shadowColor = '#5bc8ff'; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
-  const ax = Math.sin(angleRad)*r*0.45, ay = Math.cos(angleRad)*r*0.45;
-  ctx.beginPath();
-  ctx.moveTo(x + size*0.22 - ax, y - ay);
-  ctx.lineTo(x + size*0.22 + ax, y + ay);
-  ctx.strokeStyle = 'rgba(91,200,255,0.9)'; ctx.lineWidth = 2; ctx.stroke();
-
-  // Labels
-  const fs = Math.max(10, Math.round(size * 0.09));
-  ctx.font = `bold ${fs}px "Space Mono", monospace`;
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-  ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
-  ctx.fillText(`θ = ${S.theta.toFixed(0)}°`, x, y - size/2 - 6);
-  ctx.fillText(`I₂ = ${Ipct().toFixed(1)}%`, x, y + size/2 + fs + 4);
-  ctx.shadowBlur = 0;
-}
-
-function startARjs() {
-  const step2 = document.getElementById('ar-step2');
-
-  // Generate random quiz target (10% to 45% of I₁=50%, so 5%–45% of total)
-  quizTarget = Math.round(Math.random() * 40 + 5); // 5..45 %
-  const el = document.getElementById('quiz-target');
-  if(el) el.textContent = quizTarget.toFixed(0) + '%';
-  document.getElementById('quiz-result').textContent = '';
-
-  // Reset theta for fresh challenge
-  S.theta = 0;
-  document.getElementById('sl-theta').value = 0;
-  document.getElementById('lbl-theta').textContent = '0°';
-  fullUpdate();
-  updateARQuizUI();
-
-  function loadScript(src, cb) {
-    if(document.querySelector(`script[src="${src}"]`)) { cb(); return; }
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = cb;
-    s.onerror = () => {
-      step2.innerHTML = `❌ Failed to load AR library.<br><small style="color:rgba(255,150,100,.7);">Check internet connection and try again.</small>`;
-    };
-    document.head.appendChild(s);
+document.getElementById('ar-start-btn').addEventListener('click', function(){
+  showARStep(2);
+  function onLibsReady(){
+    const wrap=document.getElementById('arWrap');
+    const old=wrap.querySelector('a-scene');
+    if(old){ old.querySelectorAll('video').forEach(v=>{if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}}); wrap.removeChild(old); }
+    arScene=null; arEntities={};
+    // Small delay so A-Frame custom elements finish any pending registration tick
+    setTimeout(()=>{
+      buildARScene();
+      const s=document.getElementById('ar-status');
+      s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…';
+      s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+      showARStep(3);
+    }, 100);
   }
-
-  step2.innerHTML = '⏳ Loading AR library…';
-
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js', () => {
-    // Use the stable CDN build of AR.js for A-Frame
-    loadScript('https://cdn.jsdelivr.net/npm/ar.js@2.2.2/aframe/build/aframe-ar.js', () => {
-      step2.innerHTML = '⏳ Starting camera…';
-
-      const wrap = document.getElementById('arWrap');
-      wrap.classList.add('show');
-
-      // Build A-Frame scene with real Hiro marker and 3D polarization elements
-      wrap.innerHTML = `
-        <a-scene
-          id="arScene"
-          embedded
-          arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; maxDetectionRate: 30;"
-          style="position:absolute;inset:0;width:100%;height:100%;z-index:1;"
-          vr-mode-ui="enabled: false"
-          renderer="antialias: true; logarithmicDepthBuffer: true;"
-          loading-screen="enabled: false"
-        >
-          <!-- Hiro marker — AR.js preset uses the official Hiro pattern -->
-          <a-marker preset="hiro" id="hiroMarker" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
-
-            <!-- ═══ LIGHT SOURCE ═══ (left side of scene, scale fits marker ~18cm) -->
-            <a-entity position="-0.35 0.08 0">
-              <!-- Housing cylinder -->
-              <a-cylinder color="#223344" radius="0.028" height="0.06"
-                rotation="0 0 90" position="0 0 0" metalness="0.7"></a-cylinder>
-              <!-- Glowing lens -->
-              <a-sphere color="#fffbe8" radius="0.019" position="0.031 0 0"
-                emissive="#ffeeaa" emissive-intensity="3" material="shader:flat;"></a-sphere>
-            </a-entity>
-
-            <!-- ═══ RAIL ═══ -->
-            <a-box color="#3a5070" width="0.90" height="0.006" depth="0.011"
-              position="0 -0.018 0" metalness="0.7"></a-box>
-
-            <!-- ═══ BEAM segments ═══ -->
-            <!-- I0 beam: light source → P1 -->
-            <a-cylinder id="beam0" color="#fff5cc" radius="0.005" height="0.18"
-              rotation="0 0 90" position="-0.215 0.025 0" opacity="0.75"
-              material="transparent:true; opacity:0.75;"></a-cylinder>
-            <!-- I1 beam: P1 → P2 -->
-            <a-cylinder id="beam1" color="#ffc857" radius="0.005" height="0.25"
-              rotation="0 0 90" position="0 0.025 0" opacity="0.70"
-              material="transparent:true; opacity:0.70;"></a-cylinder>
-            <!-- I2 beam: P2 → screen -->
-            <a-cylinder id="beam2" color="#5bc8ff" radius="0.005" height="0.18"
-              rotation="0 0 90" position="0.215 0.025 0" opacity="0.70"
-              material="transparent:true; opacity:0.70;"></a-cylinder>
-
-            <!-- ═══ POLARIZER P1 (fixed, amber) ═══ -->
-            <a-entity position="-0.125 0.025 0">
-              <a-torus color="#aabbcc" radius="0.055" tube="0.006"
-                segments-tubular="32" rotation="0 90 0" metalness="0.8"></a-torus>
-              <a-circle color="#fff5cc" radius="0.052" rotation="0 90 0"
-                material="side:double; transparent:true; opacity:0.55; color:#fff5cc;"></a-circle>
-              <!-- Polarizer axis line (vertical = 0°) -->
-              <a-cylinder color="#ffc857" radius="0.002" height="0.085"
-                rotation="0 0 0" position="0.003 0 0"
-                material="emissive:#ffc857; emissive-intensity:1.5;"></a-cylinder>
-              <!-- Stand -->
-              <a-cylinder color="#445566" radius="0.003" height="0.03"
-                position="0 -0.07 0"></a-cylinder>
-              <a-box color="#445566" width="0.025" height="0.006" depth="0.025"
-                position="0 -0.087 0"></a-box>
-            </a-entity>
-
-            <!-- ═══ POLARIZER P2 (rotatable, blue) ═══ -->
-            <a-entity position="0.125 0.025 0" id="pol2Entity">
-              <a-torus color="#aabbcc" radius="0.055" tube="0.006"
-                segments-tubular="32" rotation="0 90 0" metalness="0.8"></a-torus>
-              <a-circle id="pol2Disc" color="#bbddff" radius="0.052" rotation="0 90 0"
-                material="side:double; transparent:true; opacity:0.55;"></a-circle>
-              <!-- Polarizer axis line (rotates with theta) -->
-              <a-cylinder id="pol2Axis" color="#5bc8ff" radius="0.002" height="0.085"
-                rotation="0 0 0" position="0.003 0 0"
-                material="emissive:#5bc8ff; emissive-intensity:1.5;"></a-cylinder>
-              <!-- Stand -->
-              <a-cylinder color="#445566" radius="0.003" height="0.03"
-                position="0 -0.07 0"></a-cylinder>
-              <a-box color="#445566" width="0.025" height="0.006" depth="0.025"
-                position="0 -0.087 0"></a-box>
-            </a-entity>
-
-            <!-- ═══ SCREEN ═══ -->
-            <a-entity position="0.32 0.025 0">
-              <a-box id="arScreen" color="#000" width="0.005" height="0.17" depth="0.14"
-                metalness="0.4"></a-box>
-              <!-- Screen glow face -->
-              <a-plane id="arScreenFace" width="0.13" height="0.155"
-                rotation="0 90 0" position="-0.003 0 0"
-                color="#000"
-                material="emissive:#5bc8ff; emissive-intensity:0.1; transparent:true; opacity:0.95;"></a-plane>
-            </a-entity>
-
-            <!-- ═══ FLOATING LABELS ═══ -->
-            <a-text value="P₁" color="#ffc857" position="-0.125 0.1 0"
-              align="center" width="0.3" font="monoid" side="double"></a-text>
-            <a-text id="arP2Label" value="P₂ 0°" color="#5bc8ff" position="0.125 0.1 0"
-              align="center" width="0.3" font="monoid" side="double"></a-text>
-            <a-text id="arI2Label" value="I₂=50%" color="#5bc8ff" position="0.32 0.14 0"
-              align="center" width="0.25" font="monoid" side="double"></a-text>
-            <a-text id="arTargetLabel" value="TARGET: —" color="#b57aff" position="0 0.16 0"
-              align="center" width="0.45" font="monoid" side="double"></a-text>
-
-          </a-marker>
-          <a-entity camera></a-entity>
-        </a-scene>
-      `;
-
-      document.getElementById('ar-exit-btn').style.display = 'block';
-      document.getElementById('ar-instructions').classList.remove('show');
-
-      const status = document.getElementById('ar-status');
-      status.style.cssText = 'display:block;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:400;padding:7px 18px;border-radius:20px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;white-space:nowrap;border:1px solid rgba(255,180,0,.3);';
-
-      let markerVisible = false;
-
-      // Hook AR.js marker events once scene loads
-      const arScene = document.getElementById('arScene');
-      arScene.addEventListener('loaded', () => {
-        const marker = document.getElementById('hiroMarker');
-        marker.addEventListener('markerFound', () => {
-          markerVisible = true;
-          status.textContent = '✅ HIRO DETECTED';
-          status.style.background = 'rgba(77,255,160,.15)';
-          status.style.color = '#4dffa0';
-          status.style.borderColor = 'rgba(77,255,160,.35)';
-        });
-        marker.addEventListener('markerLost', () => {
-          markerVisible = false;
-          status.textContent = '🔍 SCANNING — point at Hiro marker';
-          status.style.background = 'rgba(255,180,0,.12)';
-          status.style.color = '#ffcc44';
-          status.style.borderColor = 'rgba(255,180,0,.3)';
-        });
-
-        // Set target label on marker
-        const targetEl = document.getElementById('arTargetLabel');
-        if(targetEl) targetEl.setAttribute('value', `TARGET I₂: ${quizTarget}%`);
-
-        updateAR3D();
-      });
-
-      status.textContent = '🔍 SCANNING — point at Hiro marker';
-      status.style.background = 'rgba(255,180,0,.12)';
-      status.style.color = '#ffcc44';
-      status.style.borderColor = 'rgba(255,180,0,.3)';
-
-      // ── AR P2 rotation buttons ──
-      const STEP = 5; // degrees per tap
-      document.getElementById('ar-p2-ccw').onclick = () => {
-        S.theta = Math.max(0, S.theta - STEP);
-        fullUpdate(); updateARQuizUI(); updateAR3D();
-      };
-      document.getElementById('ar-p2-cw').onclick = () => {
-        S.theta = Math.min(90, S.theta + STEP);
-        fullUpdate(); updateARQuizUI(); updateAR3D();
-      };
-
-      // Also allow dragging on the AR wrap to rotate P2
-      let arDragX = null;
-      wrap.addEventListener('touchstart', (e) => {
-        // Ignore taps on quiz-box buttons
-        if(e.target.closest && e.target.closest('#quiz-box')) return;
-        if(e.touches.length === 1) arDragX = e.touches[0].clientX;
-      }, { passive: true });
-      wrap.addEventListener('touchmove', (e) => {
-        if(arDragX === null || e.touches.length !== 1) return;
-        const dx = e.touches[0].clientX - arDragX;
-        arDragX = e.touches[0].clientX;
-        S.theta = Math.max(0, Math.min(90, S.theta + dx * 0.4));
-        fullUpdate(); updateARQuizUI(); updateAR3D();
-      }, { passive: true });
-      wrap.addEventListener('touchend', () => { arDragX = null; });
-    });
-  });
-}
-
-// Update A-Frame 3D elements in AR to reflect current S.theta / Ipct()
-function updateAR3D() {
-  const pol2 = document.getElementById('pol2Entity');
-  const pol2Axis = document.getElementById('pol2Axis');
-  const pol2Label = document.getElementById('arP2Label');
-  const i2Label = document.getElementById('arI2Label');
-  const screenFace = document.getElementById('arScreenFace');
-  const beam2 = document.getElementById('beam2');
-
-  if(!pol2) return;
-
-  const thetaDeg = S.theta;
-  const i2 = Ipct();
-  const i2Norm = i2 / 50; // 0..1
-
-  // Rotate pol2 disc and axis line around X-axis (the beam axis is X in marker space)
-  pol2.setAttribute('rotation', `${thetaDeg} 0 0`);
-
-  // Update labels
-  if(pol2Label) pol2Label.setAttribute('value', `P₂ ${thetaDeg.toFixed(0)}°`);
-  if(i2Label) i2Label.setAttribute('value', `I₂=${i2.toFixed(1)}%`);
-
-  // Screen glow
-  if(screenFace) {
-    const emissiveI = i2Norm * 1.5;
-    const r = Math.round(20 + 130 * i2Norm);
-    const g = Math.round(80 + 150 * i2Norm);
-    const b = 255;
-    screenFace.setAttribute('material', `emissive:#5bc8ff; emissive-intensity:${emissiveI.toFixed(2)}; transparent:true; opacity:0.9;`);
-    screenFace.setAttribute('color', `rgb(${r},${g},${b})`);
-  }
-
-  // Beam2 opacity
-  if(beam2) {
-    const op = Math.max(0.05, i2Norm * 0.85);
-    beam2.setAttribute('material', `transparent:true; opacity:${op.toFixed(2)};`);
-  }
-}
-
-document.getElementById('ar-start-btn').addEventListener('click', () => {
-  document.getElementById('ar-step1').style.display = 'none';
-  document.getElementById('ar-step2').style.display = 'block';
-  startARjs();
+  // A-Frame + AR.js are already loaded from <head>; just request camera permission then proceed
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false})
+    .then(stream=>{stream.getTracks().forEach(t=>t.stop()); onLibsReady();})
+    .catch(()=>onLibsReady());
 });
 
-document.getElementById('btn-ar').addEventListener('click', () => {
-  if(!arMode) {
-    enterAR();
-    document.getElementById('ar-instructions').classList.add('show');
-  } else {
-    exitAR();
-  }
-});
+btnAR.addEventListener('click', ()=>{ if(!arMode) enterAR(); else exitAR(); });
 
 let lastRender = 0;
 function animate(ts){
+  if(arMode) return; // desktop loop stops when AR is active; re-triggered by exitAR
   requestAnimationFrame(animate);
-  if(arMode) return;
   if(ts - lastRender < 33) return;
   lastRender = ts;
   updateEField();
