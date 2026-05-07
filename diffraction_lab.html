@@ -1653,18 +1653,9 @@ document.getElementById('ar-start-btn').addEventListener('click',function(){
     );
   }
 
-  // Explicitly request camera permission first — this triggers the browser prompt
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-    .then(stream => {
-      // Permission granted — stop the test stream immediately; AR.js will open its own
-      stream.getTracks().forEach(t => t.stop());
-      loadARLibs();
-    })
-    .catch(err => {
-      console.warn('Camera permission denied or error:', err);
-      // Still try to load — some browsers handle it inside AR.js
-      loadARLibs();
-    });
+  // Directly load AR libraries – AR.js will request camera permission when needed.
+  // The user's click provides the required user activation.
+  loadARLibs();
 });
 
 // Wavelength quiz
@@ -3550,14 +3541,13 @@ document.getElementById('ar-start-btn').addEventListener('click',function(){
       ['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js'],
       ()=>loadScript(
         ['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'],
-        onLibsReady, ()=>alert('Could not load AR engine.')),
-      ()=>alert('Could not load A-Frame.')
+        onLibsReady, ()=>alert('Failed to load AR engine.')),
+      ()=>alert('Failed to load A-Frame.')
     );
   }
-  // Request camera permission explicitly before loading AR engine
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false})
-    .then(stream=>{ stream.getTracks().forEach(t=>t.stop()); loadARLibs(); })
-    .catch(()=>loadARLibs());
+  // Directly load AR libraries – AR.js will request camera permission when needed.
+  // The user's click provides the required user activation.
+  loadARLibs();
 });
 
 document.getElementById('btn-ar').addEventListener('click',()=>{ if(!arMode) enterAR(); else exitAR(); });

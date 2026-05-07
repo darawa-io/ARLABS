@@ -24,7 +24,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 
 #mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
 #labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
-#arWrap{display:none;position:fixed;inset:0;z-index:50;width:100vw;height:100vh;background:#000;}
+#arWrap{display:none;position:fixed;inset:0;z-index:50;width:100vw;height:100vh;background:#000;overflow:hidden;}
 #arWrap.show{display:block;}
 
 #hud{
@@ -128,7 +128,10 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 <body>
 <canvas id="mainCanvas"></canvas>
 <canvas id="labelCanvas"></canvas>
-<div id="arWrap"></div>
+<div id="arWrap">
+  <video id="arVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+</div>
+<button id="ar-exit-btn" onclick="exitAR()" style="display:none;position:fixed;top:16px;right:16px;z-index:1000;padding:10px 18px;border-radius:30px;border:1px solid rgba(255,100,100,.6);background:rgba(20,5,5,0.88);color:#ff7070;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);">✕ Exit AR</button>
 <div id="ar-status"></div>
 
 <div id="ar-instructions">
@@ -136,43 +139,15 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
     style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;">✕</button>
   <strong>AR Mode — Polarization Lab</strong><br><br>
   <span id="ar-step1">
-    Print or display this <strong>HIRO</strong> marker (A5+):<br><br>
-    <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png"
-      style="width:130px;height:130px;display:block;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;image-rendering:pixelated;"
-      alt="Hiro AR marker"
-      onerror="this.style.display='none';document.getElementById('hiro-fallback').style.display='block';">
-    <svg id="hiro-fallback" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
-      style="display:none;width:130px;height:130px;margin:0 auto 10px;background:white;border:3px solid white;border-radius:4px;">
-      <rect width="280" height="280" fill="white"/>
-      <rect x="20" y="20" width="240" height="240" fill="black"/>
-      <rect x="40" y="40" width="200" height="200" fill="white"/>
-      <rect x="60" y="60" width="160" height="160" fill="black"/>
-      <rect x="80" y="80" width="40" height="40" fill="white"/>
-      <rect x="160" y="80" width="40" height="40" fill="white"/>
-      <rect x="80" y="160" width="40" height="40" fill="white"/>
-      <rect x="160" y="160" width="40" height="40" fill="white"/>
-      <rect x="120" y="120" width="40" height="40" fill="white"/>
-    </svg>
-    <small style="color:rgba(255,200,100,.85);font-size:10px;display:block;margin-bottom:6px;">
-      ⚠️ Must be the official HIRO marker
+    Use your camera to observe real polarizers<br>while the simulation runs alongside.<br><br>
+    <small style="color:rgba(180,200,255,0.6);font-size:10px;display:block;margin-bottom:12px;">
+      Camera permission required — allow when prompted.<br>
+      Works best pointing at a real polarizer filter or sunglasses.
     </small>
-    <small style="color:rgba(180,200,255,0.6);font-size:9px;display:block;margin-bottom:10px;">
-      Camera permission required — allow when prompted
-    </small>
-    Place flat on table, then tap:<br><br>
-    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Open Camera & Start AR</button>
+    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Open Camera</button>
   </span>
-  <span id="ar-step2" style="display:none;">⏳ Loading AR engine…<br><small style="color:rgba(127,255,178,.5);">first load ~5 s</small></span>
-  <span id="ar-step3" style="display:none;">
-    ✅ Camera ready!<br><br>
-    Point at the marker.<br>The polarizers appear on it.<br><br>
-    <strong>Your challenge:</strong><br>
-    Observe I₁ and I₂ on the HUD.<br>
-    Calculate the angle θ between<br>polarizers using Malus's Law:<br>
-    <span style="color:var(--violet);">I₂ = I₁ · cos²(θ)</span><br><br>
-    Enter your angle and validate!<br><br>
-    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 24px;border-radius:20px;border:1px solid rgba(77,255,160,.5);background:rgba(77,255,160,.12);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Got it — Start!</button>
-  </span>
+  <span id="ar-step2" style="display:none;">⏳ Opening camera…</span>
+  <span id="ar-step3" style="display:none;"></span>
 </div>
 
 <div id="title"><h1>POLARIZATION LAB</h1><p>Malus's Law Experiment | E-field Waves</p></div>
@@ -436,8 +411,8 @@ function updateEField() {
     }
   }
 
-  // ── Zone 1: Linearly polarized (vertical) — sized to match I1 beam glow ──
-  const AMP1 = 0.32 * i1; // scale with intensity; 0.32 = beam glow radius
+  // ── Zone 1: Linearly polarized (vertical) — same peak size as I0 ──
+  const AMP1 = 0.32; // same peak amplitude as I0; wave envelope modulates the oscillation
   for(let si = 0; si < N1_SAMPLES; si++){
     const t = si / (N1_SAMPLES - 1);
     const x = -2.45 + t * 4.9; // -2.5 → 2.45
@@ -451,8 +426,8 @@ function updateEField() {
     ef1Lines[si].line.visible = i1 > 0.02;
   }
 
-  // ── Zone 2: Polarized at angle θ — sized to match I2 beam ──
-  const AMP2 = 0.32 * i2;
+  // ── Zone 2: Polarized at angle θ — same peak size as I0, scaled by cos²θ envelope ──
+  const AMP2 = 0.32 * Math.sqrt(Math.max(0, i2 / 0.5)); // sqrt so amplitude ~ cos(θ), intensity ~ cos²(θ)
   const cosT = Math.cos(thetaRad), sinT = Math.sin(thetaRad);
   for(let si = 0; si < N2_SAMPLES; si++){
     const t = si / (N2_SAMPLES - 1);
@@ -676,26 +651,35 @@ function validateQuiz(){
   document.getElementById('quiz-result').style.color = ok ? '#4dffa0' : '#ff5e72';
 }
 
-// AR Mode implementation
+// ── AR MODE — direct getUserMedia camera feed, no external libraries ──
+let arStream = null;
+
 function enterAR() {
   arMode = true;
-  document.getElementById('ar-instructions').classList.add('show');
   document.getElementById('hint').style.display = 'none';
   document.body.classList.add('ar-active');
-  // arWrap is shown later, only after camera permission is granted
 }
 
 function exitAR() {
-  arMode = false;
+  // Stop camera stream
+  if(arStream){ arStream.getTracks().forEach(t => t.stop()); arStream = null; }
+  const vid = document.getElementById('arVideo');
+  vid.srcObject = null;
+  // Hide AR UI
   document.getElementById('arWrap').classList.remove('show');
-  document.getElementById('arWrap').innerHTML = ''; // destroy scene/camera
+  document.getElementById('ar-exit-btn').style.display = 'none';
   document.getElementById('ar-instructions').classList.remove('show');
+  document.getElementById('ar-status').style.display = 'none';
   document.getElementById('hint').style.display = '';
   document.body.classList.remove('ar-active');
+  arMode = false;
+  // Reset instruction steps for next time
+  document.getElementById('ar-step1').style.display = '';
+  document.getElementById('ar-step2').style.display = 'none';
+  document.getElementById('ar-step3').style.display = 'none';
   resize();
   applyOrbit();
 }
-
 window.exitAR = exitAR;
 
 document.getElementById('ar-start-btn').addEventListener('click', () => {
@@ -704,114 +688,41 @@ document.getElementById('ar-start-btn').addEventListener('click', () => {
   const step3 = document.getElementById('ar-step3');
   step1.style.display = 'none';
   step2.style.display = 'block';
+  step2.innerHTML = '⏳ Opening camera…';
 
-  // First: request camera permission explicitly via getUserMedia
-  // This guarantees the browser prompt fires before A-Frame loads,
-  // and gives a clean error if the user denies.
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+  const constraints = {
+    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    audio: false
+  };
+
+  navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => {
-      // Permission granted — stop the test stream (A-Frame will open its own)
-      stream.getTracks().forEach(t => t.stop());
-      loadARLibs();
+      arStream = stream;
+      const vid = document.getElementById('arVideo');
+      vid.srcObject = stream;
+      vid.play().catch(()=>{});
+
+      // Show camera feed
+      document.getElementById('arWrap').classList.add('show');
+      document.getElementById('ar-exit-btn').style.display = 'block';
+
+      // Close instructions, show status
+      document.getElementById('ar-instructions').classList.remove('show');
+
+      const status = document.getElementById('ar-status');
+      status.style.display = 'block';
+      status.style.cssText = 'display:block;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;padding:7px 18px;border-radius:20px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;background:rgba(77,255,160,.12);border:1px solid rgba(77,255,160,.3);color:#4dffa0;';
+      status.textContent = '📷 CAMERA ACTIVE — point at HIRO marker';
     })
     .catch(err => {
-      step2.innerHTML = `❌ Camera blocked.<br><small style="color:rgba(255,150,100,.8);">${err.message}</small><br><small>Enable camera in browser settings and try again.</small>`;
+      step2.innerHTML = `❌ Camera error: ${err.message}<br><small style="color:rgba(255,150,100,.7);">Check browser camera permissions and try again.</small>`;
     });
-
-  function loadARLibs() {
-    // Show wrap BEFORE injecting any scripts so DOM is ready
-    const wrap = document.getElementById('arWrap');
-    wrap.style.cssText = 'display:block;position:fixed;inset:0;z-index:50;width:100vw;height:100vh;background:#000;';
-
-    if(window.AFRAME && window.AFRAME.version) {
-      buildARScene();
-      return;
-    }
-    const s1 = document.createElement('script');
-    s1.src = 'https://aframe.io/releases/1.4.0/aframe.min.js';
-    s1.onerror = () => { step2.innerHTML = '❌ Failed to load A-Frame. Check connection.'; };
-    s1.onload = () => {
-      const s2 = document.createElement('script');
-      // Pinned, stable CDN build of AR.js for A-Frame
-      s2.src = 'https://cdn.jsdelivr.net/npm/ar.js@2.2.2/aframe/build/aframe-ar.js';
-      s2.onerror = () => { step2.innerHTML = '❌ Failed to load AR.js. Check connection.'; };
-      s2.onload = buildARScene;
-      document.head.appendChild(s2);
-    };
-    document.head.appendChild(s1);
-  }
-
-  function buildARScene() {
-    const wrap = document.getElementById('arWrap');
-    wrap.innerHTML = '';
-
-    const scene = document.createElement('a-scene');
-    // embedded + explicit pixel size lets A-Frame find the container correctly
-    scene.setAttribute('embedded', '');
-    scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; cameraParametersUrl: https://cdn.jsdelivr.net/npm/ar.js@2.2.2/data/data/camera_para.dat;');
-    scene.setAttribute('vr-mode-ui', 'enabled: false');
-    scene.setAttribute('renderer', 'logarithmicDepthBuffer: true; antialias: true;');
-    scene.style.cssText = 'display:block;position:absolute;top:0;left:0;width:100%;height:100%;';
-
-    const marker = document.createElement('a-marker');
-    marker.setAttribute('preset', 'hiro');
-    marker.setAttribute('smooth', 'true');
-    marker.setAttribute('smoothCount', '5');
-
-    // Polarizer ring visual on marker
-    const ring = document.createElement('a-torus');
-    ring.setAttribute('position', '0 0.5 0');
-    ring.setAttribute('radius', '0.8');
-    ring.setAttribute('radius-tubular', '0.08');
-    ring.setAttribute('color', '#5bc8ff');
-    ring.setAttribute('opacity', '0.9');
-    marker.appendChild(ring);
-
-    const disc = document.createElement('a-circle');
-    disc.setAttribute('position', '0 0.5 0');
-    disc.setAttribute('radius', '0.75');
-    disc.setAttribute('color', '#1a3a5a');
-    disc.setAttribute('opacity', '0.5');
-    disc.setAttribute('side', 'double');
-    marker.appendChild(disc);
-
-    const label = document.createElement('a-text');
-    label.setAttribute('value', `P2: ${S.theta.toFixed(0)}deg`);
-    label.setAttribute('position', '0 1.2 0');
-    label.setAttribute('align', 'center');
-    label.setAttribute('color', '#5bc8ff');
-    label.setAttribute('scale', '1.5 1.5 1.5');
-    marker.appendChild(label);
-
-    scene.appendChild(marker);
-
-    const camera = document.createElement('a-entity');
-    camera.setAttribute('camera', '');
-    scene.appendChild(camera);
-
-    wrap.appendChild(scene);
-
-    step2.style.display = 'none';
-    step3.style.display = 'block';
-    const status = document.getElementById('ar-status');
-    status.style.display = 'block';
-    status.textContent = '🔍 SCANNING for HIRO marker…';
-    status.style.cssText += ';background:rgba(255,180,0,.15);border:1px solid rgba(255,180,0,.3);color:#ffcc44;';
-
-    marker.addEventListener('markerFound', () => {
-      status.textContent = '✅ MARKER DETECTED';
-      status.style.cssText += ';background:rgba(0,200,100,.15);color:#4dffa0;';
-    });
-    marker.addEventListener('markerLost', () => {
-      status.textContent = '🔍 SCANNING for HIRO marker…';
-      status.style.cssText += ';background:rgba(255,180,0,.15);color:#ffcc44;';
-    });
-  }
 });
 
 document.getElementById('btn-ar').addEventListener('click', () => {
   if(!arMode) {
     enterAR();
+    document.getElementById('ar-instructions').classList.add('show');
   } else {
     exitAR();
   }
