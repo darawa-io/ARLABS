@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Polarization Lab | Malus's Law | E-field Animation</title>
-<!-- A-Frame + AR.js loaded eagerly so custom elements are registered before buildARScene() runs -->
-<script src="https://cdn.jsdelivr.net/npm/aframe@1.3.0/dist/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -29,15 +26,13 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 #labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
 #arWrap{display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;}
 #arWrap.show{display:block;}
-#arWrap a-scene{width:100%!important;height:100%!important;position:fixed!important;top:0!important;left:0!important;z-index:0!important;}
-/* AR.js injects video + its canvas directly into body — keep them below our UI */
-body.ar-active > video, body.ar-active > canvas:not(#mainCanvas):not(#labelCanvas){position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:1!important;object-fit:cover!important;}
+#arWrap a-scene{width:100%!important;height:100%!important;position:absolute!important;top:0;left:0;}
 
 #hud{
   position:absolute;top:20px;right:20px;
   background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
   border:1px solid var(--border);border-radius:18px;
-  padding:18px;min-width:232px;z-index:300;
+  padding:18px;min-width:232px;z-index:10;
 }
 #hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
 .dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
@@ -69,7 +64,7 @@ body.ar-active #simWrap{display:none!important;}
   display:flex;gap:8px;align-items:center;
   background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
   border:1px solid var(--border);border-radius:50px;
-  padding:8px 16px;z-index:300;flex-wrap:wrap;justify-content:center;
+  padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;
   max-width:calc(100vw - 40px);
 }
 .btn{padding:7px 16px;border-radius:30px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
@@ -85,7 +80,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 #hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
 body.ar-active #hint{display:none;}
 
-#title{position:absolute;top:20px;left:20px;z-index:300;}
+#title{position:absolute;top:20px;left:20px;z-index:5;}
 #title h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
 #title p{font-size:10px;color:rgba(180,200,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
 
@@ -105,7 +100,7 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 <div id="ar-i0-pill" style="display:none;position:fixed;top:54px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(7,9,15,.94);border:1px solid rgba(255,220,100,.35);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(255,230,160,.75);white-space:nowrap;">I₀ &nbsp;<span style="color:#ffe088;font-weight:700;">= 100%</span></div>
 <div id="ar-i1-pill" style="display:none;position:fixed;top:88px;right:12px;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(7,9,15,.94);border:1px solid rgba(255,200,80,.38);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;color:rgba(255,210,130,.75);white-space:nowrap;">I₁ &nbsp;<span style="color:#ffc857;font-weight:700;">= 50%</span></div>
 <!-- AR instructions modal -->
-<div id="ar-instructions" style="display:none;background:rgba(7,9,15,.97);backdrop-filter:blur(16px);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:24px 26px;z-index:20;max-width:340px;width:90%;font-family:'Space Mono',monospace;font-size:11px;color:#4dffa0;line-height:1.9;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);">
+<div id="ar-instructions" style="background:rgba(7,9,15,.97);backdrop-filter:blur(16px);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:24px 26px;z-index:20;max-width:340px;width:90%;font-family:'Space Mono',monospace;font-size:11px;color:#4dffa0;line-height:1.9;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);">
   <button onclick="document.getElementById('ar-instructions').classList.remove('show');exitAR();" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;">✕</button>
   <strong style="color:#fff;">AR Mode — Polarization Lab</strong><br><br>
   <span id="ar-step1">
@@ -189,7 +184,7 @@ const canvas = document.getElementById('mainCanvas');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.shadowMap.enabled = false;
-renderer.setClearColor(0x07090f, 1);
+renderer.setClearColor(0x07090f, 0);
 const scene3 = new THREE.Scene();
 scene3.fog = new THREE.FogExp2(0x07090f, 0.02);
 const cam3 = new THREE.PerspectiveCamera(52,1,0.1,200);
@@ -636,12 +631,12 @@ function buildARScene(){
   arScale = 0.44;
 
   const sceneEl = document.createElement('a-scene');
-  // No 'embedded' — let AR.js go fullscreen so its video element is positioned correctly
-  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono_and_matrix;patternRatio:0.75;');
-  sceneEl.setAttribute('renderer','antialias:true;precision:medium;logarithmicDepthBuffer:true;');
+  sceneEl.setAttribute('embedded','');
+  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.50;');
+  sceneEl.setAttribute('renderer','antialias:true;precision:medium;');
   sceneEl.setAttribute('vr-mode-ui','enabled:false');
   sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
-  sceneEl.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;';
+  sceneEl.style.cssText='width:100%;height:100%;display:block;';
 
   const assets = document.createElement('a-assets');
   assets.setAttribute('timeout','10000');
@@ -896,24 +891,32 @@ window.exitAR = exitAR;
 
 document.getElementById('ar-start-btn').addEventListener('click', function(){
   showARStep(2);
+  function loadScript(urls, onDone, onFail){
+    if(!urls.length){onFail();return;}
+    const s=document.createElement('script'); s.src=urls[0]; s.setAttribute('data-arscript','1');
+    s.onload=onDone; s.onerror=()=>loadScript(urls.slice(1),onDone,onFail);
+    document.head.appendChild(s);
+  }
   function onLibsReady(){
     const wrap=document.getElementById('arWrap');
     const old=wrap.querySelector('a-scene');
     if(old){ old.querySelectorAll('video').forEach(v=>{if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}}); wrap.removeChild(old); }
     arScene=null; arEntities={};
-    // Small delay so A-Frame custom elements finish any pending registration tick
-    setTimeout(()=>{
-      buildARScene();
-      const s=document.getElementById('ar-status');
-      s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…';
-      s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
-      showARStep(3);
-    }, 100);
+    buildARScene();
+    const s=document.getElementById('ar-status');
+    s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…';
+    s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+    showARStep(3);
   }
-  // A-Frame + AR.js are already loaded from <head>; just request camera permission then proceed
+  function loadARLibs(){
+    if(window.AFRAME&&window.AFRAME.version){onLibsReady();return;}
+    const aframeCDNs=['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js'];
+    const arjsCDNs=['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'];
+    loadScript(aframeCDNs, ()=>loadScript(arjsCDNs, onLibsReady, ()=>alert('Could not load AR.js')), ()=>alert('Could not load A-Frame'));
+  }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false})
-    .then(stream=>{stream.getTracks().forEach(t=>t.stop()); onLibsReady();})
-    .catch(()=>onLibsReady());
+    .then(stream=>{stream.getTracks().forEach(t=>t.stop()); loadARLibs();})
+    .catch(()=>loadARLibs());
 });
 
 btnAR.addEventListener('click', ()=>{ if(!arMode) enterAR(); else exitAR(); });
