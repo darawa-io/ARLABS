@@ -129,7 +129,8 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 <canvas id="mainCanvas"></canvas>
 <canvas id="labelCanvas"></canvas>
 <div id="arWrap">
-  <video id="arVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+  <video id="arVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;"></video>
+  <canvas id="arCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;"></canvas>
 </div>
 <button id="ar-exit-btn" onclick="exitAR()" style="display:none;position:fixed;top:16px;right:16px;z-index:1000;padding:10px 18px;border-radius:30px;border:1px solid rgba(255,100,100,.6);background:rgba(20,5,5,0.88);color:#ff7070;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);">✕ Exit AR</button>
 <div id="ar-status"></div>
@@ -139,10 +140,23 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
     style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;">✕</button>
   <strong>AR Mode — Polarization Lab</strong><br><br>
   <span id="ar-step1">
-    Use your camera to observe real polarizers<br>while the simulation runs alongside.<br><br>
+    Point your camera at a <strong>Hiro marker</strong>.<br>
+    The app will detect it and overlay<br>the polarization simulation on it.<br><br>
+    <div style="margin:0 auto 10px;width:100px;height:100px;background:white;border-radius:4px;display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 7 7" width="90" height="90" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;">
+        <rect width="7" height="7" fill="white"/>
+        <rect x="0" y="0" width="7" height="7" fill="black"/>
+        <rect x="1" y="1" width="5" height="5" fill="white"/>
+        <rect x="2" y="2" width="3" height="3" fill="black"/>
+        <rect x="2" y="2" width="1" height="1" fill="white"/>
+        <rect x="4" y="2" width="1" height="1" fill="white"/>
+        <rect x="2" y="4" width="1" height="1" fill="white"/>
+        <rect x="4" y="4" width="1" height="1" fill="white"/>
+        <rect x="3" y="3" width="1" height="1" fill="white"/>
+      </svg>
+    </div>
     <small style="color:rgba(180,200,255,0.6);font-size:10px;display:block;margin-bottom:12px;">
-      Camera permission required — allow when prompted.<br>
-      Works best pointing at a real polarizer filter or sunglasses.
+      Print or display on screen (min 8×8 cm).<br>Camera permission required.
     </small>
     <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(77,255,160,.6);background:rgba(77,255,160,.15);color:#4dffa0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Open Camera</button>
   </span>
@@ -651,8 +665,22 @@ function validateQuiz(){
   document.getElementById('quiz-result').style.color = ok ? '#4dffa0' : '#ff5e72';
 }
 
-// ── AR MODE — direct getUserMedia camera feed, no external libraries ──
+// ════════════════════════════════════════════════════════════
+// AR MODE — canvas-based Hiro marker detection (no libraries)
+// ════════════════════════════════════════════════════════════
 let arStream = null;
+let arAnimId = null;
+
+// Hiro marker 6×6 interior bit pattern (1=black, 0=white)
+// This is the canonical Hiro pattern from AR.js/ARToolKit
+const HIRO_PATTERN = [
+  [0,0,0,0,0,0],
+  [0,1,0,1,0,0],
+  [0,0,0,0,1,0],
+  [0,1,0,0,0,0],
+  [0,0,1,0,1,0],
+  [0,0,0,0,0,0],
+];
 
 function enterAR() {
   arMode = true;
@@ -661,11 +689,10 @@ function enterAR() {
 }
 
 function exitAR() {
-  // Stop camera stream
+  if(arAnimId){ cancelAnimationFrame(arAnimId); arAnimId = null; }
   if(arStream){ arStream.getTracks().forEach(t => t.stop()); arStream = null; }
   const vid = document.getElementById('arVideo');
   vid.srcObject = null;
-  // Hide AR UI
   document.getElementById('arWrap').classList.remove('show');
   document.getElementById('ar-exit-btn').style.display = 'none';
   document.getElementById('ar-instructions').classList.remove('show');
@@ -673,50 +700,341 @@ function exitAR() {
   document.getElementById('hint').style.display = '';
   document.body.classList.remove('ar-active');
   arMode = false;
-  // Reset instruction steps for next time
   document.getElementById('ar-step1').style.display = '';
   document.getElementById('ar-step2').style.display = 'none';
   document.getElementById('ar-step3').style.display = 'none';
-  resize();
-  applyOrbit();
+  resize(); applyOrbit();
 }
 window.exitAR = exitAR;
+
+// ── Marker detection helpers ──
+
+function toGrayscale(data, w, h) {
+  const gray = new Uint8Array(w * h);
+  for(let i = 0; i < w * h; i++) {
+    gray[i] = (data[i*4]*77 + data[i*4+1]*150 + data[i*4+2]*29) >> 8;
+  }
+  return gray;
+}
+
+function adaptiveThreshold(gray, w, h) {
+  const bin = new Uint8Array(w * h);
+  const half = 15; // block half-size
+  for(let y = 0; y < h; y++) {
+    for(let x = 0; x < w; x++) {
+      let sum = 0, cnt = 0;
+      for(let dy = -half; dy <= half; dy++) {
+        for(let dx = -half; dx <= half; dx++) {
+          const nx = x+dx, ny = y+dy;
+          if(nx>=0 && nx<w && ny>=0 && ny<h) { sum += gray[ny*w+nx]; cnt++; }
+        }
+      }
+      bin[y*w+x] = gray[y*w+x] < (sum/cnt - 8) ? 0 : 255;
+    }
+  }
+  return bin;
+}
+
+// Fast adaptive threshold using integral image
+function fastThreshold(gray, w, h) {
+  const bin = new Uint8Array(w * h);
+  const integ = new Float64Array((w+1)*(h+1));
+  for(let y = 1; y <= h; y++)
+    for(let x = 1; x <= w; x++)
+      integ[y*(w+1)+x] = gray[(y-1)*w+(x-1)] + integ[(y-1)*(w+1)+x] + integ[y*(w+1)+(x-1)] - integ[(y-1)*(w+1)+(x-1)];
+  const s = 15;
+  for(let y = 0; y < h; y++) {
+    for(let x = 0; x < w; x++) {
+      const x1=Math.max(0,x-s), y1=Math.max(0,y-s), x2=Math.min(w-1,x+s), y2=Math.min(h-1,y+s);
+      const cnt = (x2-x1)*(y2-y1);
+      const sum = integ[(y2+1)*(w+1)+(x2+1)] - integ[y1*(w+1)+(x2+1)] - integ[(y2+1)*(w+1)+x1] + integ[y1*(w+1)+x1];
+      bin[y*w+x] = gray[y*w+x]*cnt < sum*0.87 ? 0 : 255;
+    }
+  }
+  return bin;
+}
+
+// Connected-components labeling (union-find) to find contours
+function findContours(bin, w, h) {
+  const label = new Int32Array(w * h).fill(-1);
+  const parent = [];
+  function find(x){ while(parent[x]!==x) { parent[x]=parent[parent[x]]; x=parent[x]; } return x; }
+  function union(a,b){ a=find(a); b=find(b); if(a!==b) parent[a]=b; }
+  let nextLabel = 0;
+  for(let y=0; y<h; y++) for(let x=0; x<w; x++) {
+    if(bin[y*w+x]===0) { // black pixel
+      const up = y>0 && bin[(y-1)*w+x]===0 ? label[(y-1)*w+x] : -1;
+      const left = x>0 && bin[y*w+x-1]===0 ? label[y*w+x-1] : -1;
+      if(up<0 && left<0) { label[y*w+x]=nextLabel; parent.push(nextLabel); nextLabel++; }
+      else if(up>=0 && left<0) label[y*w+x]=up;
+      else if(up<0 && left>=0) label[y*w+x]=left;
+      else { label[y*w+x]=up; union(up,left); }
+    }
+  }
+  // Collect bounding boxes
+  const boxes = {};
+  for(let i=0; i<w*h; i++) {
+    if(label[i]<0) continue;
+    const root = find(label[i]);
+    const x=i%w, y=Math.floor(i/w);
+    if(!boxes[root]) boxes[root]={minx:x,miny:y,maxx:x,maxy:y,cnt:0};
+    const b=boxes[root];
+    if(x<b.minx)b.minx=x; if(x>b.maxx)b.maxx=x;
+    if(y<b.miny)b.miny=y; if(y>b.maxy)b.maxy=y;
+    b.cnt++;
+  }
+  return Object.values(boxes);
+}
+
+// Sample a 8×8 grid from inside a detected square region
+function sampleGrid(gray, w, h, box, gridSize) {
+  const { minx, miny, maxx, maxy } = box;
+  const bw = maxx - minx, bh = maxy - miny;
+  const grid = [];
+  for(let gy = 0; gy < gridSize; gy++) {
+    const row = [];
+    for(let gx = 0; gx < gridSize; gx++) {
+      const px = Math.round(minx + (gx + 0.5) * bw / gridSize);
+      const py = Math.round(miny + (gy + 0.5) * bh / gridSize);
+      if(px<0||px>=w||py<0||py>=h){ row.push(0); continue; }
+      row.push(gray[py*w+px] < 128 ? 1 : 0);
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+
+// Check if the outer border of an 8×8 grid is all black (marker border)
+function hasBorder(grid) {
+  const n = grid.length;
+  for(let i=0; i<n; i++) {
+    if(grid[0][i]!==1||grid[n-1][i]!==1||grid[i][0]!==1||grid[i][n-1]!==1) return false;
+  }
+  return true;
+}
+
+// Extract inner 6×6 pattern from 8×8 grid
+function innerPattern(grid) {
+  return grid.slice(1,7).map(r => r.slice(1,7));
+}
+
+// Rotate a 6×6 pattern 90° clockwise
+function rotate90(pat) {
+  const n = pat.length;
+  return pat.map((row,i) => row.map((_, j) => pat[n-1-j][i]));
+}
+
+// Score match between two 6×6 patterns (lower = better)
+function patternScore(a, b) {
+  let diff = 0;
+  for(let r=0;r<6;r++) for(let c=0;c<6;c++) if(a[r][c]!==b[r][c]) diff++;
+  return diff;
+}
+
+// Try all 4 rotations against Hiro, return best score & rotation
+function matchHiro(inner) {
+  let best = 999, bestRot = 0, pat = inner;
+  for(let rot=0; rot<4; rot++) {
+    const s = patternScore(pat, HIRO_PATTERN);
+    if(s < best) { best = s; bestRot = rot; }
+    pat = rotate90(pat);
+  }
+  return { score: best, rotation: bestRot };
+}
+
+// Draw the AR overlay on the canvas
+function drawAROverlay(ctx, box, cw, ch, matched, rotation) {
+  const { minx, miny, maxx, maxy } = box;
+  const cx = (minx+maxx)/2, cy = (miny+maxy)/2;
+  const bw = maxx-minx, bh = maxy-miny;
+
+  if(matched) {
+    // Draw glowing border around detected marker
+    ctx.strokeStyle = '#4dffa0';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#4dffa0';
+    ctx.shadowBlur = 12;
+    ctx.strokeRect(minx, miny, bw, bh);
+    ctx.shadowBlur = 0;
+
+    // Draw polarizer simulation overlay in the marker area
+    const angleRad = (S.theta * Math.PI / 180) + (rotation * Math.PI / 2);
+    const r = Math.min(bw, bh) * 0.38;
+
+    // Outer ring (P1 - amber)
+    ctx.beginPath();
+    ctx.arc(cx - bw*0.22, cy, r*0.55, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,200,80,0.85)';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#ffc857'; ctx.shadowBlur = 8;
+    ctx.stroke(); ctx.shadowBlur = 0;
+    // P1 arrow (vertical)
+    ctx.beginPath();
+    ctx.moveTo(cx - bw*0.22, cy - r*0.45);
+    ctx.lineTo(cx - bw*0.22, cy + r*0.45);
+    ctx.strokeStyle = 'rgba(255,200,80,0.9)';
+    ctx.lineWidth = 2; ctx.stroke();
+
+    // P2 ring (blue, rotated)
+    ctx.beginPath();
+    ctx.arc(cx + bw*0.22, cy, r*0.55, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(91,200,255,0.85)';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#5bc8ff'; ctx.shadowBlur = 8;
+    ctx.stroke(); ctx.shadowBlur = 0;
+    // P2 arrow (at angle θ)
+    const ax = Math.sin(angleRad) * r * 0.45;
+    const ay = Math.cos(angleRad) * r * 0.45;
+    ctx.beginPath();
+    ctx.moveTo(cx + bw*0.22 - ax, cy - ay);
+    ctx.lineTo(cx + bw*0.22 + ax, cy + ay);
+    ctx.strokeStyle = 'rgba(91,200,255,0.9)';
+    ctx.lineWidth = 2; ctx.stroke();
+
+    // Label
+    ctx.font = `bold ${Math.round(bh*0.09)}px "Space Mono", monospace`;
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+    ctx.fillText(`θ = ${S.theta.toFixed(0)}°`, cx, miny - 6);
+    ctx.fillText(`I₂ = ${Ipct().toFixed(1)}%`, cx, maxy + bh*0.1 + 4);
+    ctx.shadowBlur = 0;
+  } else {
+    // Candidate: faint outline
+    ctx.strokeStyle = 'rgba(255,180,0,0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(minx, miny, bw, bh);
+  }
+}
+
+// Main AR detection loop
+function runARLoop() {
+  const vid = document.getElementById('arVideo');
+  const arCanvas = document.getElementById('arCanvas');
+  const ctx = arCanvas.getContext('2d');
+  const status = document.getElementById('ar-status');
+
+  // Off-screen processing canvas (downscaled for speed)
+  const proc = document.createElement('canvas');
+  const SCALE = 0.35; // process at 35% resolution
+  let lastDetect = 0;
+  let lastMatch = null;
+  let noMatchFrames = 0;
+
+  function frame() {
+    arAnimId = requestAnimationFrame(frame);
+    if(!arMode || vid.readyState < 2) return;
+
+    const vw = vid.videoWidth, vh = vid.videoHeight;
+    if(!vw || !vh) return;
+
+    // Sync overlay canvas to screen size
+    const cw = arCanvas.offsetWidth, ch = arCanvas.offsetHeight;
+    if(arCanvas.width !== cw || arCanvas.height !== ch) {
+      arCanvas.width = cw; arCanvas.height = ch;
+    }
+
+    const now = Date.now();
+    const doDetect = (now - lastDetect) > 120; // detect at ~8fps, draw at rAF
+
+    if(doDetect) {
+      lastDetect = now;
+      proc.width = Math.round(vw * SCALE);
+      proc.height = Math.round(vh * SCALE);
+      const pc = proc.getContext('2d', { willReadFrequently: true });
+      pc.drawImage(vid, 0, 0, proc.width, proc.height);
+      const imgData = pc.getImageData(0, 0, proc.width, proc.height);
+      const pw = proc.width, ph = proc.height;
+
+      const gray = toGrayscale(imgData.data, pw, ph);
+      const bin = fastThreshold(gray, pw, ph);
+      const boxes = findContours(bin, pw, ph);
+
+      // Filter to plausible square-ish regions
+      const candidates = boxes.filter(b => {
+        const w = b.maxx-b.minx, h = b.maxy-b.miny;
+        const aspect = w/h;
+        const area = b.cnt;
+        const boxArea = w*h;
+        const fill = area/boxArea;
+        return w > pw*0.04 && w < pw*0.9 && aspect > 0.5 && aspect < 2.0 && fill > 0.3;
+      });
+
+      lastMatch = null;
+      for(const box of candidates) {
+        const grid = sampleGrid(gray, pw, ph, box, 8);
+        if(!hasBorder(grid)) continue;
+        const inner = innerPattern(grid);
+        const { score, rotation } = matchHiro(inner);
+        if(score <= 8) { // allow up to 8/36 mismatches (lighting tolerance)
+          // Scale box back to display coords
+          const sx = cw/pw, sy = ch/ph;
+          lastMatch = {
+            minx: box.minx*sx, miny: box.miny*sy,
+            maxx: box.maxx*sx, maxy: box.maxy*sy,
+            rotation, score
+          };
+          noMatchFrames = 0;
+          break;
+        }
+      }
+      if(!lastMatch) noMatchFrames++;
+    }
+
+    // Draw overlay
+    ctx.clearRect(0, 0, cw, ch);
+
+    if(lastMatch && noMatchFrames < 6) {
+      drawAROverlay(ctx, lastMatch, cw, ch, true, lastMatch.rotation);
+      status.textContent = '✅ HIRO MARKER DETECTED';
+      status.style.background = 'rgba(77,255,160,.15)';
+      status.style.color = '#4dffa0';
+      status.style.borderColor = 'rgba(77,255,160,.35)';
+    } else {
+      status.textContent = '🔍 SCANNING — point at HIRO marker';
+      status.style.background = 'rgba(255,180,0,.12)';
+      status.style.color = '#ffcc44';
+      status.style.borderColor = 'rgba(255,180,0,.3)';
+
+      // Draw scanning reticle
+      const mx = cw/2, my = ch/2, rs = Math.min(cw,ch)*0.2;
+      ctx.strokeStyle = 'rgba(255,200,80,0.4)';
+      ctx.lineWidth = 1.5;
+      [[mx-rs,my-rs,rs*0.4,0],[mx+rs,my-rs,-rs*0.4,0],
+       [mx-rs,my+rs,0,-rs*0.4],[mx+rs,my+rs,0,-rs*0.4]].forEach(([x,y,dx,dy])=>{
+        ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+dx,y); ctx.lineTo(x,y+dy*-1); ctx.stroke();
+      });
+    }
+  }
+  frame();
+}
 
 document.getElementById('ar-start-btn').addEventListener('click', () => {
   const step1 = document.getElementById('ar-step1');
   const step2 = document.getElementById('ar-step2');
-  const step3 = document.getElementById('ar-step3');
   step1.style.display = 'none';
   step2.style.display = 'block';
   step2.innerHTML = '⏳ Opening camera…';
 
-  const constraints = {
+  navigator.mediaDevices.getUserMedia({
     video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
     audio: false
-  };
-
-  navigator.mediaDevices.getUserMedia(constraints)
-    .then(stream => {
-      arStream = stream;
-      const vid = document.getElementById('arVideo');
-      vid.srcObject = stream;
+  }).then(stream => {
+    arStream = stream;
+    const vid = document.getElementById('arVideo');
+    vid.srcObject = stream;
+    vid.onloadedmetadata = () => {
       vid.play().catch(()=>{});
-
-      // Show camera feed
       document.getElementById('arWrap').classList.add('show');
       document.getElementById('ar-exit-btn').style.display = 'block';
-
-      // Close instructions, show status
       document.getElementById('ar-instructions').classList.remove('show');
-
       const status = document.getElementById('ar-status');
-      status.style.display = 'block';
-      status.style.cssText = 'display:block;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;padding:7px 18px;border-radius:20px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;background:rgba(77,255,160,.12);border:1px solid rgba(77,255,160,.3);color:#4dffa0;';
-      status.textContent = '📷 CAMERA ACTIVE — point at HIRO marker';
-    })
-    .catch(err => {
-      step2.innerHTML = `❌ Camera error: ${err.message}<br><small style="color:rgba(255,150,100,.7);">Check browser camera permissions and try again.</small>`;
-    });
+      status.style.cssText = 'display:block;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:400;padding:7px 18px;border-radius:20px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;white-space:nowrap;border:1px solid rgba(255,180,0,.3);';
+      runARLoop();
+    };
+  }).catch(err => {
+    step2.innerHTML = `❌ Camera error: ${err.message}<br><small style="color:rgba(255,150,100,.7);">Check browser camera permissions.</small>`;
+  });
 });
 
 document.getElementById('btn-ar').addEventListener('click', () => {
