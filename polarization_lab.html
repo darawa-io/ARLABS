@@ -225,8 +225,8 @@ function Ipct(){
 }
 
 const canvas = document.getElementById('mainCanvas');
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.shadowMap.enabled = false;
 renderer.setClearColor(0x07090f, 1);
 const scene3 = new THREE.Scene();
@@ -250,7 +250,7 @@ const sun=new THREE.DirectionalLight(0xfff8f0,1.2); sun.position.set(5,10,5); sc
 
 const floorM=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0x0d1020,roughness:0.95}));
 floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.2; scene3.add(floorM);
-const grid=new THREE.GridHelper(60,60,0x1a2540,0x121c30); grid.position.y=-2.18; scene3.add(grid);
+const grid=new THREE.GridHelper(40,30,0x1a2540,0x121c30); grid.position.y=-2.18; scene3.add(grid);
 const root3=new THREE.Group(); scene3.add(root3);
 
 {const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-10,0,0),new THREE.Vector3(10,0,0)]);
@@ -340,82 +340,132 @@ function updateBeams(){
   if(i2 > 0.01) makeBeam(2.5, 6.0, Math.max(0.05, i2*0.85), 0x5bc8ff);
 }
 
+// ── PRE-ALLOCATED E-FIELD ANIMATION ──
+// All geometry is created once; only Float32Array positions are mutated each frame.
+// This eliminates per-frame GC pressure that was causing freezes.
+
+const BEAM_R = 0.10; // core beam radius (world units) — spokes scaled to match
+
+// Zone 0: Unpolarized (I0 region, x: -6.4 → -2.5)
+// 6 sample points × 8 directions = 48 double-ended lines (2 pts each → 3 positions per line)
+const N0_SAMPLES = 14, N0_DIRS = 8;
+const ef0Lines = [];
+(function(){
+  const mat = new THREE.LineBasicMaterial({ color: 0x00ffee, transparent: true, opacity: 0.95, depthWrite: false });
+  for(let i = 0; i < N0_SAMPLES * N0_DIRS; i++){
+    const pos = new Float32Array(3 * 3); // 3 points (neg tip, origin, pos tip)
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const line = new THREE.Line(geo, mat);
+    ef0Lines.push({ line, pos });
+  }
+})();
+
+// Zone 1: Linearly polarized after P1 (x: -2.5 → 2.5)
+// 16 sample points × 1 double-ended line each
+const N1_SAMPLES = 16;
+const ef1Lines = [];
+(function(){
+  const mat = new THREE.LineBasicMaterial({ color: 0xffaa44, transparent: true, opacity: 0.95, depthWrite: false });
+  for(let i = 0; i < N1_SAMPLES; i++){
+    const pos = new Float32Array(3 * 3);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const line = new THREE.Line(geo, mat);
+    ef1Lines.push({ line, pos });
+  }
+})();
+
+// Zone 2: Polarized after P2 (x: 2.5 → 6.0)
+// 16 sample points × 1 double-ended line each
+const N2_SAMPLES = 16;
+const ef2Lines = [];
+(function(){
+  const mat = new THREE.LineBasicMaterial({ color: 0x44ccff, transparent: true, opacity: 0.95, depthWrite: false });
+  for(let i = 0; i < N2_SAMPLES; i++){
+    const pos = new Float32Array(3 * 3);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const line = new THREE.Line(geo, mat);
+    ef2Lines.push({ line, pos });
+  }
+})();
+
 const efieldGroup = new THREE.Group();
+ef0Lines.forEach(o => efieldGroup.add(o.line));
+ef1Lines.forEach(o => efieldGroup.add(o.line));
+ef2Lines.forEach(o => efieldGroup.add(o.line));
 root3.add(efieldGroup);
+
 let lastUpdate = 0;
 
 function updateEField() {
   const now = Date.now();
-  if(now - lastUpdate < 40) return;
+  if(now - lastUpdate < 40) return; // ~25 fps for E-field — plenty smooth
   lastUpdate = now;
-  
-  while(efieldGroup.children.length) efieldGroup.remove(efieldGroup.children[0]);
-  
+
   const time = now * 0.0025;
-  const i1 = I1pct()/100;
-  const i2 = Ipct()/100;
-  const thetaRad = S.theta * Math.PI/180;
+  const i1 = I1pct() / 100;
+  const i2 = Ipct() / 100;
+  const thetaRad = S.theta * Math.PI / 180;
   const isCrossed = Math.abs(S.theta - 90) < 0.5 || i2 < 0.01;
-  
-  // ── UNPOLARIZED ZONE: right after light source, vibrations in all transversal directions ──
-  // 8 evenly-spaced directions per sample point, large amplitude, animated phase per direction
-  const NUM_UNPOL_DIRS = 8;
-  for(let i = 0; i < 20; i++){
-    const t = i / 19;
-    const x = -6.0 + t * 3.5;
-    // Each sample position gets a random-looking phase seeded by position
+
+  // ── Zone 0: Unpolarized — spokes sized to match I0 beam (~BEAM_R) ──
+  // Max spoke amplitude = beam glow radius so they stay visually "inside" the beam
+  const AMP0 = 0.32; // slightly larger than beam core (0.10) but ≤ glow (0.35)
+  let li = 0;
+  for(let si = 0; si < N0_SAMPLES; si++){
+    const t = si / (N0_SAMPLES - 1);
+    const x = -6.35 + t * 3.8; // spans the I0 beam: -6.4 → -2.55
     const posPhase = time * 1.4 - x * 1.1;
-    for(let d = 0; d < NUM_UNPOL_DIRS; d++){
-      // Each spoke direction is fixed (evenly spaced), but its amplitude oscillates in time
-      const spokeAngle = (d / NUM_UNPOL_DIRS) * Math.PI; // 0..π covers all distinct directions
-      // Phase offset per direction gives the "random vibration" feel
-      const phaseOffset = d * (Math.PI * 2 / NUM_UNPOL_DIRS);
-      const amp = 0.72 * Math.abs(Math.sin(posPhase + phaseOffset));
-      if(amp < 0.04) continue; // skip near-zero spokes for visual clarity
+    for(let d = 0; d < N0_DIRS; d++){
+      const spokeAngle = (d / N0_DIRS) * Math.PI;
+      const phaseOffset = d * (Math.PI * 2 / N0_DIRS);
+      const amp = AMP0 * Math.abs(Math.sin(posPhase + phaseOffset));
       const dy = Math.cos(spokeAngle) * amp;
       const dz = Math.sin(spokeAngle) * amp;
-      // Double-ended arrow: tip in +direction and -direction from beam axis
-      const origin = new THREE.Vector3(x, 0.5, 0);
-      const tipPos  = new THREE.Vector3(x, 0.5 + dy, dz);
-      const tipNeg  = new THREE.Vector3(x, 0.5 - dy, -dz);
-      const geom = new THREE.BufferGeometry().setFromPoints([tipNeg, origin, tipPos]);
-      const mat  = new THREE.LineBasicMaterial({ color: 0x00ffee, transparent: true, opacity: 0.92 });
-      efieldGroup.add(new THREE.Line(geom, mat));
+      const { pos } = ef0Lines[li++];
+      // neg tip
+      pos[0] = x; pos[1] = 0.5 - dy; pos[2] = -dz;
+      // origin
+      pos[3] = x; pos[4] = 0.5;      pos[5] = 0;
+      // pos tip
+      pos[6] = x; pos[7] = 0.5 + dy; pos[8] = dz;
+      ef0Lines[li-1].line.geometry.attributes.position.needsUpdate = true;
+      ef0Lines[li-1].line.visible = amp > 0.01;
     }
   }
-  
-  if(i1 > 0.05){
-    for(let i = 0; i < 22; i++){
-      const t = i / 21;
-      const x = -2.3 + t * 4.6;
-      const phase = time * 1.5 - x * 0.9;
-      const amp = 0.45 * i1 * (0.5 + 0.5 * Math.sin(phase));
-      const points = [new THREE.Vector3(x, 0.5, 0), new THREE.Vector3(x, 0.5 + amp, 0)];
-      const geom = new THREE.BufferGeometry().setFromPoints(points);
-      const mat = new THREE.LineBasicMaterial({ color: 0xffaa44, transparent: true, opacity: 0.9 });
-      efieldGroup.add(new THREE.Line(geom, mat));
-      const points2 = [new THREE.Vector3(x, 0.5, 0), new THREE.Vector3(x, 0.5 - amp*0.5, 0)];
-      const geom2 = new THREE.BufferGeometry().setFromPoints(points2);
-      efieldGroup.add(new THREE.Line(geom2, mat));
-    }
+
+  // ── Zone 1: Linearly polarized (vertical) — sized to match I1 beam glow ──
+  const AMP1 = 0.32 * i1; // scale with intensity; 0.32 = beam glow radius
+  for(let si = 0; si < N1_SAMPLES; si++){
+    const t = si / (N1_SAMPLES - 1);
+    const x = -2.45 + t * 4.9; // -2.5 → 2.45
+    const phase = time * 1.5 - x * 0.9;
+    const amp = AMP1 * (0.5 + 0.5 * Math.sin(phase));
+    const { pos } = ef1Lines[si];
+    pos[0] = x; pos[1] = 0.5 - amp; pos[2] = 0;
+    pos[3] = x; pos[4] = 0.5;       pos[5] = 0;
+    pos[6] = x; pos[7] = 0.5 + amp; pos[8] = 0;
+    ef1Lines[si].line.geometry.attributes.position.needsUpdate = true;
+    ef1Lines[si].line.visible = i1 > 0.02;
   }
-  
-  if(!isCrossed && i2 > 0.02){
-    for(let i = 0; i < 22; i++){
-      const t = i / 21;
-      const x = 2.7 + t * 3.1;
-      const phase = time * 1.5 - (x-2.5) * 1.0;
-      const amp = 0.45 * i2 * (0.5 + 0.5 * Math.sin(phase));
-      const dy = Math.cos(thetaRad);
-      const dz = Math.sin(thetaRad);
-      const points = [new THREE.Vector3(x, 0.5, 0), new THREE.Vector3(x, 0.5 + dy*amp, dz*amp)];
-      const geom = new THREE.BufferGeometry().setFromPoints(points);
-      const mat = new THREE.LineBasicMaterial({ color: 0x44ccff, transparent: true, opacity: 0.9 });
-      efieldGroup.add(new THREE.Line(geom, mat));
-      const points2 = [new THREE.Vector3(x, 0.5, 0), new THREE.Vector3(x, 0.5 - dy*amp*0.45, -dz*amp*0.45)];
-      const geom2 = new THREE.BufferGeometry().setFromPoints(points2);
-      efieldGroup.add(new THREE.Line(geom2, mat));
-    }
+
+  // ── Zone 2: Polarized at angle θ — sized to match I2 beam ──
+  const AMP2 = 0.32 * i2;
+  const cosT = Math.cos(thetaRad), sinT = Math.sin(thetaRad);
+  for(let si = 0; si < N2_SAMPLES; si++){
+    const t = si / (N2_SAMPLES - 1);
+    const x = 2.55 + t * 3.4; // 2.5 → 5.95
+    const phase = time * 1.5 - (x - 2.5) * 1.0;
+    const amp = AMP2 * (0.5 + 0.5 * Math.sin(phase));
+    const dy = cosT * amp, dz = sinT * amp;
+    const { pos } = ef2Lines[si];
+    pos[0] = x; pos[1] = 0.5 - dy; pos[2] = -dz;
+    pos[3] = x; pos[4] = 0.5;       pos[5] = 0;
+    pos[6] = x; pos[7] = 0.5 + dy; pos[8] = dz;
+    ef2Lines[si].line.geometry.attributes.position.needsUpdate = true;
+    ef2Lines[si].line.visible = !isCrossed && i2 > 0.02;
   }
 }
 
@@ -632,6 +682,7 @@ function enterAR() {
   document.getElementById('ar-instructions').classList.add('show');
   document.getElementById('hint').style.display = 'none';
   document.body.classList.add('ar-active');
+  // arWrap is shown later, only after camera permission is granted
 }
 
 function exitAR() {
@@ -653,56 +704,108 @@ document.getElementById('ar-start-btn').addEventListener('click', () => {
   const step3 = document.getElementById('ar-step3');
   step1.style.display = 'none';
   step2.style.display = 'block';
-  
-  // Load A-Frame and AR.js
-  function loadAR() {
+
+  // First: request camera permission explicitly via getUserMedia
+  // This guarantees the browser prompt fires before A-Frame loads,
+  // and gives a clean error if the user denies.
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    .then(stream => {
+      // Permission granted — stop the test stream (A-Frame will open its own)
+      stream.getTracks().forEach(t => t.stop());
+      loadARLibs();
+    })
+    .catch(err => {
+      step2.innerHTML = `❌ Camera blocked.<br><small style="color:rgba(255,150,100,.8);">${err.message}</small><br><small>Enable camera in browser settings and try again.</small>`;
+    });
+
+  function loadARLibs() {
+    // Show wrap BEFORE injecting any scripts so DOM is ready
+    const wrap = document.getElementById('arWrap');
+    wrap.style.cssText = 'display:block;position:fixed;inset:0;z-index:50;width:100vw;height:100vh;background:#000;';
+
+    if(window.AFRAME && window.AFRAME.version) {
+      buildARScene();
+      return;
+    }
+    const s1 = document.createElement('script');
+    s1.src = 'https://aframe.io/releases/1.4.0/aframe.min.js';
+    s1.onerror = () => { step2.innerHTML = '❌ Failed to load A-Frame. Check connection.'; };
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      // Pinned, stable CDN build of AR.js for A-Frame
+      s2.src = 'https://cdn.jsdelivr.net/npm/ar.js@2.2.2/aframe/build/aframe-ar.js';
+      s2.onerror = () => { step2.innerHTML = '❌ Failed to load AR.js. Check connection.'; };
+      s2.onload = buildARScene;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  }
+
+  function buildARScene() {
     const wrap = document.getElementById('arWrap');
     wrap.innerHTML = '';
-    // wrap is already shown before scripts started loading
-    
+
     const scene = document.createElement('a-scene');
+    // embedded + explicit pixel size lets A-Frame find the container correctly
     scene.setAttribute('embedded', '');
-    scene.setAttribute('arjs', 'sourceType:webcam;debugUIEnabled:false;detectionMode:mono;');
-    scene.setAttribute('vr-mode-ui', 'enabled:false');
-    scene.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:block;';
-    
+    scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; cameraParametersUrl: https://cdn.jsdelivr.net/npm/ar.js@2.2.2/data/data/camera_para.dat;');
+    scene.setAttribute('vr-mode-ui', 'enabled: false');
+    scene.setAttribute('renderer', 'logarithmicDepthBuffer: true; antialias: true;');
+    scene.style.cssText = 'display:block;position:absolute;top:0;left:0;width:100%;height:100%;';
+
     const marker = document.createElement('a-marker');
     marker.setAttribute('preset', 'hiro');
-    
-    const box = document.createElement('a-box');
-    box.setAttribute('position', '0 0.5 0');
-    box.setAttribute('material', 'color: #5bc8ff; opacity:0.8');
-    box.setAttribute('scale', '0.5 0.5 0.5');
-    marker.appendChild(box);
-    
+    marker.setAttribute('smooth', 'true');
+    marker.setAttribute('smoothCount', '5');
+
+    // Polarizer ring visual on marker
+    const ring = document.createElement('a-torus');
+    ring.setAttribute('position', '0 0.5 0');
+    ring.setAttribute('radius', '0.8');
+    ring.setAttribute('radius-tubular', '0.08');
+    ring.setAttribute('color', '#5bc8ff');
+    ring.setAttribute('opacity', '0.9');
+    marker.appendChild(ring);
+
+    const disc = document.createElement('a-circle');
+    disc.setAttribute('position', '0 0.5 0');
+    disc.setAttribute('radius', '0.75');
+    disc.setAttribute('color', '#1a3a5a');
+    disc.setAttribute('opacity', '0.5');
+    disc.setAttribute('side', 'double');
+    marker.appendChild(disc);
+
+    const label = document.createElement('a-text');
+    label.setAttribute('value', `P2: ${S.theta.toFixed(0)}deg`);
+    label.setAttribute('position', '0 1.2 0');
+    label.setAttribute('align', 'center');
+    label.setAttribute('color', '#5bc8ff');
+    label.setAttribute('scale', '1.5 1.5 1.5');
+    marker.appendChild(label);
+
     scene.appendChild(marker);
+
+    const camera = document.createElement('a-entity');
+    camera.setAttribute('camera', '');
+    scene.appendChild(camera);
+
     wrap.appendChild(scene);
-    
+
     step2.style.display = 'none';
     step3.style.display = 'block';
-    document.getElementById('ar-status').style.display = 'block';
-    document.getElementById('ar-status').textContent = '🔍 SCANNING for HIRO marker...';
-    document.getElementById('ar-status').style.background = 'rgba(255,180,0,.15)';
-  }
-  
-  // Show the wrapper NOW so A-Frame can access the DOM and request camera
-  document.getElementById('arWrap').classList.add('show');
+    const status = document.getElementById('ar-status');
+    status.style.display = 'block';
+    status.textContent = '🔍 SCANNING for HIRO marker…';
+    status.style.cssText += ';background:rgba(255,180,0,.15);border:1px solid rgba(255,180,0,.3);color:#ffcc44;';
 
-  if(window.AFRAME) {
-    loadAR();
-  } else {
-    const script = document.createElement('script');
-    script.src = 'https://aframe.io/releases/1.4.0/aframe.min.js';
-    script.onerror = () => { step2.textContent = '❌ Failed to load A-Frame. Check your connection.'; };
-    script.onload = () => {
-      const arScript = document.createElement('script');
-      // Use jsDelivr CDN — more reliable than raw.githack for AR.js
-      arScript.src = 'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js';
-      arScript.onerror = () => { step2.textContent = '❌ Failed to load AR.js. Check your connection.'; };
-      arScript.onload = loadAR;
-      document.head.appendChild(arScript);
-    };
-    document.head.appendChild(script);
+    marker.addEventListener('markerFound', () => {
+      status.textContent = '✅ MARKER DETECTED';
+      status.style.cssText += ';background:rgba(0,200,100,.15);color:#4dffa0;';
+    });
+    marker.addEventListener('markerLost', () => {
+      status.textContent = '🔍 SCANNING for HIRO marker…';
+      status.style.cssText += ';background:rgba(255,180,0,.15);color:#ffcc44;';
+    });
   }
 });
 
@@ -714,13 +817,15 @@ document.getElementById('btn-ar').addEventListener('click', () => {
   }
 });
 
-function animate(){
-  if(!arMode){
-    updateEField();
-    drawLabels();
-    renderer.render(scene3, cam3);
-  }
+let lastRender = 0;
+function animate(ts){
   requestAnimationFrame(animate);
+  if(arMode) return;
+  if(ts - lastRender < 33) return; // ~30 fps cap — smooth but light on resources
+  lastRender = ts;
+  updateEField();
+  drawLabels();
+  renderer.render(scene3, cam3);
 }
 
 fullUpdate();
