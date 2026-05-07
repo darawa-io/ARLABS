@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DARAWA | Physics Simulations UAE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
+
+        :root {
+            --primary-blue: #0A4A7F;
+            --primary-gold: #C9A05D;
+            --bg-cream: #f4f1e6; 
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: #1a1a1a;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .arabic-text { font-family: 'Amiri', serif; }
+
+        .fluid-hero-title {
+            font-size: clamp(1.75rem, 6vw, 3.5rem);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            min-height: 45vh;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .hero-image-underlay {
+            position: absolute;
+            right: 0%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 55%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hero-image-underlay img {
+            width: 100%;
+            mix-blend-mode: multiply; 
+        }
+
+        /* Gallery Card */
+        .gallery-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(201, 160, 93, 0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        .gallery-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-gold);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .sim-thumbnail {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+        }
+
+        /* WORKSPACE CONTAINER - EXACT MATCH TO image_c36a32.jpg */
+        #simContainer {
+            width: 100%;
+            height: 100%;
+            min-height: 680px;
+            background-color: #050505;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%),
+                url('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Central Placeholder UI - Refined for exact alignment */
+        .placeholder-glass {
+            background: rgba(18, 18, 18, 0.75);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(201, 160, 93, 0.3);
+            border-radius: 45px;
+            padding: 5rem 3rem;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Icon from image_c36a32.jpg */
+        .central-icon {
+            width: 84px;
+            height: 84px;
+            background: rgba(201, 160, 93, 0.05);
+            border: 1px solid rgba(201, 160, 93, 0.6);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2.5rem;
+            color: var(--primary-gold);
+        }
+
+        /* "SCANNING ENVIRONMENT" Animated Overlay from image_c3da6d.png */
+        .scanning-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .scanning-circle {
+            width: 180px;
+            height: 180px;
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: rotate 20s linear infinite;
+        }
+
+        .scanning-text {
+            margin-top: 100px;
+            font-size: 14px;
+            font-weight: 900;
+            color: white;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Sim Frame */
+        .sim-frame-wrapper {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            background: white;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 100px;
+            margin-top: 2rem;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .action-button {
+            padding: 0.8rem 2.2rem;
+            background-color: var(--primary-blue);
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="container mx-auto px-8 py-8 flex justify-between items-center relative z-50">
+        <div class="flex items-center gap-4">
+            <div class="w-[60px] h-[60px]">
+                <img src="assets/logo1.png" alt="Logo" class="w-full h-full object-contain mix-blend-mode-multiply" onerror="this.src='https://via.placeholder.com/60'">
+            </div>
+            <div class="flex flex-col">
+                <span class="font-black text-xl text-[#0A4A7F] tracking-tighter">DARAWA</span>
+                <span class="text-[10px] font-bold text-[#C9A05D] tracking-widest uppercase">Physics UAE</span>
+            </div>
+        </div>
+        <div class="hidden md:flex gap-10 font-bold text-[#0A4A7F] text-sm uppercase tracking-wide">
+            <a href="#" class="hover:text-[#C9A05D] transition-colors">Home</a>
+            <a href="#" class="text-[#C9A05D] border-b-2 border-[#C9A05D]">Simulations</a>
+            <a href="#" class="hover:text-[#C9A05D] transition-colors">About</a>
+            <a href="#" class="hover:text-[#C9A05D] transition-colors">Contact</a>
+        </div>
+    </nav>
+
+    <section class="hero-section container mx-auto px-8 mb-12">
+        <div class="relative z-30 max-w-3xl">
+            <h1 class="fluid-hero-title font-extrabold text-[#0A4A7F] mb-6">
+                UNLEASHING THE<br>
+                <span class="text-[#C9A05D]">INTENSITY</span><br>
+                OF EVERYDAY PHYSICS
+            </h1>
+            <p class="text-lg text-gray-600 max-w-lg font-medium leading-relaxed">
+                Experience physics like never before with high-precision simulations designed for the next generation of scientists.
+            </p>
+        </div>
+        <div class="hero-image-underlay">
+            <img src="assets/hero.png" alt="Physics" onerror="this.style.display='none'">
+        </div>
+    </section>
+
+    <main class="container mx-auto px-8 pb-32">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-10">
+            
+            <!-- Sidebar -->
+            <div class="grid grid-cols-1 gap-6 h-fit">
+                <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html')">
+                    <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
+                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
+                </div>
+                <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html')">
+                    <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
+                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
+                </div>
+                <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html')">
+                    <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
+                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-[50px] p-3 shadow-2xl">
+                    <div id="simContainer">
+                        <!-- Scanning Background Effects -->
+                        <div class="scanning-overlay">
+                            <div class="scanning-circle">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="white" class="opacity-40">
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </div>
+                            <span class="scanning-text">Scanning Environment</span>
+                        </div>
+
+                        <!-- Central Message Box (image_c36a32.jpg) -->
+                        <div class="placeholder-glass">
+                            <div class="central-icon">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-[#C9A05D] text-2xl font-black tracking-[0.25em] uppercase mb-5">Physics Environment</h3>
+                            <div class="h-[1px] w-14 bg-[#C9A05D] mx-auto mb-10"></div>
+                            <p class="text-white/60 text-sm font-medium leading-relaxed max-w-[320px] mx-auto">
+                                Initialize your virtual laboratory by selecting an experiment from the gallery to begin.
+                            </p>
+                            <div class="status-pill">
+                                <div class="pulse-dot"></div>
+                                <span class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">System Ready</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center px-12 py-10 bg-gray-50/50 rounded-b-[45px]">
+                        <div>
+                            <h3 id="workspaceTitle" class="text-2xl font-black text-[#0A4A7F] tracking-tight">WORKSPACE</h3>
+                            <p id="workspaceStatus" class="text-[11px] font-bold text-[#C9A05D] tracking-widest uppercase mt-2">Status: Standby</p>
+                        </div>
+                        <button id="openTabBtn" onclick="openSimulationInTab()" class="hidden action-button">
+                            Launch Fullscreen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-[#0A4A7F] py-24 text-white">
+        <div class="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <p class="font-black text-3xl tracking-tighter">DARAWA</p>
+                <p class="arabic-text text-4xl text-[#C9A05D] mt-3">ربط اللغة والفيزياء</p>
+            </div>
+            <div class="mt-12 md:mt-0 text-right">
+                <p class="text-[11px] font-bold opacity-30 uppercase tracking-[0.3em]">© 2024 DARWA LAB UAE</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentSimUrl = "";
+
+        function loadSimulation(title, url) {
+            const container = document.getElementById('simContainer');
+            const workspaceTitle = document.getElementById('workspaceTitle');
+            const workspaceStatus = document.getElementById('workspaceStatus');
+            const openTabBtn = document.getElementById('openTabBtn');
+            
+            workspaceTitle.innerText = title.toUpperCase();
+            workspaceStatus.innerText = "Status: Module Active";
+            currentSimUrl = url;
+
+            // Remove existing frame if any
+            const oldFrame = container.querySelector('.sim-frame-wrapper');
+            if (oldFrame) oldFrame.remove();
+
+            // Append new frame
+            container.innerHTML += `
+                <div class="sim-frame-wrapper">
+                    <iframe src="${url}" class="scaled-iframe" allowfullscreen></iframe>
+                </div>`;
+            
+            openTabBtn.classList.remove('hidden');
+        }
+
+        function openSimulationInTab() {
+            if (currentSimUrl) window.open(currentSimUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
