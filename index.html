@@ -223,15 +223,62 @@
         }
 
         .action-button {
-            padding: 0.8rem 2.2rem;
+            padding: 0.8rem 1.8rem;
             background-color: var(--primary-blue);
             color: white;
             border-radius: 12px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .secondary-button {
+            padding: 0.8rem 1.8rem;
+            background-color: transparent;
+            border: 1px solid var(--primary-gold);
+            color: var(--primary-gold);
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .secondary-button:hover {
+            background-color: var(--primary-gold);
+            color: white;
+        }
+
+        /* Marker Modal */
+        #markerModal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 30px;
+            max-width: 500px;
+            width: 100%;
+            padding: 2.5rem;
+            text-align: center;
+            position: relative;
         }
     </style>
 </head>
@@ -288,6 +335,15 @@
                     <img src="https://darawa-io.github.io/ARLABS/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
                 </div>
+                
+                <!-- AR Toolkit Sidebar item -->
+                <div class="bg-[#0A4A7F]/5 border border-[#0A4A7F]/10 p-6 rounded-3xl mt-4">
+                    <h4 class="text-[10px] font-black tracking-widest text-[#0A4A7F] uppercase mb-3">AR Assets</h4>
+                    <button onclick="toggleMarkerModal(true)" class="w-full py-3 px-4 bg-white border border-[#C9A05D] text-[#C9A05D] text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#C9A05D] hover:text-white transition-all flex items-center justify-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Get Hiro Marker
+                    </button>
+                </div>
             </div>
 
             <!-- Workspace -->
@@ -321,19 +377,56 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center px-12 py-10 bg-gray-50/50 rounded-b-[45px]">
+                    <div class="flex flex-col sm:flex-row justify-between items-center px-8 md:px-12 py-8 bg-gray-50/50 rounded-b-[45px] gap-6">
                         <div>
                             <h3 id="workspaceTitle" class="text-2xl font-black text-[#0A4A7F] tracking-tight">WORKSPACE</h3>
                             <p id="workspaceStatus" class="text-[11px] font-bold text-[#C9A05D] tracking-widest uppercase mt-2">Status: Standby</p>
                         </div>
-                        <button id="openTabBtn" onclick="openSimulationInTab()" class="hidden action-button">
-                            Launch Fullscreen
-                        </button>
+                        <div class="flex gap-4">
+                            <button onclick="toggleMarkerModal(true)" class="secondary-button">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Marker
+                            </button>
+                            <button id="openTabBtn" onclick="openSimulationInTab()" class="hidden action-button">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                Fullscreen
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Marker Modal -->
+    <div id="markerModal">
+        <div class="modal-content shadow-2xl border border-[#C9A05D]/20">
+            <button onclick="toggleMarkerModal(false)" class="absolute top-6 right-6 text-gray-400 hover:text-black">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <h3 class="text-[#0A4A7F] text-xl font-black uppercase tracking-widest mb-2">AR Hiro Marker</h3>
+            <p class="text-xs text-gray-500 font-bold tracking-wider mb-8 uppercase">Essential for Augmented Reality Mode</p>
+            
+            <div class="bg-gray-100 p-6 rounded-3xl mb-8 flex justify-center">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png" alt="Hiro Marker" class="w-48 h-48 border-8 border-white shadow-lg">
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 mb-8">
+                <div class="flex items-start gap-4 text-left p-4 bg-gray-50 rounded-2xl">
+                    <span class="bg-[#C9A05D] text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
+                    <p class="text-[11px] text-gray-600 leading-relaxed font-medium">Download and print this marker, or display it on a second device (phone/tablet).</p>
+                </div>
+                <div class="flex items-start gap-4 text-left p-4 bg-gray-50 rounded-2xl">
+                    <span class="bg-[#C9A05D] text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
+                    <p class="text-[11px] text-gray-600 leading-relaxed font-medium">Inside the simulation, click the <strong class="text-[#0A4A7F]">AR Button</strong> and allow camera access.</p>
+                </div>
+            </div>
+
+            <a href="https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png" target="_blank" download="hiro-marker.png" class="w-full py-4 bg-[#0A4A7F] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:shadow-xl transition-all inline-block">
+                Download High-Res Marker
+            </a>
+        </div>
+    </div>
 
     <footer class="bg-[#0A4A7F] py-24 text-white">
         <div class="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center">
@@ -373,6 +466,19 @@
 
         function openSimulationInTab() {
             if (currentSimUrl) window.open(currentSimUrl, '_blank');
+        }
+
+        function toggleMarkerModal(show) {
+            const modal = document.getElementById('markerModal');
+            modal.style.display = show ? 'flex' : 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('markerModal');
+            if (event.target == modal) {
+                toggleMarkerModal(false);
+            }
         }
     </script>
 </body>
