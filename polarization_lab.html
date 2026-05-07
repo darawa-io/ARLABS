@@ -357,17 +357,29 @@ function updateEField() {
   const thetaRad = S.theta * Math.PI/180;
   const isCrossed = Math.abs(S.theta - 90) < 0.5 || i2 < 0.01;
   
+  // ── UNPOLARIZED ZONE: right after light source, vibrations in all transversal directions ──
+  // 8 evenly-spaced directions per sample point, large amplitude, animated phase per direction
+  const NUM_UNPOL_DIRS = 8;
   for(let i = 0; i < 20; i++){
     const t = i / 19;
     const x = -6.0 + t * 3.5;
-    const phase = time * 1.2 - x * 0.8;
-    for(let d = 0; d < 3; d++){
-      const angle = phase + d * 2.1;
-      const dy = Math.cos(angle) * 0.35;
-      const dz = Math.sin(angle) * 0.35;
-      const points = [new THREE.Vector3(x, 0.5, 0), new THREE.Vector3(x + dy*0.2, 0.5 + dy*0.5, dz*0.6)];
-      const geom = new THREE.BufferGeometry().setFromPoints(points);
-      const mat = new THREE.LineBasicMaterial({ color: 0x66ffff, transparent: true, opacity: 0.75 });
+    // Each sample position gets a random-looking phase seeded by position
+    const posPhase = time * 1.4 - x * 1.1;
+    for(let d = 0; d < NUM_UNPOL_DIRS; d++){
+      // Each spoke direction is fixed (evenly spaced), but its amplitude oscillates in time
+      const spokeAngle = (d / NUM_UNPOL_DIRS) * Math.PI; // 0..π covers all distinct directions
+      // Phase offset per direction gives the "random vibration" feel
+      const phaseOffset = d * (Math.PI * 2 / NUM_UNPOL_DIRS);
+      const amp = 0.72 * Math.abs(Math.sin(posPhase + phaseOffset));
+      if(amp < 0.04) continue; // skip near-zero spokes for visual clarity
+      const dy = Math.cos(spokeAngle) * amp;
+      const dz = Math.sin(spokeAngle) * amp;
+      // Double-ended arrow: tip in +direction and -direction from beam axis
+      const origin = new THREE.Vector3(x, 0.5, 0);
+      const tipPos  = new THREE.Vector3(x, 0.5 + dy, dz);
+      const tipNeg  = new THREE.Vector3(x, 0.5 - dy, -dz);
+      const geom = new THREE.BufferGeometry().setFromPoints([tipNeg, origin, tipPos]);
+      const mat  = new THREE.LineBasicMaterial({ color: 0x00ffee, transparent: true, opacity: 0.92 });
       efieldGroup.add(new THREE.Line(geom, mat));
     }
   }
@@ -617,7 +629,6 @@ function validateQuiz(){
 // AR Mode implementation
 function enterAR() {
   arMode = true;
-  document.getElementById('arWrap').classList.add('show');
   document.getElementById('ar-instructions').classList.add('show');
   document.getElementById('hint').style.display = 'none';
   document.body.classList.add('ar-active');
@@ -626,6 +637,7 @@ function enterAR() {
 function exitAR() {
   arMode = false;
   document.getElementById('arWrap').classList.remove('show');
+  document.getElementById('arWrap').innerHTML = ''; // destroy scene/camera
   document.getElementById('ar-instructions').classList.remove('show');
   document.getElementById('hint').style.display = '';
   document.body.classList.remove('ar-active');
@@ -646,6 +658,7 @@ document.getElementById('ar-start-btn').addEventListener('click', () => {
   function loadAR() {
     const wrap = document.getElementById('arWrap');
     wrap.innerHTML = '';
+    // wrap is already shown before scripts started loading
     
     const scene = document.createElement('a-scene');
     scene.setAttribute('embedded', '');
@@ -672,14 +685,20 @@ document.getElementById('ar-start-btn').addEventListener('click', () => {
     document.getElementById('ar-status').style.background = 'rgba(255,180,0,.15)';
   }
   
+  // Show the wrapper NOW so A-Frame can access the DOM and request camera
+  document.getElementById('arWrap').classList.add('show');
+
   if(window.AFRAME) {
     loadAR();
   } else {
     const script = document.createElement('script');
     script.src = 'https://aframe.io/releases/1.4.0/aframe.min.js';
+    script.onerror = () => { step2.textContent = '❌ Failed to load A-Frame. Check your connection.'; };
     script.onload = () => {
       const arScript = document.createElement('script');
-      arScript.src = 'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js';
+      // Use jsDelivr CDN — more reliable than raw.githack for AR.js
+      arScript.src = 'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js';
+      arScript.onerror = () => { step2.textContent = '❌ Failed to load AR.js. Check your connection.'; };
       arScript.onload = loadAR;
       document.head.appendChild(arScript);
     };
