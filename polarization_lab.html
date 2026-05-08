@@ -86,11 +86,12 @@ body.ar-active #hint{display:none;}
 
 .ctrl-ar-hide{}
 body.ar-active .ctrl-ar-hide{display:none!important;}
+body.ar-active #ar-controls-ui{display:flex!important;}
 </style>
 </head>
 <body>
 <div id="simWrap" style="position:absolute;inset:0;z-index:1;"><canvas id="mainCanvas"></canvas><canvas id="labelCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:3;"></canvas></div>
-<div id="arWrap" style="display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;"></div>
+<div id="arWrap"></div>
 
 <!-- AR status pill -->
 <div id="ar-status" style="display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;padding:7px 18px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;transition:all 0.3s;">🔍 SCANNING FOR MARKER…</div>
@@ -154,12 +155,20 @@ body.ar-active .ctrl-ar-hide{display:none!important;}
 </div>
 
 <div id="controls">
-  <div class="sw"><span>θ=</span><input type="range" id="sl-theta" min="0" max="90" value="0" step="1"><span id="lbl-theta">0°</span></div>
+  <div class="sw ctrl-ar-hide"><span>θ=</span><input type="range" id="sl-theta" min="0" max="90" value="0" step="1"><span id="lbl-theta">0°</span></div>
   <div class="sep ctrl-ar-hide"></div>
   <button class="btn green" id="btn-ar">📷 AR Mode</button>
   <button class="btn" id="btn-guide" style="display:none;" onclick="toggleARGuide()">📋 Guide</button>
-  <div class="sep"></div>
+  <div class="sep ctrl-ar-hide"></div>
   <button class="btn ctrl-ar-hide" id="btn-reset">Reset</button>
+  <div id="ar-controls-ui" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(181,122,255,.8);">θ=</span>
+    <input type="range" id="sl-theta-ar" min="0" max="90" value="0" step="1" style="width:110px;">
+    <span id="lbl-theta-ar" style="font-family:'Space Mono',monospace;font-size:11px;color:#b57aff;min-width:28px;">0°</span>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:#ffe088;" id="ar-challenge-target">Target I₂: —</span>
+    <button id="ar-check-btn" class="btn green">✓ Check</button>
+    <span id="ar-check-result" style="font-family:'Space Mono',monospace;font-size:10px;display:none;"></span>
+  </div>
 </div>
 
 
@@ -613,24 +622,68 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   fullUpdate();
 });
 
-// (quiz validation removed — students calculate I₂ = I₁·cos²θ themselves)
+
+// AR slider
+document.getElementById('sl-theta-ar').addEventListener('input', function(){
+  S.theta = parseInt(this.value);
+  document.getElementById('lbl-theta').textContent = S.theta.toFixed(0)+'°';
+  document.getElementById('sl-theta').value = S.theta;
+  fullUpdate();
+});
+
+// Touch-drag on AR canvas to rotate P2 (single finger swipe)
+let arDragStartX=null, arDragStartTheta=null;
+document.getElementById('arWrap').addEventListener('touchstart', function(e){
+  if(e.touches.length===1){ arDragStartX=e.touches[0].clientX; arDragStartTheta=S.theta; }
+},{passive:true});
+document.getElementById('arWrap').addEventListener('touchmove', function(e){
+  if(e.touches.length===1 && arDragStartX!==null){
+    const dx=e.touches[0].clientX-arDragStartX;
+    S.theta=Math.max(0,Math.min(90,Math.round(arDragStartTheta+dx*0.5)));
+    document.getElementById('sl-theta').value=S.theta;
+    document.getElementById('lbl-theta').textContent=S.theta.toFixed(0)+'°';
+    fullUpdate();
+  }
+},{passive:true});
+document.getElementById('arWrap').addEventListener('touchend', function(){
+  arDragStartX=null; arDragStartTheta=null;
+},{passive:true});
+
+// Check button — show correct angle, not I2
+document.getElementById('ar-check-btn').addEventListener('click', ()=>{
+  const res=document.getElementById('ar-check-result');
+  res.style.display='block';
+  const current=Ipct();
+  const diff=Math.abs(current-arChallengeTarget);
+  // Correct angle: theta = acos(sqrt(target/50)) in degrees (I1=50%)
+  const correctTheta=Math.round(Math.acos(Math.sqrt(arChallengeTarget/50))*180/Math.PI);
+  if(diff<=5){
+    res.textContent='✅ Correct! θ≈'+S.theta+'°';
+    res.style.color='#4dffa0';
+  } else {
+    res.textContent='✗ Correct θ = '+correctTheta+'° (yours: '+S.theta+'°)';
+    res.style.color='#ff9966';
+  }
+});
+
 
 // ════════════════════════════════════════════════════════════
 // AR MODE — AR.js (A-Frame) real Hiro marker · double-slit style
 // ════════════════════════════════════════════════════════════
 let arScene = null, arEntities = {}, arScale = 0.44;
 let arPinchDist0 = null, arScale0 = null;
+let arChallengeTarget = 0;
 
 const btnAR = document.getElementById('btn-ar');
 function showARStep(n){ [1,2,3,4].forEach(i=>{ const el=document.getElementById('ar-step'+i); if(el)el.style.display=(i===n?'':'none'); }); }
 function toggleARGuide(){ const p=document.getElementById('ar-instructions'); p.classList.contains('show')?p.classList.remove('show'):(showARStep(3),p.classList.add('show')); }
 
 function buildARScene(){
-  const wrap = document.getElementById('arWrap');
-  wrap.innerHTML = ''; wrap.classList.add('show');
-  arScale = 0.44;
+  const wrap=document.getElementById('arWrap');
+  wrap.innerHTML=''; wrap.classList.add('show');
+  arScale=0.44;
 
-  const sceneEl = document.createElement('a-scene');
+  const sceneEl=document.createElement('a-scene');
   sceneEl.setAttribute('embedded','');
   sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.50;');
   sceneEl.setAttribute('renderer','antialias:true;precision:medium;');
@@ -638,195 +691,178 @@ function buildARScene(){
   sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
   sceneEl.style.cssText='width:100%;height:100%;display:block;';
 
-  const assets = document.createElement('a-assets');
+  const assets=document.createElement('a-assets');
   assets.setAttribute('timeout','10000');
-
-  // Screen canvas — copy from the Three.js screenTC (without the percentage text)
-  const screenCvs = document.createElement('canvas');
-  screenCvs.id = 'ar-screen-cvs'; screenCvs.width = screenCvs.height = 512;
-  screenCvs.getContext('2d').drawImage(screenTC, 0, 0, 512, 512);
+  const screenCvs=document.createElement('canvas');
+  screenCvs.id='ar-screen-cvs'; screenCvs.width=screenCvs.height=512;
+  screenCvs.getContext('2d').drawImage(screenTC,0,0,512,512);
   assets.appendChild(screenCvs);
   sceneEl.appendChild(assets);
 
-  const camEnt = document.createElement('a-entity'); camEnt.setAttribute('camera',''); sceneEl.appendChild(camEnt);
+  const camEnt=document.createElement('a-entity'); camEnt.setAttribute('camera',''); sceneEl.appendChild(camEnt);
 
-  const marker = document.createElement('a-marker');
+  const marker=document.createElement('a-marker');
   marker.setAttribute('preset','hiro');
   marker.setAttribute('smooth','true'); marker.setAttribute('smoothCount','5');
   marker.setAttribute('smoothTolerance','0.01'); marker.setAttribute('smoothThreshold','2');
-  marker.addEventListener('markerFound', ()=>{
-    const s=document.getElementById('ar-status');
-    s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(77,255,160,.18)';
-    s.style.border='1px solid rgba(77,255,160,.5)'; s.style.color='#4dffa0';
-  });
-  marker.addEventListener('markerLost', ()=>{
-    const s=document.getElementById('ar-status');
-    s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)';
-    s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
-  });
+  marker.addEventListener('markerFound',()=>{ const s=document.getElementById('ar-status'); s.textContent='\u2705 MARKER DETECTED'; s.style.background='rgba(77,255,160,.18)'; s.style.border='1px solid rgba(77,255,160,.5)'; s.style.color='#4dffa0'; });
+  marker.addEventListener('markerLost', ()=>{ const s=document.getElementById('ar-status'); s.textContent='\ud83d\udd0d SCANNING\u2026'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400'; });
 
-  // Scale group — everything lives here so pinch-to-zoom works
-  const sg = document.createElement('a-entity');
+  const sg=document.createElement('a-entity');
   sg.setAttribute('id','ar-scale-group');
   sg.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
 
-  function mkBox(w,h,d,col,met,rou){ const b=document.createElement('a-box'); b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d); b.setAttribute('color',col); if(met!=null)b.setAttribute('metalness',met); if(rou!=null)b.setAttribute('roughness',rou); return b; }
+  function mkBox(w,h,d,col,met,rou){
+    const b=document.createElement('a-box');
+    b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d);
+    b.setAttribute('color',col);
+    if(met!=null) b.setAttribute('metalness',met);
+    if(rou!=null) b.setAttribute('roughness',rou);
+    return b;
+  }
 
-  // ── Scene geometry (all positions relative to marker centre) ──
-  // Desktop world:  light source at x=-7, P1 at x=-2.5, P2 at x=2.5, screen at x=6
-  // AR scale factor: 1 desktop unit ≈ 0.18 AR units (marker ≈ 0.18m wide)
-  // So desktop span [-7..6] ≈ 13 units → AR span [-1.26..1.08]
-  const D2A = 0.135; // desktop → AR coordinate scale
-  const BEAM_Y = 0.28; // beam height above marker surface in AR units
+  // EXACT desktop values:
+  // TorusGeometry(1.1, 0.12) → a-torus radius=1.1 tube=0.12
+  // disc CircleGeometry(1.05) → a-circle radius=1.05
+  // lines BoxGeometry(0.02,1.8,0.02) at z=i*0.28, x=0.05
+  // arrow: shaft CylinderGeometry(0.05,0.05,1.6), head/tail ConeGeometry(0.13,0.35)
+  // stand: base BoxGeometry(0.5,0.12,0.5) at y=-1.58, post CylinderGeometry(0.06,0.06,0.48) at y=-1.28
+  // positions: pol1 at x=-2.5 y=0.5, pol2 at x=2.5 y=0.5, beam y=0.5
 
-  // Rail
-  const railW = mkBox('2.0','0.025','0.045','#3a5070','0.7','0.3');
-  railW.setAttribute('position',`-0.09 ${BEAM_Y - 0.08} 0`); sg.appendChild(railW);
+  const BEAM_Y = 0.5;
 
-  // Helper: optical stand (post + base)
-  function makeStand(xPos, col){
-    const g = document.createElement('a-entity'); g.setAttribute('position',`${xPos} 0 0`);
-    const base = mkBox('0.10','0.025','0.10',col,'0.7','0.3'); base.setAttribute('position',`0 ${BEAM_Y-0.22} 0`); g.appendChild(base);
-    const post = document.createElement('a-cylinder'); post.setAttribute('position',`0 ${BEAM_Y-0.11} 0`); post.setAttribute('radius','0.012'); post.setAttribute('height','0.095'); post.setAttribute('color',col); post.setAttribute('metalness','0.7'); g.appendChild(post);
+  function makeStand(col){
+    const g=document.createElement('a-entity');
+    const base=mkBox('0.5','0.12','0.5',col,'0.7','0.3'); base.setAttribute('position','0 -1.58 0'); g.appendChild(base);
+    const post=document.createElement('a-cylinder'); post.setAttribute('radius','0.06'); post.setAttribute('height','0.48'); post.setAttribute('position','0 -1.28 0'); post.setAttribute('color',col); post.setAttribute('metalness','0.7'); g.appendChild(post);
     return g;
   }
 
-  // ── LIGHT SOURCE ──
-  const LS_X = -7 * D2A;
-  const lsEnt = makeStand(LS_X, '#223344');
-  const lsBody = document.createElement('a-cylinder');
-  lsBody.setAttribute('rotation','0 0 90'); lsBody.setAttribute('radius','0.075'); lsBody.setAttribute('height','0.160');
-  lsBody.setAttribute('color','#223344'); lsBody.setAttribute('metalness','0.7');
-  lsBody.setAttribute('position',`0 ${BEAM_Y} 0`); lsEnt.appendChild(lsBody);
-  const lsLens = document.createElement('a-sphere');
-  lsLens.setAttribute('radius','0.052'); lsLens.setAttribute('color','#fffbe8');
-  lsLens.setAttribute('emissive','#ffeeaa'); lsLens.setAttribute('emissive-intensity','3.0');
-  lsLens.setAttribute('position',`0.086 ${BEAM_Y} 0`); lsEnt.appendChild(lsLens);
-  sg.appendChild(lsEnt);
+  // buildPolRing: identical proportions to desktop buildPolarizer
+  function buildPolRing(parent, frameColHex, axisColHex){
+    // Torus: radius=1.1, tube=0.12 — exact desktop match
+    const torus=document.createElement('a-torus');
+    torus.setAttribute('radius','1.1'); torus.setAttribute('tube','0.12');
+    torus.setAttribute('segments-tubular','48'); torus.setAttribute('rotation','0 90 0');
+    torus.setAttribute('color','#667788'); torus.setAttribute('metalness','0.8');
+    parent.appendChild(torus);
+    // Disc
+    const disc=document.createElement('a-circle');
+    disc.setAttribute('radius','1.05'); disc.setAttribute('rotation','0 90 0');
+    disc.setAttribute('material',`side:double;transparent:true;opacity:0.55;color:${frameColHex};`);
+    parent.appendChild(disc);
+    // Lines: 7 lines, BoxGeometry(0.02,1.8,0.02), spacing 0.28, x=0.05
+    for(let i=-3;i<=3;i++){
+      const ln=mkBox('0.02','1.8','0.02',axisColHex,'0.2','0.8');
+      ln.setAttribute('emissive',axisColHex); ln.setAttribute('emissive-intensity','1.0');
+      ln.setAttribute('position',`0.05 0 ${(i*0.28).toFixed(2)}`);
+      parent.appendChild(ln);
+    }
+    // Arrow shaft
+    const shaft=document.createElement('a-cylinder');
+    shaft.setAttribute('radius','0.05'); shaft.setAttribute('height','1.6');
+    shaft.setAttribute('color',axisColHex); shaft.setAttribute('emissive',axisColHex); shaft.setAttribute('emissive-intensity','2.5');
+    shaft.setAttribute('position','0.18 0 0'); parent.appendChild(shaft);
+    // Arrow head (top)
+    const head=document.createElement('a-cone');
+    head.setAttribute('radius-bottom','0.13'); head.setAttribute('height','0.35');
+    head.setAttribute('color',axisColHex); head.setAttribute('emissive',axisColHex); head.setAttribute('emissive-intensity','2.5');
+    head.setAttribute('position','0.18 0.98 0'); parent.appendChild(head);
+    // Arrow tail (bottom)
+    const tail=document.createElement('a-cone');
+    tail.setAttribute('radius-bottom','0.13'); tail.setAttribute('height','0.35');
+    tail.setAttribute('rotation','0 0 180');
+    tail.setAttribute('color',axisColHex); tail.setAttribute('emissive',axisColHex); tail.setAttribute('emissive-intensity','2.5');
+    tail.setAttribute('position','0.18 -0.98 0'); parent.appendChild(tail);
+  }
 
-  // ── POLARIZER P1 (fixed, amber) ──
-  const P1_X = -2.5 * D2A;
-  const p1Ent = makeStand(P1_X, '#445566');
-  // Torus frame
-  const p1Torus = document.createElement('a-torus');
-  p1Torus.setAttribute('radius','0.150'); p1Torus.setAttribute('tube','0.016');
-  p1Torus.setAttribute('segments-tubular','32'); p1Torus.setAttribute('rotation','0 90 0');
-  p1Torus.setAttribute('color','#667788'); p1Torus.setAttribute('metalness','0.8');
-  p1Torus.setAttribute('position',`0 ${BEAM_Y} 0`); p1Ent.appendChild(p1Torus);
-  // Disc
-  const p1Disc = document.createElement('a-circle');
-  p1Disc.setAttribute('radius','0.145'); p1Disc.setAttribute('rotation','0 90 0');
-  p1Disc.setAttribute('color','#fff5cc');
-  p1Disc.setAttribute('material','side:double;transparent:true;opacity:0.55;color:#fff5cc;');
-  p1Disc.setAttribute('position',`0 ${BEAM_Y} 0`); p1Ent.appendChild(p1Disc);
-  // Polarization axis line (vertical = 0°)
-  const p1Axis = mkBox('0.008','0.240','0.008','#ffc857','0.2','0.8');
-  p1Axis.setAttribute('emissive','#ffc857'); p1Axis.setAttribute('emissive-intensity','1.5');
-  p1Axis.setAttribute('position',`0.014 ${BEAM_Y} 0`); p1Ent.appendChild(p1Axis);
-  sg.appendChild(p1Ent);
+  // Rail
+  const rail=mkBox('18','0.12','0.22','#3a5070','0.7','0.3'); rail.setAttribute('position','0 -0.42 0'); sg.appendChild(rail);
 
-  // ── POLARIZER P2 (rotatable, blue) ──
-  const P2_X = 2.5 * D2A;
-  const p2Ent = makeStand(P2_X, '#445566');
-  // Ring group — this entity gets rotation.z updated when θ changes
-  const p2Ring = document.createElement('a-entity');
+  // Light source (x=-7)
+  const lsG=document.createElement('a-entity'); lsG.setAttribute('position','-7 0 0');
+  lsG.appendChild(makeStand('#223344'));
+  const lsH=document.createElement('a-cylinder'); lsH.setAttribute('radius','0.55'); lsH.setAttribute('height','1.2'); lsH.setAttribute('rotation','0 0 90'); lsH.setAttribute('color','#223344'); lsH.setAttribute('metalness','0.7'); lsH.setAttribute('position',`0 ${BEAM_Y} 0`); lsG.appendChild(lsH);
+  const lsL=document.createElement('a-sphere'); lsL.setAttribute('radius','0.38'); lsL.setAttribute('color','#fffbe8'); lsL.setAttribute('emissive','#ffeeaa'); lsL.setAttribute('emissive-intensity','2.5'); lsL.setAttribute('position',`0.62 ${BEAM_Y} 0`); lsG.appendChild(lsL);
+  sg.appendChild(lsG);
+
+  // P1: fixed, amber (x=-2.5, pivot at beam centre y=0.5)
+  const p1G=document.createElement('a-entity'); p1G.setAttribute('position','-2.5 0 0');
+  p1G.appendChild(makeStand('#445566'));
+  const p1Ring=document.createElement('a-entity'); p1Ring.setAttribute('position',`0 ${BEAM_Y} 0`);
+  buildPolRing(p1Ring,'#fff5cc','#ffc857');
+  p1G.appendChild(p1Ring); sg.appendChild(p1G);
+
+  // P2: rotatable, blue (x=2.5, pivot at beam centre y=0.5 → rotation around X axis = beam axis)
+  const p2G=document.createElement('a-entity'); p2G.setAttribute('position','2.5 0 0');
+  p2G.appendChild(makeStand('#445566'));
+  const p2Ring=document.createElement('a-entity');
   p2Ring.setAttribute('id','ar-p2-ring');
   p2Ring.setAttribute('position',`0 ${BEAM_Y} 0`);
-  const p2Torus = document.createElement('a-torus');
-  p2Torus.setAttribute('radius','0.150'); p2Torus.setAttribute('tube','0.016');
-  p2Torus.setAttribute('segments-tubular','32'); p2Torus.setAttribute('rotation','0 90 0');
-  p2Torus.setAttribute('color','#667788'); p2Torus.setAttribute('metalness','0.8'); p2Ring.appendChild(p2Torus);
-  const p2Disc = document.createElement('a-circle');
-  p2Disc.setAttribute('radius','0.145'); p2Disc.setAttribute('rotation','0 90 0');
-  p2Disc.setAttribute('material','side:double;transparent:true;opacity:0.55;color:#bbddff;'); p2Ring.appendChild(p2Disc);
-  const p2Axis = mkBox('0.008','0.240','0.008','#5bc8ff','0.2','0.8');
-  p2Axis.setAttribute('id','ar-p2-axis');
-  p2Axis.setAttribute('emissive','#5bc8ff'); p2Axis.setAttribute('emissive-intensity','1.5');
-  p2Axis.setAttribute('position','0.014 0 0'); p2Ring.appendChild(p2Axis);
-  p2Ent.appendChild(p2Ring); sg.appendChild(p2Ent);
+  buildPolRing(p2Ring,'#bbddff','#5bc8ff');
+  p2G.appendChild(p2Ring); sg.appendChild(p2G);
 
-  // ── SCREEN ──
-  const SC_X = 6 * D2A;
-  const scEnt = makeStand(SC_X, '#3a4558');
-  const SCREEN_H = 0.55, SCREEN_W = 0.48;
-  const scFrame = mkBox('0.018',String(SCREEN_H+0.02),String(SCREEN_W+0.02),'#3a4558','0.55','0.45');
-  scFrame.setAttribute('position',`0 ${BEAM_Y + SCREEN_H*0.18} 0`); scEnt.appendChild(scFrame);
-  const scPanel = document.createElement('a-plane');
-  scPanel.setAttribute('id','ar-screen-panel');
-  scPanel.setAttribute('width',String(SCREEN_W)); scPanel.setAttribute('height',String(SCREEN_H));
-  scPanel.setAttribute('rotation','0 90 0');
-  scPanel.setAttribute('position',`0 ${BEAM_Y + SCREEN_H*0.18} 0`);
+  // Screen (x=6)
+  const scG=document.createElement('a-entity'); scG.setAttribute('position','6 0 0');
+  scG.appendChild(makeStand('#3a4558'));
+  const scFrame=mkBox('0.1','3.4','3.0','#3a4558','0.55','0.45'); scFrame.setAttribute('position',`0 ${BEAM_Y} 0`); scG.appendChild(scFrame);
+  // Glow halo (behind screen, scales with I2)
+  const scGlow=document.createElement('a-plane'); scGlow.setAttribute('id','ar-screen-glow');
+  scGlow.setAttribute('width','3.8'); scGlow.setAttribute('height','4.2');
+  scGlow.setAttribute('rotation','0 90 0'); scGlow.setAttribute('position',`-0.1 ${BEAM_Y} 0`);
+  scGlow.setAttribute('material','color:#aaddff;transparent:true;opacity:0;side:double;');
+  scG.appendChild(scGlow);
+  // Screen panel
+  const scPanel=document.createElement('a-plane'); scPanel.setAttribute('id','ar-screen-panel');
+  scPanel.setAttribute('width','2.8'); scPanel.setAttribute('height','3.2');
+  scPanel.setAttribute('rotation','0 90 0'); scPanel.setAttribute('position',`0 ${BEAM_Y} 0`);
   scPanel.setAttribute('src','#ar-screen-cvs');
-  scPanel.setAttribute('material','src:#ar-screen-cvs;side:double;emissive:#111;emissive-intensity:0.4;');
-  scEnt.appendChild(scPanel); sg.appendChild(scEnt);
+  scPanel.setAttribute('material','src:#ar-screen-cvs;side:double;emissive:#aaddff;emissive-intensity:0;');
+  scG.appendChild(scPanel); sg.appendChild(scG);
 
-  // ── BEAMS ──
-  // Beam 0: light source → P1
-  const bm0 = document.createElement('a-cylinder'); bm0.setAttribute('id','ar-beam0');
-  bm0.setAttribute('rotation','0 0 90'); bm0.setAttribute('radius','0.014');
-  bm0.setAttribute('color','#fff5cc'); bm0.setAttribute('opacity','0.75'); bm0.setAttribute('transparent','true');
-  const bm0Len = P1_X - LS_X - 0.09;
-  bm0.setAttribute('height', bm0Len.toFixed(3));
-  bm0.setAttribute('position',`${LS_X + 0.09 + bm0Len/2} ${BEAM_Y} 0`); sg.appendChild(bm0);
-  const bm0g = document.createElement('a-cylinder');
-  bm0g.setAttribute('rotation','0 0 90'); bm0g.setAttribute('radius','0.048');
-  bm0g.setAttribute('color','#fff5cc'); bm0g.setAttribute('opacity','0.10'); bm0g.setAttribute('transparent','true');
-  bm0g.setAttribute('height', bm0Len.toFixed(3));
-  bm0g.setAttribute('position',`${LS_X + 0.09 + bm0Len/2} ${BEAM_Y} 0`); sg.appendChild(bm0g);
+  // Beams — all warm white in AR mode
+  function makeBeam(x1,x2,op){
+    const len=x2-x1, mid=(x1+x2)/2;
+    const b=document.createElement('a-cylinder'); b.setAttribute('rotation','0 0 90'); b.setAttribute('radius','0.10'); b.setAttribute('color','#fff5cc'); b.setAttribute('opacity',op.toFixed(2)); b.setAttribute('transparent','true'); b.setAttribute('height',len.toFixed(3)); b.setAttribute('position',`${mid} ${BEAM_Y} 0`); sg.appendChild(b);
+    const bg=document.createElement('a-cylinder'); bg.setAttribute('rotation','0 0 90'); bg.setAttribute('radius','0.35'); bg.setAttribute('color','#fff5cc'); bg.setAttribute('opacity',(op*0.18).toFixed(2)); bg.setAttribute('transparent','true'); bg.setAttribute('height',len.toFixed(3)); bg.setAttribute('position',`${mid} ${BEAM_Y} 0`); sg.appendChild(bg);
+  }
+  makeBeam(-6.4,-2.5,0.8);
+  makeBeam(-2.5, 2.5,0.8);
+  const bm2Len=6.0-2.5-0.05, bm2Mid=2.5+0.05+bm2Len/2;
+  const bm2=document.createElement('a-cylinder'); bm2.setAttribute('id','ar-beam2'); bm2.setAttribute('rotation','0 0 90'); bm2.setAttribute('radius','0.10'); bm2.setAttribute('color','#fff5cc'); bm2.setAttribute('opacity','0.75'); bm2.setAttribute('transparent','true'); bm2.setAttribute('height',bm2Len.toFixed(3)); bm2.setAttribute('position',`${bm2Mid} ${BEAM_Y} 0`); sg.appendChild(bm2);
+  const bm2g=document.createElement('a-cylinder'); bm2g.setAttribute('id','ar-beam2-glow'); bm2g.setAttribute('rotation','0 0 90'); bm2g.setAttribute('radius','0.35'); bm2g.setAttribute('color','#fff5cc'); bm2g.setAttribute('opacity','0.14'); bm2g.setAttribute('transparent','true'); bm2g.setAttribute('height',bm2Len.toFixed(3)); bm2g.setAttribute('position',`${bm2Mid} ${BEAM_Y} 0`); sg.appendChild(bm2g);
 
-  // Beam 1: P1 → P2 (amber, always 50%)
-  const bm1Len = P2_X - P1_X - 0.03;
-  const bm1 = document.createElement('a-cylinder'); bm1.setAttribute('id','ar-beam1');
-  bm1.setAttribute('rotation','0 0 90'); bm1.setAttribute('radius','0.014');
-  bm1.setAttribute('color','#ffc857'); bm1.setAttribute('opacity','0.70'); bm1.setAttribute('transparent','true');
-  bm1.setAttribute('height', bm1Len.toFixed(3));
-  bm1.setAttribute('position',`${P1_X + 0.015 + bm1Len/2} ${BEAM_Y} 0`); sg.appendChild(bm1);
-  const bm1g = document.createElement('a-cylinder');
-  bm1g.setAttribute('rotation','0 0 90'); bm1g.setAttribute('radius','0.048');
-  bm1g.setAttribute('color','#ffc857'); bm1g.setAttribute('opacity','0.10'); bm1g.setAttribute('transparent','true');
-  bm1g.setAttribute('height', bm1Len.toFixed(3));
-  bm1g.setAttribute('position',`${P1_X + 0.015 + bm1Len/2} ${BEAM_Y} 0`); sg.appendChild(bm1g);
-
-  // Beam 2: P2 → screen (blue, intensity-dependent)
-  const bm2Len = SC_X - P2_X - 0.02;
-  const bm2 = document.createElement('a-cylinder'); bm2.setAttribute('id','ar-beam2');
-  bm2.setAttribute('rotation','0 0 90'); bm2.setAttribute('radius','0.014');
-  bm2.setAttribute('color','#5bc8ff'); bm2.setAttribute('opacity','0.70'); bm2.setAttribute('transparent','true');
-  bm2.setAttribute('height', bm2Len.toFixed(3));
-  bm2.setAttribute('position',`${P2_X + 0.015 + bm2Len/2} ${BEAM_Y} 0`); sg.appendChild(bm2);
-  const bm2g = document.createElement('a-cylinder');
-  bm2g.setAttribute('id','ar-beam2-glow'); bm2g.setAttribute('rotation','0 0 90'); bm2g.setAttribute('radius','0.048');
-  bm2g.setAttribute('color','#5bc8ff'); bm2g.setAttribute('opacity','0.10'); bm2g.setAttribute('transparent','true');
-  bm2g.setAttribute('height', bm2Len.toFixed(3));
-  bm2g.setAttribute('position',`${P2_X + 0.015 + bm2Len/2} ${BEAM_Y} 0`); sg.appendChild(bm2g);
-
-  marker.appendChild(sg); sceneEl.appendChild(marker);
-  wrap.appendChild(sceneEl);
-  arScene = sceneEl;
-  arEntities = { p2Ring, beam2: bm2, beam2Glow: bm2g, screenPanel: scPanel, screenCvs, scaleGroup: sg };
-
+  marker.appendChild(sg); sceneEl.appendChild(marker); wrap.appendChild(sceneEl);
+  arScene=sceneEl;
+  arEntities={ p2Ring, beam2:bm2, beam2Glow:bm2g, screenPanel:scPanel, screenGlow:scGlow, screenCvs, scaleGroup:sg };
   syncAR();
-
-  wrap.addEventListener('touchstart', onARTouch, {passive:false});
-  wrap.addEventListener('touchmove',  onARTouchMove, {passive:false});
-  wrap.addEventListener('touchend',   onARTouchEnd, {passive:false});
+  wrap.addEventListener('touchstart',onARTouch,{passive:false});
+  wrap.addEventListener('touchmove',onARTouchMove,{passive:false});
+  wrap.addEventListener('touchend',onARTouchEnd,{passive:false});
 }
 
 function syncAR(){
   if(!arEntities.p2Ring) return;
-  // Rotate P2 ring around the beam axis (x-axis in local space = rotation around Z in A-Frame since Y is up)
-  arEntities.p2Ring.setAttribute('rotation', `0 90 ${S.theta}`);
-  // Beam 2 opacity scales with I2
-  const i2 = Ipct()/100;
-  const op = Math.max(0.04, i2 * 0.85).toFixed(2);
-  const opg = Math.max(0.02, i2 * 0.14).toFixed(2);
-  if(arEntities.beam2){ arEntities.beam2.setAttribute('opacity', op); arEntities.beam2.setAttribute('visible', i2>0.01 ? 'true':'false'); }
-  if(arEntities.beam2Glow){ arEntities.beam2Glow.setAttribute('opacity', opg); arEntities.beam2Glow.setAttribute('visible', i2>0.01 ? 'true':'false'); }
-  // Sync screen texture (brightness without percentage text — already handled in paintScreen)
+  arEntities.p2Ring.setAttribute('rotation',`${S.theta} 0 0`);
+  const i2=Ipct()/100;
+  const op=Math.max(0.04,i2*0.85).toFixed(2);
+  const opg=Math.max(0.02,i2*0.14).toFixed(2);
+  if(arEntities.beam2){ arEntities.beam2.setAttribute('opacity',op); arEntities.beam2.setAttribute('visible',i2>0.01?'true':'false'); }
+  if(arEntities.beam2Glow){ arEntities.beam2Glow.setAttribute('opacity',opg); arEntities.beam2Glow.setAttribute('visible',i2>0.01?'true':'false'); }
+  if(arEntities.screenPanel){
+    const ei=(i2*4.0).toFixed(2);
+    arEntities.screenPanel.setAttribute('material',`src:#ar-screen-cvs;side:double;emissive:#aaddff;emissive-intensity:${ei};`);
+  }
+  if(arEntities.screenGlow){
+    arEntities.screenGlow.setAttribute('material',`color:#aaddff;transparent:true;opacity:${(i2*0.85).toFixed(2)};side:double;`);
+  }
   syncARTexture();
-  // Update theta pill
-  const pill = document.getElementById('ar-theta-val');
-  if(pill) pill.textContent = `= ${S.theta.toFixed(0)}°`;
+  const pill=document.getElementById('ar-theta-val');
+  if(pill) pill.textContent=`= ${S.theta.toFixed(0)}°`;
+  const sAR=document.getElementById('sl-theta-ar');
+  if(sAR && parseInt(sAR.value)!==S.theta) sAR.value=S.theta;
+  const lAR=document.getElementById('lbl-theta-ar');
+  if(lAR) lAR.textContent=S.theta.toFixed(0)+'°';
 }
 
 function syncARTexture(){
@@ -866,6 +902,16 @@ function enterAR(){
   document.querySelectorAll('.ctrl-ar-hide').forEach(el=>el.style.display='none');
   showARStep(1);
   btnAR.textContent = '✕ Exit AR'; btnAR.classList.add('on');
+  arChallengeTarget = Math.round(Math.random()*50);
+  const tcEl=document.getElementById('ar-challenge-target');
+  if(tcEl) tcEl.textContent='Target I₂: '+arChallengeTarget+'%';
+  const rcEl=document.getElementById('ar-check-result');
+  if(rcEl){rcEl.textContent='';rcEl.style.display='none';}
+  const sAR=document.getElementById('sl-theta-ar');
+  if(sAR) sAR.value=0;
+  S.theta=0; document.getElementById('sl-theta').value=0;
+  document.getElementById('lbl-theta').textContent='0°';
+  fullUpdate();
 }
 
 function exitAR(){
