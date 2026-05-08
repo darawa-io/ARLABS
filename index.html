@@ -103,36 +103,6 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Central Placeholder UI */
-        .placeholder-glass {
-            background: rgba(18, 18, 18, 0.75);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(201, 160, 93, 0.3);
-            border-radius: 45px;
-            padding: 5rem 3rem;
-            width: 90%;
-            max-width: 480px;
-            text-align: center;
-            position: relative;
-            z-index: 10;
-            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
-        }
-
-        .central-icon {
-            width: 84px;
-            height: 84px;
-            background: rgba(201, 160, 93, 0.05);
-            border: 1px solid rgba(201, 160, 93, 0.6);
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 2.5rem;
-            color: var(--primary-gold);
-        }
-
-        /* "SCANNING ENVIRONMENT" Animated Overlay */
         .scanning-overlay {
             position: absolute;
             inset: 0;
@@ -170,7 +140,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Sim Frame FIX */
         .sim-frame-wrapper {
             position: absolute;
             top: 0;
@@ -194,32 +163,6 @@
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 20px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 100px;
-            margin-top: 2rem;
-        }
-
-        .pulse-dot {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #10b981;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
         }
 
         .action-button {
@@ -258,6 +201,53 @@
             color: white;
         }
 
+        .report-link {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .report-link:hover {
+            border-color: var(--primary-blue);
+            background: #f9fafb;
+            transform: translateX(4px);
+        }
+
+        .placeholder-glass {
+            background: rgba(18, 18, 18, 0.75);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(201, 160, 93, 0.3);
+            border-radius: 45px;
+            padding: 5rem 3rem;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
+        }
+
+        .central-icon {
+            width: 84px;
+            height: 84px;
+            background: rgba(201, 160, 93, 0.05);
+            border: 1px solid rgba(201, 160, 93, 0.6);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2.5rem;
+            color: var(--primary-gold);
+        }
+
         /* Marker Modal */
         #markerModal {
             position: fixed;
@@ -284,10 +274,12 @@
 </head>
 <body class="min-h-screen">
 
+    <!-- Navigation -->
     <nav class="container mx-auto px-8 py-8 flex justify-between items-center relative z-50">
         <div class="flex items-center gap-4">
             <div class="w-[60px] h-[60px]">
-                <img src="https://darawa-io.github.io/ARLABS/logo1.png" alt="Logo" class="w-full h-full object-contain mix-blend-mode-multiply" onerror="this.src='https://via.placeholder.com/60'">
+                <!-- Updated logo path to assets/ -->
+                <img src="assets/logo1.png" alt="Logo" class="w-full h-full object-contain mix-blend-mode-multiply" onerror="this.src='https://via.placeholder.com/60'">
             </div>
             <div class="flex flex-col">
                 <span class="font-black text-xl text-[#0A4A7F] tracking-tighter">DARAWA</span>
@@ -302,6 +294,7 @@
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <section class="hero-section container mx-auto px-8 mb-12">
         <div class="relative z-30 max-w-3xl">
             <h1 class="fluid-hero-title font-extrabold text-[#0A4A7F] mb-6">
@@ -314,29 +307,33 @@
             </p>
         </div>
         <div class="hero-image-underlay">
-            <img src="https://darawa-io.github.io/ARLABS/hero.png" alt="Physics" onerror="this.style.display='none'">
+            <!-- Updated hero image path to assets/ -->
+            <img src="assets/hero.png" alt="Physics" onerror="this.style.display='none'">
         </div>
     </section>
 
+    <!-- Main Content -->
     <main class="container mx-auto px-8 pb-32">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-10">
             
-            <!-- Sidebar -->
+            <!-- Sidebar Selection -->
             <div class="grid grid-cols-1 gap-6 h-fit">
-                <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html')">
-                    <img src="https://darawa-io.github.io/ARLABS/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
+                <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html', ['Lenses_Lab_Report.pdf'])">
+                    <!-- Updated thumbnail path to assets/ -->
+                    <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
                 </div>
-                <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html')">
-                    <img src="https://darawa-io.github.io/ARLABS/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
+                <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html', ['Single_Slit_Report.pdf', 'Double_Slit_Report.pdf', 'Diffraction_Grating_Report.pdf'])">
+                    <!-- Updated thumbnail path to assets/ -->
+                    <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
                 </div>
-                <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html')">
-                    <img src="https://darawa-io.github.io/ARLABS/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
+                <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html', ['Polarization_Lab_Report.pdf'])">
+                    <!-- Updated thumbnail path to assets/ -->
+                    <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
                 </div>
                 
-                <!-- AR Toolkit Sidebar item -->
                 <div class="bg-[#0A4A7F]/5 border border-[#0A4A7F]/10 p-6 rounded-3xl mt-4">
                     <h4 class="text-[10px] font-black tracking-widest text-[#0A4A7F] uppercase mb-3">AR Assets</h4>
                     <button onclick="toggleMarkerModal(true)" class="w-full py-3 px-4 bg-white border border-[#C9A05D] text-[#C9A05D] text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#C9A05D] hover:text-white transition-all flex items-center justify-center gap-2">
@@ -346,16 +343,12 @@
                 </div>
             </div>
 
-            <!-- Workspace -->
+            <!-- Simulation Workspace -->
             <div class="lg:col-span-3">
                 <div class="bg-white rounded-[50px] p-3 shadow-2xl">
                     <div id="simContainer">
                         <div class="scanning-overlay">
-                            <div class="scanning-circle">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="white" class="opacity-40">
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                            </div>
+                            <div class="scanning-circle"></div>
                             <span class="scanning-text">Scanning Environment</span>
                         </div>
 
@@ -370,27 +363,35 @@
                             <p class="text-white/60 text-sm font-medium leading-relaxed max-w-[320px] mx-auto">
                                 Initialize your virtual laboratory by selecting an experiment from the gallery to begin.
                             </p>
-                            <div class="status-pill">
-                                <div class="pulse-dot"></div>
-                                <span class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">System Ready</span>
-                            </div>
                         </div>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row justify-between items-center px-8 md:px-12 py-8 bg-gray-50/50 rounded-b-[45px] gap-6">
-                        <div>
-                            <h3 id="workspaceTitle" class="text-2xl font-black text-[#0A4A7F] tracking-tight">WORKSPACE</h3>
-                            <p id="workspaceStatus" class="text-[11px] font-bold text-[#C9A05D] tracking-widest uppercase mt-2">Status: Standby</p>
-                        </div>
-                        <div class="flex gap-4">
-                            <button onclick="toggleMarkerModal(true)" class="secondary-button">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                Marker
-                            </button>
-                            <button id="openTabBtn" onclick="openSimulationInTab()" class="hidden action-button">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                                Fullscreen
-                            </button>
+                    <!-- Footer Control Bar -->
+                    <div class="px-8 md:px-12 py-10 bg-gray-50/50 rounded-b-[45px]">
+                        <div class="flex flex-col lg:flex-row justify-between items-start gap-8">
+                            <div class="flex-1">
+                                <h3 id="workspaceTitle" class="text-2xl font-black text-[#0A4A7F] tracking-tight">WORKSPACE</h3>
+                                <p id="workspaceStatus" class="text-[11px] font-bold text-[#C9A05D] tracking-widest uppercase mt-2">Status: Standby</p>
+                                
+                                <!-- Dynamic Resources Panel -->
+                                <div id="labResources" class="hidden mt-6">
+                                    <h4 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3">Lab Reports & Resources</h4>
+                                    <div id="reportLinks" class="flex flex-wrap gap-3">
+                                        <!-- Dynamic links populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-4 self-end lg:self-center">
+                                <button onclick="toggleMarkerModal(true)" class="secondary-button">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Marker
+                                </button>
+                                <button id="openTabBtn" onclick="openSimulationInTab()" class="hidden action-button">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                    Fullscreen
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -398,69 +399,82 @@
         </div>
     </main>
 
-    <!-- Marker Modal -->
+    <!-- AR Marker Modal -->
     <div id="markerModal">
-        <div class="modal-content shadow-2xl border border-[#C9A05D]/20">
+        <div class="modal-content shadow-2xl">
             <button onclick="toggleMarkerModal(false)" class="absolute top-6 right-6 text-gray-400 hover:text-black">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
-            <h3 class="text-[#0A4A7F] text-xl font-black uppercase tracking-widest mb-2">AR Hiro Marker</h3>
-            <p class="text-xs text-gray-500 font-bold tracking-wider mb-8 uppercase">Essential for Augmented Reality Mode</p>
-            
+            <h3 class="text-[#0A4A7F] text-xl font-black uppercase mb-8">AR Hiro Marker</h3>
             <div class="bg-gray-100 p-6 rounded-3xl mb-8 flex justify-center">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png" alt="Hiro Marker" class="w-48 h-48 border-8 border-white shadow-lg">
+                <!-- Marker image often stays external but updated here to assets/ just in case -->
+                <img src="assets/hiro_marker.png" class="w-48 h-48 border-8 border-white shadow-lg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png'">
             </div>
-
-            <div class="grid grid-cols-1 gap-4 mb-8">
-                <div class="flex items-start gap-4 text-left p-4 bg-gray-50 rounded-2xl">
-                    <span class="bg-[#C9A05D] text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
-                    <p class="text-[11px] text-gray-600 leading-relaxed font-medium">Download and print this marker, or display it on a second device (phone/tablet).</p>
-                </div>
-                <div class="flex items-start gap-4 text-left p-4 bg-gray-50 rounded-2xl">
-                    <span class="bg-[#C9A05D] text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
-                    <p class="text-[11px] text-gray-600 leading-relaxed font-medium">Inside the simulation, click the <strong class="text-[#0A4A7F]">AR Button</strong> and allow camera access.</p>
-                </div>
-            </div>
-
-            <a href="https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png" target="_blank" download="hiro-marker.png" class="w-full py-4 bg-[#0A4A7F] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:shadow-xl transition-all inline-block">
+            <p class="text-[11px] text-gray-500 font-medium mb-8 leading-relaxed">Print this marker or display it on another device to use the AR features within the simulations.</p>
+            <a href="assets/hiro_marker.png" target="_blank" download="hiro-marker.png" class="w-full py-4 bg-[#0A4A7F] text-white text-[11px] font-black uppercase tracking-widest rounded-2xl inline-block">
                 Download High-Res Marker
             </a>
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="bg-[#0A4A7F] py-24 text-white">
         <div class="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center">
             <div>
                 <p class="font-black text-3xl tracking-tighter">DARAWA</p>
                 <p class="arabic-text text-4xl text-[#C9A05D] mt-3">ربط اللغة والفيزياء</p>
             </div>
-            <div class="mt-12 md:mt-0 text-right">
-                <p class="text-[11px] font-bold opacity-30 uppercase tracking-[0.3em]">© 2024 DARWA LAB UAE</p>
-            </div>
+            <p class="text-[11px] font-bold opacity-30 uppercase tracking-[0.3em] mt-12 md:mt-0">© 2024 DARWA LAB UAE</p>
         </div>
     </footer>
 
     <script>
         let currentSimUrl = "";
 
-        function loadSimulation(title, url) {
+        /**
+         * Loads simulation and populates report links
+         */
+        function loadSimulation(title, url, reports = []) {
             const container = document.getElementById('simContainer');
             const workspaceTitle = document.getElementById('workspaceTitle');
             const workspaceStatus = document.getElementById('workspaceStatus');
             const openTabBtn = document.getElementById('openTabBtn');
+            const labResources = document.getElementById('labResources');
+            const reportLinks = document.getElementById('reportLinks');
             
             workspaceTitle.innerText = title.toUpperCase();
             workspaceStatus.innerText = "Status: Module Active";
             currentSimUrl = url;
 
+            // Update Simulation Frame
             const oldFrame = container.querySelector('.sim-frame-wrapper');
             if (oldFrame) oldFrame.remove();
-
+            
             const frameWrapper = document.createElement('div');
             frameWrapper.className = 'sim-frame-wrapper';
             frameWrapper.innerHTML = `<iframe src="${url}" class="scaled-iframe" allowfullscreen></iframe>`;
-            
             container.appendChild(frameWrapper);
+            
+            // Populate Dynamic Lab Reports
+            reportLinks.innerHTML = "";
+            if (reports.length > 0) {
+                labResources.classList.remove('hidden');
+                reports.forEach(reportName => {
+                    const cleanName = reportName.replace(/_/g, ' ').replace('.pdf', '');
+                    const link = document.createElement('a');
+                    link.href = `reports/${reportName}`;
+                    link.className = 'report-link';
+                    link.target = "_blank";
+                    link.innerHTML = `
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                        ${cleanName}
+                    `;
+                    reportLinks.appendChild(link);
+                });
+            } else {
+                labResources.classList.add('hidden');
+            }
+
             openTabBtn.classList.remove('hidden');
         }
 
@@ -469,16 +483,13 @@
         }
 
         function toggleMarkerModal(show) {
-            const modal = document.getElementById('markerModal');
-            modal.style.display = show ? 'flex' : 'none';
+            document.getElementById('markerModal').style.display = show ? 'flex' : 'none';
         }
 
-        // Close modal on outside click
+        // Close on outside click
         window.onclick = function(event) {
             const modal = document.getElementById('markerModal');
-            if (event.target == modal) {
-                toggleMarkerModal(false);
-            }
+            if (event.target == modal) toggleMarkerModal(false);
         }
     </script>
 </body>
