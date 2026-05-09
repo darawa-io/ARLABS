@@ -1,0 +1,309 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  onSnapshot 
+} from 'firebase/firestore';
+
+// --- Initialization ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'double-slit-lab-01';
+
+// --- Interference Simulation Component ---
+const DoubleSlitSim = ({ wavelength, d, onCapture }) => {
+  const canvasRef = useRef(null);
+
+  const drawPattern = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Deep space background
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, w, h);
+
+    // Scaling factors for visible measuring
+    const L = 5; 
+    const visualScale = 300; 
+    const d_m = d * 1e-3;
+    const lambda_m = wavelength * 1e-9;
+
+    // Draw the intensity across the x-axis
+    for (let x = 0; x < w; x++) {
+      const screenPos = (x - w / 2) / visualScale;
+      const theta = Math.atan(screenPos / L);
+      const phase = (2 * Math.PI * d_m * Math.sin(theta)) / lambda_m;
+      const intensity = Math.pow(Math.cos(phase / 2), 2);
+      
+      let color;
+      if (wavelength >= 620) color = `rgba(255, 50, 50, ${intensity})`;
+      else if (wavelength >= 500) color = `rgba(34, 211, 238, ${intensity})`;
+      else color = `rgba(99, 102, 241, ${intensity})`;
+
+      ctx.fillStyle = color;
+      ctx.fillRect(x, 0, 1, h);
+    }
+
+    // Measurement Overlay (The Ruler)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+
+    for (let i = 0; i <= w; i += 50) {
+      ctx.beginPath();
+      ctx.moveTo(i, h - 10);
+      ctx.lineTo(i, h);
+      ctx.stroke();
+      if (i % 100 === 0) {
+        ctx.fillText(`${(i - w / 2) / 10}cm`, i, h - 15);
+      }
+    }
+  };
+
+  useEffect(() => {
+    drawPattern();
+  }, [wavelength, d]);
+
+  return (
+    <div className="w-full space-y-4">
+      <div className="bg-slate-900 p-4 rounded-3xl border-4 border-slate-800 shadow-xl relative overflow-hidden">
+        <canvas ref={canvasRef} width={800} height={160} className="w-full rounded-lg" />
+      </div>
+      <button 
+        onClick={() => onCapture(canvasRef.current.toDataURL())}
+        className="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95"
+      >
+        📸 SNAPSHOT FOR REPORT
+      </button>
+    </div>
+  );
+};
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [view, setView] = useState('student');
+  const [submissions, setSubmissions] = useState([]);
+  const [selectedSub, setSelectedSub] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const [simLambda, setSimLambda] = useState(450);
+  const [simD, setSimD] = useState(0.1);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    id: '',
+    capture: null,
+    trials: [
+      { id: 1, d: 0.1, l: 450, dy: '', notes: 'Blue' },
+      { id: 2, d: 0.1, l: 650, dy: '', notes: 'Red' },
+      { id: 3, d: 0.3, l: 650, dy: '', notes: 'Red - Increased d' }
+    ],
+    q1: '',
+    q2: ''
+  });
+
+  useEffect(() => {
+    const initAuth = async () => {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+    };
+    initAuth();
+    onAuthStateChanged(auth, setUser);
+  }, []);
+
+  useEffect(() => {
+    if (!user || view !== 'admin') return;
+    const q = collection(db, 'artifacts', appId, 'public', 'data', 'submissions');
+    return onSnapshot(q, (snap) => {
+      setSubmissions(snap.docs.map(doc => ({ ...doc.data(), docId: doc.id })));
+    });
+  }, [user, view]);
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.id) {
+      alert("Name and ID are required.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'submissions'), {
+        ...formData,
+        timestamp: new Date().toISOString()
+      });
+      setSuccess(true);
+    } catch (err) {
+      alert("Submission failed.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (view === 'admin') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex font-sans">
+        <aside className="w-80 bg-white border-r flex flex-col">
+          <div className="p-6 border-b flex justify-between items-center">
+            <h2 className="font-black text-cyan-600">INSTRUCTOR</h2>
+            <button onClick={() => setView('student')} className="text-[10px] font-bold text-slate-400">EXIT</button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {submissions.map(s => (
+              <button key={s.docId} onClick={() => setSelectedSub(s)} className={`w-full p-6 text-left border-b ${selectedSub?.docId === s.docId ? 'bg-cyan-50' : ''}`}>
+                <div className="font-bold">{s.name}</div>
+                <div className="text-xs text-slate-400">{s.id}</div>
+              </button>
+            ))}
+          </div>
+        </aside>
+        <main className="flex-1 p-12 overflow-y-auto">
+          {selectedSub ? (
+            <div className="max-w-3xl mx-auto bg-white p-12 rounded-[2rem] shadow-xl space-y-8">
+              <div className="border-b pb-6">
+                <h1 className="text-3xl font-black">{selectedSub.name}</h1>
+                <p className="text-cyan-600 font-mono font-bold">{selectedSub.id}</p>
+              </div>
+              {selectedSub.capture && <img src={selectedSub.capture} className="w-full rounded-2xl border-4 border-slate-900 bg-slate-900" />}
+              <div className="space-y-4">
+                <h3 className="font-bold uppercase text-[10px] tracking-widest text-slate-400">Analysis Answers</h3>
+                <div className="p-4 bg-slate-50 rounded-xl italic">"{selectedSub.q1}"</div>
+                <div className="p-4 bg-slate-50 rounded-xl italic">"{selectedSub.q2}"</div>
+              </div>
+            </div>
+          ) : <div className="h-full flex items-center justify-center text-slate-200 text-4xl font-black">SELECT REPORT</div>}
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 md:p-10 font-sans pb-40">
+      <header className="flex justify-between items-center mb-12">
+        <h1 className="text-4xl font-black tracking-tighter uppercase italic text-slate-900">DARAWA<span className="text-cyan-600">PHYSICS</span></h1>
+        <button onClick={() => setView('admin')} className="text-[10px] font-bold text-slate-300 border px-3 py-1 rounded-full uppercase">Admin</button>
+      </header>
+
+      {success ? (
+        <div className="bg-slate-900 p-20 rounded-[3rem] text-center text-white shadow-2xl">
+          <div className="text-6xl mb-4">🚀</div>
+          <h2 className="text-2xl font-black uppercase">Report Sent</h2>
+          <button onClick={() => setSuccess(false)} className="mt-8 bg-cyan-600 px-8 py-3 rounded-full font-bold">New Lab</button>
+        </div>
+      ) : (
+        <div className="space-y-12">
+          {/* Identity Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-8 rounded-3xl border border-slate-100">
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Full Name</label>
+              <input type="text" className="w-full p-4 rounded-xl border-0 shadow-sm focus:ring-2 focus:ring-cyan-500 font-bold" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Student ID</label>
+              <input type="text" className="w-full p-4 rounded-xl border-0 shadow-sm focus:ring-2 focus:ring-cyan-500 font-bold" value={formData.id} onChange={e => setFormData({...formData, id: e.target.value})} />
+            </div>
+          </div>
+
+          {/* Virtual Sim */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-black flex items-center gap-3">
+              <span className="w-8 h-8 bg-cyan-600 text-white rounded-lg flex items-center justify-center text-sm">1</span> 
+              VIRTUAL LAB
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <DoubleSlitSim wavelength={simLambda} d={simD} onCapture={(img) => setFormData({...formData, capture: img})} />
+              </div>
+              <div className="bg-slate-900 p-8 rounded-[2rem] text-white flex flex-col justify-center space-y-8">
+                <div>
+                  <div className="flex justify-between text-[10px] uppercase font-black text-cyan-400 mb-2">Wavelength: <span>{simLambda}nm</span></div>
+                  <input type="range" min="400" max="700" step="50" value={simLambda} onChange={e => setSimLambda(parseInt(e.target.value))} className="w-full" />
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] uppercase font-black text-cyan-400 mb-2">Slit Distance: <span>{simD}mm</span></div>
+                  <input type="range" min="0.1" max="0.5" step="0.05" value={simD} onChange={e => setSimD(parseFloat(e.target.value))} className="w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Table */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-black flex items-center gap-3">
+              <span className="w-8 h-8 bg-cyan-600 text-white rounded-lg flex items-center justify-center text-sm">2</span> 
+              DATA TABLE
+            </h2>
+            <div className="border-4 border-slate-50 rounded-[2rem] overflow-hidden shadow-xl">
+              <table className="w-full text-left">
+                <thead className="bg-slate-900 text-slate-500 text-[10px] font-black uppercase">
+                  <tr>
+                    <th className="p-6">Trial</th>
+                    <th className="p-6">Wavelength</th>
+                    <th className="p-6">Slit d</th>
+                    <th className="p-6">Fringe Δy</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {formData.trials.map((t, idx) => (
+                    <tr key={t.id} className="border-b last:border-0">
+                      <td className="p-6 font-black text-slate-300">{t.id}</td>
+                      <td className="p-6 font-bold">{t.l}nm</td>
+                      <td className="p-6 font-bold">{t.d}mm</td>
+                      <td className="p-6">
+                        <input className="bg-slate-50 p-3 rounded-xl w-full focus:ring-2 focus:ring-cyan-500 font-bold text-cyan-600" value={t.dy} onChange={e => {
+                          const nt = [...formData.trials]; nt[idx].dy = e.target.value; setFormData({...formData, trials: nt});
+                        }} placeholder="Measure cm" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Questions */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-black flex items-center gap-3">
+              <span className="w-8 h-8 bg-cyan-600 text-white rounded-lg flex items-center justify-center text-sm">3</span> 
+              ANALYSIS
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-slate-50 p-8 rounded-3xl space-y-3">
+                <p className="font-bold text-slate-700">Which color (Blue vs Red) produces a wider fringe? Why?</p>
+                <textarea className="w-full p-4 rounded-xl border-0 shadow-inner min-h-[100px]" value={formData.q1} onChange={e => setFormData({...formData, q1: e.target.value})} />
+              </div>
+              <div className="bg-slate-50 p-8 rounded-3xl space-y-3">
+                <p className="font-bold text-slate-700">What happens when slit distance d is increased?</p>
+                <textarea className="w-full p-4 rounded-xl border-0 shadow-inner min-h-[100px]" value={formData.q2} onChange={e => setFormData({...formData, q2: e.target.value})} />
+              </div>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleSubmit} 
+            disabled={submitting} 
+            className="w-full bg-slate-900 text-white py-10 rounded-[2.5rem] font-black text-2xl uppercase tracking-tighter hover:bg-cyan-600 transition-all active:scale-95 shadow-2xl disabled:opacity-50"
+          >
+            {submitting ? 'TRANSMITTING...' : 'SUBMIT LAB REPORT'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
