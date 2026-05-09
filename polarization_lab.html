@@ -449,18 +449,24 @@ function paintScreen(){
     const r = Math.min(200, 40 + 170*i);
     const g = Math.min(210, 50 + 170*i);
     const b = Math.min(240, 60 + 180*i);
-    const rad = Math.min(180, Math.max(18, 75*i + 12));
+    // Screen panel is 2.8 wide x 3.2 tall in world units, texture is 512x512.
+    // Constrain spot to fit well inside — max radius ~20% of canvas at full intensity
+    const spotRad = Math.min(80, Math.max(10, 28*i + 8));
     
-    const outer = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, rad*1.5);
-    outer.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${Math.min(0.6, i*0.65+0.05)})`);
+    // Outer halo — faint, only slightly larger than core
+    const outer = ctx.createRadialGradient(W/2, H/2, spotRad*0.3, W/2, H/2, spotRad*1.8);
+    outer.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${Math.min(0.3, i*0.35)})`);
     outer.addColorStop(1, `rgba(0,0,0,0)`);
     ctx.fillStyle = outer;
     ctx.fillRect(0,0,W,H);
     
-    const core = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, rad);
-    core.addColorStop(0, `rgba(210, 235, 255, ${Math.min(0.9, i*1.25+0.08)})`);
-    core.addColorStop(0.7, `rgba(${r+35}, ${g+30}, 255, ${i*0.7})`);
-    core.addColorStop(1, `rgba(0,0,0,0)`);
+    // Bright core — very tight, strong center falloff
+    const core = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, spotRad);
+    core.addColorStop(0,    `rgba(240, 248, 255, ${Math.min(0.99, i*1.5+0.15)})`);
+    core.addColorStop(0.15, `rgba(220, 240, 255, ${Math.min(0.95, i*1.3+0.1)})`);
+    core.addColorStop(0.4,  `rgba(${r+30}, ${g+25}, 255, ${i*0.75})`);
+    core.addColorStop(0.7,  `rgba(${r}, ${g}, ${b}, ${i*0.2})`);
+    core.addColorStop(1,    `rgba(0,0,0,0)`);
     ctx.fillStyle = core;
     ctx.fillRect(0,0,W,H);
   }
@@ -476,7 +482,7 @@ screenPanel.rotation.y = Math.PI/2; screenPanel.position.set(6, 0.5, 0);
 const screenFrame = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3.4, 3.0), new THREE.MeshStandardMaterial({color: 0x3a4558, metalness: 0.55}));
 screenFrame.position.set(6, 0.5, 0);
 root3.add(screenPanel); root3.add(screenFrame);
-const screenLight = new THREE.PointLight(0x5bc8ff, 0, 7);
+const screenLight = new THREE.PointLight(0x5bc8ff, 0, 3);
 screenLight.position.set(5.6, 0.5, 0.2);
 root3.add(screenLight);
 
@@ -495,7 +501,7 @@ function fullUpdate(){
   updateBeams();
   paintScreen();
   const iNorm = Ipct()/100;
-  screenLight.intensity = iNorm * 5.5;
+  screenLight.intensity = iNorm * 2.0;
   screenMat.emissiveIntensity = 0.25 + iNorm * 1.8;
   updateHUD();
   if(arMode) syncAR();
@@ -740,12 +746,15 @@ function buildARScene(){
 
   // buildPolRing: identical proportions to desktop buildPolarizer
   function buildPolRing(parent, frameColHex, axisColHex){
-    // Torus: radius=1.1, tube=0.12 — exact desktop match
-    const torus=document.createElement('a-torus');
-    torus.setAttribute('radius','1.1'); torus.setAttribute('tube','0.12');
-    torus.setAttribute('segments-tubular','48'); torus.setAttribute('rotation','0 90 0');
-    torus.setAttribute('color','#667788'); torus.setAttribute('metalness','0.8');
-    parent.appendChild(torus);
+    // Torus: thin ring hugging the disc (disc radius=1.05)
+    const torus = document.createElement('a-torus');
+torus.setAttribute('radius', '1.07');
+torus.setAttribute('radius-tubular', '0.05');   // ✅ correct name
+torus.setAttribute('segments-tubular', '24');
+torus.setAttribute('rotation', '0 90 0');
+torus.setAttribute('color', '#667788');
+torus.setAttribute('metalness', '0.8');
+parent.appendChild(torus);
     // Disc
     const disc=document.createElement('a-circle');
     disc.setAttribute('radius','1.05'); disc.setAttribute('rotation','0 90 0');
@@ -808,8 +817,8 @@ function buildARScene(){
   const scFrame=mkBox('0.1','3.4','3.0','#3a4558','0.55','0.45'); scFrame.setAttribute('position',`0 ${BEAM_Y} 0`); scG.appendChild(scFrame);
   // Glow halo (behind screen, scales with I2)
   const scGlow=document.createElement('a-plane'); scGlow.setAttribute('id','ar-screen-glow');
-  scGlow.setAttribute('width','3.8'); scGlow.setAttribute('height','4.2');
-  scGlow.setAttribute('rotation','0 90 0'); scGlow.setAttribute('position',`-0.1 ${BEAM_Y} 0`);
+  scGlow.setAttribute('width','2.8'); scGlow.setAttribute('height','3.2');
+  scGlow.setAttribute('rotation','0 90 0'); scGlow.setAttribute('position',`-0.05 ${BEAM_Y} 0`);
   scGlow.setAttribute('material','color:#aaddff;transparent:true;opacity:0;side:double;');
   scG.appendChild(scGlow);
   // Screen panel
@@ -850,11 +859,11 @@ function syncAR(){
   if(arEntities.beam2){ arEntities.beam2.setAttribute('opacity',op); arEntities.beam2.setAttribute('visible',i2>0.01?'true':'false'); }
   if(arEntities.beam2Glow){ arEntities.beam2Glow.setAttribute('opacity',opg); arEntities.beam2Glow.setAttribute('visible',i2>0.01?'true':'false'); }
   if(arEntities.screenPanel){
-    const ei=(i2*4.0).toFixed(2);
+    const ei=(i2*1.5).toFixed(2);
     arEntities.screenPanel.setAttribute('material',`src:#ar-screen-cvs;side:double;emissive:#aaddff;emissive-intensity:${ei};`);
   }
   if(arEntities.screenGlow){
-    arEntities.screenGlow.setAttribute('material',`color:#aaddff;transparent:true;opacity:${(i2*0.85).toFixed(2)};side:double;`);
+arEntities.screenGlow.setAttribute('material',`color:#aaddff;transparent:true;opacity:${(i2*0.85).toFixed(2)};side:double;blending:additive;`);
   }
   syncARTexture();
   const pill=document.getElementById('ar-theta-val');
