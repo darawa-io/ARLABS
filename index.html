@@ -69,6 +69,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             cursor: pointer;
             position: relative;
+            margin-bottom: 1rem;
         }
 
         .gallery-card:hover {
@@ -85,35 +86,51 @@
             margin-bottom: 0.75rem;
         }
 
-        /* Counter Badge */
-        .visit-counter {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: var(--primary-blue);
-            color: white;
-            font-size: 8px;
-            font-weight: 900;
-            padding: 2px 6px;
-            border-radius: 6px;
-            opacity: 0.8;
-        }
-
-        /* Category Header */
+        /* Category Header & Collapsible Logic */
         .category-header {
             font-size: 10px;
             font-weight: 900;
             letter-spacing: 0.2em;
             color: var(--primary-gold);
             text-transform: uppercase;
-            padding: 0.5rem 0;
+            padding: 0.75rem 0;
             border-bottom: 1px solid rgba(201, 160, 93, 0.2);
-            margin-bottom: 0.5rem;
             margin-top: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: color 0.3s;
+        }
+
+        .category-header:hover {
+            color: var(--primary-blue);
         }
 
         .category-header:first-child {
             margin-top: 0;
+        }
+
+        .category-content {
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+            max-height: 1000px; /* Large enough to fit cards */
+            opacity: 1;
+            padding-top: 1rem;
+        }
+
+        .category-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+        }
+
+        .chevron-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .collapsed .chevron-icon {
+            transform: rotate(-90deg);
         }
 
         /* WORKSPACE CONTAINER */
@@ -347,39 +364,46 @@
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-10">
             
             <!-- Sidebar Selection -->
-            <div class="grid grid-cols-1 gap-6 h-fit">
+            <div class="grid grid-cols-1 gap-0 h-fit">
                 
                 <!-- Optics Category -->
-                <div class="category-header">Optics Simulations</div>
-                
-                <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html', ['Lenses_Lab_Report.pdf'])">
-                    <span class="visit-counter" id="count-lenses">0</span>
-                    <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
-                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
+                <div class="category-header" onclick="toggleCategory('optics-content')">
+                    <span>Optics Simulations</span>
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
                 
-                <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html', ['Single_Slit_Report.pdf', 'Double_Slit_Report.pdf', 'Diffraction_Grating_Report.pdf'])">
-                    <span class="visit-counter" id="count-diffraction">0</span>
-                    <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
-                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
-                </div>
-                
-                <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html', ['Polarization_Lab_Report.pdf'])">
-                    <span class="visit-counter" id="count-polarization">0</span>
-                    <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
-                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
+                <div id="optics-content" class="category-content">
+                    <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html', ['Lenses_Lab_Report.pdf'])">
+                        <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
+                    </div>
+                    
+                    <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html', ['Single_Slit_Report.pdf', 'Double_Slit_Report.pdf', 'Diffraction_Grating_Report.pdf'])">
+                        <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
+                    </div>
+                    
+                    <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html', ['Polarization_Lab_Report.pdf'])">
+                        <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
+                    </div>
                 </div>
 
                 <!-- Electricity Category -->
-                <div class="category-header">Electricity & Magnetism</div>
-                
-                <div class="gallery-card" onclick="loadSimulation('Circuits Lab', 'https://darawa-io.github.io/ARLABS/circuit_lab.html', [])">
-                    <span class="visit-counter" id="count-circuits">0</span>
-                    <img src="assets/Circuits.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits+Lab'">
-                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Circuits Lab</span>
+                <div class="category-header" onclick="toggleCategory('elec-content')">
+                    <span>Electricity & Magnetism</span>
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
                 
-                <div class="bg-[#0A4A7F]/5 border border-[#0A4A7F]/10 p-6 rounded-3xl mt-4">
+                <div id="elec-content" class="category-content">
+                    <div class="gallery-card" onclick="loadSimulation('Circuits Lab', 'https://darawa-io.github.io/ARLABS/circuit_lab.html', [])">
+                        <img src="assets/Circuits.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits+Lab'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Circuits Lab</span>
+                    </div>
+                </div>
+                
+                <!-- Assets Fixed Section -->
+                <div class="bg-[#0A4A7F]/5 border border-[#0A4A7F]/10 p-6 rounded-3xl mt-6">
                     <h4 class="text-[10px] font-black tracking-widest text-[#0A4A7F] uppercase mb-3">AR Assets</h4>
                     <button onclick="toggleMarkerModal(true)" class="w-full py-3 px-4 bg-white border border-[#C9A05D] text-[#C9A05D] text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#C9A05D] hover:text-white transition-all flex items-center justify-center gap-2">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -475,14 +499,17 @@
     <script>
         let currentSimUrl = "";
 
-        // Function to initialize and display counters
-        function updateCountersUI() {
-            const simulations = ['lenses', 'diffraction', 'polarization', 'circuits'];
-            simulations.forEach(sim => {
-                const count = localStorage.getItem(`count_${sim}`) || 0;
-                const element = document.getElementById(`count-${sim}`);
-                if (element) element.innerText = count;
-            });
+        function toggleCategory(id) {
+            const content = document.getElementById(id);
+            const header = content.previousElementSibling;
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                header.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                header.classList.add('collapsed');
+            }
         }
 
         function loadSimulation(title, url, reports = []) {
@@ -496,12 +523,6 @@
             workspaceTitle.innerText = title.toUpperCase();
             workspaceStatus.innerText = "Status: Module Active";
             currentSimUrl = url;
-
-            // Increment Counter
-            const simKey = title.toLowerCase().split(' ')[0]; // matches 'lenses', 'diffraction', etc.
-            let currentCount = parseInt(localStorage.getItem(`count_${simKey}`) || 0);
-            localStorage.setItem(`count_${simKey}`, currentCount + 1);
-            updateCountersUI();
 
             const oldFrame = container.querySelector('.sim-frame-wrapper');
             if (oldFrame) oldFrame.remove();
@@ -545,9 +566,6 @@
             const modal = document.getElementById('markerModal');
             if (event.target == modal) toggleMarkerModal(false);
         }
-
-        // Initialize UI on load
-        window.onload = updateCountersUI;
     </script>
 </body>
 </html>
