@@ -278,7 +278,6 @@
     <nav class="container mx-auto px-8 py-8 flex justify-between items-center relative z-50">
         <div class="flex items-center gap-4">
             <div class="w-[60px] h-[60px]">
-                <!-- Updated logo path to assets/ -->
                 <img src="assets/logo1.png" alt="Logo" class="w-full h-full object-contain mix-blend-mode-multiply" onerror="this.src='https://via.placeholder.com/60'">
             </div>
             <div class="flex flex-col">
@@ -307,7 +306,6 @@
             </p>
         </div>
         <div class="hero-image-underlay">
-            <!-- Updated hero image path to assets/ -->
             <img src="assets/hero.png" alt="Physics" onerror="this.style.display='none'">
         </div>
     </section>
@@ -318,18 +316,21 @@
             
             <!-- Sidebar Selection -->
             <div class="grid grid-cols-1 gap-6 h-fit">
+                <!-- Circuits Lab (Updated URL to circuit_lab.html) -->
+                <div class="gallery-card" onclick="loadSimulation('Circuits Lab', 'https://darawa-io.github.io/ARLABS/circuit_lab.html', ['Ohm_Law_Report.pdf', 'Series_Parallel_Report.pdf'])">
+                    <img src="assets/Circuits.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits'">
+                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Circuits Lab</span>
+                </div>
+
                 <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html', ['Lenses_Lab_Report.pdf'])">
-                    <!-- Updated thumbnail path to assets/ -->
                     <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
                 </div>
                 <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html', ['Single_Slit_Report.pdf', 'Double_Slit_Report.pdf', 'Diffraction_Grating_Report.pdf'])">
-                    <!-- Updated thumbnail path to assets/ -->
                     <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
                 </div>
                 <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html', ['Polarization_Lab_Report.pdf'])">
-                    <!-- Updated thumbnail path to assets/ -->
                     <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
                 </div>
@@ -407,7 +408,6 @@
             </button>
             <h3 class="text-[#0A4A7F] text-xl font-black uppercase mb-8">AR Hiro Marker</h3>
             <div class="bg-gray-100 p-6 rounded-3xl mb-8 flex justify-center">
-                <!-- Marker image often stays external but updated here to assets/ just in case -->
                 <img src="assets/hiro_marker.png" class="w-48 h-48 border-8 border-white shadow-lg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png'">
             </div>
             <p class="text-[11px] text-gray-500 font-medium mb-8 leading-relaxed">Print this marker or display it on another device to use the AR features within the simulations.</p>
@@ -431,9 +431,6 @@
     <script>
         let currentSimUrl = "";
 
-        /**
-         * Loads simulation and populates report links
-         */
         function loadSimulation(title, url, reports = []) {
             const container = document.getElementById('simContainer');
             const workspaceTitle = document.getElementById('workspaceTitle');
@@ -446,7 +443,6 @@
             workspaceStatus.innerText = "Status: Module Active";
             currentSimUrl = url;
 
-            // Update Simulation Frame
             const oldFrame = container.querySelector('.sim-frame-wrapper');
             if (oldFrame) oldFrame.remove();
             
@@ -455,7 +451,6 @@
             frameWrapper.innerHTML = `<iframe src="${url}" class="scaled-iframe" allowfullscreen></iframe>`;
             container.appendChild(frameWrapper);
             
-            // Populate Dynamic Lab Reports
             reportLinks.innerHTML = "";
             if (reports.length > 0) {
                 labResources.classList.remove('hidden');
@@ -486,7 +481,6 @@
             document.getElementById('markerModal').style.display = show ? 'flex' : 'none';
         }
 
-        // Close on outside click
         window.onclick = function(event) {
             const modal = document.getElementById('markerModal');
             if (event.target == modal) toggleMarkerModal(false);
