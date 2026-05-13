@@ -84,6 +84,23 @@
             margin-bottom: 0.75rem;
         }
 
+        /* Category Header */
+        .category-header {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            color: var(--primary-gold);
+            text-transform: uppercase;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(201, 160, 93, 0.2);
+            margin-bottom: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .category-header:first-child {
+            margin-top: 0;
+        }
+
         /* WORKSPACE CONTAINER */
         #simContainer {
             width: 100%;
@@ -316,23 +333,31 @@
             
             <!-- Sidebar Selection -->
             <div class="grid grid-cols-1 gap-6 h-fit">
-                <!-- Circuits Lab (Updated URL to circuit_lab.html) -->
-                <div class="gallery-card" onclick="loadSimulation('Circuits Lab', 'https://darawa-io.github.io/ARLABS/circuit_lab.html', ['Ohm_Law_Report.pdf', 'Series_Parallel_Report.pdf'])">
-                    <img src="assets/Circuits.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits'">
-                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Circuits Lab</span>
-                </div>
-
+                
+                <!-- Optics Category -->
+                <div class="category-header">Optics Simulations</div>
+                
                 <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html', ['Lenses_Lab_Report.pdf'])">
                     <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
                 </div>
+                
                 <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html', ['Single_Slit_Report.pdf', 'Double_Slit_Report.pdf', 'Diffraction_Grating_Report.pdf'])">
                     <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
                 </div>
+                
                 <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html', ['Polarization_Lab_Report.pdf'])">
                     <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
                     <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
+                </div>
+
+                <!-- Electricity Category -->
+                <div class="category-header">Electricity & Magnetism</div>
+                
+                <div class="gallery-card" onclick="loadSimulation('Circuits Lab', 'https://darawa-io.github.io/ARLABS/circuit_lab.html', ['Ohm_Law_Report.pdf', 'Series_Parallel_Report.pdf'])">
+                    <img src="assets/Circuits.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits+Lab'">
+                    <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Circuits Lab</span>
                 </div>
                 
                 <div class="bg-[#0A4A7F]/5 border border-[#0A4A7F]/10 p-6 rounded-3xl mt-4">
