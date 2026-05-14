@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Universal AR Flint Lab</title>
+    <title>Universal AR Flint & Fire Lab</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; font-family: sans-serif; }
         #input_video { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); z-index: 1; display: none; }
@@ -19,16 +19,28 @@
             padding: 20px 50px; font-size: 1.5rem; background: #d35400; color: white;
             border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
+
+        #heat_bar_container {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 240px; height: 12px; border: 2px solid rgba(255,255,255,0.6); border-radius: 6px; z-index: 10;
+            background: rgba(0,0,0,0.3); overflow: hidden;
+        }
+        #heat_bar { width: 0%; height: 100%; background: linear-gradient(90deg, #ffcc00, #ff4500); transition: width 0.1s; }
     </style>
 </head>
 <body>
 
     <div id="start_overlay">
-        <button id="start_btn">START FLINT AR</button>
-        <p style="margin-top: 20px;">Works on Laptop & Mobile</p>
+        <button id="start_btn">START SURVIVAL AR</button>
+        <p style="margin-top: 20px;">Choca las piedras abajo para generar fuego</p>
     </div>
 
-    <div id="ui"><b>NATURAL FLINT SIMULATION</b><br>Rotate hands and strike for sparks</div>
+    <div id="ui"><b>NATURAL FIRE SIMULATION</b><br>Genera chispas sobre el montículo de heno</div>
+    
+    <div id="heat_bar_container">
+        <div id="heat_bar"></div>
+    </div>
+    
     <video id="input_video" playsinline muted autoplay></video>
     <canvas id="output_canvas"></canvas>
 
@@ -41,6 +53,7 @@
         const canvas = document.getElementById('output_canvas');
         const startBtn = document.getElementById('start_btn');
         const startOverlay = document.getElementById('start_overlay');
+        const heatBar = document.getElementById('heat_bar');
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -50,21 +63,21 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const light = new THREE.DirectionalLight(0xffffff, 1.0);
-        light.position.set(5, 10, 7);
-        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const pointLight = new THREE.PointLight(0xffaa00, 0, 25);
+        pointLight.position.set(0, -6, 2);
+        scene.add(pointLight);
 
-        // --- FLINT TEXTURE & MESH ---
+        // --- TEXTURA ORIGINAL DE LAS PIEDRAS ---
         function createFlintTexture() {
             const size = 512;
             const texCanvas = document.createElement('canvas');
             texCanvas.width = texCanvas.height = size;
             const ctx = texCanvas.getContext('2d');
-            ctx.fillStyle = '#2c2c2a'; // Deep chert color
+            ctx.fillStyle = '#2c2c2a'; 
             ctx.fillRect(0,0,size,size);
             for(let i=0; i<40; i++) {
-                ctx.fillStyle = `rgba(215, 200, 175, ${Math.random()*0.3})`; // Beige cortex patches
+                ctx.fillStyle = `rgba(215, 200, 175, ${Math.random()*0.3})`;
                 ctx.beginPath(); ctx.arc(Math.random()*size, Math.random()*size, Math.random()*100, 0, Math.PI*2); ctx.fill();
             }
             const tex = new THREE.CanvasTexture(texCanvas);
@@ -93,17 +106,74 @@
         const stoneR = createStone(50, 1.4, 0.9, 1.1);
         scene.add(stoneL, stoneR);
 
-        // --- SPARK SYSTEM ---
+        // --- HENO 3D ---
+        function createHayTexture() {
+            const size = 512;
+            const texCanvas = document.createElement('canvas');
+            texCanvas.width = texCanvas.height = size;
+            const ctx = texCanvas.getContext('2d');
+            ctx.fillStyle = '#4d411b'; 
+            ctx.fillRect(0,0,size,size);
+            for(let i=0; i<800; i++) {
+                ctx.strokeStyle = `hsl(${40 + Math.random()*10}, 60%, ${30 + Math.random()*20}%)`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                let x = Math.random()*size; let y = Math.random()*size;
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + (Math.random()-0.5)*60, y + (Math.random()-0.5)*60);
+                ctx.stroke();
+            }
+            return new THREE.CanvasTexture(texCanvas);
+        }
+
+        const hayGeo = new THREE.SphereGeometry(4, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const hayMat = new THREE.MeshStandardMaterial({ map: createHayTexture(), roughness: 1 });
+        const hayMound = new THREE.Mesh(hayGeo, hayMat);
+        hayMound.position.y = -9;
+        hayMound.scale.set(1.5, 0.7, 1);
+        scene.add(hayMound);
+
+        // --- LLAMA OSCILANTE ---
+        function createFireSprite() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            grad.addColorStop(0.2, 'rgba(255, 200, 0, 0.8)');
+            grad.addColorStop(0.5, 'rgba(255, 50, 0, 0.4)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, 64, 64);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const fireSprite = createFireSprite();
+        const fireGroup = new THREE.Group();
+        const flames = [];
+        for(let i=0; i<6; i++) {
+            const mat = new THREE.SpriteMaterial({ map: fireSprite, blending: THREE.AdditiveBlending, transparent: true, opacity: 0 });
+            const s = new THREE.Sprite(mat);
+            s.position.set((Math.random()-0.5)*2.5, i * 0.8, (Math.random()-0.5));
+            fireGroup.add(s);
+            flames.push(s);
+        }
+        fireGroup.position.y = -8;
+        scene.add(fireGroup);
+
+        // --- CHISPAS ---
         const sparkCount = 60;
         const sparkGeo = new THREE.BufferGeometry();
         const sparkPos = new Float32Array(sparkCount * 3);
         const sparkVels = [];
         for(let i=0; i<sparkCount; i++) sparkVels.push(new THREE.Vector3());
         sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
-        const sparkMat = new THREE.PointsMaterial({ color: 0xffcc00, size: 0.25, transparent: true, blending: THREE.AdditiveBlending });
+        const sparkMat = new THREE.PointsMaterial({ color: 0xffcc00, size: 0.2, transparent: true, blending: THREE.AdditiveBlending });
         const sparkSystem = new THREE.Points(sparkGeo, sparkMat);
         scene.add(sparkSystem);
+        
         let sparkLife = 0;
+        let temperature = 0;
+        let isBurning = false;
 
         function triggerSparks(pos) {
             sparkSystem.position.copy(pos);
@@ -111,22 +181,28 @@
             const positions = sparkGeo.attributes.position.array;
             for (let i = 0; i < sparkCount; i++) {
                 positions[i*3] = positions[i*3+1] = positions[i*3+2] = 0;
-                sparkVels[i].set((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).multiplyScalar(1.3);
+                sparkVels[i].set((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).multiplyScalar(1.5);
+            }
+
+            // Sensibilidad corregida: Ahora detecta calor en gran parte de la zona baja/media
+            if (pos.y < 2 && !isBurning) {
+                temperature += 15; 
+                if (temperature >= 100) {
+                    temperature = 100;
+                    isBurning = true;
+                }
             }
         }
 
-        // --- HAND ROTATION MATRIX ---
         function updateRotation(stone, landmarks) {
             const w = new THREE.Vector3(landmarks[0].x, landmarks[0].y, landmarks[0].z);
             const m = new THREE.Vector3(landmarks[9].x, landmarks[9].y, landmarks[9].z);
             const i = new THREE.Vector3(landmarks[5].x, landmarks[5].y, landmarks[5].z);
             const p = new THREE.Vector3(landmarks[17].x, landmarks[17].y, landmarks[17].z);
-
             const yAx = new THREE.Vector3().subVectors(m, w).normalize();
             const side = new THREE.Vector3().subVectors(p, i).normalize();
             const zAx = new THREE.Vector3().crossVectors(side, yAx).normalize();
             const xAx = new THREE.Vector3().crossVectors(yAx, zAx).normalize();
-            
             const matrix = new THREE.Matrix4().makeBasis(xAx, yAx, zAx);
             stone.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(matrix), 0.25);
         }
@@ -140,11 +216,9 @@
                 results.multiHandLandmarks.forEach((landmarks, index) => {
                     const label = results.multiHandedness[index].label;
                     const targetStone = (label === "Left") ? stoneR : stoneL;
-                    
                     const p = landmarks[9]; 
                     const h = 2 * Math.tan((camera.fov * Math.PI / 180) / 2) * 12;
                     const w = h * camera.aspect;
-                    
                     targetStone.position.lerp(new THREE.Vector3(-(p.x - 0.5) * w, -(p.y - 0.5) * h, 0), 0.35);
                     updateRotation(targetStone, landmarks);
                     targetStone.visible = true;
@@ -152,23 +226,36 @@
 
                 if (stoneL.visible && stoneR.visible) {
                     const dist = stoneL.position.distanceTo(stoneR.position);
-                    if (dist < 3.8) { 
-                        const collisionPoint = new THREE.Vector3().lerpVectors(stoneL.position, stoneR.position, 0.5);
-                        triggerSparks(collisionPoint);
-                    }
+                    if (dist < 3.7) triggerSparks(new THREE.Vector3().lerpVectors(stoneL.position, stoneR.position, 0.5));
                 }
             }
 
             if (sparkLife > 0) {
-                sparkLife -= 0.04;
-                const positions = sparkGeo.attributes.position.array;
+                sparkLife -= 0.05;
+                const posArr = sparkGeo.attributes.position.array;
                 for (let i = 0; i < sparkCount; i++) {
-                    positions[i*3] += sparkVels[i].x; positions[i*3+1] += sparkVels[i].y; positions[i*3+2] += sparkVels[i].z;
-                    sparkVels[i].y -= 0.02;
+                    posArr[i*3] += sparkVels[i].x; posArr[i*3+1] += sparkVels[i].y; posArr[i*3+2] += sparkVels[i].z;
+                    sparkVels[i].y -= 0.04; 
                 }
                 sparkGeo.attributes.position.needsUpdate = true;
                 sparkMat.opacity = sparkLife;
             }
+
+            // Actualización de barra y enfriamiento
+            if (temperature > 0 && !isBurning) temperature -= 0.25;
+            heatBar.style.width = Math.min(temperature, 100) + "%";
+
+            if (isBurning) {
+                const time = Date.now() * 0.006;
+                pointLight.intensity = 1.8 + Math.sin(time * 2.5) * 0.6;
+                flames.forEach((f, i) => {
+                    f.material.opacity = Math.min(f.material.opacity + 0.01, 0.7);
+                    f.scale.setScalar(2.2 + Math.sin(time + i) * 0.6);
+                    f.position.x = Math.sin(time * 0.4 + i) * 0.4;
+                    f.position.y = (i * 0.75) + Math.cos(time + i) * 0.25;
+                });
+            }
+
             renderer.render(scene, camera);
         }
 
