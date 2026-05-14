@@ -3,36 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Mobile AR Flint</title>
+    <title>Universal AR Flint Lab</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; }
-        #input_video { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); z-index: 1; }
+        body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; font-family: sans-serif; }
+        #input_video { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); z-index: 1; display: none; }
         #output_canvas { position: absolute; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        #ui { position: absolute; top: 20px; width: 100%; text-align: center; z-index: 10; color: white; text-shadow: 2px 2px 4px #000; pointer-events: none; }
         
-        /* Mobile Overlay */
-        #ui { position: absolute; top: 20px; width: 100%; text-align: center; z-index: 10; color: white; font-family: sans-serif; text-shadow: 2px 2px 4px #000; pointer-events: none; }
-        
-        /* Start Button for Mobile Safari/Chrome */
         #start_overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 100;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-family: sans-serif;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;
         }
         #start_btn {
-            padding: 15px 40px; font-size: 1.2rem; background: #e67e22; color: white;
-            border: none; border-radius: 30px; cursor: pointer; font-weight: bold;
+            padding: 20px 50px; font-size: 1.5rem; background: #d35400; color: white;
+            border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
 
     <div id="start_overlay">
-        <button id="start_btn">START AR EXPERIENCE</button>
-        <p style="margin-top: 20px;">Allow camera access when prompted</p>
+        <button id="start_btn">START FLINT AR</button>
+        <p style="margin-top: 20px;">Works on Laptop & Mobile</p>
     </div>
 
-    <div id="ui"><b>STRIKE FLINTS</b></div>
+    <div id="ui"><b>NATURAL FLINT SIMULATION</b><br>Rotate hands and strike for sparks</div>
     <video id="input_video" playsinline muted autoplay></video>
     <canvas id="output_canvas"></canvas>
 
@@ -59,42 +55,46 @@
         light.position.set(5, 10, 7);
         scene.add(light);
 
-        // --- STONE LOGIC ---
+        // --- FLINT TEXTURE & MESH ---
         function createFlintTexture() {
-            const size = 256; // Smaller for mobile memory
+            const size = 512;
             const texCanvas = document.createElement('canvas');
             texCanvas.width = texCanvas.height = size;
             const ctx = texCanvas.getContext('2d');
-            ctx.fillStyle = '#3a3a38';
+            ctx.fillStyle = '#2c2c2a'; // Deep chert color
             ctx.fillRect(0,0,size,size);
-            for(let i=0; i<20; i++) {
-                ctx.fillStyle = `rgba(220, 210, 190, 0.2)`;
-                ctx.beginPath(); ctx.arc(Math.random()*size, Math.random()*size, Math.random()*40, 0, Math.PI*2); ctx.fill();
+            for(let i=0; i<40; i++) {
+                ctx.fillStyle = `rgba(215, 200, 175, ${Math.random()*0.3})`; // Beige cortex patches
+                ctx.beginPath(); ctx.arc(Math.random()*size, Math.random()*size, Math.random()*100, 0, Math.PI*2); ctx.fill();
             }
-            return new THREE.CanvasTexture(texCanvas);
+            const tex = new THREE.CanvasTexture(texCanvas);
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+            return tex;
         }
         const flintTex = createFlintTexture();
 
         function createStone(seed, scaleX, scaleY, scaleZ) {
-            const geo = new THREE.IcosahedronGeometry(2.0, 3);
+            const geo = new THREE.IcosahedronGeometry(2.1, 3);
             const pos = geo.attributes.position;
             const v = new THREE.Vector3();
             for (let i = 0; i < pos.count; i++) {
                 v.fromBufferAttribute(pos, i);
                 v.x *= scaleX; v.y *= scaleY; v.z *= scaleZ;
-                v.addScaledVector(v.clone().normalize(), 0.4 * Math.sin(v.x + seed));
+                v.addScaledVector(v.clone().normalize(), 0.5 * Math.sin(v.x * 1.2 + seed));
                 pos.setXYZ(i, v.x, v.y, v.z);
             }
             geo.computeVertexNormals();
-            return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: flintTex, roughness: 0.7, flatShading: true }));
+            return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ 
+                map: flintTex, roughness: 0.65, flatShading: true 
+            }));
         }
 
         const stoneL = createStone(10, 0.8, 1.5, 1.0);
-        const stoneR = createStone(50, 1.4, 0.8, 1.1);
+        const stoneR = createStone(50, 1.4, 0.9, 1.1);
         scene.add(stoneL, stoneR);
 
-        // --- SPARKS ---
-        const sparkCount = 40;
+        // --- SPARK SYSTEM ---
+        const sparkCount = 60;
         const sparkGeo = new THREE.BufferGeometry();
         const sparkPos = new Float32Array(sparkCount * 3);
         const sparkVels = [];
@@ -111,42 +111,56 @@
             const positions = sparkGeo.attributes.position.array;
             for (let i = 0; i < sparkCount; i++) {
                 positions[i*3] = positions[i*3+1] = positions[i*3+2] = 0;
-                sparkVels[i].set((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).multiplyScalar(1.2);
+                sparkVels[i].set((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).multiplyScalar(1.3);
             }
         }
 
+        // --- HAND ROTATION MATRIX ---
         function updateRotation(stone, landmarks) {
-            const wrist = new THREE.Vector3(landmarks[0].x, landmarks[0].y, landmarks[0].z);
-            const indexBase = new THREE.Vector3(landmarks[5].x, landmarks[5].y, landmarks[5].z);
-            const pinkyBase = new THREE.Vector3(landmarks[17].x, landmarks[17].y, landmarks[17].z);
-            const up = new THREE.Vector3().subVectors(indexBase, wrist).normalize();
-            const side = new THREE.Vector3().subVectors(pinkyBase, wrist).normalize();
-            const forward = new THREE.Vector3().crossVectors(up, side).normalize();
-            const matrix = new THREE.Matrix4().makeBasis(side, up, forward);
-            stone.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(matrix), 0.2);
+            const w = new THREE.Vector3(landmarks[0].x, landmarks[0].y, landmarks[0].z);
+            const m = new THREE.Vector3(landmarks[9].x, landmarks[9].y, landmarks[9].z);
+            const i = new THREE.Vector3(landmarks[5].x, landmarks[5].y, landmarks[5].z);
+            const p = new THREE.Vector3(landmarks[17].x, landmarks[17].y, landmarks[17].z);
+
+            const yAx = new THREE.Vector3().subVectors(m, w).normalize();
+            const side = new THREE.Vector3().subVectors(p, i).normalize();
+            const zAx = new THREE.Vector3().crossVectors(side, yAx).normalize();
+            const xAx = new THREE.Vector3().crossVectors(yAx, zAx).normalize();
+            
+            const matrix = new THREE.Matrix4().makeBasis(xAx, yAx, zAx);
+            stone.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(matrix), 0.25);
         }
 
-        // --- MEDIAPIPE ---
         function onResults(results) {
+            startOverlay.style.display = 'none';
+            videoElement.style.display = 'block';
             stoneL.visible = stoneR.visible = false;
+
             if (results.multiHandLandmarks) {
                 results.multiHandLandmarks.forEach((landmarks, index) => {
                     const label = results.multiHandedness[index].label;
                     const targetStone = (label === "Left") ? stoneR : stoneL;
+                    
                     const p = landmarks[9]; 
                     const h = 2 * Math.tan((camera.fov * Math.PI / 180) / 2) * 12;
                     const w = h * camera.aspect;
-                    targetStone.position.lerp(new THREE.Vector3(-(p.x - 0.5) * w, -(p.y - 0.5) * h, 0), 0.3);
+                    
+                    targetStone.position.lerp(new THREE.Vector3(-(p.x - 0.5) * w, -(p.y - 0.5) * h, 0), 0.35);
                     updateRotation(targetStone, landmarks);
                     targetStone.visible = true;
                 });
+
                 if (stoneL.visible && stoneR.visible) {
                     const dist = stoneL.position.distanceTo(stoneR.position);
-                    if (dist < 4.0) triggerSparks(new THREE.Vector3().lerpVectors(stoneL.position, stoneR.position, 0.5));
+                    if (dist < 3.8) { 
+                        const collisionPoint = new THREE.Vector3().lerpVectors(stoneL.position, stoneR.position, 0.5);
+                        triggerSparks(collisionPoint);
+                    }
                 }
             }
+
             if (sparkLife > 0) {
-                sparkLife -= 0.05;
+                sparkLife -= 0.04;
                 const positions = sparkGeo.attributes.position.array;
                 for (let i = 0; i < sparkCount; i++) {
                     positions[i*3] += sparkVels[i].x; positions[i*3+1] += sparkVels[i].y; positions[i*3+2] += sparkVels[i].z;
@@ -158,4 +172,22 @@
             renderer.render(scene, camera);
         }
 
-        const hands =
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        hands.onResults(onResults);
+
+        startBtn.addEventListener('click', () => {
+            const cam = new Camera(videoElement, {
+                onFrame: async () => { await hands.send({image: videoElement}); },
+                width: 1280, height: 720
+            });
+            cam.start();
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
