@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AR Flint - Hand Rotation</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #input_video { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); z-index: 1; }
+        #output_canvas { position: absolute; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        #ui { position: absolute; top: 20px; width: 100%; text-align: center; z-index: 10; color: white; font-family: sans-serif; text-shadow: 2px 2px 4px #000; }
+    </style>
+</head>
+<body>
+
+    <div id="ui"><b>ROTATIONAL FLINT AR</b><br>Rotate your wrists to aim the strike</div>
+    <video id="input_video" playsinline></video>
+    <canvas id="output_canvas"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+
+    <script>
+        const videoElement = document.getElementById('input_video');
+        const canvas = document.getElementById('output_canvas');
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 12;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const light = new THREE.DirectionalLight(0xffffff, 1.0);
+        light.position.set(5, 10, 7);
+        scene.add(light);
+
+        // --- PROCEDURAL TEXTURE ---
+        function createFlintTexture() {
+            const size = 512;
+            const texCanvas = document.createElement('canvas');
+            texCanvas.width = texCanvas.height = size;
+            const ctx = texCanvas.getContext('2d');
+            ctx.fillStyle = '#3a3a38';
+            ctx.fillRect(0,0,size,size);
+            for(let i=0; i<40; i++) {
+                ctx.fillStyle = `rgba(220, 210, 190, ${Math.random()*0.25})`;
+                ctx.beginPath(); ctx.arc(Math.random()*size, Math.random()*size, Math.random()*80, 0, Math.PI*2); ctx.fill();
+            }
+            const tex = new THREE.CanvasTexture(texCanvas);
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+            return tex;
+        }
+        const flintTex = createFlintTexture();
+
+        // --- STONE GEOMETRY ---
+        function createStone(seed, scaleX, scaleY, scaleZ) {
+            const geo = new THREE.IcosahedronGeometry(2.2, 3);
+            const pos = geo.attributes.position;
+            const v = new THREE.Vector3();
+            for (let i = 0; i < pos.count; i++) {
+                v.fromBufferAttribute(pos, i);
+                v.x *= scaleX; v.y *= scaleY; v.z *= scaleZ;
+                const noise = 0.5 * Math.sin(v.x + seed) + 0.3 * Math.cos(v.y * 1.5);
+                v.addScaledVector(v.clone().normalize(), noise);
+                pos.setXYZ(i, v.x, v.y, v.z);
+            }
+            geo.computeVertexNormals();
+            return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: flintTex, roughness: 0.7, flatShading: true }));
+        }
+
+        const stoneL = createStone(10, 0.8, 1.5, 1.0);
+        const stoneR = createStone(50, 1.4, 0.8, 1.1);
+        scene.add(stoneL, stoneR);
+
+        // --- SPARK SYSTEM ---
+        const sparkCount = 60;
+        const sparkGeo = new THREE.BufferGeometry();
+        const sparkPos = new Float32Array(sparkCount * 3);
+        const sparkVels = [];
+        for(let i=0; i<sparkCount; i++) sparkVels.push(new THREE.Vector3());
+        sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+        const sparkMat = new THREE.PointsMaterial({ color: 0xffcc00, size: 0.2, transparent: true, blending: THREE.AdditiveBlending });
+        const sparkSystem = new THREE.Points(sparkGeo, sparkMat);
+        scene.add(sparkSystem);
+        let sparkLife = 0;
+
+        function triggerSparks(pos) {
+            sparkSystem.position.copy(pos);
+            sparkLife = 1.0;
+            const positions = sparkGeo.attributes.position.array;
+            for (let i = 0; i < sparkCount; i++) {
+                positions[i*3] = positions[i*3+1] = positions[i*3+2] = 0;
+                sparkVels[i].set((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).multiplyScalar(1.2);
+            }
+        }
+
+        // --- ROTATION CALCULATOR ---
+        function updateRotation(stone, landmarks) {
+            const wrist = new THREE.Vector3(landmarks[0].x, landmarks[0].y, landmarks[0].z);
+            const indexBase = new THREE.Vector3(landmarks[5].x, landmarks[5].y, landmarks[5].z);
+            const pinkyBase = new THREE.Vector3(landmarks[17].x, landmarks[17].y, landmarks[17].z);
+
+            // Compute hand orientation vectors
+            const up = new THREE.Vector3().subVectors(indexBase, wrist).normalize();
+            const side = new THREE.Vector3().subVectors(pinkyBase, wrist).normalize();
+            const forward = new THREE.Vector3().crossVectors(up, side).normalize();
+            
+            const matrix = new THREE.Matrix4();
+            // Basis: Right, Up, Forward
+            matrix.makeBasis(side, up, forward);
+            
+            const targetQuat = new THREE.Quaternion().setFromRotationMatrix(matrix);
+            stone.quaternion.slerp(targetQuat, 0.2); // Smooth rotation transition
+        }
+
+        // --- HAND TRACKING ---
+        function onResults(results) {
+            stoneL.visible = stoneR.visible = false;
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                results.multiHandLandmarks.forEach((landmarks, index) => {
+                    const label = results.multiHandedness[index].label;
+                    const targetStone = (label === "Left") ? stoneR : stoneL; // Flip logic for mirror
+                    
+                    const p = landmarks[9]; 
+                    const h = 2 * Math.tan((camera.fov * Math.PI / 180) / 2) * 12;
+                    const w = h * camera.aspect;
+                    
+                    targetStone.position.lerp(new THREE.Vector3(-(p.x - 0.5) * w, -(p.y - 0.5) * h, 0), 0.3);
+                    updateRotation(targetStone, landmarks);
+                    targetStone.visible = true;
+                });
+
+                if (stoneL.visible && stoneR.visible) {
+                    const dist = stoneL.position.distanceTo(stoneR.position);
+                    const collisionDist = 4.0;
+                    if (dist < collisionDist) { 
+                        const dir = new THREE.Vector3().subVectors(stoneR.position, stoneL.position).normalize();
+                        stoneR.position.addScaledVector(dir, (collisionDist - dist)/2);
+                        stoneL.position.addScaledVector(dir, -(collisionDist - dist)/2);
+                        triggerSparks(new THREE.Vector3().lerpVectors(stoneL.position, stoneR.position, 0.5));
+                    }
+                }
+            }
+
+            if (sparkLife > 0) {
+                sparkLife -= 0.05;
+                const positions = sparkGeo.attributes.position.array;
+                for (let i = 0; i < sparkCount; i++) {
+                    positions[i*3] += sparkVels[i].x;
+                    positions[i*3+1] += sparkVels[i].y;
+                    positions[i*3+2] += sparkVels[i].z;
+                    sparkVels[i].y -= 0.02; 
+                }
+                sparkGeo.attributes.position.needsUpdate = true;
+                sparkMat.opacity = sparkLife;
+            }
+            renderer.render(scene, camera);
+        }
+
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        hands.onResults(onResults);
+        const cam = new Camera(videoElement, {onFrame: async () => { await hands.send({image: videoElement}); }, width: 1280, height: 720});
+        cam.start();
+    </script>
+</body>
+</html>
