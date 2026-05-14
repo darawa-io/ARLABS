@@ -354,13 +354,35 @@
   <div class="sidebar">
     <div class="sidebar-section">Sources</div>
     <div class="comp-btn" draggable="true" data-type="battery" title="Battery">
-      <svg viewBox="0 0 44 28"><line x1="2" y1="14" x2="12" y2="14" stroke="#00d4ff" stroke-width="2"/><line x1="12" y1="6" x2="12" y2="22" stroke="#00d4ff" stroke-width="3"/><line x1="17" y1="9" x2="17" y2="19" stroke="#00d4ff" stroke-width="1.5"/><line x1="22" y1="6" x2="22" y2="22" stroke="#00d4ff" stroke-width="3"/><line x1="27" y1="9" x2="27" y2="19" stroke="#00d4ff" stroke-width="1.5"/><line x1="32" y1="6" x2="32" y2="22" stroke="#00d4ff" stroke-width="3"/><line x1="32" y1="14" x2="42" y2="14" stroke="#00d4ff" stroke-width="2"/><text x="14" y="26" fill="#00d4ff" font-size="6" font-family="monospace">+</text></svg>
+      <!-- IEC battery: each cell = short thin(+) then long thick(−), two cells, leads on both ends -->
+      <svg viewBox="0 0 44 28">
+        <!-- left lead -->
+        <line x1="2" y1="14" x2="9" y2="14" stroke="#00d4ff" stroke-width="2"/>
+        <!-- cell 1: short thin = + -->
+        <line x1="9" y1="10" x2="9" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- cell 1: long thick = − -->
+        <line x1="14" y1="6" x2="14" y2="22" stroke="#00d4ff" stroke-width="3"/>
+        <!-- bridge -->
+        <line x1="14" y1="14" x2="20" y2="14" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- cell 2: short thin = + -->
+        <line x1="20" y1="10" x2="20" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- cell 2: long thick = − -->
+        <line x1="25" y1="6" x2="25" y2="22" stroke="#00d4ff" stroke-width="3"/>
+        <!-- bridge -->
+        <line x1="25" y1="14" x2="31" y2="14" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- cell 3: short thin = + -->
+        <line x1="31" y1="10" x2="31" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- cell 3: long thick = − -->
+        <line x1="36" y1="6" x2="36" y2="22" stroke="#00d4ff" stroke-width="3"/>
+        <!-- right lead -->
+        <line x1="36" y1="14" x2="42" y2="14" stroke="#00d4ff" stroke-width="2"/>
+        <!-- + label near left, − near right -->
+        <text x="1" y="9" fill="#00d4ff" font-size="6" font-family="monospace" font-weight="bold">+</text>
+        <text x="37" y="9" fill="#00d4ff" font-size="7" font-family="monospace">−</text>
+      </svg>
       <span>Battery</span>
     </div>
-    <div class="comp-btn" draggable="true" data-type="dcpsu" title="DC PSU">
-      <svg viewBox="0 0 44 28"><circle cx="22" cy="14" r="11" stroke="#39ff14" stroke-width="1.5" fill="none"/><line x1="2" y1="14" x2="11" y2="14" stroke="#39ff14" stroke-width="2"/><line x1="33" y1="14" x2="42" y2="14" stroke="#39ff14" stroke-width="2"/><text x="17" y="18" fill="#39ff14" font-size="9" font-family="monospace">~</text></svg>
-      <span>DC PSU</span>
-    </div>
+
 
     <div class="sidebar-section">Passive</div>
     <div class="comp-btn" draggable="true" data-type="resistor" title="Resistor">
@@ -370,6 +392,10 @@
     <div class="comp-btn" draggable="true" data-type="varresistor" title="Variable Resistor">
       <svg viewBox="0 0 44 28"><line x1="2" y1="14" x2="8" y2="14" stroke="#ffe066" stroke-width="2"/><rect x="8" y="8" width="28" height="12" rx="2" stroke="#ffe066" stroke-width="1.5" fill="none"/><line x1="36" y1="14" x2="42" y2="14" stroke="#ffe066" stroke-width="2"/><line x1="14" y1="22" x2="30" y2="6" stroke="#ffe066" stroke-width="1.5"/><polygon points="28,5 32,4 30,8" fill="#ffe066"/></svg>
       <span>Var. R</span>
+    </div>
+    <div class="comp-btn" draggable="true" data-type="hiresistor" title="High Resistance (1kΩ–50kΩ)">
+      <svg viewBox="0 0 44 28"><line x1="2" y1="14" x2="8" y2="14" stroke="#ff9900" stroke-width="2"/><rect x="8" y="8" width="28" height="12" rx="2" stroke="#ff9900" stroke-width="1.5" fill="none"/><line x1="36" y1="14" x2="42" y2="14" stroke="#ff9900" stroke-width="2"/><text x="13" y="19" fill="#ff9900" font-size="7" font-family="monospace">Hi-R</text></svg>
+      <span>Hi-R</span>
     </div>
     <div class="comp-btn" draggable="true" data-type="capacitor" title="Capacitor">
       <svg viewBox="0 0 44 28"><line x1="2" y1="14" x2="19" y2="14" stroke="#b44aff" stroke-width="2"/><line x1="19" y1="5" x2="19" y2="23" stroke="#b44aff" stroke-width="3"/><line x1="25" y1="5" x2="25" y2="23" stroke="#b44aff" stroke-width="3"/><line x1="25" y1="14" x2="42" y2="14" stroke="#b44aff" stroke-width="2"/></svg>
@@ -431,6 +457,14 @@
     <div class="comp-count-row"><span>Components</span><span class="comp-count-val" id="compCount">0</span></div>
     <div class="comp-count-row"><span>Wires</span><span class="comp-count-val" id="wireCount">0</span></div>
     <button class="power-btn" id="powerBtn">⚡ POWER OFF</button>
+    <div style="margin-top:10px;">
+      <div style="font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:5px;">Simulation Mode</div>
+      <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <button id="modeIdeal" onclick="setSimMode('ideal')" style="flex:1;padding:5px 2px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;border:none;background:var(--accent);color:#000;cursor:pointer;">IDEAL</button>
+        <button id="modeReal" onclick="setSimMode('realistic')" style="flex:1;padding:5px 2px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;border:none;background:var(--panel2);color:var(--dim);cursor:pointer;">REALISTIC</button>
+      </div>
+      <div id="modeDesc" style="font-size:8px;color:var(--dim);margin-top:4px;line-height:1.4;">Ideal: zero wire &amp; meter resistance.</div>
+    </div>
     <div class="warning-box" id="warningBox">⚠ Circuit incomplete or open branch detected</div>
     <div style="height:12px"></div>
     <div style="font-size:9px;color:var(--dim);letter-spacing:1px;line-height:1.7">
@@ -499,6 +533,7 @@ let powerOn = false;
 let circuitCurrent = 0;
 let circuitVoltage = 0;
 let circuitResistance = 0;
+let shortCircuitDetected = false;
 let animOffset = 0;
 let undoStack = [];
 let hoverComp = null;
@@ -519,6 +554,7 @@ const COMP_DEFAULTS = {
   battery:     { voltage: 9,   resistance: 0.1, label: 'Battery',     color: '#00d4ff', w: 3, h: 2 },
   dcpsu:       { voltage: 12,  resistance: 0.1, label: 'DC PSU',      color: '#39ff14', w: 3, h: 2 },
   resistor:    { resistance: 100, label: 'Resistor',    color: '#ffe066', w: 2, h: 2 },
+  hiresistor:  { resistance: 10000, label: 'Hi-R',      color: '#ff9900', w: 2, h: 2 },
   varresistor: { resistance: 500, label: 'Var. R',      color: '#ffe066', w: 2, h: 2 },
   capacitor:   { capacitance: 100, label: 'Capacitor',  color: '#b44aff', w: 3, h: 2, _charge: 0, _capVoltage: 0, _charging: false },
   bulb:        { resistance: 60,  label: 'Bulb',        color: '#ffe066', w: 2, h: 2 },
@@ -527,6 +563,20 @@ const COMP_DEFAULTS = {
   ammeter:     { label: 'Ammeter',    color: '#00d4ff', w: 2, h: 2 },
   voltmeter:   { label: 'Voltmeter',  color: '#ffe066', w: 2, h: 2 },
 };
+
+// ---- Simulation Mode ----
+let simMode = 'ideal';
+function setSimMode(mode) {
+  simMode = mode;
+  document.getElementById('modeIdeal').style.background = mode === 'ideal' ? 'var(--accent)' : 'var(--panel2)';
+  document.getElementById('modeIdeal').style.color      = mode === 'ideal' ? '#000' : 'var(--dim)';
+  document.getElementById('modeReal').style.background  = mode === 'realistic' ? 'var(--accent2)' : 'var(--panel2)';
+  document.getElementById('modeReal').style.color       = mode === 'realistic' ? '#000' : 'var(--dim)';
+  document.getElementById('modeDesc').textContent = mode === 'ideal'
+    ? 'Ideal: zero wire & meter resistance.'
+    : 'Realistic: wires 0.05\u03a9/seg, ammeter 0.1\u03a9, battery internal R on.';
+  updateCircuit();
+}
 
 // ---- Utility ----
 function snap(v) { return Math.round(v / GRID) * GRID; }
@@ -579,46 +629,39 @@ function nearTerminal(mx, my) {
 
 // ---- Circuit Solver (Parallel-aware, all branches) ----
 function compResistance(c) {
-  if (c.type === 'resistor' || c.type === 'varresistor') return c.resistance;
+  if (c.type === 'resistor' || c.type === 'varresistor' || c.type === 'hiresistor') return c.resistance;
   if (c.type === 'bulb')      return c.resistance;
   if (c.type === 'led')       return c.resistance;
   if (c.type === 'capacitor') {
-    // Fully charged cap blocks DC (high R); discharging or charging gives low R
-    if (c._charge >= 0.999) return 1e9; // fully charged, blocks
-    return 0.1; // effectively a wire while charging/discharging
+    if (c._charge >= 0.999) return 1e9;
+    return 0.1;
   }
-  if (c.type === 'ammeter')   return 0.001;
-  if (c.type === 'voltmeter') return 1e9;
+  if (c.type === 'ammeter')   return simMode === 'realistic' ? 0.1 : 0.001;
+  if (c.type === 'voltmeter') return 1e7; // high but finite so node voltages can be computed
   return 0;
 }
 
 function solveCircuit() {
   components.forEach(c => { c._current = 0; c._voltage = 0; c._lit = false; });
   circuitCurrent = 0; circuitVoltage = 0; circuitResistance = 0;
+  shortCircuitDetected = false;
   wires.forEach(w => { w._active = false; });
 
   const sources = components.filter(c => c.type === 'battery' || c.type === 'dcpsu');
 
   // ── Capacitor topology check ─────────────────────────────────
-  // Determine if each capacitor is in a closed loop (connected circuit)
   const graph0 = buildGraph();
   components.filter(c => c.type === 'capacitor').forEach(cap => {
     const tA = findNode(graph0, getTerminals(cap).a);
     const tB = findNode(graph0, getTerminals(cap).b);
     const inLoop = tA !== -1 && tB !== -1 && tA !== tB && bfsPath(graph0, tA, tB, cap) !== null;
-    if (!inLoop) {
-      // Disconnected: keep charge frozen — do not reset
-      cap._charging = false;
-    }
+    if (!inLoop) { cap._charging = false; }
   });
 
-  if (!sources.length) {
-    // No source: capacitors can discharge into any closed loop
-    _tickCapacitors(null, graph0);
-    return;
-  }
+  if (!sources.length) { _tickCapacitors(null, graph0); return; }
 
   const graph = buildGraph();
+  const WIRE_R = simMode === 'realistic' ? 0.05 : 0;
 
   for (const src of sources) {
     const t = getTerminals(src);
@@ -633,6 +676,13 @@ function solveCircuit() {
     const validPaths = allPaths.filter(path => {
       const comps = getPathComponents(path, graph);
       if (comps.some(c => c.type === 'switch' && !c.closed)) return false;
+      // Voltmeters are open circuits for the main solve — exclude any
+      // path that passes through a voltmeter, whether or not it also
+      // contains real components. This prevents VM wires from being
+      // animated, keeps the parallel-R calc clean, and lets the
+      // dedicated voltmeter-reading pass below compute |Va-Vb| correctly
+      // from the node voltages set by the pure-resistor paths.
+      if (comps.some(c => c.type === 'voltmeter')) return false;
       for (let i = 0; i < path.length - 1; i++) {
         const from = path[i], to = path[i + 1];
         for (const { to: t2, edge } of (graph.adj[from] || [])) {
@@ -647,14 +697,26 @@ function solveCircuit() {
     if (!validPaths.length) continue;
 
     const V = src.voltage;
-    const srcR = src.resistance || 0.1;
+    const srcR = simMode === 'realistic' ? (src.resistance || 0.1) : 0.001;
+
     const branchData = validPaths.map(path => {
       const comps = getPathComponents(path, graph);
-      const R = comps.reduce((s, c) => s + compResistance(c), 0);
+      let R = comps.reduce((s, c) => s + compResistance(c), 0);
+      if (simMode === 'realistic') {
+        for (let i = 0; i < path.length - 1; i++) {
+          const from = path[i], to = path[i+1];
+          for (const { to: t2, edge } of (graph.adj[from] || [])) {
+            if (t2 === to && edge.wire) R += WIRE_R;
+          }
+        }
+      }
       return { path, comps, R };
     });
 
-    const invParallel = branchData.reduce((s, b) => s + (b.R > 0 ? 1/b.R : 0), 0);
+    // Short circuit: any branch with near-zero resistance
+    if (branchData.some(b => b.R < 0.5)) shortCircuitDetected = true;
+
+    const invParallel = branchData.reduce((s, b) => s + (b.R > 0 ? 1/b.R : 1e6), 0);
     const Rparallel = invParallel > 0 ? 1 / invParallel : 0;
     const totalR = srcR + Rparallel;
     const Itotal = V / Math.max(totalR, 0.001);
@@ -666,17 +728,72 @@ function solveCircuit() {
     src._current = Itotal;
     src._voltage = V;
 
+    // Build node voltage map — walk every main branch and accumulate drops.
+    // Voltmeters are excluded from paths entirely (they're handled below).
+    const nodeVoltages = new Array(graph.nodes.length).fill(null);
+    nodeVoltages[nodePos] = V;
+    nodeVoltages[nodeNeg] = 0;
+
     for (const { path, comps, R } of branchData) {
       const Ibranch = R > 0 ? Vparallel / R : 0;
+      let vWalk = V;
+      for (let i = 0; i < path.length - 1; i++) {
+        const from = path[i], to = path[i+1];
+        if (nodeVoltages[from] === null) nodeVoltages[from] = vWalk;
+        let drop = 0;
+        for (const { to: t2, edge } of (graph.adj[from] || [])) {
+          if (t2 === to) {
+            if (edge.comp) drop = Ibranch * compResistance(edge.comp);
+            else if (edge.wire) drop = Ibranch * WIRE_R;
+          }
+        }
+        vWalk -= drop;
+        if (nodeVoltages[to] === null) nodeVoltages[to] = vWalk;
+      }
       for (const c of comps) {
         c._current = Ibranch;
         c._voltage = Ibranch * compResistance(c);
         if (c.type === 'led')  { c._lit = Ibranch > 0.001 && V > (c.forwardV || 2.0); }
         if (c.type === 'bulb') { c._lit = Ibranch > 0.01; }
-        // Capacitor: mark as charging
         if (c.type === 'capacitor') { c._charging = true; c._sourceV = V; }
       }
       markPathWires(path, graph);
+    }
+
+    // ── Voltmeter readings ────────────────────────────────────────
+    // For each voltmeter, find the two main-circuit nodes that its
+    // terminals physically connect to (via wires / junctions), then
+    // read the potential difference directly from nodeVoltages.
+    // We do NOT route current through voltmeters — they're open for
+    // the purpose of the main solve and only read node potentials.
+    for (const c of components) {
+      if (c.type !== 'voltmeter') continue;
+      const tA = getTerminals(c).a, tB = getTerminals(c).b;
+      // Walk wires from each voltmeter terminal to find the nearest
+      // graph node that has a known voltage (set by a main branch).
+      const resolveV = (termPos) => {
+        // Try direct graph node at terminal position first
+        const ni = findNode(graph, termPos);
+        if (ni !== -1 && nodeVoltages[ni] !== null) return nodeVoltages[ni];
+        // BFS along wire edges only to find a node with a known voltage
+        const startNi = ni !== -1 ? ni : -1;
+        if (startNi === -1) return null;
+        const visited = new Set([startNi]);
+        const q = [startNi];
+        while (q.length) {
+          const n = q.shift();
+          if (nodeVoltages[n] !== null) return nodeVoltages[n];
+          for (const { to, edge } of (graph.adj[n] || [])) {
+            if (edge.wire && !visited.has(to)) { visited.add(to); q.push(to); }
+          }
+        }
+        return null;
+      };
+      const vA = resolveV(tA), vB = resolveV(tB);
+      if (vA !== null && vB !== null) {
+        c._voltage = Math.abs(vA - vB);
+      }
+      c._current = 0;
     }
   }
 
@@ -850,10 +967,6 @@ function markPathWires(path, graph) {
       if (t === to && edge.wire) {
         const w = edge.wire;
         w._active = true;
-        // Flow direction: true = particles travel pts[0]→pts[last] (A→B),
-        // false = particles travel pts[last]→pts[0] (B→A).
-        // from===w._nodeA means the BFS arrived at this wire from its A side,
-        // so current exits through B → forward direction.
         w._flowForward = (from === w._nodeA);
       }
     }
@@ -921,17 +1034,8 @@ function drawWire(w) {
   ctx.stroke();
   ctx.restore();
 
-  // Flow animation — skip wires attached to voltmeter terminals
-  if (active && powerOn) {
-    const attachedToVoltmeter = components.some(c => {
-      if (c.type !== 'voltmeter') return false;
-      const t = getTerminals(c);
-      const p0 = w.pts[0], pN = w.pts[w.pts.length - 1];
-      return dist(p0, t.a) < GRID * 0.6 || dist(p0, t.b) < GRID * 0.6
-          || dist(pN, t.a) < GRID * 0.6 || dist(pN, t.b) < GRID * 0.6;
-    });
-    if (!attachedToVoltmeter) drawFlowParticles(w);
-  }
+  // Flow animation on active wires
+  if (active && powerOn) drawFlowParticles(w);
 }
 
 function drawFlowParticles(w) {
@@ -1004,6 +1108,7 @@ function drawComponent(c) {
       break;
     case 'resistor':
     case 'varresistor':
+    case 'hiresistor':
       drawResistor(c, hw, hh, col);
       break;
     case 'capacitor':
@@ -1055,28 +1160,52 @@ function drawComponent(c) {
     ctx.setLineDash([]);
   }
 
-  // Label
+  ctx.restore();
+
+  // ---- Labels drawn AFTER restore so they are never rotated ----
+  const rot = c.rotation || 0;
+  // For rotated components the bounding box changes; use a fixed screen offset from centre
+  const labelOffset = Math.round((c.h * GRID) / 2) + 14;
+  const valueOffset = Math.round((c.h * GRID) / 2) + 5;
+
+  // Label (component name)
+  ctx.save();
   ctx.fillStyle = '#4a6080';
   ctx.font = '11px "Share Tech Mono"';
   ctx.textAlign = 'center';
-  ctx.fillText(c.label || '', 0, hh + 14);
+  ctx.fillText(c.label || '', c.x, c.y + labelOffset);
 
   // Value label
   if (c.type === 'battery' || c.type === 'dcpsu') {
-    ctx.fillStyle = col;
+    ctx.fillStyle = c.color || '#00d4ff';
     ctx.font = '12px "Share Tech Mono"';
-    ctx.fillText(c.voltage + 'V', 0, -hh - 5);
+    ctx.fillText(c.voltage + 'V', c.x, c.y - valueOffset);
   } else if (c.type === 'resistor' || c.type === 'varresistor') {
-    ctx.fillStyle = col;
+    ctx.fillStyle = c.color || '#ffe066';
     ctx.font = '12px "Share Tech Mono"';
-    ctx.fillText(c.resistance + 'Ω', 0, -hh - 5);
+    ctx.fillText(c.resistance + 'Ω', c.x, c.y - valueOffset);
+  } else if (c.type === 'hiresistor') {
+    ctx.fillStyle = c.color || '#ff9900';
+    ctx.font = '11px "Share Tech Mono"';
+    ctx.fillText(c.resistance >= 1000 ? (c.resistance/1000).toFixed(1)+'kΩ' : c.resistance+'Ω', c.x, c.y - valueOffset);
   }
 
-  // Live reading
-  if (powerOn && I > 0.0001) {
+  // Live current reading (non-meter components only)
+  if (powerOn && I > 0.0001 && c.type !== 'ammeter' && c.type !== 'voltmeter') {
     ctx.fillStyle = 'rgba(0,212,255,0.9)';
     ctx.font = '11px "Share Tech Mono"';
-    ctx.fillText(I.toFixed(3) + 'A', 0, hh + 27);
+    ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 13);
+  }
+
+  // Meter live readings (ammeter current / voltmeter voltage)
+  if (powerOn && c.type === 'ammeter' && I > 0.0001) {
+    ctx.fillStyle = c.color || '#00d4ff';
+    ctx.font = '9px "Share Tech Mono"';
+    ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 13);
+  } else if (powerOn && c.type === 'voltmeter' && (c._voltage || 0) > 0.001) {
+    ctx.fillStyle = c.color || '#ffe066';
+    ctx.font = '9px "Share Tech Mono"';
+    ctx.fillText(c._voltage.toFixed(2) + 'V', c.x, c.y + labelOffset + 13);
   }
 
   ctx.restore();
@@ -1222,16 +1351,7 @@ function drawMeter(c, hw, hh, col, I) {
   ctx.beginPath(); ctx.arc(0, 0, hw - 12, 0, Math.PI * 2); ctx.stroke();
   ctx.fillStyle = col; ctx.font = 'bold 14px "Share Tech Mono"'; ctx.textAlign = 'center';
   ctx.fillText(c.type === 'ammeter' ? 'A' : 'V', 0, 5);
-  if (powerOn && I > 0.0001) {
-    ctx.fillStyle = col; ctx.font = '8px "Share Tech Mono"';
-    if (c.type === 'ammeter') {
-      ctx.fillText(I.toFixed(3) + 'A', 0, hh + 10);
-    } else {
-      // Voltmeter: show voltage across its terminals (stored in _voltage by solver)
-      const vReading = c._voltage || 0;
-      ctx.fillText(vReading.toFixed(2) + 'V', 0, hh + 10);
-    }
-  }
+  // readings are drawn post-restore (unrotated) in drawComponent
 }
 
 // ---- Main Render ----
@@ -1314,7 +1434,9 @@ function updateReadings() {
 
   const sources = components.filter(c => c.type === 'battery' || c.type === 'dcpsu');
   let warnMsg = '';
-  if (powerOn && circuitCurrent === 0 && components.length > 0) {
+  if (powerOn && shortCircuitDetected) {
+    warnMsg = '🔴 SHORT CIRCUIT — add resistance or remove direct wire!';
+  } else if (powerOn && circuitCurrent === 0 && components.length > 0) {
     if (!sources.length) warnMsg = '⚠ No power source in circuit';
     else {
       const hasSwitch = components.some(c => c.type === 'switch');
@@ -1406,7 +1528,8 @@ function openModal(c, screenX, screenY) {
 
   if (c.type === 'battery') addField('Voltage (V)', 'voltage', 'number', 0.1, 100, 0.1);
   if (c.type === 'dcpsu') addField('Voltage (V)', 'voltage', 'number', 0.1, 240, 0.1);
-  if (c.type === 'resistor' || c.type === 'varresistor') addField('Resistance (Ω)', 'resistance', 'number', 1, 1e6, 1);
+  if (c.type === 'resistor' || c.type === 'varresistor') addField('Resistance (Ω)', 'resistance', 'number', 1, 1000, 1);
+  if (c.type === 'hiresistor') addField('Resistance (Ω)', 'resistance', 'number', 1000, 50000, 100);
   if (c.type === 'capacitor') addField('Capacitance (μF)', 'capacitance', 'number', 0.1, 10000, 0.1);
   if (c.type === 'bulb') addField('Resistance (Ω)', 'resistance', 'number', 1, 10000, 1);
   if (c.type === 'led') {
@@ -1437,13 +1560,66 @@ document.getElementById('modalCancel').onclick = () => {
 };
 
 // ---- Drag & Drop from sidebar ----
+// ---- Sidebar drag: mouse (desktop) + touch (iPad/mobile) ----
 let sidebarDragType = null;
+let touchDragGhost  = null;   // floating ghost element during touch drag
+let touchDragActive = false;
+
 document.querySelectorAll('.comp-btn[data-type]').forEach(btn => {
+  // Mouse drag (desktop)
   btn.addEventListener('dragstart', e => {
     sidebarDragType = btn.dataset.type;
     e.dataTransfer.effectAllowed = 'copy';
   });
+
+  // Touch drag (iPad / mobile)
+  btn.addEventListener('touchstart', e => {
+    e.preventDefault();
+    sidebarDragType = btn.dataset.type;
+    touchDragActive = true;
+
+    // Create a visual ghost that follows the finger
+    touchDragGhost = btn.cloneNode(true);
+    Object.assign(touchDragGhost.style, {
+      position: 'fixed', zIndex: 9999, opacity: '0.85',
+      pointerEvents: 'none', transition: 'none',
+      width: btn.offsetWidth + 'px',
+      background: 'var(--panel2)',
+      border: '1px solid var(--accent)',
+      borderRadius: '6px',
+    });
+    document.body.appendChild(touchDragGhost);
+
+    const t = e.touches[0];
+    touchDragGhost.style.left = (t.clientX - btn.offsetWidth / 2) + 'px';
+    touchDragGhost.style.top  = (t.clientY - btn.offsetHeight / 2) + 'px';
+  }, { passive: false });
+
+  btn.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!touchDragGhost) return;
+    const t = e.touches[0];
+    touchDragGhost.style.left = (t.clientX - touchDragGhost.offsetWidth / 2) + 'px';
+    touchDragGhost.style.top  = (t.clientY - touchDragGhost.offsetHeight / 2) + 'px';
+  }, { passive: false });
+
+  btn.addEventListener('touchend', e => {
+    e.preventDefault();
+    if (touchDragGhost) { touchDragGhost.remove(); touchDragGhost = null; }
+    touchDragActive = false;
+    if (!sidebarDragType) return;
+    const t = e.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    // Check if finger lifted over the canvas
+    if (t.clientX >= rect.left && t.clientX <= rect.right &&
+        t.clientY >= rect.top  && t.clientY <= rect.bottom) {
+      addComponent(sidebarDragType, t.clientX - rect.left, t.clientY - rect.top);
+      updateCircuit();
+    }
+    sidebarDragType = null;
+  }, { passive: false });
 });
+
 canvas.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
 canvas.addEventListener('drop', e => {
   e.preventDefault();
@@ -1452,6 +1628,142 @@ canvas.addEventListener('drop', e => {
   addComponent(sidebarDragType, e.clientX - rect.left, e.clientY - rect.top);
   sidebarDragType = null;
 });
+
+// ---- Canvas touch events (iPad component drag + wire drawing) ----
+function canvasTouchPos(touch) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+
+canvas.addEventListener('touchstart', e => {
+  if (touchDragActive) return; // sidebar touch in progress
+  e.preventDefault();
+  const { x: mx, y: my } = canvasTouchPos(e.touches[0]);
+  mouseDownPos = { x: mx, y: my };
+  isMouseDown = true;
+
+  if (wireMode) {
+    // Mirror mousedown wire logic for touch
+    const t = nearTerminal(mx, my);
+    const n = hitNode(mx, my);
+    if (!wireStart) {
+      if (t) {
+        wireStart = { type:'terminal', comp:t.comp, terminal:t.terminal };
+      } else if (n) {
+        wireStart = { type:'node', node:n };
+      } else {
+        const clickPt = { x: snap(mx), y: snap(my) };
+        const wireSplit = snapToWireAndSplit(clickPt);
+        const nodePt = wireSplit || clickPt;
+        const newNode = { id: nodeIdCounter++, x: nodePt.x, y: nodePt.y };
+        nodes.push(newNode);
+        wireStart = { type:'node', node:newNode };
+      }
+    } else {
+      const t2 = nearTerminal(mx, my);
+      const n2 = hitNode(mx, my);
+      let endPt = null, isSelf = false;
+      if (t2) {
+        if (wireStart.type==='terminal' && t2.comp===wireStart.comp && t2.terminal===wireStart.terminal) isSelf=true;
+        else { const tb=getTerminals(t2.comp); endPt=t2.terminal==='a'?{...tb.a}:{...tb.b}; }
+      } else if (n2) {
+        if (wireStart.type==='node' && n2===wireStart.node) isSelf=true;
+        else endPt={x:n2.x,y:n2.y};
+      } else {
+        const newNode={id:nodeIdCounter++,x:snap(mx),y:snap(my)};
+        nodes.push(newNode);
+        endPt={x:newNode.x,y:newNode.y};
+      }
+      if (!isSelf && endPt) { saveUndo(); completeWire(endPt); }
+      wireStart=null; wirePreview=null; wireMode=false;
+      document.getElementById('btnWire').classList.remove('active');
+    }
+    return;
+  }
+
+  // Normal mode: node drag, auto-wire from terminal, or component drag
+  const hitN = hitNode(mx, my);
+  if (hitN) { pendingNodePress = hitN; selectedComp=null; selectedWire=null; return; }
+
+  const autoT = nearTerminal(mx, my);
+  if (autoT) {
+    wireMode = true;
+    wireStart = { type:'terminal', comp:autoT.comp, terminal:autoT.terminal };
+    document.getElementById('btnWire').classList.add('active');
+    return;
+  }
+
+  const c = hitComp(mx, my);
+  if (c) {
+    selectedComp = c; selectedWire = null;
+    draggingComp = c;
+    dragOffset = { x: mx - c.x, y: my - c.y };
+  } else {
+    selectedComp = null; selectedWire = null;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (touchDragActive) return;
+  e.preventDefault();
+  const { x: mx, y: my } = canvasTouchPos(e.touches[0]);
+
+  if (wireMode && wireStart) { wirePreview = { x: snap(mx), y: snap(my) }; }
+
+  if (!wireMode && isMouseDown && pendingNodePress) {
+    if (dist({x:mx,y:my},{x:pendingNodePress.x,y:pendingNodePress.y}) > 6) {
+      draggingNode = { node: pendingNodePress };
+      pendingNodePress = null;
+    }
+  }
+  if (!wireMode && isMouseDown && draggingNode) {
+    const nx=snap(mx), ny=snap(my);
+    const oldX=draggingNode.node.x, oldY=draggingNode.node.y;
+    draggingNode.node.x=nx; draggingNode.node.y=ny;
+    for (const w of wires) {
+      for (let i=0;i<w.pts.length;i++) {
+        if(Math.abs(w.pts[i].x-oldX)<GRID*0.6&&Math.abs(w.pts[i].y-oldY)<GRID*0.6)
+          w.pts[i]={x:nx,y:ny};
+      }
+    }
+    updateCircuit();
+  }
+  if (!wireMode && isMouseDown && draggingComp) {
+    const nx=snap(mx-dragOffset.x), ny=snap(my-dragOffset.y);
+    const prevX=draggingComp.x, prevY=draggingComp.y;
+    const oldT=getTerminals({...draggingComp,x:prevX,y:prevY});
+    draggingComp.x=nx; draggingComp.y=ny;
+    const newT=getTerminals(draggingComp);
+    for (const w of wires) {
+      for (let i=0;i<w.pts.length;i++) {
+        if(dist(w.pts[i],oldT.a)<GRID*0.6) w.pts[i]={...newT.a};
+        else if(dist(w.pts[i],oldT.b)<GRID*0.6) w.pts[i]={...newT.b};
+      }
+    }
+    updateCircuit();
+  }
+  // Hover equivalents for touch
+  hoverNode = hitNode(mx, my);
+  hoverComp = !hoverNode ? hitComp(mx, my) : null;
+  hoverWire = (!hoverComp && !hoverNode) ? hitWire(mx, my) : null;
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  if (touchDragActive) return;
+  e.preventDefault();
+  const { x: mx, y: my } = canvasTouchPos(e.changedTouches[0]);
+  isMouseDown = false;
+  // Double-tap to open modal (within 300ms of last tap)
+  const now = Date.now();
+  if (!wireMode && canvas._lastTap && now - canvas._lastTap < 300) {
+    const c = hitComp(mx, my);
+    if (c) openModal(c, e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    canvas._lastTap = 0;
+  } else {
+    canvas._lastTap = now;
+  }
+  draggingComp = null; draggingNode = null; pendingNodePress = null;
+}, { passive: false });
 
 // ---- Mouse Events ----
 let isMouseDown = false;
@@ -1707,13 +2019,8 @@ canvas.addEventListener('click', e => {
   if (suppressNextClick) { suppressNextClick = false; return; }
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-  // Don't act if we just finished dragging
   if (mouseDownPos && dist({x:mx,y:my}, mouseDownPos) > 5) return;
-
-  if (wireMode) {
-    // Wire mode clicks are handled in mousedown; suppress modal here
-    return;
-  }
+  if (wireMode) return;
 
   // Click on a junction node → start wire from it
   const n = hitNode(mx, my);
@@ -1724,7 +2031,16 @@ canvas.addEventListener('click', e => {
     setHint('Click terminal, node, or canvas point to complete wire · ESC to cancel');
     return;
   }
+  // Single click: just select (no modal)
+  const c = hitComp(mx, my);
+  if (c) { selectedComp = c; selectedWire = null; }
+  else    { selectedComp = null; selectedWire = null; }
+});
 
+canvas.addEventListener('dblclick', e => {
+  if (wireMode) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
   const c = hitComp(mx, my);
   if (c) openModal(c, e.clientX, e.clientY);
 });
@@ -1947,7 +2263,7 @@ document.getElementById('btnTest').addEventListener('click', () => {
 });
 
 // ---- Start ----
-setHint('Drag components from sidebar · Double-click to edit · Wire Mode to connect · Power ON to simulate');
+setHint('Drag components from sidebar · Double-click/tap to edit · Click terminal to wire · Power ON to simulate');
 render();
 updateReadings();
 </script>
