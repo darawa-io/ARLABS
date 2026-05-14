@@ -213,8 +213,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 8px 16px;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 6px 10px;
     background: var(--panel);
     border-top: 1px solid var(--border);
     flex-shrink: 0;
@@ -226,11 +227,12 @@
     text-align: center;
     padding: 3px;
     flex: 1;
+    min-width: 120px;
     letter-spacing: 0.5px;
     font-family: 'Share Tech Mono', monospace;
   }
   .tool-btn {
-    padding: 7px 14px;
+    padding: 8px 13px;
     border-radius: 20px;
     border: 1px solid var(--border);
     background: var(--panel2);
@@ -243,11 +245,20 @@
     display: flex;
     align-items: center;
     gap: 5px;
+    white-space: nowrap;
+    touch-action: manipulation;
   }
   .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
   .tool-btn.active { border-color: var(--accent); background: rgba(0,212,255,0.1); color: var(--accent); }
   .tool-btn.danger { border-color: var(--danger); color: var(--danger); }
   .tool-btn.danger:hover { background: rgba(255,51,85,0.12); }
+
+  /* On narrow screens (iPad portrait / phone): hide hint bar, keep all buttons */
+  @media (max-width: 900px) {
+    .hint-bar { display: none; }
+    .toolbar { justify-content: flex-start; padding: 6px 8px; }
+    .tool-btn { padding: 9px 11px; font-size: 12px; }
+  }
 
   /* MODAL */
   .modal-overlay {
@@ -1573,40 +1584,69 @@ document.querySelectorAll('.comp-btn[data-type]').forEach(btn => {
   });
 
   // Touch drag (iPad / mobile)
+  // Strategy: touchstart just records position. Only after the finger moves >8px
+  // do we lock into "drag mode" (preventing scroll). A tap (no/little movement)
+  // falls through naturally to allow sidebar scrolling.
+  let _btnTouchStart = null;
+  let _btnDragLocked = false;
+
   btn.addEventListener('touchstart', e => {
-    e.preventDefault();
-    sidebarDragType = btn.dataset.type;
-    touchDragActive = true;
-
-    // Create a visual ghost that follows the finger
-    touchDragGhost = btn.cloneNode(true);
-    Object.assign(touchDragGhost.style, {
-      position: 'fixed', zIndex: 9999, opacity: '0.85',
-      pointerEvents: 'none', transition: 'none',
-      width: btn.offsetWidth + 'px',
-      background: 'var(--panel2)',
-      border: '1px solid var(--accent)',
-      borderRadius: '6px',
-    });
-    document.body.appendChild(touchDragGhost);
-
     const t = e.touches[0];
-    touchDragGhost.style.left = (t.clientX - btn.offsetWidth / 2) + 'px';
-    touchDragGhost.style.top  = (t.clientY - btn.offsetHeight / 2) + 'px';
-  }, { passive: false });
+    _btnTouchStart = { x: t.clientX, y: t.clientY };
+    _btnDragLocked = false;
+    sidebarDragType = btn.dataset.type;
+    // Don't preventDefault here — lets the sidebar scroll if needed
+  }, { passive: true });
 
   btn.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (!touchDragGhost) return;
+    if (!_btnTouchStart) return;
     const t = e.touches[0];
-    touchDragGhost.style.left = (t.clientX - touchDragGhost.offsetWidth / 2) + 'px';
-    touchDragGhost.style.top  = (t.clientY - touchDragGhost.offsetHeight / 2) + 'px';
+    const dx = t.clientX - _btnTouchStart.x;
+    const dy = t.clientY - _btnTouchStart.y;
+    const moved = Math.hypot(dx, dy);
+
+    if (!_btnDragLocked && moved > 8) {
+      // Finger moved enough → commit to drag, create ghost, block scroll
+      _btnDragLocked = true;
+      touchDragActive = true;
+
+      touchDragGhost = btn.cloneNode(true);
+      Object.assign(touchDragGhost.style, {
+        position: 'fixed', zIndex: 9999, opacity: '0.85',
+        pointerEvents: 'none', transition: 'none',
+        width: btn.offsetWidth + 'px',
+        background: 'var(--panel2)',
+        border: '1px solid var(--accent)',
+        borderRadius: '6px',
+      });
+      document.body.appendChild(touchDragGhost);
+    }
+
+    if (_btnDragLocked && touchDragGhost) {
+      e.preventDefault(); // block scroll only while dragging
+      touchDragGhost.style.left = (t.clientX - touchDragGhost.offsetWidth / 2) + 'px';
+      touchDragGhost.style.top  = (t.clientY - touchDragGhost.offsetHeight / 2) + 'px';
+    }
   }, { passive: false });
 
   btn.addEventListener('touchend', e => {
-    e.preventDefault();
     if (touchDragGhost) { touchDragGhost.remove(); touchDragGhost = null; }
+    const wasDrag = _btnDragLocked;
     touchDragActive = false;
+    _btnDragLocked = false;
+    _btnTouchStart = null;
+
+    if (!wasDrag) {
+      // It was a tap, not a drag — add component at centre of canvas
+      sidebarDragType = null;
+      const type = btn.dataset.type;
+      const cx = canvas.width / 2 + (Math.random() - 0.5) * 60;
+      const cy = canvas.height / 2 + (Math.random() - 0.5) * 60;
+      addComponent(type, cx, cy);
+      updateCircuit();
+      return;
+    }
+
     if (!sidebarDragType) return;
     const t = e.changedTouches[0];
     const rect = canvas.getBoundingClientRect();
@@ -1617,7 +1657,7 @@ document.querySelectorAll('.comp-btn[data-type]').forEach(btn => {
       updateCircuit();
     }
     sidebarDragType = null;
-  }, { passive: false });
+  }, { passive: true });
 });
 
 canvas.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
@@ -1642,57 +1682,18 @@ canvas.addEventListener('touchstart', e => {
   mouseDownPos = { x: mx, y: my };
   isMouseDown = true;
 
-  if (wireMode) {
-    // Mirror mousedown wire logic for touch
-    const t = nearTerminal(mx, my);
-    const n = hitNode(mx, my);
-    if (!wireStart) {
-      if (t) {
-        wireStart = { type:'terminal', comp:t.comp, terminal:t.terminal };
-      } else if (n) {
-        wireStart = { type:'node', node:n };
-      } else {
-        const clickPt = { x: snap(mx), y: snap(my) };
-        const wireSplit = snapToWireAndSplit(clickPt);
-        const nodePt = wireSplit || clickPt;
-        const newNode = { id: nodeIdCounter++, x: nodePt.x, y: nodePt.y };
-        nodes.push(newNode);
-        wireStart = { type:'node', node:newNode };
-      }
-    } else {
-      const t2 = nearTerminal(mx, my);
-      const n2 = hitNode(mx, my);
-      let endPt = null, isSelf = false;
-      if (t2) {
-        if (wireStart.type==='terminal' && t2.comp===wireStart.comp && t2.terminal===wireStart.terminal) isSelf=true;
-        else { const tb=getTerminals(t2.comp); endPt=t2.terminal==='a'?{...tb.a}:{...tb.b}; }
-      } else if (n2) {
-        if (wireStart.type==='node' && n2===wireStart.node) isSelf=true;
-        else endPt={x:n2.x,y:n2.y};
-      } else {
-        const newNode={id:nodeIdCounter++,x:snap(mx),y:snap(my)};
-        nodes.push(newNode);
-        endPt={x:newNode.x,y:newNode.y};
-      }
-      if (!isSelf && endPt) { saveUndo(); completeWire(endPt); }
-      wireStart=null; wirePreview=null; wireMode=false;
-      document.getElementById('btnWire').classList.remove('active');
-    }
-    return;
+  // Update wire preview so rubber-band line follows the finger during touch
+  if (wireMode && wireStart) {
+    wirePreview = { x: snap(mx), y: snap(my) };
+    return; // wire start/complete handled cleanly in touchend
   }
+  if (wireMode && !wireStart) return; // handled in touchend
 
-  // Normal mode: node drag, auto-wire from terminal, or component drag
+  // Normal mode: detect what was pressed so touchmove can drag it
   const hitN = hitNode(mx, my);
   if (hitN) { pendingNodePress = hitN; selectedComp=null; selectedWire=null; return; }
 
-  const autoT = nearTerminal(mx, my);
-  if (autoT) {
-    wireMode = true;
-    wireStart = { type:'terminal', comp:autoT.comp, terminal:autoT.terminal };
-    document.getElementById('btnWire').classList.add('active');
-    return;
-  }
-
+  // For components, begin potential drag (touchend handles tap→wire for terminals)
   const c = hitComp(mx, my);
   if (c) {
     selectedComp = c; selectedWire = null;
@@ -1751,18 +1752,101 @@ canvas.addEventListener('touchmove', e => {
 canvas.addEventListener('touchend', e => {
   if (touchDragActive) return;
   e.preventDefault();
-  const { x: mx, y: my } = canvasTouchPos(e.changedTouches[0]);
+  const touch = e.changedTouches[0];
+  const { x: mx, y: my } = canvasTouchPos(touch);
+  const wasDragging = !!(draggingComp || draggingNode);
   isMouseDown = false;
+  draggingComp = null; draggingNode = null; pendingNodePress = null;
+
+  // Ignore touchend if the finger moved significantly (was a drag, not a tap)
+  const startPos = mouseDownPos || { x: mx, y: my };
+  const moved = Math.hypot(mx - startPos.x, my - startPos.y);
+  if (moved > 8 || wasDragging) return;
+
+  // ── Wire mode: completing a wire ──────────────────────────
+  if (wireMode && wireStart) {
+    const t2 = nearTerminal(mx, my);
+    const n2 = hitNode(mx, my);
+    let endPt = null, isSelf = false;
+    if (t2) {
+      if (wireStart.type==='terminal' && t2.comp===wireStart.comp && t2.terminal===wireStart.terminal) isSelf=true;
+      else { const tb=getTerminals(t2.comp); endPt=t2.terminal==='a'?{...tb.a}:{...tb.b}; }
+    } else if (n2) {
+      if (wireStart.type==='node' && n2===wireStart.node) isSelf=true;
+      else endPt={x:n2.x,y:n2.y};
+    } else {
+      const newNode={id:nodeIdCounter++,x:snap(mx),y:snap(my)};
+      nodes.push(newNode);
+      endPt={x:newNode.x,y:newNode.y};
+    }
+    if (!isSelf && endPt) { saveUndo(); completeWire(endPt); }
+    wireStart=null; wirePreview=null; wireMode=false;
+    document.getElementById('btnWire').classList.remove('active');
+    setHint('Tap component to edit · Tap terminal to wire · Power ON to simulate');
+    return;
+  }
+
+  // ── Wire mode: starting a wire (no wireStart yet) ─────────
+  if (wireMode && !wireStart) {
+    const t = nearTerminal(mx, my);
+    const n = hitNode(mx, my);
+    if (t) {
+      wireStart = { type:'terminal', comp:t.comp, terminal:t.terminal };
+      setHint('Tap terminal, node, or canvas point to complete wire · Wire button to cancel');
+    } else if (n) {
+      wireStart = { type:'node', node:n };
+      setHint('Tap terminal, node, or canvas point to complete wire · Wire button to cancel');
+    } else {
+      const clickPt = { x: snap(mx), y: snap(my) };
+      const wireSplit = snapToWireAndSplit(clickPt);
+      const nodePt = wireSplit || clickPt;
+      const newNode = { id: nodeIdCounter++, x: nodePt.x, y: nodePt.y };
+      nodes.push(newNode);
+      wireStart = { type:'node', node:newNode };
+      setHint('Tap terminal, node, or canvas point to complete wire · Wire button to cancel');
+    }
+    return;
+  }
+
+  // ── Normal mode ───────────────────────────────────────────
+
+  // Tap on a junction node → start wire from it (without needing Wire Mode button)
+  const n = hitNode(mx, my);
+  if (n) {
+    wireMode = true;
+    wireStart = { type:'node', node:n };
+    document.getElementById('btnWire').classList.add('active');
+    setHint('Tap terminal, node, or canvas to complete wire · Wire button to cancel');
+    return;
+  }
+
+  // Tap on a terminal → auto-start wire
+  const autoT = nearTerminal(mx, my);
+  if (autoT) {
+    wireMode = true;
+    wireStart = { type:'terminal', comp:autoT.comp, terminal:autoT.terminal };
+    document.getElementById('btnWire').classList.add('active');
+    setHint('Tap terminal, node, or canvas point to complete wire · Wire button to cancel');
+    return;
+  }
+
   // Double-tap to open modal (within 300ms of last tap)
   const now = Date.now();
   if (!wireMode && canvas._lastTap && now - canvas._lastTap < 300) {
     const c = hitComp(mx, my);
-    if (c) openModal(c, e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    if (c) openModal(c, touch.clientX, touch.clientY);
     canvas._lastTap = 0;
   } else {
     canvas._lastTap = now;
+    // Single tap: select component or wire
+    const c = hitComp(mx, my);
+    if (c) { selectedComp = c; selectedWire = null; }
+    else {
+      const w = hitWire(mx, my);
+      if (w) { selectedWire = (selectedWire === w) ? null : w; selectedComp = null; }
+      else { selectedComp = null; selectedWire = null; }
+    }
   }
-  draggingComp = null; draggingNode = null; pendingNodePress = null;
 }, { passive: false });
 
 // ---- Mouse Events ----
@@ -2263,7 +2347,7 @@ document.getElementById('btnTest').addEventListener('click', () => {
 });
 
 // ---- Start ----
-setHint('Drag components from sidebar · Double-click/tap to edit · Click terminal to wire · Power ON to simulate');
+setHint('Tap sidebar item to add · Drag to place · Tap terminal to wire · Double-tap component to edit · Power ON to simulate');
 render();
 updateReadings();
 </script>
