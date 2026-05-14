@@ -7,6 +7,7 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
 
+  /* ── DARK theme (default) ── */
   :root {
     --bg: #080c14;
     --panel: #0d1320;
@@ -23,6 +24,26 @@
     --grid: #0f1e30;
     --glow: rgba(0,212,255,0.15);
     --danger: #ff3355;
+    --fab-shadow: rgba(0,0,0,0.5);
+  }
+  /* ── LIGHT theme ── */
+  body.theme-light {
+    --bg: #f0f4f8;
+    --panel: #ffffff;
+    --panel2: #e8edf3;
+    --border: #c0ccd8;
+    --accent: #0077cc;
+    --accent2: #d94f00;
+    --accent3: #1a8a00;
+    --accent4: #b07800;
+    --accent5: #7a1fcc;
+    --wire: #0055aa;
+    --text: #1a2433;
+    --dim: #6a7f96;
+    --grid: #dce4ed;
+    --glow: rgba(0,119,204,0.1);
+    --danger: #cc0033;
+    --fab-shadow: rgba(0,0,0,0.18);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,6 +57,7 @@
     display: flex;
     flex-direction: column;
     user-select: none;
+    transition: background 0.3s, color 0.3s;
   }
 
   /* HEADER */
@@ -211,38 +233,38 @@
   }
   .warning-box.show { display: block; }
 
-  /* BOTTOM TOOLBAR */
-  .toolbar {
+  /* ── FLOATING ACTION BAR ── */
+  /* Replaces the old bottom toolbar. Fixed to the bottom-centre of the viewport,
+     always visible regardless of layout, scrolls horizontally if needed. */
+  .fab-bar {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 6px 10px;
+    gap: 6px;
+    padding: 7px 12px;
     background: var(--panel);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-    z-index: 10;
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    box-shadow: 0 4px 24px var(--fab-shadow);
+    z-index: 200;
+    max-width: calc(100vw - 24px);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    transition: background 0.3s, border-color 0.3s;
   }
-  .toolbar::-webkit-scrollbar { display: none; }
-  .hint-bar {
-    font-size: 10px;
-    color: var(--dim);
-    text-align: center;
-    padding: 3px 8px;
-    flex-shrink: 0;
-    letter-spacing: 0.5px;
-    font-family: 'Share Tech Mono', monospace;
-    white-space: nowrap;
-  }
-  .tool-btn {
-    padding: 9px 14px;
+  .fab-bar::-webkit-scrollbar { display: none; }
+
+  .fab-btn {
+    padding: 8px 14px;
     border-radius: 20px;
     border: 1px solid var(--border);
     background: var(--panel2);
     color: var(--text);
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.18s;
     font-family: 'Share Tech Mono', monospace;
@@ -254,12 +276,22 @@
     flex-shrink: 0;
     touch-action: manipulation;
   }
-  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .tool-btn.active { border-color: var(--accent); background: rgba(0,212,255,0.1); color: var(--accent); }
-  .tool-btn.danger { border-color: var(--danger); color: var(--danger); }
-  .tool-btn.danger:hover { background: rgba(255,51,85,0.12); }
+  .fab-btn:hover, .fab-btn:active { border-color: var(--accent); color: var(--accent); background: var(--panel); }
+  .fab-btn.active { border-color: var(--accent); background: rgba(0,119,204,0.15); color: var(--accent); }
+  .fab-btn.danger { border-color: var(--danger); color: var(--danger); }
+  .fab-btn.danger:hover, .fab-btn.danger:active { background: rgba(204,0,51,0.1); }
+  .fab-btn.power-active { border-color: var(--accent3); color: var(--accent3); background: rgba(0,200,0,0.1); }
 
-  /* Narrow screens: hide hint bar (buttons scroll horizontally) */
+  /* Hint bar — hidden on touch devices, shown on desktop */
+  .hint-bar {
+    font-size: 10px;
+    color: var(--dim);
+    padding: 3px 8px;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+    font-family: 'Share Tech Mono', monospace;
+    white-space: nowrap;
+  }
   @media (max-width: 900px) {
     .hint-bar { display: none; }
     .readings-panel { width: 150px; padding: 10px 8px; }
@@ -269,6 +301,18 @@
     .comp-count-row { font-size: 9px; }
     .power-btn { font-size: 10px; padding: 8px; }
   }
+
+  /* Keep old .tool-btn for any references inside the right panel */
+  .tool-btn {
+    padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--panel2); color: var(--text); font-size: 12px; cursor: pointer;
+    transition: all 0.18s; font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0;
+    touch-action: manipulation;
+  }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tool-btn.active { border-color: var(--accent); background: rgba(0,119,204,0.15); color: var(--accent); }
+  .tool-btn.danger { border-color: var(--danger); color: var(--danger); }
 
   /* MODAL */
   .modal-overlay {
@@ -499,18 +543,20 @@
   </div>
 </div>
 
-<!-- BOTTOM TOOLBAR -->
-<div class="toolbar">
-  <button class="tool-btn" id="btnPower">⚡ POWER OFF</button>
-  <button class="tool-btn" id="btnWire">🔗 Wire Mode</button>
-  <button class="tool-btn" id="btnRotate">↺ Rotate</button>
-  <button class="tool-btn danger" id="btnDelete">✕ Delete</button>
-  <div class="hint-bar" id="hintBar">Click component to edit values · Click terminal to wire · Right-click wire to delete · Ctrl+Z undo · R rotate · Del delete</div>
-  <button class="tool-btn danger" id="btnClear">⊗ Clear</button>
-  <button class="tool-btn" id="btnUndo">↩ Undo</button>
-  <button class="tool-btn" id="btnView">◎ View</button>
-  <button class="tool-btn" id="btnTest">✦ Test Mode</button>
+<!-- FLOATING ACTION BAR — fixed bottom-centre, always visible -->
+<div class="fab-bar" id="fabBar">
+  <button class="fab-btn" id="btnPower">⚡ Power</button>
+  <button class="fab-btn" id="btnWire">🔗 Wire</button>
+  <button class="fab-btn" id="btnRotate">↺ Rotate</button>
+  <button class="fab-btn danger" id="btnDelete">✕ Del</button>
+  <button class="fab-btn danger" id="btnClear">⊗ Clear</button>
+  <button class="fab-btn" id="btnUndo">↩ Undo</button>
+  <button class="fab-btn" id="btnView">◎ Fit</button>
+  <button class="fab-btn" id="btnTest">✦ Demo</button>
+  <button class="fab-btn" id="btnTheme" title="Switch theme">🌙</button>
 </div>
+<!-- Hint bar still exists for desktop, just not visible on mobile -->
+<div class="hint-bar" id="hintBar" style="position:fixed;bottom:56px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:199;background:var(--panel);border-radius:12px;padding:3px 10px;border:1px solid var(--border);font-size:10px;"></div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
@@ -1036,8 +1082,16 @@ function manhattanRoute(start, end) {
 }
 
 // ---- Drawing ----
+function getCSSVar(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
 function drawGrid() {
-  ctx.strokeStyle = '#0e1c2e';
+  const gridColor = getCSSVar('--grid');
+  const bgColor   = getCSSVar('--bg');
+  // Fill background with theme colour
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
   for (let x = 0; x < canvas.width; x += GRID) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
@@ -1046,10 +1100,10 @@ function drawGrid() {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
   }
   // Dots at grid intersections
-  ctx.fillStyle = '#12263a';
+  ctx.fillStyle = gridColor;
   for (let x = 0; x < canvas.width; x += GRID)
     for (let y = 0; y < canvas.height; y += GRID) {
-      ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill();
     }
 }
 
@@ -1400,7 +1454,7 @@ function render() {
       ? { x: wireStart.node.x, y: wireStart.node.y }
       : (() => { const t = getTerminals(wireStart.comp); return wireStart.terminal === 'a' ? t.a : t.b; })();
     ctx.save();
-    ctx.strokeStyle = 'rgba(0,212,255,0.5)';
+    ctx.strokeStyle = getCSSVar('--accent') + '88';
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 4]);
     ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 8;
@@ -2216,16 +2270,20 @@ function setHint(msg) { document.getElementById('hintBar').textContent = msg; }
 function togglePower() {
   powerOn = !powerOn;
   const on = powerOn;
-  document.getElementById('powerBtn').textContent = on ? '⚡ POWER ON' : '⚡ POWER OFF';
-  document.getElementById('powerBtn').classList.toggle('active', on);
-  document.getElementById('powerBtn').style.borderColor = on ? 'var(--accent3)' : 'var(--border)';
-  document.getElementById('btnPower').textContent = on ? '⚡ POWER ON' : '⚡ POWER OFF';
-  document.getElementById('btnPower').classList.toggle('active', on);
+  // Right panel button
+  const pbRight = document.getElementById('powerBtn');
+  pbRight.textContent = on ? '⚡ POWER ON' : '⚡ POWER OFF';
+  pbRight.classList.toggle('on', on);
+  pbRight.style.borderColor = on ? 'var(--accent3)' : '';
+  // FAB bar button
+  const pbFab = document.getElementById('btnPower');
+  pbFab.textContent = on ? '⚡ ON' : '⚡ Power';
+  pbFab.classList.toggle('power-active', on);
+  pbFab.classList.toggle('active', false);
+  // Header indicator
   document.getElementById('powerDot').classList.toggle('on', on);
   document.getElementById('powerLbl').textContent = on ? 'LIVE' : 'OFFLINE';
   document.getElementById('powerLbl').style.color = on ? 'var(--accent3)' : 'var(--dim)';
-  const powerBtnRight = document.getElementById('powerBtn');
-  powerBtnRight.classList.toggle('on', on);
   updateCircuit();
 }
 
@@ -2236,7 +2294,8 @@ document.getElementById('btnWire').addEventListener('click', () => {
   wireMode = !wireMode;
   wireStart = null; wirePreview = null;
   document.getElementById('btnWire').classList.toggle('active', wireMode);
-  setHint(wireMode ? 'Click a terminal to start wiring · ESC to exit wire mode' : 'Click component to edit values · Click terminal to wire');
+  document.getElementById('btnWire').textContent = wireMode ? '🔗 Wiring…' : '🔗 Wire';
+  setHint(wireMode ? 'Tap a terminal or node to start · tap again to complete · Wire btn to cancel' : 'Tap sidebar to add · tap terminal to wire · double-tap to edit');
 });
 
 document.getElementById('btnRotate').addEventListener('click', () => {
@@ -2329,9 +2388,31 @@ document.getElementById('btnTest').addEventListener('click', () => {
 });
 
 // ---- Start ----
-setHint('Tap sidebar item to add · Drag to place · Tap terminal to wire · Double-tap component to edit · Power ON to simulate');
+setHint('Tap sidebar to add · Tap terminal to wire · Double-tap to edit · Power to simulate');
 render();
 updateReadings();
+
+// ── Theme toggle ──────────────────────────────────────────────
+const THEMES = ['dark', 'light'];
+let currentTheme = 'dark';
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  document.body.classList.toggle('theme-light', theme === 'light');
+  const btn = document.getElementById('btnTheme');
+  btn.textContent = theme === 'light' ? '🌙' : '☀️';
+  btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+  // Re-render canvas so grid/wire colours update immediately
+  render();
+}
+
+document.getElementById('btnTheme').addEventListener('click', () => {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+// Also expose ESC from wire mode via fab bar (cancel wire if active)
+document.getElementById('fabBar').addEventListener('touchstart', () => {}, { passive: true });
+
 </script>
 </body>
 </html>
