@@ -129,7 +129,7 @@
             transition: transform 0.3s ease;
         }
 
-        .collapsed .chevron-icon {
+        .category-header.collapsed-header .chevron-icon {
             transform: rotate(-90deg);
         }
 
@@ -390,7 +390,7 @@
                 </div>
 
                 <!-- Electricity Category -->
-                <div class="category-header" onclick="toggleCategory('elec-content')">
+                <div class="category-header collapsed-header" onclick="toggleCategory('elec-content')">
                     <span>Electricity & Magnetism</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
@@ -403,7 +403,7 @@
                 </div>
 
                 <!-- Nuclear Physics Category -->
-                <div class="category-header" onclick="toggleCategory('nuclear-content')">
+                <div class="category-header collapsed-header" onclick="toggleCategory('nuclear-content')">
                     <span>Nuclear Physics</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
@@ -516,12 +516,24 @@
             const content = document.getElementById(id);
             const header = content.previousElementSibling;
             
-            if (content.classList.contains('collapsed')) {
+            // Check if we are opening or closing
+            const isCollapsing = !content.classList.contains('collapsed');
+
+            // Collapse all other sections first
+            const allContents = document.querySelectorAll('.category-content');
+            const allHeaders = document.querySelectorAll('.category-header');
+            
+            allContents.forEach(c => {
+                c.classList.add('collapsed');
+            });
+            allHeaders.forEach(h => {
+                h.classList.add('collapsed-header');
+            });
+
+            // If it was already closed, open it now (Accordion behavior)
+            if (!isCollapsing) {
                 content.classList.remove('collapsed');
-                header.classList.remove('collapsed');
-            } else {
-                content.classList.add('collapsed');
-                header.classList.add('collapsed');
+                header.classList.remove('collapsed-header');
             }
         }
 
