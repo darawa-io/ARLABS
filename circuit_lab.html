@@ -602,6 +602,7 @@ let wireMode = false;
 let wireStart = null;    // {comp, terminal: 'a'|'b'}
 let wirePreview = null;  // mouse pos
 let draggingComp = null;
+let draggingCompWires = []; // wire endpoints attached to draggingComp at drag-start
 let dragOffset = {x:0, y:0};
 let powerOn = false;
 let circuitCurrent = 0;
@@ -1809,6 +1810,16 @@ canvas.addEventListener('touchmove', e => {
       draggingComp = pendingDragComp;
       dragOffset = pendingDragOffset;
       selectedComp = pendingDragComp;
+      // Snapshot attached wire endpoints at the moment drag commits
+      const t0touch = getTerminals(pendingDragComp);
+      const TOL0touch = GRID * 0.6;
+      draggingCompWires = [];
+      for (const w of wires) {
+        for (let i = 0; i < w.pts.length; i++) {
+          if (dist(w.pts[i], t0touch.a) < TOL0touch) draggingCompWires.push({ w, i, terminal: 'a' });
+          else if (dist(w.pts[i], t0touch.b) < TOL0touch) draggingCompWires.push({ w, i, terminal: 'b' });
+        }
+      }
       pendingDragComp = null;
     }
   }
@@ -1833,15 +1844,11 @@ canvas.addEventListener('touchmove', e => {
   }
   if (!wireMode && !wireDragActive && isMouseDown && draggingComp) {
     const nx=snap(mx-dragOffset.x), ny=snap(my-dragOffset.y);
-    const prevX=draggingComp.x, prevY=draggingComp.y;
-    const oldT=getTerminals({...draggingComp,x:prevX,y:prevY});
     draggingComp.x=nx; draggingComp.y=ny;
+    // Move ONLY the wire endpoints that were attached at drag-start (snapshot)
     const newT=getTerminals(draggingComp);
-    for (const w of wires) {
-      for (let i=0;i<w.pts.length;i++) {
-        if(dist(w.pts[i],oldT.a)<GRID*0.6) w.pts[i]={...newT.a};
-        else if(dist(w.pts[i],oldT.b)<GRID*0.6) w.pts[i]={...newT.b};
-      }
+    for (const { w, i, terminal } of draggingCompWires) {
+      w.pts[i] = terminal === 'a' ? { ...newT.a } : { ...newT.b };
     }
     updateCircuit();
   }
@@ -2142,6 +2149,17 @@ canvas.addEventListener('mousedown', e => {
     selectedComp = c; selectedWire = null;
     draggingComp = c;
     dragOffset = { x: mx - c.x, y: my - c.y };
+    // Snapshot attached wire endpoints NOW, before dragging starts.
+    // Only these will follow the component — no proximity snapping mid-drag.
+    const t0 = getTerminals(c);
+    const TOL0 = GRID * 0.6;
+    draggingCompWires = [];
+    for (const w of wires) {
+      for (let i = 0; i < w.pts.length; i++) {
+        if (dist(w.pts[i], t0.a) < TOL0) draggingCompWires.push({ w, i, terminal: 'a' });
+        else if (dist(w.pts[i], t0.b) < TOL0) draggingCompWires.push({ w, i, terminal: 'b' });
+      }
+    }
   } else {
     selectedComp = null; selectedWire = null;
   }
@@ -2187,17 +2205,11 @@ canvas.addEventListener('mousemove', e => {
   if (!wireMode && !wireDragActive && isMouseDown && draggingComp) {
     const nx = snap(mx - dragOffset.x);
     const ny = snap(my - dragOffset.y);
-    // Move connected wire endpoints too
-    const prevX = draggingComp.x, prevY = draggingComp.y;
-    const oldT = getTerminals({ ...draggingComp, x: prevX, y: prevY });
     draggingComp.x = nx; draggingComp.y = ny;
+    // Move ONLY the wire endpoints that were attached at drag-start (snapshot)
     const newT = getTerminals(draggingComp);
-    const TOL = GRID * 0.6;
-    for (const w of wires) {
-      for (let i = 0; i < w.pts.length; i++) {
-        if (dist(w.pts[i], oldT.a) < TOL) { w.pts[i] = { ...newT.a }; }
-        else if (dist(w.pts[i], oldT.b) < TOL) { w.pts[i] = { ...newT.b }; }
-      }
+    for (const { w, i, terminal } of draggingCompWires) {
+      w.pts[i] = terminal === 'a' ? { ...newT.a } : { ...newT.b };
     }
     updateCircuit();
   }
