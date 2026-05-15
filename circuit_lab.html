@@ -1853,6 +1853,7 @@ canvas.addEventListener('touchend', e => {
     const startPos = mouseDownPos || { x: mx, y: my };
     const dragDist = Math.hypot(mx - startPos.x, my - startPos.y);
     if (dragDist > 8) {
+      // Real drag: complete wire at release point
       const t2 = nearTerminalTouch(mx, my);
       const n2 = hitNode(mx, my);
       let endPt = null, isSelf = false;
@@ -1867,10 +1868,17 @@ canvas.addEventListener('touchend', e => {
         endPt = snapped || dropPt;
       }
       if (!isSelf && endPt) completeWire(endPt);
+      wireDragActive = false;
+      wireStart = null; wirePreview = null;
+      setHint('Tap a terminal or node to start wire · tap destination to complete');
+    } else {
+      // Short tap on terminal: promote to tap-to-tap wire mode
+      wireDragActive = false;
+      wireMode = true;
+      wirePreview = null;
+      document.getElementById('btnWire').classList.add('active');
+      setHint('Tap terminal, node, or canvas point to complete wire · Wire button to cancel');
     }
-    wireDragActive = false;
-    wireStart = null; wirePreview = null;
-    setHint('Drag from terminal dot to wire · Double-tap to edit · Power to simulate');
     return;
   }
 
