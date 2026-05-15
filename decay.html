@@ -114,6 +114,35 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 /* Radiation type legend */
 .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
 
+/* Zoom modal */
+#zoom-modal{
+  display:none;position:fixed;inset:0;z-index:60;
+  background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;
+}
+#zoom-modal.show{display:flex;}
+.zoom-box{
+  background:rgba(6,8,16,0.98);border:1px solid rgba(91,200,255,0.3);
+  border-radius:20px;padding:20px;
+  width:80vw;height:80vh;
+  display:flex;flex-direction:column;
+  position:relative;
+}
+.zoom-box h3{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.5);text-transform:uppercase;margin-bottom:12px;}
+#zoom-canvas{flex:1;border-radius:8px;border:1px solid var(--border);display:block;width:100%;cursor:crosshair;}
+#zoom-coords{font-family:'Space Mono',monospace;font-size:10px;color:var(--blue);margin-top:8px;height:16px;text-align:center;}
+
+/* BG Warning message */
+#bg-warning{
+  display:none;position:absolute;
+  font-family:'Space Mono',monospace;font-size:10px;
+  background:rgba(255,200,80,0.12);border:1px solid rgba(255,200,80,0.4);
+  color:var(--amber);border-radius:10px;padding:8px 12px;
+  z-index:15;text-align:center;line-height:1.5;
+  animation: pulse-warn 1.5s ease-in-out infinite;
+}
+@keyframes pulse-warn{0%,100%{opacity:1;}50%{opacity:0.6;}}
+
 /* CPM digits */
 .cpm-big{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green);text-align:center;letter-spacing:2px;margin:6px 0;text-shadow:0 0 20px rgba(77,255,160,0.4);}
 .cpm-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;text-align:center;color:rgba(180,200,255,0.35);text-transform:uppercase;}
@@ -122,6 +151,27 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 .act-sel-row{display:flex;gap:4px;margin-bottom:8px;}
 .act-sel-btn{flex:1;padding:5px 4px;border-radius:10px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.04);color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;text-align:center;transition:all .2s;}
 .act-sel-btn.active{background:rgba(181,122,255,0.2);border-color:var(--violet);color:var(--violet);}
+
+/* Decay curve panel top-left */
+#decay-panel{
+  position:absolute;top:72px;left:20px;z-index:10;
+  background:rgba(8,12,26,0.93);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:14px;
+  padding:10px 12px;
+}
+#decay-panel h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:6px;}
+
+/* Mystery quiz inline in HUD */
+#mystery-quiz{display:none;margin-top:8px;}
+#mystery-quiz .quiz-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--violet);text-transform:uppercase;margin-bottom:8px;}
+.quiz-option-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.quiz-opt-btn{padding:5px 10px;border-radius:20px;border:1px solid rgba(181,122,255,0.3);background:rgba(181,122,255,0.05);color:rgba(181,122,255,0.7);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;transition:all .2s;}
+.quiz-opt-btn.selected{background:rgba(181,122,255,0.22);border-color:var(--violet);color:var(--violet);}
+.quiz-validate-btn{width:100%;padding:6px;border-radius:10px;border:1px solid rgba(181,122,255,0.4);background:rgba(181,122,255,0.08);color:var(--violet);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;transition:all .2s;margin-bottom:6px;}
+.quiz-validate-btn:hover{background:rgba(181,122,255,0.18);}
+.quiz-result{padding:8px 10px;border-radius:8px;font-size:10px;display:none;font-family:'Space Mono',monospace;line-height:1.5;}
+.quiz-result.ok{background:rgba(77,255,160,0.1);border:1px solid rgba(77,255,160,0.3);color:var(--green);}
+.quiz-result.fail{background:rgba(255,94,114,0.1);border:1px solid rgba(255,94,114,0.3);color:var(--red);}
 </style>
 </head>
 <body>
@@ -132,6 +182,50 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 <div id="title">
   <h1>RADIOACTIVE DECAY LAB</h1>
   <p>Radiation Shielding &amp; Decay Kinetics</p>
+</div>
+
+<!-- Decay Curve Panel (top-left) -->
+<div id="decay-panel">
+  <h3>Decay Curve</h3>
+  <canvas id="decay-canvas" width="220" height="140" style="border-radius:6px;border:1px solid var(--border);display:block;"></canvas>
+  <button id="btn-zoom-decay" onclick="openZoomModal()" style="display:none;margin-top:7px;width:100%;padding:5px 10px;border-radius:10px;border:1px solid rgba(91,200,255,0.35);background:rgba(91,200,255,0.08);color:var(--blue);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">🔍 ZOOM GRAPH</button>
+</div>
+
+<!-- Mystery quiz (shown only when mystery source is selected, placed below decay panel) -->
+<div id="mystery-quiz" style="display:none;position:absolute;top:0;left:20px;z-index:10;background:rgba(8,12,26,0.93);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:10px 12px;min-width:244px;">
+  <div class="quiz-title">❓ Mystery Source — Test Mode</div>
+  <div style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,0.55);margin-bottom:8px;">What do you want to determine?</div>
+  <div class="quiz-option-row" id="quiz-mode-row">
+    <button class="quiz-opt-btn" id="qmode-halflife" onclick="selectQuizMode('halflife')">Determine Half-Life</button>
+    <button class="quiz-opt-btn" id="qmode-identify" onclick="selectQuizMode('identify')">Identify Radiation</button>
+  </div>
+  <!-- Half-life sub-quiz -->
+  <div id="quiz-halflife-panel" style="display:none;">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,0.55);margin-bottom:6px;">Observe decay curve → enter T½ (s):</div>
+    <input class="modal-input" id="mystery-inp-hl" type="number" placeholder="e.g. 20" min="1" max="300" style="margin-bottom:6px;">
+    <button class="quiz-validate-btn" onclick="validateMysteryHL()">✓ Validate Half-Life</button>
+    <div class="quiz-result" id="mystery-res-hl"></div>
+  </div>
+  <!-- Identify radiation sub-quiz -->
+  <div id="quiz-identify-panel" style="display:none;">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,0.55);margin-bottom:6px;">Test shields, then select radiation type(s):</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,0.7);cursor:pointer;">
+        <input type="checkbox" id="mchk-alpha" style="accent-color:var(--alpha-col);width:13px;height:13px;">
+        <span style="color:var(--alpha-col);">●</span> Alpha (α)
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,0.7);cursor:pointer;">
+        <input type="checkbox" id="mchk-beta" style="accent-color:var(--beta-col);width:13px;height:13px;">
+        <span style="color:var(--blue);">●</span> Beta (β)
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,0.7);cursor:pointer;">
+        <input type="checkbox" id="mchk-gamma" style="accent-color:var(--gamma-col);width:13px;height:13px;">
+        <span style="color:var(--green);">●</span> Gamma (γ)
+      </label>
+    </div>
+    <button class="quiz-validate-btn" onclick="validateMysteryIdentify()">🔬 Validate Identification</button>
+    <div class="quiz-result" id="mystery-res-identify"></div>
+  </div>
 </div>
 
 <!-- HUD -->
@@ -159,23 +253,13 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
   <div class="hdiv"></div>
   <h2>Shield Slot</h2>
   <div class="btn-group" id="shield-btns">
-    <button class="sbtn" data-sh="none" onclick="selectShield(&#39;none&#39;)">None</button>
-    <button class="sbtn" data-sh="paper" onclick="selectShield(&#39;paper&#39;)">📄 Paper</button>
-    <button class="sbtn active-shield" data-sh="al" onclick="selectShield(&#39;al&#39;)">🔩 Al</button>
-    <button class="sbtn" data-sh="pb" onclick="selectShield(&#39;pb&#39;)">🧱 Pb</button>
+    <button class="sbtn" data-sh="none" onclick="selectShield('none')">None</button>
+    <button class="sbtn" data-sh="paper" onclick="selectShield('paper')">📄 Paper</button>
+    <button class="sbtn active-shield" data-sh="al" onclick="selectShield('al')">🔩 Al</button>
+    <button class="sbtn" data-sh="pb" onclick="selectShield('pb')">🧱 Pb</button>
   </div>
   <div class="dr" style="margin-top:4px;"><span class="dl">Shield Status</span><span class="dv" id="val-shield" style="color:var(--amber);">Aluminum</span></div>
 
-  <div class="hdiv"></div>
-  <h2>Decay Curve</h2>
-  <canvas id="decay-canvas" width="204" height="120" style="border-radius:8px;border:1px solid var(--border);display:block;"></canvas>
-
-  <div class="hdiv"></div>
-  <h2>Activities</h2>
-  <div class="act-sel-row">
-    <button class="act-sel-btn" onclick="openActivity(&#39;A&#39;)">A: Half-Life</button>
-    <button class="act-sel-btn" onclick="openActivity(&#39;B&#39;)">B: Mystery ID</button>
-  </div>
 </div>
 
 <!-- Bottom Controls -->
@@ -190,6 +274,19 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 </div>
 
 <div id="hint">🖐 Drag to orbit · Scroll to zoom · Use HUD to control experiment</div>
+
+<!-- BG Warning -->
+<div id="bg-warning">⚠ Set background radiation first!<br>Press <b>Zero / Tare</b> to measure background.</div>
+
+<!-- Zoom Modal -->
+<div id="zoom-modal">
+  <div class="zoom-box">
+    <button onclick="closeZoomModal()" style="position:absolute;top:14px;right:18px;background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;z-index:2;">✕</button>
+    <h3>📈 Decay Curve — Detailed View</h3>
+    <canvas id="zoom-canvas"></canvas>
+    <div id="zoom-coords">Click on a point to read coordinates</div>
+  </div>
+</div>
 
 <!-- Activity Modal -->
 <div id="activity-modal" class="">
@@ -219,10 +316,10 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 //  PHYSICS STATE
 // ═══════════════════════════════════════════════════════
 const SOURCES = {
-  alpha:   { label:'Alpha',   color:0xff5e72, hlSec:30, types:['alpha'] },
-  beta:    { label:'Beta',    color:0x5bc8ff, hlSec:45, types:['beta'] },
+  alpha:   { label:'Alpha',   color:0xff5e72, hlSec:20, types:['alpha'] },
+  beta:    { label:'Beta',    color:0x5bc8ff, hlSec:20, types:['beta'] },
   gamma:   { label:'Gamma',   color:0x4dffa0, hlSec:20, types:['gamma'] },
-  mystery: { label:'Mystery', color:0xb57aff, hlSec:35, types:[] }
+  mystery: { label:'Mystery', color:0xb57aff, hlSec:20, types:[] }
 };
 
 const SHIELDS = {
@@ -247,7 +344,8 @@ const S = {
   decayData: [],
   mysteryTypes: [],
   gammaAttenuation: 1.0,
-  paused: false
+  paused: false,
+  quizMode: null
 };
 
 function setBGNoise(){ return 15 + Math.random()*15; }
@@ -257,7 +355,8 @@ function computeActivity(elapsedSec){
   if(!S.source) return setBGNoise();
   const src = SOURCES[S.source];
   const lambda = Math.LN2 / src.hlSec;
-  let baseActivity = S.N0 * lambda * Math.exp(-lambda * elapsedSec) * 0.1; // scale to CPM-range
+  // Source starts at ~1200 CPM and decays exponentially to near zero
+  let baseActivity = 1200 * Math.exp(-lambda * elapsedSec);
 
   // Shielding attenuation
   const sh = SHIELDS[S.shield];
@@ -321,16 +420,16 @@ const root3 = new THREE.Group(); scene3.add(root3);
 // Floor
 const floorM = new THREE.Mesh(
   new THREE.PlaneGeometry(80, 80),
-  new THREE.MeshStandardMaterial({color:0x080c18, roughness:0.95})
+  new THREE.MeshStandardMaterial({color:0x111828, roughness:0.92})
 );
 floorM.rotation.x = -Math.PI/2; floorM.position.y = -2.5; scene3.add(floorM);
 
 // Grid
-const grid = new THREE.GridHelper(50, 40, 0x111830, 0x0d1428);
+const grid = new THREE.GridHelper(50, 40, 0x1e2e4a, 0x172238);
 grid.position.y = -2.48; scene3.add(grid);
 
 // Bench top
-const benchMat = new THREE.MeshStandardMaterial({color:0x1a2035, roughness:0.6, metalness:0.1});
+const benchMat = new THREE.MeshStandardMaterial({color:0x263050, roughness:0.55, metalness:0.12});
 const bench = new THREE.Mesh(new THREE.BoxGeometry(20, 0.3, 4), benchMat);
 bench.position.set(0, -0.6, 0); bench.receiveShadow = true; root3.add(bench);
 
@@ -395,7 +494,7 @@ const shieldPlate = new THREE.Mesh(
 shieldPlate.position.y = 0.28; shieldPlate.visible = false; shieldGroup.add(shieldPlate);
 
 // ── Screen / Monitor ──
-const screenGroup = new THREE.Group(); screenGroup.position.set(-9.5, 0, 0); root3.add(screenGroup);
+const screenGroup = new THREE.Group(); screenGroup.position.set(10.5, 0, 0); root3.add(screenGroup);
 const monitorMat = new THREE.MeshStandardMaterial({color:0x1a2540, metalness:0.6, roughness:0.4});
 const monitor = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.5, 4.5), monitorMat);
 monitor.position.y = 1.05; screenGroup.add(monitor);
@@ -407,19 +506,19 @@ const screenPanel = new THREE.Mesh(
   new THREE.PlaneGeometry(4.0, 3.2),
   new THREE.MeshStandardMaterial({map:screenTex, roughness:0.5, emissive:0x000000, emissiveIntensity:0})
 );
-screenPanel.rotation.y = Math.PI/2; screenPanel.position.set(0.08, 1.1, 0); screenGroup.add(screenPanel);
+screenPanel.rotation.y = -Math.PI/2; screenPanel.position.set(-0.08, 1.1, 0); screenGroup.add(screenPanel);
 const screenMonBase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.14, 1.8), monitorMat);
 screenMonBase.position.set(0, -0.9, 0); screenGroup.add(screenMonBase);
 const screenMonPost = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.86, 8), monitorMat);
 screenMonPost.position.set(0, -0.46, 0); screenGroup.add(screenMonPost);
-const screenGlowLight = new THREE.PointLight(0x5bc8ff, 0.2, 5); screenGlowLight.position.set(0.6, 1.1, 0); screenGroup.add(screenGlowLight);
+const screenGlowLight = new THREE.PointLight(0x5bc8ff, 0.2, 5); screenGlowLight.position.set(-0.6, 1.1, 0); screenGroup.add(screenGlowLight);
 
 // ── Wiring / Cable ──
 (function buildCable(){
   const pts = [];
   for(let i=0;i<=30;i++){
     const t = i/30;
-    const x = -9.4 + t*17.0;
+    const x = -7.0 + t*17.0;
     const y = -0.38 + Math.sin(t*Math.PI)*0.08 - (t*(1-t))*0.15;
     pts.push(new THREE.Vector3(x, y, -0.3));
   }
@@ -510,7 +609,10 @@ let lastTick = 0;
 let flashT = 0;
 
 function selectSource(src){
+  if(S.running){ showFlash('Stop acquisition before changing source!', '#ff5e72'); return; }
   S.source = src;
+  // Randomize half-life between 10 and 30 seconds
+  SOURCES[src].hlSec = 10 + Math.floor(Math.random()*21);
   document.querySelectorAll('#source-btns .sbtn').forEach(b=>{
     b.className = 'sbtn';
     if(b.dataset.src===src) b.classList.add('active-'+src);
@@ -521,6 +623,17 @@ function selectSource(src){
     const shuffled = pool.sort(()=>Math.random()-0.5);
     const count = 1 + Math.floor(Math.random()*3);
     S.mysteryTypes = shuffled.slice(0, count);
+    // Show mystery quiz panel below decay panel
+    document.getElementById('mystery-quiz').style.display = 'block';
+    // Reset quiz state
+    S.quizMode = null;
+    document.getElementById('quiz-halflife-panel').style.display='none';
+    document.getElementById('quiz-identify-panel').style.display='none';
+    document.querySelectorAll('#quiz-mode-row .quiz-opt-btn').forEach(b=>b.classList.remove('selected'));
+    const rhl = document.getElementById('mystery-res-hl'); rhl.style.display='none';
+    const rid = document.getElementById('mystery-res-identify'); rid.style.display='none';
+  } else {
+    document.getElementById('mystery-quiz').style.display = 'none';
   }
   updateSourceVisual();
   updateShieldVisual();
@@ -563,21 +676,28 @@ function updateShieldVisual(){
 }
 
 function toggleAcquisition(){
-  S.running = !S.running;
-  const btn = document.getElementById('btn-start');
-  if(S.running){
-    if(!S.source){ alert('Please select a source first.'); S.running=false; return; }
+  if(!S.running){
+    // Starting
+    if(!S.source){ showFlash('Please select a source first.', '#ff5e72'); return; }
+    if(!S.bgMeasured){ showFlash('⚠ Set background radiation first! Press "Zero / Tare".', '#ffc857'); return; }
+    S.running = true;
     S.startTime = Date.now();
     acqStartReal = Date.now();
     S.elapsed = 0;
     S.decayData = [];
+    const btn = document.getElementById('btn-start');
     btn.textContent = '■ Stop Acquisition';
     btn.classList.add('on');
     updateSourceVisual();
   } else {
+    // Stopping
+    S.running = false;
+    const btn = document.getElementById('btn-start');
     btn.textContent = '▶ Start Acquisition';
     btn.classList.remove('on');
     updateSourceVisual();
+    // Show zoom button
+    document.getElementById('btn-zoom-decay').style.display = 'inline-block';
   }
 }
 
@@ -610,6 +730,9 @@ function resetAll(){
   document.getElementById('val-net').textContent = '—';
   document.getElementById('val-net').style.color = 'var(--amber)';
   document.getElementById('cpm-display').textContent = '0';
+  document.getElementById('mystery-quiz').style.display = 'none';
+  document.getElementById('btn-zoom-decay').style.display = 'none';
+  document.getElementById('zoom-modal').style.display = 'none';
   srcCapsule.visible = false; srcGlow.intensity = 0;
   shieldPlate.visible = false;
   blockLine.material.opacity = 0;
@@ -643,11 +766,12 @@ function spawnParticles(){
     const cols = {alpha:0xff5e72, beta:0x5bc8ff, gamma:0x4dffa0};
     p.active = true;
     p.x = -7.0; p.y = 0.3 + (Math.random()-0.5)*0.15; p.z = (Math.random()-0.5)*0.15;
-    p.vx = 3.5 + Math.random()*1.5;
+    p.vx = 4.0 + Math.random()*1.0;
     p.vy = (Math.random()-0.5)*0.08;
     p.vz = (Math.random()-0.5)*0.08;
     p.life = 0;
-    p.maxLife = isBlocked ? (Math.random()*0.35+0.2) : (Math.random()*0.5+0.9);
+    // Non-blocked: need ~3.5s to travel 14 units at v≈4. maxLife ~3.5
+    p.maxLife = isBlocked ? (Math.random()*0.35+0.2) : (Math.random()*0.4+3.2);
     p.type = type;
     p.blocked = isBlocked;
     p.mesh.material.color.setHex(cols[type]||0xffffff);
@@ -659,14 +783,16 @@ function spawnParticles(){
 
 const DT = 1/30;
 function updateParticles(){
+  // Shield position in world space is x≈0
+  const SHIELD_X = 0.0;
   partSpheres.forEach(p=>{
     if(!p.active){ p.mesh.visible=false; return; }
     p.life += DT;
     const t = p.life / p.maxLife;
     if(t >= 1){ p.active=false; p.mesh.visible=false; return; }
 
-    // Stop alpha at paper, beta at Al, etc. at shield position (x≈0)
-    if(p.blocked && p.x >= -0.1){
+    // Stop blocked particles at shield position
+    if(p.blocked && p.x >= SHIELD_X - 0.1){
       p.active=false; p.mesh.visible=false;
       return;
     }
@@ -675,11 +801,20 @@ function updateParticles(){
     p.y += p.vy * DT;
     p.z += p.vz * DT;
 
-    const fade = t > 0.7 ? (1-t)/0.3 : 1.0;
-    p.mesh.material.opacity = 0.85 * fade;
-    p.mesh.material.emissiveIntensity = 1.2 * fade;
+    // Always fade when reaching the shield mount position (x≈0), regardless of blocking
+    let opacity;
+    if(p.x >= SHIELD_X){
+      // Past shield: fade quickly
+      const distPast = p.x - SHIELD_X;
+      const totalPast = 7.5 - SHIELD_X; // ~7.5 is GM tube
+      opacity = 0.85 * Math.max(0, 1 - distPast/totalPast);
+    } else {
+      opacity = 0.85;
+    }
+    p.mesh.material.opacity = opacity;
+    p.mesh.material.emissiveIntensity = 1.2 * (opacity/0.85);
     p.mesh.position.set(p.x, p.y, p.z);
-    p.mesh.visible = true;
+    p.mesh.visible = opacity > 0.01;
   });
 }
 
@@ -716,9 +851,9 @@ function updateHUD(){
   document.getElementById('cpm-display').textContent = S.grossCPM.toFixed(0);
   document.getElementById('val-gross').textContent = S.grossCPM.toFixed(1);
   document.getElementById('val-time').textContent = S.elapsed.toFixed(1)+'s';
-  const barPct = Math.min(100, (S.grossCPM/300)*100);
+  const barPct = Math.min(100, (S.grossCPM/1500)*100);
   document.getElementById('cpm-bar').style.width = barPct+'%';
-  const barColor = S.grossCPM > 200 ? 'var(--red)' : S.grossCPM > 100 ? 'var(--amber)' : 'var(--green)';
+  const barColor = S.grossCPM > 900 ? 'var(--red)' : S.grossCPM > 400 ? 'var(--amber)' : 'var(--green)';
   document.getElementById('cpm-bar').style.background = barColor;
   document.getElementById('cpm-display').style.color = barColor;
   if(S.netCPM !== null){
@@ -727,33 +862,91 @@ function updateHUD(){
   }
 }
 
-// ── Decay canvas (HUD plot) ──
+// ── Decay canvas (top-left plot) ──
 function updateDecayCanvas(){
   const c = document.getElementById('decay-canvas');
   if(!c) return;
   const ctx = c.getContext('2d'); const W=c.width, H=c.height;
+  // Margins for axis labels
+  const ML=38, MR=8, MT=10, MB=24;
+  const PW=W-ML-MR, PH=H-MT-MB;
+
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#060810'; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle = 'rgba(180,200,255,0.08)'; ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){ctx.beginPath();ctx.moveTo(0,i*H/4);ctx.lineTo(W,i*H/4);ctx.stroke();}
-  for(let i=0;i<=5;i++){ctx.beginPath();ctx.moveTo(i*W/5,0);ctx.lineTo(i*W/5,H);ctx.stroke();}
-  if(S.decayData.length < 2){
-    ctx.fillStyle='rgba(180,200,255,0.2)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
-    ctx.fillText('Waiting for data…',W/2,H/2); return;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(180,200,255,0.07)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=MT+i*PH/4;
+    ctx.beginPath();ctx.moveTo(ML,y);ctx.lineTo(ML+PW,y);ctx.stroke();
   }
+  for(let i=0;i<=5;i++){
+    const x=ML+i*PW/5;
+    ctx.beginPath();ctx.moveTo(x,MT);ctx.lineTo(x,MT+PH);ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle='rgba(180,200,255,0.35)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,MT+PH); ctx.lineTo(ML+PW,MT+PH); ctx.stroke();
+
+  if(S.decayData.length < 2){
+    ctx.fillStyle='rgba(180,200,255,0.25)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('Waiting…',ML+PW/2,MT+PH/2);
+    // Axis labels
+    ctx.fillStyle='rgba(91,200,255,0.4)'; ctx.font='7px Space Mono';
+    ctx.textAlign='center'; ctx.fillText('t (s)', ML+PW/2, H-2);
+    ctx.save(); ctx.translate(9, MT+PH/2); ctx.rotate(-Math.PI/2); ctx.fillText('CPM',0,0); ctx.restore();
+    return;
+  }
+
   const maxCPM = Math.max(...S.decayData.map(d=>d.cpm), 1);
-  const maxT = Math.max(...S.decayData.map(d=>d.t), 1);
+  const maxT   = Math.max(...S.decayData.map(d=>d.t), 1);
+
+  // Nice round max for Y axis
+  const yMax = Math.ceil(maxCPM / 200) * 200;
+  const tMax = Math.ceil(maxT / 30) * 30;
+
+  const px = t  => ML + (t/tMax)*PW;
+  const py = cp => MT + PH - (cp/yMax)*PH;
+
+  // Y tick labels
+  ctx.fillStyle='rgba(180,200,255,0.45)'; ctx.font='7px Space Mono'; ctx.textAlign='right';
+  for(let i=0;i<=4;i++){
+    const val = Math.round(yMax*(4-i)/4);
+    const yp = MT + i*PH/4;
+    ctx.fillText(val, ML-3, yp+3);
+  }
+
+  // X tick labels
+  ctx.textAlign='center';
+  for(let i=0;i<=5;i++){
+    const val = Math.round(tMax*i/5);
+    const xp = ML + i*PW/5;
+    ctx.fillText(val+'s', xp, MT+PH+10);
+  }
+
+  // Axis name labels
+  ctx.fillStyle='rgba(91,200,255,0.45)'; ctx.font='7px Space Mono';
+  ctx.textAlign='center'; ctx.fillText('t (s)', ML+PW/2, H-1);
+  ctx.save(); ctx.translate(9, MT+PH/2); ctx.rotate(-Math.PI/2); ctx.fillText('CPM',0,0); ctx.restore();
+
+  // Fill under curve
   ctx.beginPath();
-  ctx.strokeStyle = '#5bc8ff'; ctx.lineWidth = 1.5;
   S.decayData.forEach((d,i)=>{
-    const px = (d.t/maxT)*W; const py = H - (d.cpm/maxCPM)*H*0.9 - H*0.05;
-    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    if(i===0) ctx.moveTo(px(d.t), py(d.cpm)); else ctx.lineTo(px(d.t), py(d.cpm));
+  });
+  ctx.lineTo(px(S.decayData[S.decayData.length-1].t), MT+PH);
+  ctx.lineTo(px(0), MT+PH); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,MT,0,MT+PH);
+  grad.addColorStop(0,'rgba(91,200,255,0.22)'); grad.addColorStop(1,'rgba(91,200,255,0.02)');
+  ctx.fillStyle=grad; ctx.fill();
+
+  // Curve line
+  ctx.beginPath(); ctx.strokeStyle='#5bc8ff'; ctx.lineWidth=1.8;
+  S.decayData.forEach((d,i)=>{
+    if(i===0) ctx.moveTo(px(d.t), py(d.cpm)); else ctx.lineTo(px(d.t), py(d.cpm));
   });
   ctx.stroke();
-  // Axes labels
-  ctx.fillStyle='rgba(91,200,255,0.5)'; ctx.font='8px Space Mono'; ctx.textAlign='left';
-  ctx.fillText('CPM',2,10);
-  ctx.textAlign='right'; ctx.fillText('t(s)',W-2,H-2);
 }
 
 // ── Screen texture (monitor in 3D) ──
@@ -833,7 +1026,7 @@ function drawLabels(){
     {wx:7.5, wy:1.2, wz:0, text:'GM TUBE', col:'rgba(91,200,255,0.7)'},
     {wx:-7.5, wy:1.2, wz:0, text:'SOURCE', col:'rgba(255,94,114,0.7)'},
     {wx:0, wy:1.8, wz:0, text:'SHIELD', col:'rgba(255,200,80,0.7)'},
-    {wx:-9.5, wy:2.8, wz:0, text:'MONITOR', col:'rgba(77,255,160,0.5)'},
+    {wx:10.5, wy:2.8, wz:0, text:'MONITOR', col:'rgba(77,255,160,0.5)'},
   ];
   labels3d.forEach(l=>{
     const sc = worldToScreen(l.wx, l.wy, l.wz);
@@ -912,16 +1105,16 @@ window.validateHalflife = function(){
   if(!S.source || !SOURCES[S.source]){ res.className='modal-result fail'; res.textContent='⚠ Please run an acquisition first.'; return; }
   const src = SOURCES[S.source];
   const trueHL = src.hlSec;
-  const tol = trueHL * 0.2;
+  const tol = trueHL * 0.05;
   if(Math.abs(val-trueHL)<=tol){
     res.className='modal-result ok';
-    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s. Your reading of '+val+'s is within 20% tolerance. Well done!';
+    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s. Your reading of '+val+'s is within 5% tolerance. Well done!';
     const n0 = S.decayData.length>0 ? S.decayData[0].cpm : 200;
     document.getElementById('n0-display').textContent = n0.toFixed(0);
     document.getElementById('followup-hl').style.display='block';
   } else {
     res.className='modal-result fail';
-    res.innerHTML='❌ Not quite. Hint: The activity should drop to 50% of its peak. Look at your curve. True T½ is between 15–60s. Try again!';
+    res.innerHTML='❌ Not quite. Hint: The activity should drop to 50% of its peak. Look at your curve carefully. Try again!';
   }
 };
 
@@ -970,6 +1163,248 @@ window.validateMystery = function(){
     res.innerHTML='❌ Not quite. Hints: '+hints.join(' ')+' Try more shield combinations!';
   }
 };
+
+// ── Mystery inline quiz ──
+function selectQuizMode(mode){
+  S.quizMode = mode;
+  document.querySelectorAll('#quiz-mode-row .quiz-opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('qmode-'+mode).classList.add('selected');
+  document.getElementById('quiz-halflife-panel').style.display = mode==='halflife' ? 'block' : 'none';
+  document.getElementById('quiz-identify-panel').style.display = mode==='identify' ? 'block' : 'none';
+}
+window.selectQuizMode = selectQuizMode;
+
+window.validateMysteryHL = function(){
+  const val = parseFloat(document.getElementById('mystery-inp-hl').value);
+  const res = document.getElementById('mystery-res-hl');
+  res.style.display='block';
+  if(!S.source||S.source!=='mystery'||S.mysteryTypes.length===0){
+    res.className='quiz-result fail'; res.textContent='⚠ Select Mystery Source and run acquisition first.'; return;
+  }
+  const trueHL = SOURCES.mystery.hlSec;
+  const tol = trueHL * 0.05;
+  if(Math.abs(val-trueHL)<=tol){
+    res.className='quiz-result ok';
+    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s — within 5% tolerance. Well done!';
+  } else {
+    res.className='quiz-result fail';
+    res.innerHTML='❌ Not quite. Look carefully at where activity drops to exactly 50% of peak. T½ is between 10–30s.';
+  }
+};
+
+window.validateMysteryIdentify = function(){
+  if(!S.mysteryTypes||S.mysteryTypes.length===0){
+    const res=document.getElementById('mystery-res-identify'); res.style.display='block';
+    res.className='quiz-result fail'; res.textContent='⚠ Select Mystery Source and run acquisitions with different shields first.'; return;
+  }
+  const guesses = [];
+  if(document.getElementById('mchk-alpha').checked) guesses.push('alpha');
+  if(document.getElementById('mchk-beta').checked) guesses.push('beta');
+  if(document.getElementById('mchk-gamma').checked) guesses.push('gamma');
+  const truth = S.mysteryTypes.slice().sort().join(',');
+  const guess = guesses.slice().sort().join(',');
+  const res = document.getElementById('mystery-res-identify');
+  res.style.display='block';
+  if(truth===guess){
+    res.className='quiz-result ok';
+    res.innerHTML='🎉 Correct! Emits: '+S.mysteryTypes.join(' + ')+'. Excellent detective work!';
+  } else {
+    res.className='quiz-result fail';
+    const hints = [];
+    if(S.mysteryTypes.includes('alpha')&&!guesses.includes('alpha')) hints.push('Paper reduces CPM → α present.');
+    if(!S.mysteryTypes.includes('alpha')&&guesses.includes('alpha')) hints.push('Paper shows no reduction → no α.');
+    if(S.mysteryTypes.includes('beta')&&!guesses.includes('beta')) hints.push('Al reduces more than paper → β present.');
+    if(!S.mysteryTypes.includes('beta')&&guesses.includes('beta')) hints.push('Al same as paper → no β.');
+    if(S.mysteryTypes.includes('gamma')&&!guesses.includes('gamma')) hints.push('Lead only partially reduces → γ present.');
+    res.innerHTML='❌ Hints: '+(hints.join(' ')||'Try more shield combinations!');
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  MYSTERY QUIZ POSITIONING (below decay panel)
+// ═══════════════════════════════════════════════════════
+function positionMysteryQuiz(){
+  const dp = document.getElementById('decay-panel');
+  const mq = document.getElementById('mystery-quiz');
+  if(mq.style.display === 'none') return;
+  const rect = dp.getBoundingClientRect();
+  mq.style.top = (rect.bottom + 8) + 'px';
+  mq.style.left = '20px';
+}
+// Re-position on resize
+window.addEventListener('resize', positionMysteryQuiz);
+
+// Update selectSource to reposition mystery quiz
+const _origSelectQuizMode = window.selectQuizMode;
+window.selectQuizMode = function(mode){
+  _origSelectQuizMode(mode);
+  setTimeout(positionMysteryQuiz, 10);
+};
+
+// ═══════════════════════════════════════════════════════
+//  ZOOM MODAL
+// ═══════════════════════════════════════════════════════
+function openZoomModal(){
+  const modal = document.getElementById('zoom-modal');
+  modal.classList.add('show');
+  modal.style.display = 'flex';
+  setTimeout(drawZoomCanvas, 30);
+}
+window.openZoomModal = openZoomModal;
+
+function closeZoomModal(){
+  const modal = document.getElementById('zoom-modal');
+  modal.classList.remove('show');
+  modal.style.display = 'none';
+}
+window.closeZoomModal = closeZoomModal;
+
+document.getElementById('zoom-modal').addEventListener('click', e=>{
+  if(e.target === document.getElementById('zoom-modal')) closeZoomModal();
+});
+
+function drawZoomCanvas(){
+  const canvas = document.getElementById('zoom-canvas');
+  if(!canvas) return;
+  const parent = canvas.parentElement;
+  canvas.width = parent.clientWidth - 40;
+  canvas.height = parent.clientHeight - 80;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const ML=60, MR=20, MT=20, MB=40;
+  const PW=W-ML-MR, PH=H-MT-MB;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#06080f'; ctx.fillRect(0,0,W,H);
+
+  if(S.decayData.length < 2){
+    ctx.fillStyle='rgba(91,200,255,0.3)'; ctx.font='14px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('No data yet — run an acquisition first', W/2, H/2);
+    return;
+  }
+
+  const maxCPM = Math.max(...S.decayData.map(d=>d.cpm), 1);
+  const maxT   = Math.max(...S.decayData.map(d=>d.t), 1);
+  const yMax = Math.ceil(maxCPM / 50) * 50;
+  const tMax = Math.ceil(maxT / 10) * 10;
+
+  const px = t  => ML + (t/tMax)*PW;
+  const py = cp => MT + PH - (cp/yMax)*PH;
+  const invPx = x => ((x - ML) / PW) * tMax;
+  const invPy = y => ((MT + PH - y) / PH) * yMax;
+
+  // Grid
+  ctx.strokeStyle='rgba(180,200,255,0.06)'; ctx.lineWidth=1;
+  const yTicks = 8, xTicks = 10;
+  for(let i=0;i<=yTicks;i++){
+    const y=MT+i*PH/yTicks;
+    ctx.beginPath();ctx.moveTo(ML,y);ctx.lineTo(ML+PW,y);ctx.stroke();
+  }
+  for(let i=0;i<=xTicks;i++){
+    const x=ML+i*PW/xTicks;
+    ctx.beginPath();ctx.moveTo(x,MT);ctx.lineTo(x,MT+PH);ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle='rgba(180,200,255,0.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,MT+PH); ctx.lineTo(ML+PW,MT+PH); ctx.stroke();
+
+  // Y tick labels
+  ctx.fillStyle='rgba(180,200,255,0.6)'; ctx.font='11px Space Mono'; ctx.textAlign='right';
+  for(let i=0;i<=yTicks;i++){
+    const val = Math.round(yMax*(yTicks-i)/yTicks);
+    const yp = MT + i*PH/yTicks;
+    ctx.fillText(val, ML-6, yp+4);
+    // Minor grid tick
+    ctx.strokeStyle='rgba(180,200,255,0.2)'; ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(ML-3,yp);ctx.lineTo(ML,yp);ctx.stroke();
+  }
+
+  // X tick labels
+  ctx.fillStyle='rgba(180,200,255,0.6)'; ctx.font='11px Space Mono'; ctx.textAlign='center';
+  for(let i=0;i<=xTicks;i++){
+    const val = (tMax*i/xTicks).toFixed(1);
+    const xp = ML + i*PW/xTicks;
+    ctx.fillText(val+'s', xp, MT+PH+18);
+    ctx.strokeStyle='rgba(180,200,255,0.2)'; ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(xp,MT+PH);ctx.lineTo(xp,MT+PH+3);ctx.stroke();
+  }
+
+  // Axis labels
+  ctx.fillStyle='rgba(91,200,255,0.6)'; ctx.font='12px Space Mono';
+  ctx.textAlign='center'; ctx.fillText('Time (s)', ML+PW/2, H-4);
+  ctx.save(); ctx.translate(14, MT+PH/2); ctx.rotate(-Math.PI/2); ctx.fillText('CPM',0,0); ctx.restore();
+
+  // Fill under curve
+  ctx.beginPath();
+  S.decayData.forEach((d,i)=>{
+    if(i===0) ctx.moveTo(px(d.t), py(d.cpm)); else ctx.lineTo(px(d.t), py(d.cpm));
+  });
+  ctx.lineTo(px(S.decayData[S.decayData.length-1].t), MT+PH);
+  ctx.lineTo(px(0), MT+PH); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,MT,0,MT+PH);
+  grad.addColorStop(0,'rgba(91,200,255,0.25)'); grad.addColorStop(1,'rgba(91,200,255,0.02)');
+  ctx.fillStyle=grad; ctx.fill();
+
+  // Curve line
+  ctx.beginPath(); ctx.strokeStyle='#5bc8ff'; ctx.lineWidth=2.5;
+  S.decayData.forEach((d,i)=>{
+    if(i===0) ctx.moveTo(px(d.t), py(d.cpm)); else ctx.lineTo(px(d.t), py(d.cpm));
+  });
+  ctx.stroke();
+
+  // Data point dots
+  ctx.fillStyle='rgba(91,200,255,0.5)';
+  S.decayData.forEach(d=>{
+    ctx.beginPath(); ctx.arc(px(d.t), py(d.cpm), 3, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Store for click handling
+  canvas._zoomInfo = { px, py, invPx, invPy, ML, MR, MT, MB, PW, PH };
+}
+
+// Click on zoom canvas → show coordinates
+document.getElementById('zoom-canvas').addEventListener('click', function(e){
+  const info = this._zoomInfo;
+  if(!info || S.decayData.length < 2) return;
+  const rect = this.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) * (this.width / rect.width);
+  const cy = (e.clientY - rect.top) * (this.height / rect.height);
+  const { ML, MT, PW, PH, invPx, invPy } = info;
+  if(cx < ML || cx > ML+PW || cy < MT || cy > MT+PH) return;
+  const t = invPx(cx);
+  const cpm = invPy(cy);
+  // Find nearest data point
+  let nearest = S.decayData[0];
+  S.decayData.forEach(d=>{ if(Math.abs(d.t - t) < Math.abs(nearest.t - t)) nearest = d; });
+  document.getElementById('zoom-coords').textContent =
+    '📍  t = ' + nearest.t.toFixed(1) + ' s  |  CPM = ' + nearest.cpm.toFixed(1);
+  // Draw crosshair
+  const ctx = this.getContext('2d');
+  drawZoomCanvas();
+  const ix = info.px(nearest.t), iy = info.py(nearest.cpm);
+  ctx.strokeStyle = 'rgba(255,200,80,0.8)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(ix, MT); ctx.lineTo(ix, MT+PH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ML, iy); ctx.lineTo(ML+PW, iy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='var(--amber)';
+  ctx.beginPath(); ctx.arc(ix, iy, 5, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,200,80,0.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(ix, iy, 8, 0, Math.PI*2); ctx.stroke();
+});
+
+// ═══════════════════════════════════════════════════════
+//  BG WARNING positioning
+// ═══════════════════════════════════════════════════════
+function showBGWarning(){
+  const warn = document.getElementById('bg-warning');
+  const btn = document.getElementById('btn-zero');
+  const rect = btn.getBoundingClientRect();
+  warn.style.display = 'block';
+  warn.style.left = (rect.left - 80) + 'px';
+  warn.style.top = (rect.top - 70) + 'px';
+  setTimeout(()=>{ warn.style.display='none'; }, 3500);
+}
 
 // ═══════════════════════════════════════════════════════
 //  ANIMATION LOOP
