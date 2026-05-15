@@ -264,7 +264,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 
 <!-- Bottom Controls -->
 <div id="controls">
-  <button class="btn green on" id="btn-start" onclick="toggleAcquisition()">■ Stop Acquisition</button>
+  <button class="btn green" id="btn-start" onclick="toggleAcquisition()">▶ Start Acquisition</button>
   <div class="sep"></div>
   <button class="btn amber" id="btn-zero" onclick="zeroBackground()">⊘ Zero / Tare</button>
   <div class="sep"></div>
@@ -345,7 +345,8 @@ const S = {
   mysteryTypes: [],
   gammaAttenuation: 1.0,
   paused: false,
-  quizMode: null
+  quizMode: null,
+  initialActivity: 1200
 };
 
 function setBGNoise(){ return 15 + Math.random()*15; }
@@ -355,8 +356,8 @@ function computeActivity(elapsedSec){
   if(!S.source) return setBGNoise();
   const src = SOURCES[S.source];
   const lambda = Math.LN2 / src.hlSec;
-  // Source starts at ~1200 CPM and decays exponentially to near zero
-  let baseActivity = 1200 * Math.exp(-lambda * elapsedSec);
+  // Source starts at randomized CPM and decays exponentially to near zero
+  let baseActivity = S.initialActivity * Math.exp(-lambda * elapsedSec);
 
   // Shielding attenuation
   const sh = SHIELDS[S.shield];
@@ -563,7 +564,7 @@ root3.add(blockLine);
 
 // ── Orbit Controls (manual) ──
 let isDragging = false, lastMX=0, lastMY=0;
-let camTheta = 0.35, camPhi = 0.38, camR = 16;
+let camTheta = -0.42, camPhi = 0.52, camR = 18;
 function applyCam(){
   cam3.position.set(
     camR * Math.sin(camTheta) * Math.cos(camPhi),
@@ -613,6 +614,8 @@ function selectSource(src){
   S.source = src;
   // Randomize half-life between 10 and 30 seconds
   SOURCES[src].hlSec = 10 + Math.floor(Math.random()*21);
+  // Randomize initial activity between 1000 and 5000 CPM
+  S.initialActivity = 1000 + Math.floor(Math.random()*4001);
   document.querySelectorAll('#source-btns .sbtn').forEach(b=>{
     b.className = 'sbtn';
     if(b.dataset.src===src) b.classList.add('active-'+src);
@@ -801,13 +804,16 @@ function updateParticles(){
     p.y += p.vy * DT;
     p.z += p.vz * DT;
 
-    // Always fade when reaching the shield mount position (x≈0), regardless of blocking
+    // Always fade as particles reach the shield mount position (x≈0)
     let opacity;
+    const FADE_START = -1.5; // start fading 1.5 units before shield
     if(p.x >= SHIELD_X){
-      // Past shield: fade quickly
-      const distPast = p.x - SHIELD_X;
-      const totalPast = 7.5 - SHIELD_X; // ~7.5 is GM tube
-      opacity = 0.85 * Math.max(0, 1 - distPast/totalPast);
+      // At or past shield position: fully faded out
+      opacity = 0;
+    } else if(p.x >= FADE_START){
+      // Approaching shield: linearly fade to 0
+      const fadeProgress = (p.x - FADE_START) / (SHIELD_X - FADE_START);
+      opacity = 0.85 * (1 - fadeProgress);
     } else {
       opacity = 0.85;
     }
@@ -851,7 +857,7 @@ function updateHUD(){
   document.getElementById('cpm-display').textContent = S.grossCPM.toFixed(0);
   document.getElementById('val-gross').textContent = S.grossCPM.toFixed(1);
   document.getElementById('val-time').textContent = S.elapsed.toFixed(1)+'s';
-  const barPct = Math.min(100, (S.grossCPM/1500)*100);
+  const barPct = Math.min(100, (S.grossCPM / Math.max(S.initialActivity, 1200)) * 100);
   document.getElementById('cpm-bar').style.width = barPct+'%';
   const barColor = S.grossCPM > 900 ? 'var(--red)' : S.grossCPM > 400 ? 'var(--amber)' : 'var(--green)';
   document.getElementById('cpm-bar').style.background = barColor;
@@ -1102,20 +1108,38 @@ window.validateHalflife = function(){
   const val = parseFloat(document.getElementById('inp-halflife').value);
   const res = document.getElementById('res-halflife');
   res.style.display='block';
-  if(!S.source || !SOURCES[S.source]){ res.className='modal-result fail'; res.textContent='⚠ Please run an acquisition first.'; return; }
+  if(!S.source || !SOURCES[S.source]){ res.className='modal-result fail'; res.innerHTML='⚠ Please run an acquisition first.<br><button class="btn" onclick="clearHLValidation()" style="margin-top:8px;width:100%;">OK</button>'; return; }
   const src = SOURCES[S.source];
   const trueHL = src.hlSec;
   const tol = trueHL * 0.05;
   if(Math.abs(val-trueHL)<=tol){
     res.className='modal-result ok';
-    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s. Your reading of '+val+'s is within 5% tolerance. Well done!';
+    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s. Your reading of '+val+'s is within 5% tolerance. Well done!<br><button class="btn green" onclick="closeModalAndClear()" style="margin-top:8px;width:100%;">OK</button>';
     const n0 = S.decayData.length>0 ? S.decayData[0].cpm : 200;
     document.getElementById('n0-display').textContent = n0.toFixed(0);
     document.getElementById('followup-hl').style.display='block';
   } else {
     res.className='modal-result fail';
-    res.innerHTML='❌ Not quite. Hint: The activity should drop to 50% of its peak. Look at your curve carefully. Try again!';
+    res.innerHTML='❌ Not quite. Hint: The activity should drop to 50% of its peak. Look at your curve carefully. Try again!<br><button class="btn" onclick="clearHLValidation()" style="margin-top:8px;width:100%;">OK</button>';
   }
+};
+
+window.clearHLValidation = function(){
+  const inp = document.getElementById('inp-halflife');
+  const res = document.getElementById('res-halflife');
+  if(inp) inp.value = '';
+  if(res){ res.style.display='none'; res.innerHTML=''; }
+};
+
+window.closeModalAndClear = function(){
+  // Clear half-life input and result
+  const inp = document.getElementById('inp-halflife');
+  const res = document.getElementById('res-halflife');
+  if(inp) inp.value = '';
+  if(res){ res.style.display='none'; res.innerHTML=''; }
+  // Clear mystery checkboxes
+  ['chk-alpha','chk-beta','chk-gamma'].forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=false; });
+  closeModal();
 };
 
 window.validate3HL = function(){
@@ -1126,17 +1150,24 @@ window.validate3HL = function(){
   const expected = n0 / 8; // After 3 T½: N0 × (1/2)³ = N0/8
   if(Math.abs(val-expected)/expected < 0.15){
     res.className='modal-result ok';
-    res.innerHTML='🎉 Excellent! After 3 half-lives, activity = N₀/2³ = N₀/8 ≈ '+expected.toFixed(1)+' CPM. Perfect understanding!';
+    res.innerHTML='🎉 Excellent! After 3 half-lives, activity = N₀/2³ = N₀/8 ≈ '+expected.toFixed(1)+' CPM. Perfect understanding!<br><button class="btn green" onclick="closeModalAndClear()" style="margin-top:8px;width:100%;">OK</button>';
   } else {
     res.className='modal-result fail';
-    res.innerHTML='❌ Hint: After each half-life, activity halves. After 3 T½: A = N₀ × (½)³ = N₀/8 ≈ '+expected.toFixed(1)+' CPM.';
+    res.innerHTML='❌ Hint: After each half-life, activity halves. After 3 T½: A = N₀ × (½)³ = N₀/8 ≈ '+expected.toFixed(1)+' CPM.<br><button class="btn" onclick="clear3HLValidation()" style="margin-top:8px;width:100%;">OK</button>';
   }
+};
+
+window.clear3HLValidation = function(){
+  const inp = document.getElementById('inp-3hl');
+  const res = document.getElementById('res-3hl');
+  if(inp) inp.value = '';
+  if(res){ res.style.display='none'; res.innerHTML=''; }
 };
 
 window.validateMystery = function(){
   if(!S.mysteryTypes||S.mysteryTypes.length===0){ 
     const res=document.getElementById('res-mystery'); res.style.display='block';
-    res.className='modal-result fail'; res.textContent='⚠ Please select Mystery Source and run acquisitions first.'; return;
+    res.className='modal-result fail'; res.innerHTML='⚠ Please select Mystery Source and run acquisitions first.<br><button class="btn" onclick="clearMysteryValidation()" style="margin-top:8px;width:100%;">OK</button>'; return;
   }
   const chkAlpha = document.getElementById('chk-alpha').checked;
   const chkBeta  = document.getElementById('chk-beta').checked;
@@ -1151,7 +1182,7 @@ window.validateMystery = function(){
   res.style.display='block';
   if(truth===guess){
     res.className='modal-result ok';
-    res.innerHTML='🎉 Correct identification! The mystery source emits: <b>'+S.mysteryTypes.join(' + ')+'</b>. Excellent detective work!';
+    res.innerHTML='🎉 Correct identification! The mystery source emits: <b>'+S.mysteryTypes.join(' + ')+'</b>. Excellent detective work!<br><button class="btn green" onclick="closeModalAndClear()" style="margin-top:8px;width:100%;">OK</button>';
   } else {
     res.className='modal-result fail';
     const hints = [];
@@ -1160,8 +1191,14 @@ window.validateMystery = function(){
     if(S.mysteryTypes.includes('beta')&&!guesses.includes('beta')) hints.push('Beta present: Al reduces more than paper.');
     if(!S.mysteryTypes.includes('beta')&&guesses.includes('beta')) hints.push('No beta: Al shows same count as paper.');
     if(S.mysteryTypes.includes('gamma')&&!guesses.includes('gamma')) hints.push('Gamma present: Lead only partially reduces count.');
-    res.innerHTML='❌ Not quite. Hints: '+hints.join(' ')+' Try more shield combinations!';
+    res.innerHTML='❌ Not quite. Hints: '+hints.join(' ')+' Try more shield combinations!<br><button class="btn" onclick="clearMysteryValidation()" style="margin-top:8px;width:100%;">OK</button>';
   }
+};
+
+window.clearMysteryValidation = function(){
+  ['chk-alpha','chk-beta','chk-gamma'].forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=false; });
+  const res=document.getElementById('res-mystery');
+  if(res){ res.style.display='none'; res.innerHTML=''; }
 };
 
 // ── Mystery inline quiz ──
@@ -1179,23 +1216,30 @@ window.validateMysteryHL = function(){
   const res = document.getElementById('mystery-res-hl');
   res.style.display='block';
   if(!S.source||S.source!=='mystery'||S.mysteryTypes.length===0){
-    res.className='quiz-result fail'; res.textContent='⚠ Select Mystery Source and run acquisition first.'; return;
+    res.className='quiz-result fail'; res.innerHTML='⚠ Select Mystery Source and run acquisition first.<br><button class="btn" onclick="clearInlineHLValidation()" style="margin-top:6px;width:100%;">OK</button>'; return;
   }
   const trueHL = SOURCES.mystery.hlSec;
   const tol = trueHL * 0.05;
   if(Math.abs(val-trueHL)<=tol){
     res.className='quiz-result ok';
-    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s — within 5% tolerance. Well done!';
+    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s — within 5% tolerance. Well done!<br><button class="btn green" onclick="clearInlineHLValidation(true)" style="margin-top:6px;width:100%;">OK</button>';
   } else {
     res.className='quiz-result fail';
-    res.innerHTML='❌ Not quite. Look carefully at where activity drops to exactly 50% of peak. T½ is between 10–30s.';
+    res.innerHTML='❌ Not quite. Look carefully at where activity drops to exactly 50% of peak. T½ is between 10–30s.<br><button class="btn" onclick="clearInlineHLValidation()" style="margin-top:6px;width:100%;">OK</button>';
   }
+};
+
+window.clearInlineHLValidation = function(isCorrect){
+  const inp = document.getElementById('mystery-inp-hl');
+  const res = document.getElementById('mystery-res-hl');
+  if(inp) inp.value = '';
+  if(res){ res.style.display='none'; res.innerHTML=''; }
 };
 
 window.validateMysteryIdentify = function(){
   if(!S.mysteryTypes||S.mysteryTypes.length===0){
     const res=document.getElementById('mystery-res-identify'); res.style.display='block';
-    res.className='quiz-result fail'; res.textContent='⚠ Select Mystery Source and run acquisitions with different shields first.'; return;
+    res.className='quiz-result fail'; res.innerHTML='⚠ Select Mystery Source and run acquisitions with different shields first.<br><button class="btn" onclick="clearInlineIdentifyValidation()" style="margin-top:6px;width:100%;">OK</button>'; return;
   }
   const guesses = [];
   if(document.getElementById('mchk-alpha').checked) guesses.push('alpha');
@@ -1207,7 +1251,7 @@ window.validateMysteryIdentify = function(){
   res.style.display='block';
   if(truth===guess){
     res.className='quiz-result ok';
-    res.innerHTML='🎉 Correct! Emits: '+S.mysteryTypes.join(' + ')+'. Excellent detective work!';
+    res.innerHTML='🎉 Correct! Emits: '+S.mysteryTypes.join(' + ')+'. Excellent detective work!<br><button class="btn green" onclick="clearInlineIdentifyValidation(true)" style="margin-top:6px;width:100%;">OK</button>';
   } else {
     res.className='quiz-result fail';
     const hints = [];
@@ -1216,8 +1260,15 @@ window.validateMysteryIdentify = function(){
     if(S.mysteryTypes.includes('beta')&&!guesses.includes('beta')) hints.push('Al reduces more than paper → β present.');
     if(!S.mysteryTypes.includes('beta')&&guesses.includes('beta')) hints.push('Al same as paper → no β.');
     if(S.mysteryTypes.includes('gamma')&&!guesses.includes('gamma')) hints.push('Lead only partially reduces → γ present.');
-    res.innerHTML='❌ Hints: '+(hints.join(' ')||'Try more shield combinations!');
+    res.innerHTML='❌ Hints: '+(hints.join(' ')||'Try more shield combinations!')+'<br><button class="btn" onclick="clearInlineIdentifyValidation()" style="margin-top:6px;width:100%;">OK</button>';
   }
+};
+
+window.clearInlineIdentifyValidation = function(isCorrect){
+  // Clear checkboxes
+  ['mchk-alpha','mchk-beta','mchk-gamma'].forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=false; });
+  const res=document.getElementById('mystery-res-identify');
+  if(res){ res.style.display='none'; res.innerHTML=''; }
 };
 
 // ═══════════════════════════════════════════════════════
