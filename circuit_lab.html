@@ -28,22 +28,22 @@
   }
   /* ── LIGHT theme ── */
   body.theme-light {
-    --bg: #f0f4f8;
-    --panel: #ffffff;
-    --panel2: #e8edf3;
-    --border: #c0ccd8;
-    --accent: #0077cc;
-    --accent2: #d94f00;
-    --accent3: #1a8a00;
-    --accent4: #b07800;
-    --accent5: #7a1fcc;
-    --wire: #0055aa;
-    --text: #1a2433;
-    --dim: #6a7f96;
-    --grid: #dce4ed;
-    --glow: rgba(0,119,204,0.1);
-    --danger: #cc0033;
-    --fab-shadow: rgba(0,0,0,0.18);
+    --bg: #f5f0e8;
+    --panel: #fffdf7;
+    --panel2: #ede8dc;
+    --border: #9e8f78;
+    --accent: #0052a3;
+    --accent2: #c43500;
+    --accent3: #116b00;
+    --accent4: #8a5c00;
+    --accent5: #6200b3;
+    --wire: #0052a3;
+    --text: #1a120a;
+    --dim: #5a4a38;
+    --grid: #ddd5c6;
+    --glow: rgba(0,82,163,0.12);
+    --danger: #b50020;
+    --fab-shadow: rgba(80,50,10,0.22);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -533,12 +533,12 @@
     <div class="warning-box" id="warningBox">⚠ Circuit incomplete or open branch detected</div>
     <div style="height:12px"></div>
     <div style="font-size:9px;color:var(--dim);letter-spacing:1px;line-height:1.7">
-      <div>• Drag components to canvas</div>
-      <div>• Click component to edit</div>
-      <div>• Wire Mode: connect terminals</div>
+      <div>• Drag from sidebar to canvas</div>
+      <div>• Drag terminal dot → wire</div>
+      <div>• 🔗 Wire btn: tap-to-tap mode</div>
+      <div>• Right-click wire: delete</div>
       <div>• R key: rotate selected</div>
       <div>• Del: delete selected</div>
-      <div>• Right-click wire: delete</div>
     </div>
   </div>
 </div>
@@ -606,6 +606,8 @@ let undoStack = [];
 let hoverComp = null;
 let hoverWire = null;
 let hoverNode = null;
+let hoverTerminal = null;   // {comp, terminal:'a'|'b'} — terminal under cursor for drag-to-wire
+let wireDragActive = false; // true while a terminal drag-wire is in progress
 let compIdCounter = 1;
 let wireIdCounter = 1;
 let testMode = false;
@@ -1225,15 +1227,28 @@ function drawComponent(c) {
   for (const [tp, lx] of [[t.a, -hw], [t.b, hw]]) {
     const connected = termConnected(tp);
     const active = powerOn && I > 0.0001;
-    ctx.fillStyle = active ? '#00ffcc' : (connected ? '#4a8aaa' : '#1a3050');
-    ctx.strokeStyle = active ? '#00ffcc' : (connected ? '#2a6080' : '#0a2030');
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(lx, 0, connected ? 7 : 5, 0, Math.PI*2);
-    ctx.fill(); ctx.stroke();
-    if (active) {
-      ctx.shadowColor = '#00ffcc'; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(lx, 0, 7, 0, Math.PI*2); ctx.fill();
+    // Check if this terminal is being hovered for wire-drag
+    const isHovered = hoverTerminal && hoverTerminal.comp === c &&
+      ((hoverTerminal.terminal === 'a' && lx === -hw) || (hoverTerminal.terminal === 'b' && lx === hw));
+    if (isHovered) {
+      // Pulsing glow ring to indicate "drag from here to wire"
+      ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = 14;
+      ctx.strokeStyle = '#00ffaa'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(lx, 0, 10, 0, Math.PI*2); ctx.stroke();
       ctx.shadowBlur = 0;
+      ctx.fillStyle = '#00ffaa';
+      ctx.beginPath(); ctx.arc(lx, 0, 6, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillStyle = active ? '#00ffcc' : (connected ? '#4a8aaa' : '#1a3050');
+      ctx.strokeStyle = active ? '#00ffcc' : (connected ? '#2a6080' : '#0a2030');
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(lx, 0, connected ? 7 : 5, 0, Math.PI*2);
+      ctx.fill(); ctx.stroke();
+      if (active) {
+        ctx.shadowColor = '#00ffcc'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(lx, 0, 7, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
     }
   }
 
@@ -1256,42 +1271,42 @@ function drawComponent(c) {
 
   // Label (component name)
   ctx.save();
-  ctx.fillStyle = '#4a6080';
-  ctx.font = '11px "Share Tech Mono"';
+  ctx.fillStyle = '#6a88aa';
+  ctx.font = '13px "Share Tech Mono"';
   ctx.textAlign = 'center';
   ctx.fillText(c.label || '', c.x, c.y + labelOffset);
 
   // Value label
   if (c.type === 'battery' || c.type === 'dcpsu') {
     ctx.fillStyle = c.color || '#00d4ff';
-    ctx.font = '12px "Share Tech Mono"';
+    ctx.font = 'bold 14px "Share Tech Mono"';
     ctx.fillText(c.voltage + 'V', c.x, c.y - valueOffset);
   } else if (c.type === 'resistor' || c.type === 'varresistor') {
     ctx.fillStyle = c.color || '#ffe066';
-    ctx.font = '12px "Share Tech Mono"';
+    ctx.font = 'bold 14px "Share Tech Mono"';
     ctx.fillText(c.resistance + 'Ω', c.x, c.y - valueOffset);
   } else if (c.type === 'hiresistor') {
     ctx.fillStyle = c.color || '#ff9900';
-    ctx.font = '11px "Share Tech Mono"';
+    ctx.font = 'bold 13px "Share Tech Mono"';
     ctx.fillText(c.resistance >= 1000 ? (c.resistance/1000).toFixed(1)+'kΩ' : c.resistance+'Ω', c.x, c.y - valueOffset);
   }
 
   // Live current reading (non-meter components only)
   if (powerOn && I > 0.0001 && c.type !== 'ammeter' && c.type !== 'voltmeter') {
-    ctx.fillStyle = 'rgba(0,212,255,0.9)';
-    ctx.font = '11px "Share Tech Mono"';
-    ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 13);
+    ctx.fillStyle = 'rgba(0,220,255,0.95)';
+    ctx.font = 'bold 13px "Share Tech Mono"';
+    ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 15);
   }
 
   // Meter live readings (ammeter current / voltmeter voltage)
   if (powerOn && c.type === 'ammeter' && I > 0.0001) {
     ctx.fillStyle = c.color || '#00d4ff';
-    ctx.font = '9px "Share Tech Mono"';
-    ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 13);
+    ctx.font = 'bold 12px "Share Tech Mono"';
+    ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 15);
   } else if (powerOn && c.type === 'voltmeter' && (c._voltage || 0) > 0.001) {
     ctx.fillStyle = c.color || '#ffe066';
-    ctx.font = '9px "Share Tech Mono"';
-    ctx.fillText(c._voltage.toFixed(2) + 'V', c.x, c.y + labelOffset + 13);
+    ctx.font = 'bold 12px "Share Tech Mono"';
+    ctx.fillText(c._voltage.toFixed(2) + 'V', c.x, c.y + labelOffset + 15);
   }
 
   ctx.restore();
@@ -1448,20 +1463,43 @@ function render() {
   // Draw wires
   for (const w of wires) drawWire(w);
 
-  // Wire preview
-  if (wireMode && wireStart && wirePreview) {
+  // Wire preview (both button-mode wireMode and drag-from-terminal wireDragActive)
+  if ((wireMode || wireDragActive) && wireStart && wirePreview) {
     const start = wireStart.type === 'node'
       ? { x: wireStart.node.x, y: wireStart.node.y }
       : (() => { const t = getTerminals(wireStart.comp); return wireStart.terminal === 'a' ? t.a : t.b; })();
     ctx.save();
-    ctx.strokeStyle = getCSSVar('--accent') + '88';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = getCSSVar('--accent') + '99';
+    ctx.lineWidth = 2.5;
     ctx.setLineDash([6, 4]);
     ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 8;
     const pts = manhattanRoute(start, wirePreview);
     ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
     ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
+    // Snap-target highlight: show nearest valid terminal within snapping range
+    if (wireDragActive || wireMode) {
+      const SNAP_R = 20;
+      let nearest = null, nearestDist = SNAP_R;
+      for (const c of components) {
+        if (wireStart.type === 'terminal' && c === wireStart.comp) continue;
+        const t = getTerminals(c);
+        for (const tp of [t.a, t.b]) {
+          const d = dist(wirePreview, tp);
+          if (d < nearestDist) { nearest = tp; nearestDist = d; }
+        }
+      }
+      if (nearest) {
+        ctx.strokeStyle = '#00ffaa';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(nearest.x, nearest.y, 11, 0, Math.PI*2); ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+    }
     ctx.restore();
   }
 
@@ -1716,6 +1754,18 @@ canvas.addEventListener('touchstart', e => {
   }
   if (wireMode && !wireStart) return; // handled in touchend
 
+  // Drag-from-terminal on touch: if finger lands on a terminal, start wire-drag
+  if (!wireDragActive) {
+    const termHit = nearTerminalTouch(mx, my);
+    if (termHit) {
+      saveUndo();
+      wireDragActive = true;
+      wireStart = { type:'terminal', comp:termHit.comp, terminal:termHit.terminal };
+      wirePreview = { x: snap(mx), y: snap(my) };
+      return;
+    }
+  }
+
   // Normal mode: record what was touched — commit to drag only after movement
   const hitN = hitNode(mx, my);
   if (hitN) { pendingNodePress = hitN; selectedComp=null; selectedWire=null; return; }
@@ -1735,8 +1785,11 @@ canvas.addEventListener('touchmove', e => {
 
   if (wireMode && wireStart) { wirePreview = { x: snap(mx), y: snap(my) }; }
 
+  // Drag-from-terminal wire preview on touch
+  if (wireDragActive && wireStart) { wirePreview = { x: snap(mx), y: snap(my) }; }
+
   // Commit pending component drag once finger moves enough
-  if (!wireMode && isMouseDown && pendingDragComp && !draggingComp) {
+  if (!wireMode && !wireDragActive && isMouseDown && pendingDragComp && !draggingComp) {
     const startPos = mouseDownPos || { x: mx, y: my };
     if (Math.hypot(mx - startPos.x, my - startPos.y) > 8) {
       draggingComp = pendingDragComp;
@@ -1746,13 +1799,13 @@ canvas.addEventListener('touchmove', e => {
     }
   }
 
-  if (!wireMode && isMouseDown && pendingNodePress) {
+  if (!wireMode && !wireDragActive && isMouseDown && pendingNodePress) {
     if (dist({x:mx,y:my},{x:pendingNodePress.x,y:pendingNodePress.y}) > 6) {
       draggingNode = { node: pendingNodePress };
       pendingNodePress = null;
     }
   }
-  if (!wireMode && isMouseDown && draggingNode) {
+  if (!wireMode && !wireDragActive && isMouseDown && draggingNode) {
     const nx=snap(mx), ny=snap(my);
     const oldX=draggingNode.node.x, oldY=draggingNode.node.y;
     draggingNode.node.x=nx; draggingNode.node.y=ny;
@@ -1764,7 +1817,7 @@ canvas.addEventListener('touchmove', e => {
     }
     updateCircuit();
   }
-  if (!wireMode && isMouseDown && draggingComp) {
+  if (!wireMode && !wireDragActive && isMouseDown && draggingComp) {
     const nx=snap(mx-dragOffset.x), ny=snap(my-dragOffset.y);
     const prevX=draggingComp.x, prevY=draggingComp.y;
     const oldT=getTerminals({...draggingComp,x:prevX,y:prevY});
@@ -1794,6 +1847,32 @@ canvas.addEventListener('touchend', e => {
   draggingComp = null; draggingNode = null; pendingNodePress = null;
   pendingDragComp = null; pendingDragOffset = null;
 
+  // ── Complete drag-from-terminal wire on touchend ───────────
+  if (wireDragActive && wireStart) {
+    const startPos = mouseDownPos || { x: mx, y: my };
+    const dragDist = Math.hypot(mx - startPos.x, my - startPos.y);
+    if (dragDist > 8) {
+      const t2 = nearTerminalTouch(mx, my);
+      const n2 = hitNode(mx, my);
+      let endPt = null, isSelf = false;
+      if (t2) {
+        if (wireStart.type==='terminal' && t2.comp===wireStart.comp && t2.terminal===wireStart.terminal) isSelf=true;
+        else { const tb=getTerminals(t2.comp); endPt=t2.terminal==='a'?{...tb.a}:{...tb.b}; }
+      } else if (n2) {
+        endPt = { x: n2.x, y: n2.y };
+      } else {
+        const dropPt = { x: snap(mx), y: snap(my) };
+        const snapped = snapToWireAndSplit(dropPt);
+        endPt = snapped || dropPt;
+      }
+      if (!isSelf && endPt) completeWire(endPt);
+    }
+    wireDragActive = false;
+    wireStart = null; wirePreview = null;
+    setHint('Drag from terminal dot to wire · Double-tap to edit · Power to simulate');
+    return;
+  }
+
   // Ignore touchend if the finger moved significantly (was a drag, not a tap)
   const startPos = mouseDownPos || { x: mx, y: my };
   const moved = Math.hypot(mx - startPos.x, my - startPos.y);
@@ -1818,7 +1897,7 @@ canvas.addEventListener('touchend', e => {
     if (!isSelf && endPt) { saveUndo(); completeWire(endPt); }
     wireStart=null; wirePreview=null; wireMode=false;
     document.getElementById('btnWire').classList.remove('active');
-    setHint('Tap component to edit · Tap terminal to wire · Power ON to simulate');
+    setHint('Drag from terminal dot to wire · Double-tap to edit · Power to simulate');
     return;
   }
 
@@ -1846,7 +1925,7 @@ canvas.addEventListener('touchend', e => {
 
   // ── Normal mode ───────────────────────────────────────────
 
-  // Priority 1: junction node tap → start wire
+  // Priority 1: junction node tap → start wire (click-to-click mode for touch)
   const n = hitNode(mx, my);
   if (n) {
     wireMode = true;
@@ -1856,17 +1935,7 @@ canvas.addEventListener('touchend', e => {
     return;
   }
 
-  // Priority 2: terminal tap → start wire (checked BEFORE component body)
-  const autoT = nearTerminalTouch(mx, my);
-  if (autoT) {
-    wireMode = true;
-    wireStart = { type:'terminal', comp:autoT.comp, terminal:autoT.terminal };
-    document.getElementById('btnWire').classList.add('active');
-    setHint('Tap terminal, node, or canvas point to complete wire · Wire button to cancel');
-    return;
-  }
-
-  // Priority 3: double-tap on component body → open modal
+  // Priority 2: double-tap on component body → open modal
   const now = Date.now();
   const c = hitComp(mx, my);
   if (c && canvas._lastTap && now - canvas._lastTap < 400) {
@@ -1876,7 +1945,7 @@ canvas.addEventListener('touchend', e => {
   }
   canvas._lastTap = now;
 
-  // Priority 4: single tap → select
+  // Priority 3: single tap → select
   if (c) { selectedComp = c; selectedWire = null; }
   else {
     const w = hitWire(mx, my);
@@ -1967,14 +2036,13 @@ canvas.addEventListener('mousedown', e => {
     return;
   }
 
-  // ── Wire mode ──────────────────────────────────────────────
+  // ── Wire mode (button-activated) ──────────────────────────
   if (wireMode) {
     // Priority: terminal → existing node → empty canvas (create node)
     const t = nearTerminal(mx, my);
     const n = hitNode(mx, my);
 
     if (!wireStart) {
-      // Starting a wire
       if (t) {
         wireStart = { type:'terminal', comp:t.comp, terminal:t.terminal };
         setHint('Click terminal, node, or canvas point to complete wire · ESC to cancel');
@@ -1982,7 +2050,6 @@ canvas.addEventListener('mousedown', e => {
         wireStart = { type:'node', node:n };
         setHint('Click terminal, node, or canvas point to complete wire · ESC to cancel');
       } else {
-        // Click on empty canvas or wire: try to snap to wire first
         saveUndo();
         const clickPt = { x: snap(mx), y: snap(my) };
         const wireSplit = snapToWireAndSplit(clickPt);
@@ -1993,57 +2060,49 @@ canvas.addEventListener('mousedown', e => {
         setHint('Click terminal, node, or canvas point to complete wire · ESC to cancel');
       }
     } else {
-      // Completing a wire
       let endPt = null;
       let isSelf = false;
-
       if (t) {
-        // Connecting to a terminal
         if (wireStart.type === 'terminal' && t.comp === wireStart.comp && t.terminal === wireStart.terminal) { isSelf = true; }
         else { const tb = getTerminals(t.comp); endPt = t.terminal === 'a' ? { ...tb.a } : { ...tb.b }; }
       } else if (n) {
         if (wireStart.type === 'node' && n === wireStart.node) { isSelf = true; }
         else { endPt = { x: n.x, y: n.y }; }
       } else {
-        // Empty canvas: create a new junction node
         saveUndo();
         const newNode = { id: nodeIdCounter++, x: snap(mx), y: snap(my) };
         nodes.push(newNode);
         endPt = { x: newNode.x, y: newNode.y };
       }
-
       if (!isSelf && endPt) {
         saveUndo();
         completeWire(endPt);
       }
-      wireStart = null;
-      wirePreview = null;
-      wireMode = false;
-      suppressNextClick = true;
+      wireStart = null; wirePreview = null; wireMode = false; suppressNextClick = true;
       document.getElementById('btnWire').classList.remove('active');
-      setHint('Drag components · Click terminal to wire · R rotate · Del delete');
+      setHint('Hover a terminal and drag to wire · Double-click to edit · Del to delete');
     }
     return;
   }
 
-  // ── Normal mode ────────────────────────────────────────────
+  // ── Drag-from-terminal wiring (NEW) ───────────────────────
+  // If mousedown lands on a terminal dot, start a drag-wire immediately
+  const termHit = nearTerminal(mx, my);
+  if (termHit) {
+    saveUndo();
+    wireDragActive = true;
+    wireStart = { type:'terminal', comp:termHit.comp, terminal:termHit.terminal };
+    wirePreview = { x: snap(mx), y: snap(my) };
+    suppressNextClick = true;
+    setHint('Drag to another terminal or release on canvas · ESC cancel');
+    return;
+  }
 
-  // Track if a node was pressed (mousedown), so we can drag it in mousemove.
-  // Wire-start from a node is handled in the click event instead.
+  // ── Normal mode ────────────────────────────────────────────
   const hitN = hitNode(mx, my);
   if (hitN) {
     pendingNodePress = hitN;
     selectedWire = null; selectedComp = null;
-    return;
-  }
-
-  // Auto-wire: click terminal → enter wire mode immediately
-  const autoT = nearTerminal(mx, my);
-  if (autoT) {
-    wireMode = true;
-    wireStart = { type:'terminal', comp:autoT.comp, terminal:autoT.terminal };
-    document.getElementById('btnWire').classList.add('active');
-    setHint('Click terminal, node, or canvas point to complete wire · ESC to cancel');
     return;
   }
 
@@ -2074,8 +2133,13 @@ canvas.addEventListener('mousemove', e => {
     wirePreview = { x: snap(mx), y: snap(my) };
   }
 
+  // Drag-from-terminal wire preview
+  if (wireDragActive && wireStart) {
+    wirePreview = { x: snap(mx), y: snap(my) };
+  }
+
   // If a node was pressed and mouse moved enough, commit to dragging it
-  if (!wireMode && isMouseDown && pendingNodePress) {
+  if (!wireMode && !wireDragActive && isMouseDown && pendingNodePress) {
     if (dist({ x: mx, y: my }, { x: pendingNodePress.x, y: pendingNodePress.y }) > 6) {
       draggingNode = { node: pendingNodePress };
       pendingNodePress = null;
@@ -2083,7 +2147,7 @@ canvas.addEventListener('mousemove', e => {
   }
 
   // Drag junction node — move node + all wire endpoints attached to it
-  if (!wireMode && isMouseDown && draggingNode) {
+  if (!wireMode && !wireDragActive && isMouseDown && draggingNode) {
     const nx = snap(mx), ny = snap(my);
     const oldX = draggingNode.node.x, oldY = draggingNode.node.y;
     draggingNode.node.x = nx; draggingNode.node.y = ny;
@@ -2098,7 +2162,7 @@ canvas.addEventListener('mousemove', e => {
     updateCircuit();
   }
 
-  if (!wireMode && isMouseDown && draggingComp) {
+  if (!wireMode && !wireDragActive && isMouseDown && draggingComp) {
     const nx = snap(mx - dragOffset.x);
     const ny = snap(my - dragOffset.y);
     // Move connected wire endpoints too
@@ -2116,19 +2180,60 @@ canvas.addEventListener('mousemove', e => {
     updateCircuit();
   }
 
-  // Hover
+  // Hover detection
   hoverNode = hitNode(mx, my);
   hoverComp = !hoverNode ? hitComp(mx, my) : null;
   hoverWire = (!hoverComp && !hoverNode) ? hitWire(mx, my) : null;
+  // Terminal hover — only when not dragging a component or wire-drag in progress
+  hoverTerminal = (!draggingComp && !wireDragActive) ? nearTerminal(mx, my) : null;
+
   canvas.style.cursor = wireMode ? 'crosshair'
+    : (wireDragActive ? 'crosshair'
     : (draggingNode && isMouseDown ? 'grabbing'
     : (draggingComp && isMouseDown ? 'grabbing'
+    : (hoverTerminal ? 'crosshair'
     : (hoverNode ? 'crosshair'
     : (hoverComp ? 'grab'
-    : (hoverWire ? 'pointer' : 'crosshair')))));
+    : (hoverWire ? 'pointer' : 'crosshair')))))));
 });
 
 canvas.addEventListener('mouseup', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+  // ── Complete drag-from-terminal wire on mouseup ────────────
+  if (wireDragActive && wireStart) {
+    const dragDist = mouseDownPos ? dist({x:mx,y:my}, mouseDownPos) : 0;
+    if (dragDist > 8) {
+      // Enough drag distance: complete the wire immediately
+      const t = nearTerminal(mx, my);
+      const n = hitNode(mx, my);
+      let endPt = null, isSelf = false;
+      if (t) {
+        if (wireStart.type === 'terminal' && t.comp === wireStart.comp && t.terminal === wireStart.terminal) isSelf = true;
+        else { const tb = getTerminals(t.comp); endPt = t.terminal === 'a' ? {...tb.a} : {...tb.b}; }
+      } else if (n) {
+        endPt = { x: n.x, y: n.y };
+      } else {
+        const dropPt = { x: snap(mx), y: snap(my) };
+        const snapped = snapToWireAndSplit(dropPt);
+        endPt = snapped || dropPt;
+      }
+      if (!isSelf && endPt) completeWire(endPt);
+      wireDragActive = false;
+      wireStart = null; wirePreview = null; hoverTerminal = null;
+      setHint('Drag from terminal to wire · Click terminal to wire · Double-click to edit');
+    } else {
+      // Short click on terminal/node: promote to click-to-click wire mode
+      wireDragActive = false;
+      wireMode = true;
+      wirePreview = null;
+      suppressNextClick = true;
+      document.getElementById('btnWire').classList.add('active');
+      setHint('Click terminal, node, or canvas point to complete wire · ESC to cancel');
+    }
+  }
+
   isMouseDown = false;
   draggingComp = null;
   draggingNode = null;
@@ -2140,9 +2245,9 @@ canvas.addEventListener('click', e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
   if (mouseDownPos && dist({x:mx,y:my}, mouseDownPos) > 5) return;
-  if (wireMode) return;
+  if (wireMode || wireDragActive) return;
 
-  // Click on a junction node → start wire from it
+  // Click on a junction node → start click-to-click wire mode
   const n = hitNode(mx, my);
   if (n) {
     wireMode = true;
@@ -2151,10 +2256,15 @@ canvas.addEventListener('click', e => {
     setHint('Click terminal, node, or canvas point to complete wire · ESC to cancel');
     return;
   }
-  // Single click: just select (no modal)
+
+  // Select component or wire
   const c = hitComp(mx, my);
   if (c) { selectedComp = c; selectedWire = null; }
-  else    { selectedComp = null; selectedWire = null; }
+  else {
+    const w = hitWire(mx, my);
+    if (w) { selectedWire = (selectedWire === w) ? null : w; selectedComp = null; }
+    else   { selectedComp = null; selectedWire = null; }
+  }
 });
 
 canvas.addEventListener('dblclick', e => {
@@ -2257,8 +2367,9 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape') {
     wireMode = false; wireStart = null; wirePreview = null;
+    wireDragActive = false;
     document.getElementById('btnWire').classList.remove('active');
-    setHint('Click component to edit values · Click terminal to wire · Right-click wire to delete · Ctrl+Z undo · R rotate · Del delete');
+    setHint('Drag from a terminal dot to wire · Double-click to edit · R rotate · Del delete');
   }
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { restoreUndo(); updateCircuit(); }
 });
@@ -2292,10 +2403,13 @@ document.getElementById('powerBtn').addEventListener('click', togglePower);
 
 document.getElementById('btnWire').addEventListener('click', () => {
   wireMode = !wireMode;
+  wireDragActive = false;
   wireStart = null; wirePreview = null;
   document.getElementById('btnWire').classList.toggle('active', wireMode);
   document.getElementById('btnWire').textContent = wireMode ? '🔗 Wiring…' : '🔗 Wire';
-  setHint(wireMode ? 'Tap a terminal or node to start · tap again to complete · Wire btn to cancel' : 'Tap sidebar to add · tap terminal to wire · double-tap to edit');
+  setHint(wireMode
+    ? 'Tap a terminal or node to start wire · tap destination to complete · Wire btn to cancel'
+    : 'Drag from terminal dot to wire · Double-click to edit · Power to simulate');
 });
 
 document.getElementById('btnRotate').addEventListener('click', () => {
@@ -2388,7 +2502,7 @@ document.getElementById('btnTest').addEventListener('click', () => {
 });
 
 // ---- Start ----
-setHint('Tap sidebar to add · Tap terminal to wire · Double-tap to edit · Power to simulate');
+setHint('Drag from sidebar to add · Drag terminal dot to wire · Double-click to edit · Power to simulate');
 render();
 updateReadings();
 
