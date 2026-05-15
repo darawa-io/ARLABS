@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)file:///Users/v90000889/Downloads/radioactive_decay_lab.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Radioactive Decay Lab | Radiation Shielding</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#060810;
+  --surface:#0b0f1e;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --orange:#ff8c42;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+  --alpha-col:#ff5e72;
+  --beta-col:#5bc8ff;
+  --gamma-col:#4dffa0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+/* Title */
+#title{position:absolute;top:20px;left:20px;z-index:10;}
+#title h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
+#title p{font-size:10px;color:rgba(180,200,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+
+/* HUD right panel */
+#hud{
+  position:absolute;top:20px;right:20px;
+  background:rgba(8,12,26,0.93);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:18px;
+  padding:18px;min-width:240px;z-index:10;
+  max-height:calc(100vh - 40px);overflow-y:auto;
+}
+#hud::-webkit-scrollbar{width:4px;}
+#hud::-webkit-scrollbar-thumb{background:rgba(91,200,255,0.2);border-radius:2px;}
+#hud h2{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.55);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
+.hdiv{height:1px;background:var(--border);margin:10px 0;}
+
+/* Source buttons */
+.btn-group{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.sbtn{padding:5px 10px;border-radius:20px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.05);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.sbtn:hover{background:rgba(180,200,255,0.12);}
+.sbtn.active-alpha{background:rgba(255,94,114,0.2);border-color:var(--alpha-col);color:var(--alpha-col);}
+.sbtn.active-beta{background:rgba(91,200,255,0.2);border-color:var(--beta-col);color:var(--beta-col);}
+.sbtn.active-gamma{background:rgba(77,255,160,0.2);border-color:var(--gamma-col);color:var(--gamma-col);}
+.sbtn.active-mystery{background:rgba(181,122,255,0.2);border-color:var(--violet);color:var(--violet);}
+.sbtn.active-shield{background:rgba(255,200,80,0.2);border-color:var(--amber);color:var(--amber);}
+
+/* Activity bar */
+.act-bar-track{width:100%;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-top:3px;}
+.act-bar-fill{height:100%;border-radius:4px;transition:width 0.3s;}
+
+/* Screen canvas area */
+#screen-canvas-wrap{margin-top:8px;}
+
+/* Controls bottom */
+#controls{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  display:flex;gap:8px;align-items:center;
+  background:rgba(8,12,26,0.93);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:50px;
+  padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 40px);
+}
+.btn{padding:7px 16px;border-radius:30px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.red{border-color:rgba(255,94,114,0.4);color:var(--red);background:rgba(255,94,114,0.06);}
+.btn.red:hover{background:rgba(255,94,114,0.14);}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.2);border-color:var(--green);color:#fff;}
+.btn.amber{border-color:rgba(255,200,80,0.4);color:var(--amber);background:rgba(255,200,80,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+
+#hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+
+/* Activity modal */
+#activity-modal{
+  display:none;position:fixed;inset:0;z-index:50;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;
+}
+#activity-modal.show{display:flex;}
+.modal-box{
+  background:rgba(8,12,26,0.97);border:1px solid rgba(91,200,255,0.3);
+  border-radius:22px;padding:28px 30px;max-width:440px;width:90%;
+  font-family:'Space Mono',monospace;font-size:12px;color:var(--text);
+  max-height:90vh;overflow-y:auto;
+}
+.modal-box h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin-bottom:14px;}
+.modal-box p{line-height:1.8;margin-bottom:12px;color:rgba(180,210,255,0.8);font-size:11px;}
+.modal-input{width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(91,200,255,0.3);background:rgba(91,200,255,0.05);color:#fff;font-family:'Space Mono',monospace;font-size:13px;outline:none;margin-bottom:10px;}
+.modal-input:focus{border-color:var(--blue);}
+.modal-result{padding:10px 14px;border-radius:10px;font-size:11px;margin-top:6px;display:none;}
+.modal-result.ok{background:rgba(77,255,160,0.1);border:1px solid rgba(77,255,160,0.3);color:var(--green);}
+.modal-result.fail{background:rgba(255,94,114,0.1);border:1px solid rgba(255,94,114,0.3);color:var(--red);}
+.chk-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.chk-row input[type=checkbox]{accent-color:var(--violet);width:14px;height:14px;cursor:pointer;}
+.chk-row label{font-size:11px;color:rgba(180,210,255,0.8);cursor:pointer;}
+
+/* Radiation type legend */
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
+
+/* CPM digits */
+.cpm-big{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green);text-align:center;letter-spacing:2px;margin:6px 0;text-shadow:0 0 20px rgba(77,255,160,0.4);}
+.cpm-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;text-align:center;color:rgba(180,200,255,0.35);text-transform:uppercase;}
+
+/* Activity selector in HUD */
+.act-sel-row{display:flex;gap:4px;margin-bottom:8px;}
+.act-sel-btn{flex:1;padding:5px 4px;border-radius:10px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.04);color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;text-align:center;transition:all .2s;}
+.act-sel-btn.active{background:rgba(181,122,255,0.2);border-color:var(--violet);color:var(--violet);}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas" width="2136" height="1077" style="width: 1424px; height: 718px;"></canvas>
+<canvas id="labelCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:3;" width="1424" height="718"></canvas>
+
+<!-- Title -->
+<div id="title">
+  <h1>RADIOACTIVE DECAY LAB</h1>
+  <p>Radiation Shielding &amp; Decay Kinetics</p>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <h2>Detector Readout</h2>
+  <div class="cpm-big" id="cpm-display" style="color: var(--green);">20</div>
+  <div class="cpm-lbl">counts per minute</div>
+  <div style="margin-top:4px;margin-bottom:4px;">
+    <div class="act-bar-track"><div class="act-bar-fill" id="cpm-bar" style="background: var(--green); width: 6.74573%;"></div></div>
+  </div>
+  <div class="dr"><span class="dl">Gross CPM</span><span class="dv" id="val-gross" style="color:var(--green);">20.2</span></div>
+  <div class="dr"><span class="dl">Background</span><span class="dv" id="val-bg" style="color: var(--green);">31.6</span></div>
+  <div class="dr"><span class="dl">Net CPM</span><span class="dv" id="val-net" style="color: var(--amber);">0.0</span></div>
+  <div class="dr"><span class="dl">Elapsed</span><span class="dv" id="val-time" style="color:var(--blue);">1442.4s</span></div>
+
+  <div class="hdiv"></div>
+  <h2>Source Selection</h2>
+  <div class="btn-group" id="source-btns">
+    <button class="sbtn" data-src="alpha" onclick="selectSource(&#39;alpha&#39;)">⚛ α Alpha</button>
+    <button class="sbtn" data-src="beta" onclick="selectSource(&#39;beta&#39;)">β Beta</button>
+    <button class="sbtn" data-src="gamma" onclick="selectSource(&#39;gamma&#39;)">γ Gamma</button>
+    <button class="sbtn active-mystery" data-src="mystery" onclick="selectSource(&#39;mystery&#39;)">❓ Mystery</button>
+  </div>
+
+  <div class="hdiv"></div>
+  <h2>Shield Slot</h2>
+  <div class="btn-group" id="shield-btns">
+    <button class="sbtn" data-sh="none" onclick="selectShield(&#39;none&#39;)">None</button>
+    <button class="sbtn" data-sh="paper" onclick="selectShield(&#39;paper&#39;)">📄 Paper</button>
+    <button class="sbtn active-shield" data-sh="al" onclick="selectShield(&#39;al&#39;)">🔩 Al</button>
+    <button class="sbtn" data-sh="pb" onclick="selectShield(&#39;pb&#39;)">🧱 Pb</button>
+  </div>
+  <div class="dr" style="margin-top:4px;"><span class="dl">Shield Status</span><span class="dv" id="val-shield" style="color:var(--amber);">Aluminum</span></div>
+
+  <div class="hdiv"></div>
+  <h2>Decay Curve</h2>
+  <canvas id="decay-canvas" width="204" height="120" style="border-radius:8px;border:1px solid var(--border);display:block;"></canvas>
+
+  <div class="hdiv"></div>
+  <h2>Activities</h2>
+  <div class="act-sel-row">
+    <button class="act-sel-btn" onclick="openActivity(&#39;A&#39;)">A: Half-Life</button>
+    <button class="act-sel-btn" onclick="openActivity(&#39;B&#39;)">B: Mystery ID</button>
+  </div>
+</div>
+
+<!-- Bottom Controls -->
+<div id="controls">
+  <button class="btn green on" id="btn-start" onclick="toggleAcquisition()">■ Stop Acquisition</button>
+  <div class="sep"></div>
+  <button class="btn amber" id="btn-zero" onclick="zeroBackground()">⊘ Zero / Tare</button>
+  <div class="sep"></div>
+  <button class="btn red" id="btn-reset" onclick="resetAll()">↺ Reset</button>
+  <div class="sep"></div>
+  <button class="btn" id="btn-ar" onclick="alert(&#39;AR Mode: point device at Hiro marker to overlay experiment.&#39;)">📷 AR Mode</button>
+</div>
+
+<div id="hint">🖐 Drag to orbit · Scroll to zoom · Use HUD to control experiment</div>
+
+<!-- Activity Modal -->
+<div id="activity-modal" class="">
+  <div class="modal-box" id="modal-inner">
+      <button onclick="closeModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;">✕</button>
+      <h3>❓ Activity B — Mystery Source Identification</h3>
+      <p>A <b>Mystery Source</b> is active. Use the shield system to probe which radiation types are present:</p>
+      <ul style="padding-left:18px;line-height:2;font-size:11px;color:rgba(180,210,255,0.7);margin-bottom:12px;">
+        <li><span style="color:var(--alpha-col);">Paper</span> stops <b>α</b> radiation.</li>
+        <li><span style="color:var(--blue);">Aluminum</span> stops <b>α</b> and <b>β</b>.</li>
+        <li><span style="color:var(--green);">Lead</span> stops <b>α, β</b> and attenuates <b>γ</b>.</li>
+      </ul>
+      <p style="color:rgba(255,200,80,0.8);font-size:11px;">⚠️ Make sure <b>Mystery Source</b> is selected and run acquisitions with each shield type, then identify which radiation types are present:</p>
+      <div class="chk-row"><input type="checkbox" id="chk-alpha"><label for="chk-alpha"><span style="color:var(--alpha-col);">● Alpha (α)</span> — low penetration, stopped by paper</label></div>
+      <div class="chk-row"><input type="checkbox" id="chk-beta"><label for="chk-beta"><span style="color:var(--blue);">● Beta (β)</span> — stopped by aluminum</label></div>
+      <div class="chk-row"><input type="checkbox" id="chk-gamma"><label for="chk-gamma"><span style="color:var(--green);">● Gamma (γ)</span> — highly penetrating, attenuated by lead</label></div>
+      <button class="btn" onclick="validateMystery()" style="width:100%;margin-top:10px;border-color:var(--violet);color:var(--violet);background:rgba(181,122,255,0.08);">🔬 Validate Identification</button>
+      <div class="modal-result" id="res-mystery"></div>
+    </div>
+</div>
+
+<script src="./radioactive_decay_lab1_files/three.min.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  PHYSICS STATE
+// ═══════════════════════════════════════════════════════
+const SOURCES = {
+  alpha:   { label:'Alpha',   color:0xff5e72, hlSec:30, types:['alpha'] },
+  beta:    { label:'Beta',    color:0x5bc8ff, hlSec:45, types:['beta'] },
+  gamma:   { label:'Gamma',   color:0x4dffa0, hlSec:20, types:['gamma'] },
+  mystery: { label:'Mystery', color:0xb57aff, hlSec:35, types:[] }
+};
+
+const SHIELDS = {
+  none:  { label:'None',      stops:[] },
+  paper: { label:'Paper',     stops:['alpha'] },
+  al:    { label:'Aluminum',  stops:['alpha','beta'] },
+  pb:    { label:'Lead',      stops:['alpha','beta'], gammaAtt:0.85 }
+};
+
+const S = {
+  source: null,
+  shield: 'none',
+  running: false,
+  bgMeasured: false,
+  bgCPM: 0,
+  startTime: 0,
+  elapsed: 0,
+  N0: 3000,
+  activity: 0,
+  grossCPM: 0,
+  netCPM: 0,
+  decayData: [],
+  mysteryTypes: [],
+  gammaAttenuation: 1.0,
+  paused: false
+};
+
+function setBGNoise(){ return 15 + Math.random()*15; }
+
+// Compute instantaneous CPM given elapsed seconds
+function computeActivity(elapsedSec){
+  if(!S.source) return setBGNoise();
+  const src = SOURCES[S.source];
+  const lambda = Math.LN2 / src.hlSec;
+  let baseActivity = S.N0 * lambda * Math.exp(-lambda * elapsedSec) * 0.1; // scale to CPM-range
+
+  // Shielding attenuation
+  const sh = SHIELDS[S.shield];
+  const types = S.source === 'mystery' ? S.mysteryTypes : src.types;
+  let surviving = types.filter(t => !sh.stops.includes(t));
+  let frac = surviving.length / Math.max(types.length, 1);
+  if(surviving.includes('gamma') && sh.gammaAtt){
+    const beforeGamma = frac;
+    frac = frac - (1/Math.max(types.length,1)) + (1/Math.max(types.length,1))*(1-sh.gammaAtt);
+    frac = Math.max(0, frac);
+  }
+  if(types.length === 0) frac = 0;
+  baseActivity *= frac;
+
+  const bg = setBGNoise();
+  return baseActivity + bg;
+}
+
+// ═══════════════════════════════════════════════════════
+//  THREE.JS SCENE
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x060810, 1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x060810, 0.018);
+
+const cam3 = new THREE.PerspectiveCamera(52, 1, 0.1, 200);
+cam3.position.set(0, 5, 14);
+cam3.lookAt(0, 0, 0);
+
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  cam3.aspect = w/h; cam3.updateProjectionMatrix();
+  labelCanvas.width = w; labelCanvas.height = h;
+}
+resize(); window.addEventListener('resize', resize);
+
+// ── Lighting ──
+scene3.add(new THREE.AmbientLight(0x8899cc, 1.2));
+const sun = new THREE.DirectionalLight(0xfff0e8, 1.0);
+sun.position.set(8, 14, 8); sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+scene3.add(sun);
+const fill = new THREE.DirectionalLight(0x3355aa, 0.4);
+fill.position.set(-6, 4, -4); scene3.add(fill);
+
+// ── Lab Bench ──
+const root3 = new THREE.Group(); scene3.add(root3);
+
+// Floor
+const floorM = new THREE.Mesh(
+  new THREE.PlaneGeometry(80, 80),
+  new THREE.MeshStandardMaterial({color:0x080c18, roughness:0.95})
+);
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -2.5; scene3.add(floorM);
+
+// Grid
+const grid = new THREE.GridHelper(50, 40, 0x111830, 0x0d1428);
+grid.position.y = -2.48; scene3.add(grid);
+
+// Bench top
+const benchMat = new THREE.MeshStandardMaterial({color:0x1a2035, roughness:0.6, metalness:0.1});
+const bench = new THREE.Mesh(new THREE.BoxGeometry(20, 0.3, 4), benchMat);
+bench.position.set(0, -0.6, 0); bench.receiveShadow = true; root3.add(bench);
+
+// Bench legs
+const legMat = new THREE.MeshStandardMaterial({color:0x151d2e, roughness:0.7});
+[[-8.5, -1.55, 1.4],[8.5, -1.55, 1.4],[-8.5, -1.55, -1.4],[8.5, -1.55, -1.4]].forEach(([x,y,z])=>{
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.9, 0.3), legMat);
+  leg.position.set(x,y,z); root3.add(leg);
+});
+
+// Rail (optical rail)
+const railMat = new THREE.MeshStandardMaterial({color:0x3a5070, metalness:0.8, roughness:0.2});
+const rail = new THREE.Mesh(new THREE.BoxGeometry(18, 0.1, 0.18), railMat);
+rail.position.set(0, -0.42, 0); root3.add(rail);
+
+// ── GM Tube ──
+const gmGroup = new THREE.Group(); gmGroup.position.set(7.5, 0, 0); root3.add(gmGroup);
+const gmBodyMat = new THREE.MeshStandardMaterial({color:0x2a3d55, metalness:0.75, roughness:0.25});
+const gmBody = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 2.2, 20), gmBodyMat);
+gmBody.rotation.z = Math.PI/2; gmBody.position.y = 0.3; gmGroup.add(gmBody);
+const gmTip = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.38, 0.4, 12), gmBodyMat);
+gmTip.rotation.z = Math.PI/2; gmTip.position.set(-1.28, 0.3, 0); gmGroup.add(gmTip);
+// Window glow
+const gmWinMat = new THREE.MeshStandardMaterial({color:0x002233, emissive:0x00aaff, emissiveIntensity:0.6, roughness:0.3});
+const gmWin = new THREE.Mesh(new THREE.CircleGeometry(0.16, 16), gmWinMat);
+gmWin.rotation.y = Math.PI/2; gmWin.position.set(-1.49, 0.3, 0); gmGroup.add(gmWin);
+const gmLight = new THREE.PointLight(0x5bc8ff, 0.5, 3); gmLight.position.set(-1.5, 0.4, 0); gmGroup.add(gmLight);
+// Stand
+const standMat = new THREE.MeshStandardMaterial({color:0x1e2e45, metalness:0.6});
+const gmBase = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.12, 1.5), standMat); gmBase.position.set(0, -0.9, 0); gmGroup.add(gmBase);
+const gmPost = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.0, 8), standMat); gmPost.position.set(0, -0.4, 0); gmGroup.add(gmPost);
+
+// ── Source Holder ──
+const srcGroup = new THREE.Group(); srcGroup.position.set(-7.5, 0, 0); root3.add(srcGroup);
+const srcBaseMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.12, 1.2), standMat); srcBaseMesh.position.set(0, -0.9, 0); srcGroup.add(srcBaseMesh);
+const srcPost = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 8), standMat); srcPost.position.set(0, -0.46, 0); srcGroup.add(srcPost);
+const srcHolder = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.6), new THREE.MeshStandardMaterial({color:0x2d4060, metalness:0.7, roughness:0.3}));
+srcHolder.position.y = 0.26; srcGroup.add(srcHolder);
+// Source capsule (hidden until source selected)
+const srcCapsule = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.18, 0.18, 0.4, 12),
+  new THREE.MeshStandardMaterial({color:0x888888, metalness:0.9, emissive:0x000000, emissiveIntensity:0})
+);
+srcCapsule.rotation.z = Math.PI/2; srcCapsule.position.set(0.35, 0.26, 0); srcGroup.add(srcCapsule);
+const srcGlow = new THREE.PointLight(0xff5e72, 0, 4); srcGlow.position.set(0.5, 0.3, 0); srcGroup.add(srcGlow);
+
+// ── Shield Slot ──
+const shieldGroup = new THREE.Group(); shieldGroup.position.set(0, 0, 0); root3.add(shieldGroup);
+const slotFrameMat = new THREE.MeshStandardMaterial({color:0x2a3b50, metalness:0.7, roughness:0.3});
+const slotBase = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.14, 1.6), slotFrameMat); slotBase.position.y = -0.9; shieldGroup.add(slotBase);
+const slotPost = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.86, 8), slotFrameMat); slotPost.position.y = -0.45; shieldGroup.add(slotPost);
+// Slot guide rails
+const sgLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.0, 0.08), slotFrameMat);
+sgLeft.position.set(0, 0.22, 0.9); shieldGroup.add(sgLeft);
+const sgRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.0, 0.08), slotFrameMat);
+sgRight.position.set(0, 0.22, -0.9); shieldGroup.add(sgRight);
+// Shield plate (shown when shield selected)
+const shieldPlate = new THREE.Mesh(
+  new THREE.BoxGeometry(0.12, 1.8, 1.6),
+  new THREE.MeshStandardMaterial({color:0x888888, metalness:0.8, roughness:0.2})
+);
+shieldPlate.position.y = 0.28; shieldPlate.visible = false; shieldGroup.add(shieldPlate);
+
+// ── Screen / Monitor ──
+const screenGroup = new THREE.Group(); screenGroup.position.set(-9.5, 0, 0); root3.add(screenGroup);
+const monitorMat = new THREE.MeshStandardMaterial({color:0x1a2540, metalness:0.6, roughness:0.4});
+const monitor = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.5, 4.5), monitorMat);
+monitor.position.y = 1.05; screenGroup.add(monitor);
+// Screen canvas texture
+const screenTC = document.createElement('canvas'); screenTC.width = screenTC.height = 512;
+const screenTCtx = screenTC.getContext('2d');
+const screenTex = new THREE.CanvasTexture(screenTC);
+const screenPanel = new THREE.Mesh(
+  new THREE.PlaneGeometry(4.0, 3.2),
+  new THREE.MeshStandardMaterial({map:screenTex, roughness:0.5, emissive:0x000000, emissiveIntensity:0})
+);
+screenPanel.rotation.y = Math.PI/2; screenPanel.position.set(0.08, 1.1, 0); screenGroup.add(screenPanel);
+const screenMonBase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.14, 1.8), monitorMat);
+screenMonBase.position.set(0, -0.9, 0); screenGroup.add(screenMonBase);
+const screenMonPost = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.86, 8), monitorMat);
+screenMonPost.position.set(0, -0.46, 0); screenGroup.add(screenMonPost);
+const screenGlowLight = new THREE.PointLight(0x5bc8ff, 0.2, 5); screenGlowLight.position.set(0.6, 1.1, 0); screenGroup.add(screenGlowLight);
+
+// ── Wiring / Cable ──
+(function buildCable(){
+  const pts = [];
+  for(let i=0;i<=30;i++){
+    const t = i/30;
+    const x = -9.4 + t*17.0;
+    const y = -0.38 + Math.sin(t*Math.PI)*0.08 - (t*(1-t))*0.15;
+    pts.push(new THREE.Vector3(x, y, -0.3));
+  }
+  const cg = new THREE.CatmullRomCurve3(pts);
+  const cGeo = new THREE.TubeGeometry(cg, 40, 0.025, 6, false);
+  const cMesh = new THREE.Mesh(cGeo, new THREE.MeshStandardMaterial({color:0x223344}));
+  root3.add(cMesh);
+})();
+
+// ── Particle Stream (radiation) ──
+const PARTICLE_COUNT = 120;
+const particleGeo = new THREE.BufferGeometry();
+const pPositions = new Float32Array(PARTICLE_COUNT * 3);
+const pData = [];
+for(let i=0; i<PARTICLE_COUNT; i++){
+  pData.push({ active:false, x:0, y:0, z:0, vx:0, vy:0, vz:0, life:0, maxLife:0, type:'alpha' });
+  pPositions[i*3] = 0; pPositions[i*3+1] = -100; pPositions[i*3+2] = 0;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+const particleMat = new THREE.PointsMaterial({
+  color:0xff5e72, size:0.12, transparent:true, opacity:0.85,
+  blending:THREE.AdditiveBlending, depthWrite:false, vertexColors:false
+});
+const particleMesh = new THREE.Points(particleGeo, particleMat);
+root3.add(particleMesh);
+
+// Per-particle color via custom shader hack: we use colored spheres instead
+const partSpheres = [];
+const sphereGeoS = new THREE.SphereGeometry(0.06, 6, 6);
+for(let i=0;i<60;i++){
+  const mat = new THREE.MeshStandardMaterial({color:0xff5e72, emissive:0xff5e72, emissiveIntensity:1.5, transparent:true, opacity:0});
+  const mesh = new THREE.Mesh(sphereGeoS, mat);
+  mesh.position.y = -100;
+  root3.add(mesh);
+  partSpheres.push({mesh, active:false, x:0, y:0.3, z:0, vx:0, vy:0, vz:0, life:0, maxLife:0, type:'alpha', blocked:false});
+}
+
+// Shield blocking line (visual feedback)
+const blockLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-2,0),new THREE.Vector3(0,3,0)]);
+const blockLine = new THREE.Line(blockLineGeo, new THREE.LineBasicMaterial({color:0xffc857, transparent:true, opacity:0}));
+root3.add(blockLine);
+
+// ── Orbit Controls (manual) ──
+let isDragging = false, lastMX=0, lastMY=0;
+let camTheta = 0.35, camPhi = 0.38, camR = 16;
+function applyCam(){
+  cam3.position.set(
+    camR * Math.sin(camTheta) * Math.cos(camPhi),
+    camR * Math.sin(camPhi) + 1,
+    camR * Math.cos(camTheta) * Math.cos(camPhi)
+  );
+  cam3.lookAt(0, 0.5, 0);
+}
+applyCam();
+canvas.addEventListener('mousedown', e=>{ if(e.target===canvas){ isDragging=true; lastMX=e.clientX; lastMY=e.clientY; }});
+window.addEventListener('mouseup', ()=>{ isDragging=false; });
+window.addEventListener('mousemove', e=>{
+  if(!isDragging) return;
+  camTheta -= (e.clientX-lastMX)*0.006;
+  camPhi = Math.max(-0.1, Math.min(1.1, camPhi+(e.clientY-lastMY)*0.005));
+  lastMX=e.clientX; lastMY=e.clientY; applyCam();
+});
+canvas.addEventListener('wheel', e=>{ camR = Math.max(6, Math.min(28, camR+e.deltaY*0.02)); applyCam(); }, {passive:true});
+// Touch
+let tStart=null, tDist0=null, tR0=null;
+canvas.addEventListener('touchstart', e=>{ if(e.touches.length===1){isDragging=true; tStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; lastMX=tStart.x; lastMY=tStart.y;}
+  if(e.touches.length===2){tDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); tR0=camR;}
+}, {passive:true});
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===1&&isDragging){
+    camTheta-=(e.touches[0].clientX-lastMX)*0.006;
+    camPhi=Math.max(-0.1,Math.min(1.1,camPhi+(e.touches[0].clientY-lastMY)*0.005));
+    lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY; applyCam();
+  }
+  if(e.touches.length===2&&tDist0){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    camR=Math.max(6,Math.min(28,tR0*(tDist0/d))); applyCam();
+  }
+},{passive:true});
+canvas.addEventListener('touchend', ()=>{ isDragging=false; tDist0=null; });
+
+// ═══════════════════════════════════════════════════════
+//  SIMULATION LOGIC
+// ═══════════════════════════════════════════════════════
+let bgCPM = setBGNoise();
+let acqStartReal = 0;
+let lastTick = 0;
+let flashT = 0;
+
+function selectSource(src){
+  S.source = src;
+  document.querySelectorAll('#source-btns .sbtn').forEach(b=>{
+    b.className = 'sbtn';
+    if(b.dataset.src===src) b.classList.add('active-'+src);
+  });
+  if(src==='mystery'){
+    const pool = ['alpha','beta','gamma'];
+    // Randomly assign 1–3 types
+    const shuffled = pool.sort(()=>Math.random()-0.5);
+    const count = 1 + Math.floor(Math.random()*3);
+    S.mysteryTypes = shuffled.slice(0, count);
+  }
+  updateSourceVisual();
+  updateShieldVisual();
+}
+
+function selectShield(sh){
+  S.shield = sh;
+  document.querySelectorAll('#shield-btns .sbtn').forEach(b=>{
+    b.className = 'sbtn';
+    if(b.dataset.sh===sh) b.classList.add('active-shield');
+  });
+  document.getElementById('val-shield').textContent = SHIELDS[sh].label;
+  updateShieldVisual();
+}
+
+function updateSourceVisual(){
+  if(!S.source){ srcCapsule.visible=false; srcGlow.intensity=0; return; }
+  srcCapsule.visible = true;
+  const col = SOURCES[S.source].color;
+  srcCapsule.material.emissive = new THREE.Color(col);
+  srcCapsule.material.color = new THREE.Color(col).multiplyScalar(0.6);
+  srcCapsule.material.emissiveIntensity = S.running ? 1.5 : 0.4;
+  srcGlow.color = new THREE.Color(col);
+  srcGlow.intensity = S.running ? 1.5 : 0.2;
+}
+
+function updateShieldVisual(){
+  if(S.shield==='none'){
+    shieldPlate.visible = false;
+    blockLine.material.opacity = 0;
+    return;
+  }
+  shieldPlate.visible = true;
+  const colors = {paper:0xddeebb, al:0x9ab0cc, pb:0x556677};
+  shieldPlate.material.color = new THREE.Color(colors[S.shield]||0x888888);
+  shieldPlate.material.metalness = S.shield==='pb'?0.9:S.shield==='al'?0.8:0.1;
+  shieldPlate.material.roughness = S.shield==='paper'?0.9:0.2;
+  blockLine.material.opacity = 0.2;
+  blockLine.material.color = new THREE.Color(colors[S.shield]||0x888888);
+}
+
+function toggleAcquisition(){
+  S.running = !S.running;
+  const btn = document.getElementById('btn-start');
+  if(S.running){
+    if(!S.source){ alert('Please select a source first.'); S.running=false; return; }
+    S.startTime = Date.now();
+    acqStartReal = Date.now();
+    S.elapsed = 0;
+    S.decayData = [];
+    btn.textContent = '■ Stop Acquisition';
+    btn.classList.add('on');
+    updateSourceVisual();
+  } else {
+    btn.textContent = '▶ Start Acquisition';
+    btn.classList.remove('on');
+    updateSourceVisual();
+  }
+}
+
+function zeroBackground(){
+  if(S.running){ alert('Stop acquisition before zeroing.'); return; }
+  S.bgMeasured = true;
+  S.bgCPM = bgCPM + setBGNoise()*0.3;
+  document.getElementById('val-bg').textContent = S.bgCPM.toFixed(1);
+  document.getElementById('val-bg').style.color = 'var(--green)';
+  showFlash('Background zeroed! BG = '+S.bgCPM.toFixed(1)+' CPM', '#4dffa0');
+}
+
+function resetAll(){
+  S.running = false;
+  S.source = null;
+  S.shield = 'none';
+  S.bgMeasured = false;
+  S.bgCPM = 0;
+  S.elapsed = 0;
+  S.decayData = [];
+  S.grossCPM = 0;
+  S.netCPM = 0;
+  document.getElementById('btn-start').textContent = '▶ Start Acquisition';
+  document.getElementById('btn-start').classList.remove('on');
+  document.querySelectorAll('#source-btns .sbtn').forEach(b=>b.className='sbtn');
+  document.querySelectorAll('#shield-btns .sbtn').forEach(b=>b.className='sbtn');
+  document.getElementById('val-shield').textContent = 'None';
+  document.getElementById('val-bg').textContent = '—';
+  document.getElementById('val-bg').style.color = 'var(--muted)';
+  document.getElementById('val-net').textContent = '—';
+  document.getElementById('val-net').style.color = 'var(--amber)';
+  document.getElementById('cpm-display').textContent = '0';
+  srcCapsule.visible = false; srcGlow.intensity = 0;
+  shieldPlate.visible = false;
+  blockLine.material.opacity = 0;
+  updateDecayCanvas();
+}
+
+// ── Flash message ──
+let flashMsg = '', flashCol = '#fff', flashAlpha = 0;
+function showFlash(msg, col='#5bc8ff'){
+  flashMsg = msg; flashCol = col; flashAlpha = 1;
+}
+
+// ── Spawn particles ──
+let lastSpawnT = 0;
+function spawnParticles(){
+  if(!S.running || !S.source) return;
+  const now = Date.now();
+  if(now - lastSpawnT < 80) return;
+  lastSpawnT = now;
+
+  const src = SOURCES[S.source];
+  const types = S.source==='mystery' ? S.mysteryTypes : src.types;
+  const sh = SHIELDS[S.shield];
+
+  types.forEach(type=>{
+    // find free sphere
+    const p = partSpheres.find(p=>!p.active);
+    if(!p) return;
+
+    const isBlocked = sh.stops.includes(type) || (type==='gamma' && sh.gammaAtt && Math.random()<sh.gammaAtt*0.7);
+    const cols = {alpha:0xff5e72, beta:0x5bc8ff, gamma:0x4dffa0};
+    p.active = true;
+    p.x = -7.0; p.y = 0.3 + (Math.random()-0.5)*0.15; p.z = (Math.random()-0.5)*0.15;
+    p.vx = 3.5 + Math.random()*1.5;
+    p.vy = (Math.random()-0.5)*0.08;
+    p.vz = (Math.random()-0.5)*0.08;
+    p.life = 0;
+    p.maxLife = isBlocked ? (Math.random()*0.35+0.2) : (Math.random()*0.5+0.9);
+    p.type = type;
+    p.blocked = isBlocked;
+    p.mesh.material.color.setHex(cols[type]||0xffffff);
+    p.mesh.material.emissive.setHex(cols[type]||0xffffff);
+    p.mesh.material.opacity = 0.9;
+    p.mesh.visible = true;
+  });
+}
+
+const DT = 1/30;
+function updateParticles(){
+  partSpheres.forEach(p=>{
+    if(!p.active){ p.mesh.visible=false; return; }
+    p.life += DT;
+    const t = p.life / p.maxLife;
+    if(t >= 1){ p.active=false; p.mesh.visible=false; return; }
+
+    // Stop alpha at paper, beta at Al, etc. at shield position (x≈0)
+    if(p.blocked && p.x >= -0.1){
+      p.active=false; p.mesh.visible=false;
+      return;
+    }
+
+    p.x += p.vx * DT;
+    p.y += p.vy * DT;
+    p.z += p.vz * DT;
+
+    const fade = t > 0.7 ? (1-t)/0.3 : 1.0;
+    p.mesh.material.opacity = 0.85 * fade;
+    p.mesh.material.emissiveIntensity = 1.2 * fade;
+    p.mesh.position.set(p.x, p.y, p.z);
+    p.mesh.visible = true;
+  });
+}
+
+// ── Main simulation tick ──
+function simTick(){
+  const now = Date.now();
+  if(!S.running) return;
+  if(now - lastTick < 200) return; // 5 Hz updates
+  lastTick = now;
+
+  S.elapsed = (now - S.startTime) / 1000;
+
+  const raw = computeActivity(S.elapsed);
+  S.grossCPM = Math.max(0, raw + (Math.random()-0.5)*Math.sqrt(raw)*0.5);
+
+  const net = S.bgMeasured ? Math.max(0, S.grossCPM - S.bgCPM) : null;
+  S.netCPM = net;
+
+  // Record data point every second
+  if(S.decayData.length === 0 || S.elapsed - S.decayData[S.decayData.length-1].t > 1){
+    S.decayData.push({t: S.elapsed, cpm: S.grossCPM, net: net});
+  }
+
+  // GM tube flash
+  if(S.grossCPM > 50){ gmWin.material.emissiveIntensity = 0.9 + Math.random()*0.5; gmLight.intensity = 0.8+Math.random()*0.5; }
+  else { gmWin.material.emissiveIntensity = 0.3; gmLight.intensity = 0.2; }
+
+  updateHUD();
+  updateDecayCanvas();
+  paintScreenTexture();
+}
+
+function updateHUD(){
+  document.getElementById('cpm-display').textContent = S.grossCPM.toFixed(0);
+  document.getElementById('val-gross').textContent = S.grossCPM.toFixed(1);
+  document.getElementById('val-time').textContent = S.elapsed.toFixed(1)+'s';
+  const barPct = Math.min(100, (S.grossCPM/300)*100);
+  document.getElementById('cpm-bar').style.width = barPct+'%';
+  const barColor = S.grossCPM > 200 ? 'var(--red)' : S.grossCPM > 100 ? 'var(--amber)' : 'var(--green)';
+  document.getElementById('cpm-bar').style.background = barColor;
+  document.getElementById('cpm-display').style.color = barColor;
+  if(S.netCPM !== null){
+    document.getElementById('val-net').textContent = S.netCPM.toFixed(1);
+    document.getElementById('val-net').style.color = 'var(--amber)';
+  }
+}
+
+// ── Decay canvas (HUD plot) ──
+function updateDecayCanvas(){
+  const c = document.getElementById('decay-canvas');
+  if(!c) return;
+  const ctx = c.getContext('2d'); const W=c.width, H=c.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#060810'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = 'rgba(180,200,255,0.08)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ctx.beginPath();ctx.moveTo(0,i*H/4);ctx.lineTo(W,i*H/4);ctx.stroke();}
+  for(let i=0;i<=5;i++){ctx.beginPath();ctx.moveTo(i*W/5,0);ctx.lineTo(i*W/5,H);ctx.stroke();}
+  if(S.decayData.length < 2){
+    ctx.fillStyle='rgba(180,200,255,0.2)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('Waiting for data…',W/2,H/2); return;
+  }
+  const maxCPM = Math.max(...S.decayData.map(d=>d.cpm), 1);
+  const maxT = Math.max(...S.decayData.map(d=>d.t), 1);
+  ctx.beginPath();
+  ctx.strokeStyle = '#5bc8ff'; ctx.lineWidth = 1.5;
+  S.decayData.forEach((d,i)=>{
+    const px = (d.t/maxT)*W; const py = H - (d.cpm/maxCPM)*H*0.9 - H*0.05;
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+  // Axes labels
+  ctx.fillStyle='rgba(91,200,255,0.5)'; ctx.font='8px Space Mono'; ctx.textAlign='left';
+  ctx.fillText('CPM',2,10);
+  ctx.textAlign='right'; ctx.fillText('t(s)',W-2,H-2);
+}
+
+// ── Screen texture (monitor in 3D) ──
+function paintScreenTexture(){
+  const ctx = screenTCtx, W=512, H=512;
+  ctx.fillStyle='#000209'; ctx.fillRect(0,0,W,H);
+  // Grid lines
+  ctx.strokeStyle='rgba(91,200,255,0.07)'; ctx.lineWidth=1;
+  for(let i=0;i<=8;i++){ctx.beginPath();ctx.moveTo(0,i*H/8);ctx.lineTo(W,i*H/8);ctx.stroke();}
+  for(let i=0;i<=8;i++){ctx.beginPath();ctx.moveTo(i*W/8,0);ctx.lineTo(i*W/8,H);ctx.stroke();}
+  // Border
+  ctx.strokeStyle='rgba(91,200,255,0.2)'; ctx.lineWidth=2; ctx.strokeRect(2,2,W-4,H-4);
+  // Title
+  ctx.fillStyle='rgba(91,200,255,0.6)'; ctx.font='bold 20px Space Mono'; ctx.textAlign='center';
+  ctx.fillText('ACTIVITY vs TIME', W/2, 30);
+  if(!S.running && S.decayData.length===0){
+    ctx.fillStyle='rgba(91,200,255,0.25)'; ctx.font='15px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('AWAITING ACQUISITION', W/2, H/2-10);
+    ctx.fillText('Select source → Start', W/2, H/2+14);
+    screenTex.needsUpdate=true; return;
+  }
+  if(S.decayData.length < 2){ screenTex.needsUpdate=true; return; }
+  const maxCPM = Math.max(...S.decayData.map(d=>d.cpm), 1);
+  const maxT = Math.max(...S.decayData.map(d=>d.t), 1);
+  const px = (t) => 40 + (t/maxT)*(W-60);
+  const py = (c) => H-30 - (c/maxCPM)*(H-60);
+  // Axes
+  ctx.strokeStyle='rgba(180,200,255,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(40,20); ctx.lineTo(40,H-30); ctx.lineTo(W-20,H-30); ctx.stroke();
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='13px Space Mono';
+  ctx.textAlign='center'; ctx.fillText('Time (s)', W/2, H-8);
+  ctx.save(); ctx.translate(14,H/2); ctx.rotate(-Math.PI/2); ctx.fillText('CPM',0,0); ctx.restore();
+  // Curve fill
+  ctx.beginPath();
+  S.decayData.forEach((d,i)=>{
+    const x=px(d.t), y=py(d.cpm);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.lineTo(px(S.decayData[S.decayData.length-1].t), H-30);
+  ctx.lineTo(px(0), H-30); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,50,0,H-30);
+  grad.addColorStop(0,'rgba(91,200,255,0.25)'); grad.addColorStop(1,'rgba(91,200,255,0.02)');
+  ctx.fillStyle=grad; ctx.fill();
+  // Curve line
+  ctx.beginPath(); ctx.strokeStyle='#5bc8ff'; ctx.lineWidth=2.5;
+  S.decayData.forEach((d,i)=>{
+    const x=px(d.t), y=py(d.cpm);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // CPM label
+  ctx.fillStyle='#5bc8ff'; ctx.font='bold 26px Syne,sans-serif'; ctx.textAlign='right';
+  ctx.fillText(S.grossCPM.toFixed(0)+' CPM', W-22, 56);
+  screenTex.needsUpdate=true;
+}
+
+// ── 2D Labels overlay ──
+function drawLabels(){
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  // Flash message
+  if(flashAlpha > 0){
+    flashAlpha -= 0.018;
+    lctx.globalAlpha = Math.min(1, flashAlpha);
+    lctx.fillStyle = flashCol;
+    lctx.font = 'bold 13px Space Mono';
+    lctx.textAlign = 'center';
+    lctx.fillText(flashMsg, labelCanvas.width/2, labelCanvas.height/2 - 80);
+    lctx.globalAlpha = 1;
+  }
+  // World-space label helper
+  function worldToScreen(wx,wy,wz){
+    const v = new THREE.Vector3(wx,wy,wz);
+    v.project(cam3);
+    return { x:(v.x+1)/2*labelCanvas.width, y:(-v.y+1)/2*labelCanvas.height };
+  }
+  const labels3d = [
+    {wx:7.5, wy:1.2, wz:0, text:'GM TUBE', col:'rgba(91,200,255,0.7)'},
+    {wx:-7.5, wy:1.2, wz:0, text:'SOURCE', col:'rgba(255,94,114,0.7)'},
+    {wx:0, wy:1.8, wz:0, text:'SHIELD', col:'rgba(255,200,80,0.7)'},
+    {wx:-9.5, wy:2.8, wz:0, text:'MONITOR', col:'rgba(77,255,160,0.5)'},
+  ];
+  labels3d.forEach(l=>{
+    const sc = worldToScreen(l.wx, l.wy, l.wz);
+    if(sc.x<0||sc.x>labelCanvas.width||sc.y<0||sc.y>labelCanvas.height) return;
+    lctx.font = '10px Space Mono';
+    lctx.fillStyle = l.col;
+    lctx.textAlign = 'center';
+    lctx.fillText(l.text, sc.x, sc.y);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACTIVITY MODALS
+// ═══════════════════════════════════════════════════════
+function openActivity(act){
+  const modal = document.getElementById('activity-modal');
+  const box = document.getElementById('modal-inner');
+  if(act==='A'){
+    box.innerHTML = `
+      <button onclick="closeModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;">✕</button>
+      <h3>☢ Activity A — Half-Life Measurement</h3>
+      <p>Run an acquisition with <b>no shield</b> and observe the decay curve on the monitor. The activity follows:</p>
+      <p style="text-align:center;font-size:13px;color:#5bc8ff;background:rgba(91,200,255,0.06);border:1px solid rgba(91,200,255,0.2);border-radius:8px;padding:8px;">N(t) = N₀ · e<sup>−λt</sup> &nbsp;,&nbsp; T½ = ln2 / λ</p>
+      <p>From the curve, identify the time at which activity falls to <b>50% of its initial value</b>. Enter your estimate below:</p>
+      <div style="margin-bottom:6px;font-size:11px;color:rgba(180,210,255,0.6);">Estimated T½ (seconds):</div>
+      <input class="modal-input" id="inp-halflife" type="number" placeholder="e.g. 30" min="1" max="200">
+      <button class="btn green" onclick="validateHalflife()" style="width:100%;margin-top:2px;">✓ Validate</button>
+      <div class="modal-result" id="res-halflife"></div>
+      <div id="followup-hl" style="display:none;margin-top:14px;">
+        <div style="height:1px;background:var(--border);margin-bottom:12px;"></div>
+        <p style="color:var(--amber);">Excellent! Now calculate: <b>What is the activity after 3 half-lives, if N₀ CPM = <span id="n0-display">—</span>?</b></p>
+        <input class="modal-input" id="inp-3hl" type="number" placeholder="Activity in CPM after 3 T½">
+        <button class="btn amber" onclick="validate3HL()" style="width:100%;margin-top:2px;">✓ Submit Answer</button>
+        <div class="modal-result" id="res-3hl"></div>
+      </div>
+    `;
+    // Fill N0 if we have data
+    if(S.decayData.length > 0){
+      const n0 = S.decayData[0].cpm.toFixed(0);
+      const el = document.getElementById('n0-display');
+      if(el) el.textContent = n0;
+    }
+  } else {
+    box.innerHTML = `
+      <button onclick="closeModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;">✕</button>
+      <h3>❓ Activity B — Mystery Source Identification</h3>
+      <p>A <b>Mystery Source</b> is active. Use the shield system to probe which radiation types are present:</p>
+      <ul style="padding-left:18px;line-height:2;font-size:11px;color:rgba(180,210,255,0.7);margin-bottom:12px;">
+        <li><span style="color:var(--alpha-col);">Paper</span> stops <b>α</b> radiation.</li>
+        <li><span style="color:var(--blue);">Aluminum</span> stops <b>α</b> and <b>β</b>.</li>
+        <li><span style="color:var(--green);">Lead</span> stops <b>α, β</b> and attenuates <b>γ</b>.</li>
+      </ul>
+      <p style="color:rgba(255,200,80,0.8);font-size:11px;">⚠️ Make sure <b>Mystery Source</b> is selected and run acquisitions with each shield type, then identify which radiation types are present:</p>
+      <div class="chk-row"><input type="checkbox" id="chk-alpha"><label for="chk-alpha"><span style="color:var(--alpha-col);">● Alpha (α)</span> — low penetration, stopped by paper</label></div>
+      <div class="chk-row"><input type="checkbox" id="chk-beta"><label for="chk-beta"><span style="color:var(--blue);">● Beta (β)</span> — stopped by aluminum</label></div>
+      <div class="chk-row"><input type="checkbox" id="chk-gamma"><label for="chk-gamma"><span style="color:var(--green);">● Gamma (γ)</span> — highly penetrating, attenuated by lead</label></div>
+      <button class="btn" onclick="validateMystery()" style="width:100%;margin-top:10px;border-color:var(--violet);color:var(--violet);background:rgba(181,122,255,0.08);">🔬 Validate Identification</button>
+      <div class="modal-result" id="res-mystery"></div>
+    `;
+  }
+  modal.classList.add('show');
+}
+
+function closeModal(){ document.getElementById('activity-modal').classList.remove('show'); }
+document.getElementById('activity-modal').addEventListener('click', e=>{
+  if(e.target===document.getElementById('activity-modal')) closeModal();
+});
+
+window.closeModal = closeModal;
+window.openActivity = openActivity;
+
+window.validateHalflife = function(){
+  const val = parseFloat(document.getElementById('inp-halflife').value);
+  const res = document.getElementById('res-halflife');
+  res.style.display='block';
+  if(!S.source || !SOURCES[S.source]){ res.className='modal-result fail'; res.textContent='⚠ Please run an acquisition first.'; return; }
+  const src = SOURCES[S.source];
+  const trueHL = src.hlSec;
+  const tol = trueHL * 0.2;
+  if(Math.abs(val-trueHL)<=tol){
+    res.className='modal-result ok';
+    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s. Your reading of '+val+'s is within 20% tolerance. Well done!';
+    const n0 = S.decayData.length>0 ? S.decayData[0].cpm : 200;
+    document.getElementById('n0-display').textContent = n0.toFixed(0);
+    document.getElementById('followup-hl').style.display='block';
+  } else {
+    res.className='modal-result fail';
+    res.innerHTML='❌ Not quite. Hint: The activity should drop to 50% of its peak. Look at your curve. True T½ is between 15–60s. Try again!';
+  }
+};
+
+window.validate3HL = function(){
+  const val = parseFloat(document.getElementById('inp-3hl').value);
+  const res = document.getElementById('res-3hl');
+  res.style.display='block';
+  const n0 = S.decayData.length>0 ? S.decayData[0].cpm : 200;
+  const expected = n0 / 8; // After 3 T½: N0 × (1/2)³ = N0/8
+  if(Math.abs(val-expected)/expected < 0.15){
+    res.className='modal-result ok';
+    res.innerHTML='🎉 Excellent! After 3 half-lives, activity = N₀/2³ = N₀/8 ≈ '+expected.toFixed(1)+' CPM. Perfect understanding!';
+  } else {
+    res.className='modal-result fail';
+    res.innerHTML='❌ Hint: After each half-life, activity halves. After 3 T½: A = N₀ × (½)³ = N₀/8 ≈ '+expected.toFixed(1)+' CPM.';
+  }
+};
+
+window.validateMystery = function(){
+  if(!S.mysteryTypes||S.mysteryTypes.length===0){ 
+    const res=document.getElementById('res-mystery'); res.style.display='block';
+    res.className='modal-result fail'; res.textContent='⚠ Please select Mystery Source and run acquisitions first.'; return;
+  }
+  const chkAlpha = document.getElementById('chk-alpha').checked;
+  const chkBeta  = document.getElementById('chk-beta').checked;
+  const chkGamma = document.getElementById('chk-gamma').checked;
+  const guesses = [];
+  if(chkAlpha) guesses.push('alpha');
+  if(chkBeta)  guesses.push('beta');
+  if(chkGamma) guesses.push('gamma');
+  const truth = S.mysteryTypes.slice().sort().join(',');
+  const guess = guesses.slice().sort().join(',');
+  const res = document.getElementById('res-mystery');
+  res.style.display='block';
+  if(truth===guess){
+    res.className='modal-result ok';
+    res.innerHTML='🎉 Correct identification! The mystery source emits: <b>'+S.mysteryTypes.join(' + ')+'</b>. Excellent detective work!';
+  } else {
+    res.className='modal-result fail';
+    const hints = [];
+    if(S.mysteryTypes.includes('alpha')&&!guesses.includes('alpha')) hints.push('Alpha present: paper shield reduces CPM significantly.');
+    if(!S.mysteryTypes.includes('alpha')&&guesses.includes('alpha')) hints.push('No alpha: paper shield shows no reduction.');
+    if(S.mysteryTypes.includes('beta')&&!guesses.includes('beta')) hints.push('Beta present: Al reduces more than paper.');
+    if(!S.mysteryTypes.includes('beta')&&guesses.includes('beta')) hints.push('No beta: Al shows same count as paper.');
+    if(S.mysteryTypes.includes('gamma')&&!guesses.includes('gamma')) hints.push('Gamma present: Lead only partially reduces count.');
+    res.innerHTML='❌ Not quite. Hints: '+hints.join(' ')+' Try more shield combinations!';
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  ANIMATION LOOP
+// ═══════════════════════════════════════════════════════
+let lastRender=0;
+function animate(ts){
+  requestAnimationFrame(animate);
+  if(ts-lastRender < 33) return;
+  lastRender=ts;
+
+  simTick();
+  spawnParticles();
+  updateParticles();
+
+  // Subtle source pulse
+  if(S.running && S.source){
+    const pulse = 0.6 + 0.4*Math.sin(ts*0.004);
+    srcCapsule.material.emissiveIntensity = pulse*1.5;
+    srcGlow.intensity = pulse*1.5;
+    screenGlowLight.intensity = 0.3+0.2*pulse;
+  } else {
+    screenGlowLight.intensity = 0.1;
+  }
+
+  drawLabels();
+  renderer.render(scene3, cam3);
+}
+
+// Init
+selectShield('none');
+paintScreenTexture();
+updateDecayCanvas();
+animate(0);
+</script>
+
+
+</body></html>
