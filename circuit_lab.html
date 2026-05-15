@@ -98,8 +98,13 @@
     flex-direction: column;
     padding: 8px 6px;
     gap: 4px;
-    overflow-y: auto;
+    overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: auto;
+    will-change: scroll-position;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     z-index: 5;
     touch-action: pan-y;
   }
@@ -1697,19 +1702,26 @@ document.querySelectorAll('.comp-btn[data-type]').forEach(btn => {
     e.dataTransfer.effectAllowed = 'copy';
   });
 
-  // Touch on iPad/mobile: TAP = add to canvas centre. 
-  // Scrolling works naturally because we never call preventDefault on the sidebar.
-  // We distinguish tap vs scroll by checking vertical movement on touchend.
+  // Touch on iPad/mobile: TAP = add to canvas centre.
+  // We distinguish tap vs scroll by checking BOTH finger movement AND whether
+  // the sidebar container actually scrolled (most reliable on iOS/iPadOS Chrome).
+  const sidebar = btn.closest('.sidebar') || btn.parentElement;
   let _tapStartY = null;
+  let _tapScrollTop = null;
+
   btn.addEventListener('touchstart', e => {
     _tapStartY = e.touches[0].clientY;
+    _tapScrollTop = sidebar ? sidebar.scrollTop : 0;
   }, { passive: true });
 
   btn.addEventListener('touchend', e => {
     if (_tapStartY === null) return;
     const dy = Math.abs(e.changedTouches[0].clientY - _tapStartY);
+    const scrolled = sidebar ? Math.abs(sidebar.scrollTop - _tapScrollTop) : 0;
     _tapStartY = null;
-    if (dy > 10) return; // was a scroll, not a tap — ignore
+    _tapScrollTop = null;
+    // Ignore if finger moved a lot OR the sidebar actually scrolled
+    if (dy > 12 || scrolled > 4) return;
     // Tap confirmed: add component near centre of canvas with slight jitter
     const type = btn.dataset.type;
     const jx = (Math.random() - 0.5) * 80;
