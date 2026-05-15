@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Circuit Lab — Interactive Electronics Simulator</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
@@ -238,13 +238,14 @@
      always visible regardless of layout, scrolls horizontally if needed. */
   .fab-bar {
     position: fixed;
-    bottom: 14px;
+    bottom: max(14px, env(safe-area-inset-bottom, 14px));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 7px 12px;
+    padding-bottom: max(7px, calc(env(safe-area-inset-bottom, 0px) - 6px));
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 40px;
@@ -556,7 +557,7 @@
   <button class="fab-btn" id="btnTheme" title="Switch theme">🌙</button>
 </div>
 <!-- Hint bar still exists for desktop, just not visible on mobile -->
-<div class="hint-bar" id="hintBar" style="position:fixed;bottom:56px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:199;background:var(--panel);border-radius:12px;padding:3px 10px;border:1px solid var(--border);font-size:10px;"></div>
+<div class="hint-bar" id="hintBar" style="position:fixed;bottom:calc(max(14px, env(safe-area-inset-bottom, 14px)) + 46px);left:50%;transform:translateX(-50%);pointer-events:none;z-index:199;background:var(--panel);border-radius:12px;padding:3px 10px;border:1px solid var(--border);font-size:10px;"></div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
