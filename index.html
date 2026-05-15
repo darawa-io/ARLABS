@@ -395,10 +395,23 @@
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
                 
-                <div id="elec-content" class="category-content">
+                <div id="elec-content" class="category-content collapsed">
                     <div class="gallery-card" onclick="loadSimulation('Circuits Lab', 'https://darawa-io.github.io/ARLABS/circuit_lab.html', [])">
                         <img src="assets/Circuits.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits+Lab'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Circuits Lab</span>
+                    </div>
+                </div>
+
+                <!-- Nuclear Physics Category -->
+                <div class="category-header" onclick="toggleCategory('nuclear-content')">
+                    <span>Nuclear Physics</span>
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                
+                <div id="nuclear-content" class="category-content collapsed">
+                    <div class="gallery-card" onclick="loadSimulation('Radioactive Decay', 'decay.html', ['Decay_Lab_Report.pdf'])">
+                        <img src="decay.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Radioactive+Decay'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Radioactive Decay</span>
                     </div>
                 </div>
                 
@@ -538,7 +551,7 @@
                 reports.forEach(reportName => {
                     const cleanName = reportName.replace(/_/g, ' ').replace('.pdf', '');
                     const link = document.createElement('a');
-                    link.href = `reports/${reportName}`;
+                    link.href = reportName.startsWith('http') ? reportName : `reports/${reportName}`;
                     link.className = 'report-link';
                     link.target = "_blank";
                     link.innerHTML = `
