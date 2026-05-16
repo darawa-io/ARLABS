@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Radioactive Decay Lab | Radiation Shielding</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
@@ -161,6 +164,55 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 }
 #decay-panel h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:6px;}
 
+/* ── AR Mode ── */
+#arWrap{display:none;position:fixed;inset:0;z-index:2;width:100vw;height:100vh;background:transparent;}
+#arWrap.show{display:block;}
+#arWrap a-scene{width:100%!important;height:100%!important;position:absolute!important;top:0;left:0;}
+#arWrap canvas{background:transparent!important;}
+#arWrap video{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;}
+
+body.ar-active #hud{display:none!important;}
+body.ar-active #title{display:none!important;}
+body.ar-active #decay-panel{display:none!important;}
+body.ar-active #mystery-quiz{display:none!important;}
+body.ar-active #controls .ctrl-ar-hide{display:none!important;}
+body.ar-active #hint{display:none!important;}
+body.ar-active #simWrap{display:none!important;}
+body.ar-active #bg-warning{display:none!important;}
+body.ar-active #zoom-modal{display:none!important;}
+
+/* AR Instructions modal */
+#ar-instructions{display:none;background:rgba(6,8,16,.97);backdrop-filter:blur(16px);border:1px solid rgba(181,122,255,.38);border-radius:18px;padding:24px 26px;z-index:200;max-width:340px;width:90%;font-family:'Space Mono',monospace;font-size:11px;color:var(--violet);line-height:1.9;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);}
+#ar-instructions.show{display:block;}
+
+/* AR HUD pills */
+.ar-pill{display:none;position:fixed;z-index:200;padding:6px 14px;border-radius:14px;background:rgba(6,8,16,.94);backdrop-filter:blur(12px);font-family:'Space Mono',monospace;font-size:12px;white-space:nowrap;}
+body.ar-active .ar-pill{display:block;}
+
+/* AR bottom controls */
+#ar-controls-ui{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;gap:8px;align-items:center;background:rgba(6,8,16,.93);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:50px;padding:8px 16px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
+body.ar-active #ar-controls-ui{display:flex;}
+
+/* AR status pill */
+#ar-status{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;padding:7px 18px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;transition:all 0.3s;}
+
+/* AR activity panel */
+#ar-activity-panel{display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:200;background:rgba(6,8,16,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(181,122,255,.32);border-radius:16px;padding:14px 16px;min-width:220px;font-family:'Space Mono',monospace;font-size:10px;max-height:calc(100vh - 40px);overflow-y:auto;}
+body.ar-active #ar-activity-panel{display:block;}
+
+/* AR shared button classes */
+.ar-sh-btn{padding:4px 8px;border-radius:14px;border:1px solid rgba(180,200,255,.2);background:rgba(180,200,255,.05);color:var(--muted);font-family:'Space Mono',monospace;font-size:8px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.ar-act-btn{flex:1;padding:5px 4px;border-radius:10px;border:1px solid rgba(180,200,255,.2);background:rgba(180,200,255,.04);color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;text-align:center;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.ar-sh-btn.active{background:rgba(255,200,80,.2);border-color:var(--amber);color:var(--amber);}
+.ar-act-btn.active{background:rgba(181,122,255,.2);border-color:var(--violet);color:var(--violet);}
+
+/* AR zoom modal */
+#ar-zoom-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;}
+#ar-zoom-modal.show{display:flex;}
+.ar-zoom-box{background:rgba(6,8,16,.98);border:1px solid rgba(91,200,255,.3);border-radius:20px;padding:20px;width:90vw;height:70vh;display:flex;flex-direction:column;position:relative;}
+.ar-zoom-box h3{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,.5);text-transform:uppercase;margin-bottom:12px;}
+#ar-zoom-canvas{flex:1;border-radius:8px;border:1px solid var(--border);display:block;width:100%;cursor:crosshair;}
+
 /* Mystery quiz inline in HUD */
 #mystery-quiz{display:none;margin-top:8px;}
 #mystery-quiz .quiz-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--violet);text-transform:uppercase;margin-bottom:8px;}
@@ -173,10 +225,145 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 .quiz-result.ok{background:rgba(77,255,160,0.1);border:1px solid rgba(77,255,160,0.3);color:var(--green);}
 .quiz-result.fail{background:rgba(255,94,114,0.1);border:1px solid rgba(255,94,114,0.3);color:var(--red);}
 </style>
+
+<!-- AR libs: loaded eagerly so dynamic injection CSP issues are avoided -->
+<script>
+// Preload A-Frame + AR.js via a self-executing loader that runs before user clicks.
+// We use a promise-based chain so the scripts are queued as soon as the page loads.
+(function(){
+  window._arLibsReady = false;
+  window._arLibsPromise = new Promise(function(resolve, reject){
+    function loadScript(urls, done, fail){
+      if(!urls.length){ fail(); return; }
+      var s = document.createElement('script');
+      s.src = urls[0];
+      s.crossOrigin = 'anonymous';
+      s.onload  = done;
+      s.onerror = function(){ loadScript(urls.slice(1), done, fail); };
+      document.head.appendChild(s);
+    }
+    var aframeCDNs = [
+      'https://cdn.jsdelivr.net/npm/aframe@1.6.0/dist/aframe.min.js',
+      'https://unpkg.com/aframe@1.6.0/dist/aframe.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js'
+    ];
+    var arjsCDNs = [
+      'https://cdn.jsdelivr.net/npm/ar.js@2.3.4/aframe/build/aframe-ar.min.js',
+      'https://unpkg.com/ar.js@2.3.4/aframe/build/aframe-ar.min.js',
+      'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js'
+    ];
+    loadScript(aframeCDNs,
+      function(){ loadScript(arjsCDNs, function(){ window._arLibsReady=true; resolve(); }, reject); },
+      reject
+    );
+  });
+  window._arLibsPromise.catch(function(){ window._arLibsReady = false; });
+})();
+</script>
 </head>
 <body>
-<canvas id="mainCanvas" width="2136" height="1077" style="width: 1424px; height: 718px;"></canvas>
-<canvas id="labelCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:3;" width="1424" height="718"></canvas>
+<div id="simWrap" style="position:absolute;inset:0;z-index:1;">
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:3;"></canvas>
+</div>
+<div id="arWrap"></div>
+
+<!-- AR status pill -->
+<div id="ar-status">🔍 SCANNING FOR MARKER…</div>
+
+<!-- AR info pills -->
+<div class="ar-pill" id="ar-cpm-pill" style="top:20px;right:12px;border-color:rgba(77,255,160,.4);color:rgba(150,255,180,.75);">
+  CPM &nbsp;<span id="ar-cpm-val" style="color:#4dffa0;font-weight:700;">0</span>
+</div>
+<div class="ar-pill" id="ar-elapsed-pill" style="top:54px;right:12px;border-color:rgba(91,200,255,.35);color:rgba(160,220,255,.75);">
+  t &nbsp;<span id="ar-elapsed-val" style="color:#5bc8ff;font-weight:700;">0.0s</span>
+</div>
+<div class="ar-pill" id="ar-shield-pill" style="top:88px;right:12px;border-color:rgba(255,200,80,.35);color:rgba(255,220,150,.75);">
+  Shield &nbsp;<span id="ar-shield-val" style="color:#ffc857;font-weight:700;">None</span>
+</div>
+
+<!-- AR activity panel (left side) -->
+<div id="ar-activity-panel">
+  <div style="color:var(--violet);font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid rgba(181,122,255,.2);padding-bottom:6px;">❓ Mystery Source — AR Mode</div>
+
+  <!-- Shield selector — always visible in AR, shared by both activities -->
+  <div style="font-size:8px;color:rgba(180,200,255,.35);letter-spacing:1px;margin-bottom:4px;">ACTIVE SHIELD</div>
+  <div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;">
+    <button onclick="selectARShield('none')" id="arsh-none" class="ar-sh-btn">None</button>
+    <button onclick="selectARShield('paper')" id="arsh-paper" class="ar-sh-btn">📄 Paper</button>
+    <button onclick="selectARShield('al')" id="arsh-al" class="ar-sh-btn">🔩 Al</button>
+    <button onclick="selectARShield('pb')" id="arsh-pb" class="ar-sh-btn">🧱 Pb</button>
+  </div>
+
+  <!-- Activity selector -->
+  <div style="font-size:8px;color:rgba(180,200,255,.35);letter-spacing:1px;margin-bottom:4px;">ACTIVITY</div>
+  <div style="display:flex;gap:5px;margin-bottom:10px;">
+    <button id="ar-act-hl" onclick="selectARActivity('halflife')" class="ar-act-btn">Find Half-Life</button>
+    <button id="ar-act-id" onclick="selectARActivity('identify')" class="ar-act-btn">Identify Radiation</button>
+  </div>
+
+  <!-- Half-life panel -->
+  <div id="ar-halflife-panel" style="display:none;">
+    <div style="font-size:9px;color:rgba(180,210,255,.55);margin-bottom:5px;">Observe decay curve → enter T½ (s):</div>
+    <input id="ar-inp-hl" type="number" placeholder="e.g. 20" min="1" max="300"
+      style="width:100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(91,200,255,.3);background:rgba(91,200,255,.05);color:#fff;font-family:'Space Mono',monospace;font-size:11px;outline:none;margin-bottom:6px;-webkit-appearance:none;">
+    <button onclick="validateARHalflife()"
+      style="width:100%;padding:6px;border-radius:10px;border:1px solid rgba(77,255,160,.4);background:rgba(77,255,160,.08);color:var(--green);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;margin-bottom:6px;-webkit-tap-highlight-color:transparent;">✓ Validate Half-Life</button>
+    <div id="ar-res-hl" style="display:none;padding:8px 10px;border-radius:8px;font-size:10px;font-family:'Space Mono',monospace;line-height:1.5;"></div>
+    <!-- Mini decay graph -->
+    <div style="margin-top:8px;">
+      <div style="font-size:8px;color:rgba(180,200,255,.35);letter-spacing:1px;margin-bottom:3px;">DECAY CURVE</div>
+      <canvas id="ar-decay-mini" width="190" height="90" style="border-radius:6px;border:1px solid var(--border);display:block;"></canvas>
+      <button id="ar-btn-zoom" onclick="openARZoomModal()"
+        style="display:none;margin-top:5px;width:100%;padding:4px 8px;border-radius:8px;border:1px solid rgba(91,200,255,.35);background:rgba(91,200,255,.08);color:var(--blue);font-family:'Space Mono',monospace;font-size:8px;cursor:pointer;letter-spacing:1px;-webkit-tap-highlight-color:transparent;">🔍 ZOOM GRAPH</button>
+    </div>
+  </div>
+
+  <!-- Identify panel -->
+  <div id="ar-identify-panel" style="display:none;">
+    <div style="font-size:9px;color:rgba(180,210,255,.55);margin-bottom:6px;">Test shields above → select type(s) present:</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(180,210,255,.7);cursor:pointer;"><input type="checkbox" id="ar-mchk-alpha" style="accent-color:var(--alpha-col);width:12px;height:12px;"><span style="color:var(--alpha-col);">●</span> Alpha (α)</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(180,210,255,.7);cursor:pointer;"><input type="checkbox" id="ar-mchk-beta" style="accent-color:var(--beta-col);width:12px;height:12px;"><span style="color:var(--blue);">●</span> Beta (β)</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(180,210,255,.7);cursor:pointer;"><input type="checkbox" id="ar-mchk-gamma" style="accent-color:var(--gamma-col);width:12px;height:12px;"><span style="color:var(--green);">●</span> Gamma (γ)</label>
+    </div>
+    <button onclick="validateARIdentify()"
+      style="width:100%;padding:6px;border-radius:10px;border:1px solid rgba(181,122,255,.4);background:rgba(181,122,255,.08);color:var(--violet);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;margin-bottom:6px;-webkit-tap-highlight-color:transparent;">🔬 Validate Identification</button>
+    <div id="ar-res-identify" style="display:none;padding:8px 10px;border-radius:8px;font-size:10px;font-family:'Space Mono',monospace;line-height:1.5;"></div>
+  </div>
+</div>
+
+<!-- AR instructions modal -->
+<div id="ar-instructions">
+  <button onclick="exitAR();" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;">✕</button>
+  <strong style="color:#fff;">AR Mode — Decay Lab</strong><br><br>
+  <span id="ar-step1">
+    Print or display the Hiro marker (A5 or larger):<br><br>
+    <img src="https://ar-js-org.github.io/AR.js/data/images/hiro.png" alt="Hiro marker"
+         style="width:150px;height:150px;display:block;margin:0 auto 8px;border:6px solid white;background:white;border-radius:4px;"
+         onerror="this.style.display='none'"/>
+    <small style="color:rgba(255,200,100,.9);font-size:10px;display:block;margin-bottom:8px;">⚠️ This exact pattern is required</small>
+    Place flat on table, then tap:<br><br>
+    <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(181,122,255,.7);background:rgba(181,122,255,.18);color:var(--violet);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Open Camera</button>
+  </span>
+  <span id="ar-step2" style="display:none;">⏳ Loading AR engine…<br><small style="color:rgba(181,122,255,.5);">(first load may take 5–15 s)<br>Allow camera access when prompted.</small></span>
+  <span id="ar-step3" style="display:none;">
+    ✅ Camera ready!<br><br>Point at the <strong>Hiro marker</strong>.<br>The experiment appears on it.<br><br>
+    <button onclick="showARStep(4)" style="padding:8px 22px;border-radius:20px;border:1px solid rgba(181,122,255,.6);background:rgba(181,122,255,.15);color:var(--violet);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">Guide →</button>
+    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Close</button>
+  </span>
+  <span id="ar-step4" style="display:none;text-align:left;line-height:2.0;">
+    <strong style="display:block;text-align:center;margin-bottom:8px;">📋 AR Lab — Mystery Source</strong>
+    <span style="color:rgba(255,255,255,.8);">
+      1️⃣ &nbsp;Choose activity on the left panel.<br>
+      2️⃣ &nbsp;<b>Find Half-Life:</b> tap Start → watch curve decay → enter T½.<br>
+      3️⃣ &nbsp;<b>Identify Radiation:</b> swap shields, observe CPM drops → select types.<br>
+      4️⃣ &nbsp;Pinch to scale the 3D scene on the marker.<br>
+      5️⃣ &nbsp;Tap ✕ Exit AR to return to full lab.
+    </span><br>
+    <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="margin-top:8px;padding:8px 22px;border-radius:20px;border:1px solid rgba(181,122,255,.6);background:rgba(181,122,255,.15);color:var(--violet);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Got it!</button>
+  </span>
+</div>
 
 <!-- Title -->
 <div id="title">
@@ -265,12 +452,25 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 <!-- Bottom Controls -->
 <div id="controls">
   <button class="btn green" id="btn-start" onclick="toggleAcquisition()">▶ Start Acquisition</button>
+  <div class="sep ctrl-ar-hide"></div>
+  <button class="btn amber ctrl-ar-hide" id="btn-zero" onclick="zeroBackground()">⊘ Zero / Tare</button>
+  <div class="sep ctrl-ar-hide"></div>
+  <button class="btn red ctrl-ar-hide" id="btn-reset" onclick="resetAll()">↺ Reset</button>
   <div class="sep"></div>
-  <button class="btn amber" id="btn-zero" onclick="zeroBackground()">⊘ Zero / Tare</button>
+  <button class="btn" id="btn-ar">📷 AR Mode</button>
+</div>
+
+<!-- AR-only bottom controls -->
+<div id="ar-controls-ui">
+  <button class="btn green" id="ar-btn-start" onclick="toggleARAcquisition()">▶ Start</button>
   <div class="sep"></div>
-  <button class="btn red" id="btn-reset" onclick="resetAll()">↺ Reset</button>
+  <button class="btn amber" onclick="zeroBackgroundAR()">⊘ Zero</button>
   <div class="sep"></div>
-  <button class="btn" id="btn-ar" onclick="alert(&#39;AR Mode: point device at Hiro marker to overlay experiment.&#39;)">📷 AR Mode</button>
+  <button class="btn red" onclick="resetARSession()">↺ Reset</button>
+  <div class="sep"></div>
+  <button class="btn" onclick="document.getElementById('ar-instructions').classList.add('show');showARStep(4);">❓ Guide</button>
+  <div class="sep"></div>
+  <button class="btn on" id="btn-ar-exit" onclick="exitAR()">✕ Exit AR</button>
 </div>
 
 <div id="hint">🖐 Drag to orbit · Scroll to zoom · Use HUD to control experiment</div>
@@ -285,6 +485,16 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
     <h3>📈 Decay Curve — Detailed View</h3>
     <canvas id="zoom-canvas"></canvas>
     <div id="zoom-coords">Click on a point to read coordinates</div>
+  </div>
+</div>
+
+<!-- AR Zoom Modal -->
+<div id="ar-zoom-modal">
+  <div class="ar-zoom-box">
+    <button onclick="closeARZoomModal()" style="position:absolute;top:14px;right:18px;background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;z-index:2;-webkit-tap-highlight-color:transparent;">✕</button>
+    <h3>📈 Decay Curve — Detailed View</h3>
+    <canvas id="ar-zoom-canvas"></canvas>
+    <div id="ar-zoom-coords" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--blue);margin-top:8px;height:16px;text-align:center;">Tap a point to read coordinates</div>
   </div>
 </div>
 
@@ -1459,6 +1669,7 @@ function showBGWarning(){
 // ═══════════════════════════════════════════════════════
 let lastRender=0;
 function animate(ts){
+  if(arMode) return; // AR has its own loop
   requestAnimationFrame(animate);
   if(ts-lastRender < 33) return;
   lastRender=ts;
@@ -1480,6 +1691,804 @@ function animate(ts){
   drawLabels();
   renderer.render(scene3, cam3);
 }
+
+// ═══════════════════════════════════════════════════════
+//  AR MODE
+// ═══════════════════════════════════════════════════════
+let arMode = false;
+let arScene = null;
+let arEntities = {};
+let arScale = 0.15;   // ~3mm per Three.js unit → whole 20-unit bench fits in ~6cm on marker
+let arPinchDist0 = null, arScale0 = null;
+let arActivity = null; // 'halflife' | 'identify'
+
+// AR-specific state (mystery source auto-selected)
+const AR_S = {
+  running: false,
+  bgMeasured: false,
+  bgCPM: 0,
+  elapsed: 0,
+  startTime: 0,
+  decayData: [],
+  grossCPM: 0,
+  netCPM: 0,
+  shield: 'none',
+  // Mystery source always used; types and hlSec set on enter
+  mysteryTypes: [],
+  initialActivity: 2000,
+  hlSec: 20,
+  lastTick: 0,
+  lastSpawn: 0,
+};
+
+function showARStep(n){
+  ['ar-step1','ar-step2','ar-step3','ar-step4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = (i+1===n) ? '' : 'none';
+  });
+}
+window.showARStep = showARStep;
+
+function selectARActivity(act){
+  arActivity = act;
+  document.getElementById('ar-act-hl').className = 'ar-act-btn' + (act==='halflife' ? ' active' : '');
+  document.getElementById('ar-act-id').className = 'ar-act-btn' + (act==='identify' ? ' active' : '');
+  document.getElementById('ar-halflife-panel').style.display = act==='halflife' ? 'block' : 'none';
+  document.getElementById('ar-identify-panel').style.display = act==='identify' ? 'block' : 'none';
+  ['ar-res-hl','ar-res-identify'].forEach(id=>{ const el=document.getElementById(id); if(el){el.style.display='none';el.innerHTML='';} });
+}
+window.selectARActivity = selectARActivity;
+
+function selectARShield(sh){
+  AR_S.shield = sh;
+  ['none','paper','al','pb'].forEach(s=>{
+    const btn = document.getElementById('arsh-'+s);
+    if(btn) btn.className = 'ar-sh-btn' + (s===sh ? ' active' : '');
+  });
+  document.getElementById('ar-shield-val').textContent = SHIELDS[sh].label;
+  // Reset data on shield change so student measures fresh
+  AR_S.decayData = [];
+  AR_S.running = false;
+  const ab = document.getElementById('ar-btn-zoom'); if(ab) ab.style.display='none';
+  updateARBtnState();
+  // Immediately update shield plate visibility in 3D
+  if(arEntities.shieldPlate){
+    const shColors = {none:'#888888', paper:'#ddeebb', al:'#9ab0cc', pb:'#556677'};
+    arEntities.shieldPlate.setAttribute('visible', sh!=='none' ? 'true' : 'false');
+    if(sh!=='none') arEntities.shieldPlate.setAttribute('color', shColors[sh]);
+  }
+  updateARScreen();
+}
+window.selectARShield = selectARShield;
+
+function computeARActivity(elapsedSec){
+  const lambda = Math.LN2 / AR_S.hlSec;
+  let base = AR_S.initialActivity * Math.exp(-lambda * elapsedSec);
+  const sh = SHIELDS[AR_S.shield];
+  const types = AR_S.mysteryTypes;
+  let surviving = types.filter(t=>!sh.stops.includes(t));
+  let frac = surviving.length / Math.max(types.length, 1);
+  if(surviving.includes('gamma') && sh.gammaAtt){
+    frac = frac - (1/Math.max(types.length,1)) + (1/Math.max(types.length,1))*(1-sh.gammaAtt);
+    frac = Math.max(0, frac);
+  }
+  if(types.length===0) frac=0;
+  base *= frac;
+  return base + setBGNoise();
+}
+
+function toggleARAcquisition(){
+  if(!AR_S.running){
+    if(!AR_S.bgMeasured){ showFlash('⚠ Zero background first!', '#ffc857'); return; }
+    AR_S.running = true;
+    AR_S.startTime = Date.now();
+    AR_S.elapsed = 0;
+    AR_S.decayData = [];
+    document.getElementById('ar-btn-start').textContent = '■ Stop';
+    document.getElementById('ar-btn-start').classList.add('on');
+    const ab = document.getElementById('ar-btn-zoom'); if(ab) ab.style.display='none';
+  } else {
+    AR_S.running = false;
+    document.getElementById('ar-btn-start').textContent = '▶ Start';
+    document.getElementById('ar-btn-start').classList.remove('on');
+    if(AR_S.decayData.length > 1){
+      updateARMiniGraph();
+      const ab = document.getElementById('ar-btn-zoom'); if(ab) ab.style.display='block';
+    }
+  }
+}
+window.toggleARAcquisition = toggleARAcquisition;
+
+function updateARBtnState(){
+  const btn = document.getElementById('ar-btn-start');
+  if(!btn) return;
+  if(AR_S.running){ btn.textContent='■ Stop'; btn.classList.add('on'); }
+  else { btn.textContent='▶ Start'; btn.classList.remove('on'); }
+}
+
+function zeroBackgroundAR(){
+  if(AR_S.running){ showFlash('Stop acquisition first!', '#ff5e72'); return; }
+  AR_S.bgMeasured = true;
+  AR_S.bgCPM = setBGNoise() + setBGNoise()*0.3;
+  showFlash('Background zeroed! BG = '+AR_S.bgCPM.toFixed(1)+' CPM', '#4dffa0');
+}
+window.zeroBackgroundAR = zeroBackgroundAR;
+
+function resetARSession(){
+  AR_S.running = false;
+  AR_S.bgMeasured = false;
+  AR_S.bgCPM = 0;
+  AR_S.elapsed = 0;
+  AR_S.decayData = [];
+  AR_S.grossCPM = 0;
+  AR_S.shield = 'none';
+  selectARShield('none');
+  document.getElementById('ar-btn-start').textContent = '▶ Start';
+  document.getElementById('ar-btn-start').classList.remove('on');
+  document.getElementById('ar-cpm-val').textContent = '0';
+  document.getElementById('ar-elapsed-val').textContent = '0.0s';
+  ['ar-res-hl','ar-res-identify'].forEach(id=>{ const el=document.getElementById(id); if(el){el.style.display='none';el.innerHTML='';} });
+  const mc = document.getElementById('ar-decay-mini');
+  if(mc){ const cx=mc.getContext('2d'); cx.fillStyle='#060810'; cx.fillRect(0,0,mc.width,mc.height); }
+  if(arEntities.screenCvs) updateARScreen();
+}
+window.resetARSession = resetARSession;
+
+function arSimTick(){
+  if(!AR_S.running) return;
+  const now = Date.now();
+  if(now - AR_S.lastTick < 200) return;
+  AR_S.lastTick = now;
+  AR_S.elapsed = (now - AR_S.startTime) / 1000;
+  const raw = computeARActivity(AR_S.elapsed);
+  AR_S.grossCPM = Math.max(0, raw + (Math.random()-0.5)*Math.sqrt(raw)*0.5);
+  const net = AR_S.bgMeasured ? Math.max(0, AR_S.grossCPM - AR_S.bgCPM) : null;
+  AR_S.netCPM = net;
+  if(AR_S.decayData.length===0 || AR_S.elapsed - AR_S.decayData[AR_S.decayData.length-1].t > 1){
+    AR_S.decayData.push({t:AR_S.elapsed, cpm:AR_S.grossCPM, net});
+  }
+  // Update pills
+  document.getElementById('ar-cpm-val').textContent = AR_S.grossCPM.toFixed(0);
+  document.getElementById('ar-elapsed-val').textContent = AR_S.elapsed.toFixed(1)+'s';
+  // Update mini graph
+  if(arActivity==='halflife') updateARMiniGraph();
+  // Update AR 3D screen
+  updateARScreen();
+}
+
+function updateARMiniGraph(){
+  const c = document.getElementById('ar-decay-mini'); if(!c) return;
+  const ctx = c.getContext('2d'); const W=c.width, H=c.height;
+  const ML=28, MR=4, MT=6, MB=16;
+  const PW=W-ML-MR, PH=H-MT-MB;
+  ctx.fillStyle='#060810'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(180,200,255,0.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=3;i++){ctx.beginPath();ctx.moveTo(ML,MT+i*PH/3);ctx.lineTo(ML+PW,MT+i*PH/3);ctx.stroke();}
+  ctx.strokeStyle='rgba(180,200,255,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(ML,MT);ctx.lineTo(ML,MT+PH);ctx.lineTo(ML+PW,MT+PH);ctx.stroke();
+  const data = AR_S.decayData;
+  if(data.length < 2){
+    ctx.fillStyle='rgba(180,200,255,0.3)'; ctx.font='7px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('Waiting…',ML+PW/2,MT+PH/2+3); return;
+  }
+  const maxCPM=Math.max(...data.map(d=>d.cpm),1), maxT=Math.max(...data.map(d=>d.t),1);
+  const yMax=Math.ceil(maxCPM/200)*200, tMax=Math.ceil(maxT/20)*20;
+  const px=t=>ML+(t/tMax)*PW, py=c=>MT+PH-(c/yMax)*PH;
+  ctx.fillStyle='rgba(180,200,255,0.35)'; ctx.font='6px Space Mono';
+  ctx.textAlign='right'; ctx.fillText(yMax,ML-2,MT+5);
+  ctx.textAlign='center'; ctx.fillText('0s',ML,MT+PH+9); ctx.fillText(tMax+'s',ML+PW,MT+PH+9);
+  ctx.fillStyle='rgba(91,200,255,0.35)'; ctx.font='6px Space Mono';
+  ctx.textAlign='center'; ctx.fillText('t (s)',ML+PW/2,H-1);
+  ctx.beginPath();
+  data.forEach((d,i)=>{ if(i===0) ctx.moveTo(px(d.t),py(d.cpm)); else ctx.lineTo(px(d.t),py(d.cpm)); });
+  ctx.lineTo(px(data[data.length-1].t),MT+PH); ctx.lineTo(px(0),MT+PH); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,MT,0,MT+PH);
+  grad.addColorStop(0,'rgba(91,200,255,0.2)'); grad.addColorStop(1,'rgba(91,200,255,0.01)');
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.beginPath(); ctx.strokeStyle='#5bc8ff'; ctx.lineWidth=1.5;
+  data.forEach((d,i)=>{ if(i===0) ctx.moveTo(px(d.t),py(d.cpm)); else ctx.lineTo(px(d.t),py(d.cpm)); });
+  ctx.stroke();
+}
+
+function updateARScreen(){
+  if(!arEntities.screenCvs) return;
+  const ctx = arEntities.screenCvs.getContext('2d');
+  const W=512, H=512;
+  ctx.fillStyle='#000209'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(91,200,255,0.07)'; ctx.lineWidth=1;
+  for(let i=0;i<=8;i++){ctx.beginPath();ctx.moveTo(0,i*H/8);ctx.lineTo(W,i*H/8);ctx.stroke();}
+  for(let i=0;i<=8;i++){ctx.beginPath();ctx.moveTo(i*W/8,0);ctx.lineTo(i*W/8,H);ctx.stroke();}
+  ctx.strokeStyle='rgba(181,122,255,0.25)'; ctx.lineWidth=2; ctx.strokeRect(2,2,W-4,H-4);
+  ctx.fillStyle='rgba(181,122,255,0.7)'; ctx.font='bold 18px Space Mono'; ctx.textAlign='center';
+  ctx.fillText('MYSTERY — DECAY MONITOR', W/2, 28);
+  // Source info
+  ctx.fillStyle='rgba(181,122,255,0.5)'; ctx.font='13px Space Mono';
+  ctx.fillText('Shield: '+SHIELDS[AR_S.shield].label, W/2, 54);
+  const data = AR_S.decayData;
+  if(data.length < 2){
+    ctx.fillStyle='rgba(181,122,255,0.3)'; ctx.font='15px Space Mono';
+    ctx.fillText('AWAITING ACQUISITION', W/2, H/2-10);
+    ctx.fillText('Zero → Start', W/2, H/2+14);
+  } else {
+    const maxCPM=Math.max(...data.map(d=>d.cpm),1), maxT=Math.max(...data.map(d=>d.t),1);
+    const px=t=>40+(t/maxT)*(W-60), py=c=>H-30-(c/maxCPM)*(H-60);
+    ctx.strokeStyle='rgba(180,200,255,0.35)'; ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(40,68);ctx.lineTo(40,H-30);ctx.lineTo(W-20,H-30);ctx.stroke();
+    const grad=ctx.createLinearGradient(0,68,0,H-30);
+    grad.addColorStop(0,'rgba(181,122,255,0.3)'); grad.addColorStop(1,'rgba(181,122,255,0.02)');
+    ctx.beginPath(); data.forEach((d,i)=>{ if(i===0) ctx.moveTo(px(d.t),py(d.cpm)); else ctx.lineTo(px(d.t),py(d.cpm)); });
+    ctx.lineTo(px(data[data.length-1].t),H-30); ctx.lineTo(px(0),H-30); ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+    ctx.beginPath(); ctx.strokeStyle='#b57aff'; ctx.lineWidth=2.5;
+    data.forEach((d,i)=>{ if(i===0) ctx.moveTo(px(d.t),py(d.cpm)); else ctx.lineTo(px(d.t),py(d.cpm)); });
+    ctx.stroke();
+    ctx.fillStyle='#b57aff'; ctx.font='bold 24px Syne,sans-serif'; ctx.textAlign='right';
+    ctx.fillText(AR_S.grossCPM.toFixed(0)+' CPM', W-22, 54);
+  }
+  // Sync texture
+  const mat = arEntities.screenPanel && arEntities.screenPanel.components && arEntities.screenPanel.components.material;
+  if(mat && mat.material && mat.material.map) mat.material.map.needsUpdate = true;
+}
+
+// Validate half-life in AR
+window.validateARHalflife = function(){
+  const val = parseFloat(document.getElementById('ar-inp-hl').value);
+  const res = document.getElementById('ar-res-hl');
+  res.style.display='block';
+  if(AR_S.decayData.length < 5){
+    res.style.cssText+='background:rgba(255,94,114,.1);border:1px solid rgba(255,94,114,.3);color:var(--red);';
+    res.innerHTML='⚠ Run longer acquisition first.'; return;
+  }
+  const trueHL = AR_S.hlSec;
+  const tol = trueHL * 0.05;
+  if(Math.abs(val-trueHL)<=tol){
+    res.style.cssText='display:block;background:rgba(77,255,160,.1);border:1px solid rgba(77,255,160,.3);color:var(--green);padding:8px 10px;border-radius:8px;font-size:10px;font-family:Space Mono,monospace;line-height:1.5;';
+    res.innerHTML='✅ Correct! T½ ≈ '+trueHL+'s — within 5% tolerance. Excellent!';
+  } else {
+    res.style.cssText='display:block;background:rgba(255,94,114,.1);border:1px solid rgba(255,94,114,.3);color:var(--red);padding:8px 10px;border-radius:8px;font-size:10px;font-family:Space Mono,monospace;line-height:1.5;';
+    res.innerHTML='❌ Not quite. Find where CPM drops to 50% of peak. T½ is 10–30s.';
+  }
+};
+
+// Validate identification in AR
+window.validateARIdentify = function(){
+  if(!AR_S.mysteryTypes||AR_S.mysteryTypes.length===0){ return; }
+  const guesses = [];
+  if(document.getElementById('ar-mchk-alpha').checked) guesses.push('alpha');
+  if(document.getElementById('ar-mchk-beta').checked) guesses.push('beta');
+  if(document.getElementById('ar-mchk-gamma').checked) guesses.push('gamma');
+  const truth = AR_S.mysteryTypes.slice().sort().join(',');
+  const guess = guesses.slice().sort().join(',');
+  const res = document.getElementById('ar-res-identify');
+  res.style.display='block';
+  if(truth===guess){
+    res.style.cssText='display:block;background:rgba(77,255,160,.1);border:1px solid rgba(77,255,160,.3);color:var(--green);padding:8px 10px;border-radius:8px;font-size:10px;font-family:Space Mono,monospace;line-height:1.5;';
+    res.innerHTML='🎉 Correct! Emits: '+AR_S.mysteryTypes.join(' + ')+'. Great detective work!';
+  } else {
+    const hints = [];
+    if(AR_S.mysteryTypes.includes('alpha')&&!guesses.includes('alpha')) hints.push('Paper reduces CPM → α present.');
+    if(!AR_S.mysteryTypes.includes('alpha')&&guesses.includes('alpha')) hints.push('Paper shows no reduction → no α.');
+    if(AR_S.mysteryTypes.includes('beta')&&!guesses.includes('beta')) hints.push('Al reduces more than paper → β present.');
+    if(!AR_S.mysteryTypes.includes('beta')&&guesses.includes('beta')) hints.push('Al same as paper → no β.');
+    if(AR_S.mysteryTypes.includes('gamma')&&!guesses.includes('gamma')) hints.push('Lead only partially reduces → γ present.');
+    res.style.cssText='display:block;background:rgba(255,94,114,.1);border:1px solid rgba(255,94,114,.3);color:var(--red);padding:8px 10px;border-radius:8px;font-size:10px;font-family:Space Mono,monospace;line-height:1.5;';
+    res.innerHTML='❌ Hints: '+(hints.join(' ')||'Try more shield combinations!');
+  }
+};
+
+// AR Zoom Modal — same logic as desktop zoom but uses AR_S.decayData
+function openARZoomModal(){
+  const modal = document.getElementById('ar-zoom-modal');
+  modal.classList.add('show');
+  modal.style.display='flex';
+  setTimeout(drawARZoomCanvas, 30);
+}
+window.openARZoomModal = openARZoomModal;
+
+function closeARZoomModal(){
+  const modal = document.getElementById('ar-zoom-modal');
+  modal.classList.remove('show');
+  modal.style.display='none';
+}
+window.closeARZoomModal = closeARZoomModal;
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const azm = document.getElementById('ar-zoom-modal');
+  if(azm) azm.addEventListener('click', e=>{ if(e.target===azm) closeARZoomModal(); });
+});
+
+function drawARZoomCanvas(){
+  const canvas = document.getElementById('ar-zoom-canvas');
+  if(!canvas) return;
+  const parent = canvas.parentElement;
+  canvas.width = parent.clientWidth - 40;
+  canvas.height = parent.clientHeight - 80;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const ML=60, MR=20, MT=20, MB=40;
+  const PW=W-ML-MR, PH=H-MT-MB;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#06080f'; ctx.fillRect(0,0,W,H);
+
+  const data = AR_S.decayData;
+  if(data.length < 2){
+    ctx.fillStyle='rgba(91,200,255,0.3)'; ctx.font='14px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('No data yet', W/2, H/2); return;
+  }
+
+  const maxCPM = Math.max(...data.map(d=>d.cpm), 1);
+  const maxT   = Math.max(...data.map(d=>d.t), 1);
+  const yMax = Math.ceil(maxCPM / 50) * 50;
+  const tMax = Math.ceil(maxT / 10) * 10;
+
+  const px = t  => ML + (t/tMax)*PW;
+  const py = cp => MT + PH - (cp/yMax)*PH;
+  const invPx = x => ((x - ML) / PW) * tMax;
+  const invPy = y => ((MT + PH - y) / PH) * yMax;
+
+  // Grid
+  ctx.strokeStyle='rgba(180,200,255,0.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=8;i++){const y=MT+i*PH/8; ctx.beginPath();ctx.moveTo(ML,y);ctx.lineTo(ML+PW,y);ctx.stroke();}
+  for(let i=0;i<=10;i++){const x=ML+i*PW/10; ctx.beginPath();ctx.moveTo(x,MT);ctx.lineTo(x,MT+PH);ctx.stroke();}
+
+  ctx.strokeStyle='rgba(180,200,255,0.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,MT+PH); ctx.lineTo(ML+PW,MT+PH); ctx.stroke();
+
+  ctx.fillStyle='rgba(180,200,255,0.6)'; ctx.font='11px Space Mono'; ctx.textAlign='right';
+  for(let i=0;i<=8;i++){
+    const val=Math.round(yMax*(8-i)/8); const yp=MT+i*PH/8;
+    ctx.fillText(val, ML-6, yp+4);
+  }
+  ctx.textAlign='center';
+  for(let i=0;i<=10;i++){
+    const val=(tMax*i/10).toFixed(1); const xp=ML+i*PW/10;
+    ctx.fillText(val+'s', xp, MT+PH+18);
+  }
+  ctx.fillStyle='rgba(91,200,255,0.6)'; ctx.font='12px Space Mono';
+  ctx.textAlign='center'; ctx.fillText('Time (s)', ML+PW/2, H-4);
+  ctx.save(); ctx.translate(14,MT+PH/2); ctx.rotate(-Math.PI/2); ctx.fillText('CPM',0,0); ctx.restore();
+
+  ctx.beginPath();
+  data.forEach((d,i)=>{ if(i===0) ctx.moveTo(px(d.t),py(d.cpm)); else ctx.lineTo(px(d.t),py(d.cpm)); });
+  ctx.lineTo(px(data[data.length-1].t), MT+PH); ctx.lineTo(px(0), MT+PH); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,MT,0,MT+PH);
+  grad.addColorStop(0,'rgba(91,200,255,0.25)'); grad.addColorStop(1,'rgba(91,200,255,0.02)');
+  ctx.fillStyle=grad; ctx.fill();
+
+  ctx.beginPath(); ctx.strokeStyle='#5bc8ff'; ctx.lineWidth=2.5;
+  data.forEach((d,i)=>{ if(i===0) ctx.moveTo(px(d.t),py(d.cpm)); else ctx.lineTo(px(d.t),py(d.cpm)); });
+  ctx.stroke();
+
+  ctx.fillStyle='rgba(91,200,255,0.5)';
+  data.forEach(d=>{ ctx.beginPath(); ctx.arc(px(d.t),py(d.cpm),3,0,Math.PI*2); ctx.fill(); });
+
+  canvas._zoomInfoAR = {px, py, invPx, invPy, ML, MR, MT, MB, PW, PH};
+}
+
+// Tap on AR zoom canvas → crosshair
+document.addEventListener('DOMContentLoaded', ()=>{
+  const azc = document.getElementById('ar-zoom-canvas');
+  if(azc) azc.addEventListener('click', function(e){
+    const info = this._zoomInfoAR;
+    if(!info || AR_S.decayData.length < 2) return;
+    const rect = this.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) * (this.width / rect.width);
+    const cy = (e.clientY - rect.top) * (this.height / rect.height);
+    const {ML, MT, PW, PH, invPx, invPy, px:pfn, py:pyfn} = info;
+    if(cx<ML||cx>ML+PW||cy<MT||cy>MT+PH) return;
+    const t = invPx(cx);
+    let nearest = AR_S.decayData[0];
+    AR_S.decayData.forEach(d=>{ if(Math.abs(d.t-t)<Math.abs(nearest.t-t)) nearest=d; });
+    document.getElementById('ar-zoom-coords').textContent =
+      '📍  t = '+nearest.t.toFixed(1)+' s  |  CPM = '+nearest.cpm.toFixed(1);
+    drawARZoomCanvas();
+    const ctx = this.getContext('2d');
+    const ix=pfn(nearest.t), iy=pyfn(nearest.cpm);
+    ctx.strokeStyle='rgba(255,200,80,0.8)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(ix,MT);ctx.lineTo(ix,MT+PH);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ML,iy);ctx.lineTo(ML+PW,iy);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='var(--amber)';
+    ctx.beginPath(); ctx.arc(ix,iy,5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,200,80,0.5)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(ix,iy,8,0,Math.PI*2); ctx.stroke();
+  });
+});
+
+// Build the AR.js / A-Frame scene
+function buildARScene(){
+  const wrap = document.getElementById('arWrap');
+  wrap.classList.add('show');
+
+  const scene = document.createElement('a-scene');
+  scene.setAttribute('embedded','');
+  // iPad/Safari compatible AR.js config
+  scene.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;trackingMethod:best;sourceWidth:1280;sourceHeight:720;displayWidth:1280;displayHeight:720;');
+  scene.setAttribute('renderer','antialias:true;precision:medium;colorManagement:true;logarithmicDepthBuffer:false;alpha:true;');
+  // iOS Safari: ensure video is playsinline once scene loads
+  scene.addEventListener('loaded',function(){
+    scene.querySelectorAll('video').forEach(function(v){
+      v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline',''); v.muted=true;
+    });
+  });
+  scene.setAttribute('vr-mode-ui','enabled:false');
+  scene.setAttribute('loading-screen','enabled:false');
+  scene.style.cssText='width:100%;height:100%;position:absolute;top:0;left:0;';
+
+  // Assets for canvas texture
+  const assets = document.createElement('a-assets');
+  const scrCvs = document.createElement('canvas');
+  scrCvs.width = scrCvs.height = 512;
+  scrCvs.id = 'ar-screen-canvas';
+  arEntities.screenCvs = scrCvs;
+  assets.appendChild(scrCvs);
+  scene.appendChild(assets);
+
+  // Marker
+  const marker = document.createElement('a-marker');
+  marker.setAttribute('preset','hiro');
+  marker.setAttribute('smooth','true');
+  marker.setAttribute('smoothCount','5');
+  marker.setAttribute('smoothTolerance','0.01');
+
+  // Scale group — same coordinate system as Three.js scene
+  // Three.js scene spans roughly x: -10..+11, y: -2.5..+3, z: -3..+3
+  // arScale maps those units to marker-relative meters
+  const sg = document.createElement('a-entity');
+  sg.id = 'ar-scale-group';
+  sg.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
+  arEntities.scaleGroup = sg;
+  marker.appendChild(sg);
+
+  // Helper to make an element and append to sg
+  function mk(tag, attrs){
+    const el = document.createElement(tag);
+    Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
+    sg.appendChild(el);
+    return el;
+  }
+
+  // ── Ambient + Directional lights ──
+  const ambLight = document.createElement('a-light');
+  ambLight.setAttribute('type','ambient'); ambLight.setAttribute('color','#8899cc'); ambLight.setAttribute('intensity','1.2');
+  sg.appendChild(ambLight);
+  const sunLight = document.createElement('a-light');
+  sunLight.setAttribute('type','directional'); sunLight.setAttribute('color','#fff0e8'); sunLight.setAttribute('intensity','1.0');
+  sunLight.setAttribute('position','8 14 8'); sunLight.setAttribute('cast-shadow','true');
+  sg.appendChild(sunLight);
+  const fillLight = document.createElement('a-light');
+  fillLight.setAttribute('type','directional'); fillLight.setAttribute('color','#3355aa'); fillLight.setAttribute('intensity','0.4');
+  fillLight.setAttribute('position','-6 4 -4');
+  sg.appendChild(fillLight);
+
+  // ── Floor ──
+  //mk('a-plane',{rotation:'-90 0 0', width:'20', height:'10', color:'#87CEEB', roughness:'0.92',
+  //  position:'0 -2.5 0', 'material':'side:double'});
+
+  // ── Bench top ── (Three.js: BoxGeo(20,0.3,4), pos(0,-0.6,0))
+  mk('a-box',{width:'20', height:'0.3', depth:'4', position:'0 -0.6 0',
+    color:'#263050', metalness:'0.12', roughness:'0.55'});
+
+  // ── Bench legs ──
+  [[-8.5,-1.55,1.4],[8.5,-1.55,1.4],[-8.5,-1.55,-1.4],[8.5,-1.55,-1.4]].forEach(([x,y,z])=>{
+    mk('a-box',{width:'0.3', height:'1.9', depth:'0.3', position:`${x} ${y} ${z}`,
+      color:'#151d2e', roughness:'0.7'});
+  });
+
+  // ── Rail ── (BoxGeo(18,0.1,0.18), pos(0,-0.42,0))
+  mk('a-box',{width:'18', height:'0.1', depth:'0.18', position:'0 -0.42 0',
+    color:'#3a5070', metalness:'0.8', roughness:'0.2'});
+
+  // ── GM Tube group ── (group at x=7.5)
+  // gmBody: CylinderGeo(0.55,0.55,2.2,20), rotZ=90, pos(0,0.3,0) in group → world (7.5,0.3,0)
+  mk('a-cylinder',{radius:'0.55', height:'2.2', position:'7.5 0.3 0', rotation:'0 0 90',
+    color:'#2a3d55', metalness:'0.75', roughness:'0.25'});
+  // gmTip: CylinderGeo(0.18,0.38,0.4), pos(-1.28,0.3,0) in group → (6.22,0.3,0)
+  mk('a-cylinder',{radius:'0.28', height:'0.4', position:'6.22 0.3 0', rotation:'0 0 90',
+    color:'#2a3d55', metalness:'0.75', roughness:'0.25'});
+  // gmWin: CircleGeo(0.16), rotY=90, pos(-1.49,0.3,0) → (6.01,0.3,0)
+  const gmWinEl = mk('a-circle',{radius:'0.16', position:'6.01 0.3 0', rotation:'0 90 0',
+    color:'#002233', emissive:'#00aaff', 'emissive-intensity':'0.6'});
+  arEntities.gmWin = gmWinEl;
+  // GM stand base: BoxGeo(1.5,0.12,1.5), pos(0,-0.9,0) → (7.5,-0.9,0)
+  mk('a-box',{width:'1.5', height:'0.12', depth:'1.5', position:'7.5 -0.9 0', color:'#1e2e45', metalness:'0.6'});
+  // GM stand post: CylinderGeo(0.08,0.08,1.0), pos(0,-0.4,0) → (7.5,-0.4,0)
+  mk('a-cylinder',{radius:'0.08', height:'1.0', position:'7.5 -0.4 0', color:'#1e2e45', metalness:'0.6'});
+
+  // ── Source group ── (group at x=-7.5)
+  // src stand base: BoxGeo(1.2,0.12,1.2), pos(0,-0.9,0) → (-7.5,-0.9,0)
+  mk('a-box',{width:'1.2', height:'0.12', depth:'1.2', position:'-7.5 -0.9 0', color:'#1e2e45', metalness:'0.6'});
+  // src post: CylinderGeo(0.07,0.07,0.9), pos(0,-0.46,0) → (-7.5,-0.46,0)
+  mk('a-cylinder',{radius:'0.07', height:'0.9', position:'-7.5 -0.46 0', color:'#1e2e45', metalness:'0.6'});
+  // src holder block: BoxGeo(0.6,0.5,0.6), pos(0,0.26,0) → (-7.5,0.26,0)
+  mk('a-box',{width:'0.6', height:'0.5', depth:'0.6', position:'-7.5 0.26 0', color:'#2d4060', metalness:'0.7', roughness:'0.3'});
+  // src capsule: CylinderGeo(0.18,0.18,0.4,12), rotZ=90, pos(0.35,0.26,0) → (-7.15,0.26,0) — mystery violet
+  const srcCapEl = mk('a-cylinder',{radius:'0.18', height:'0.4', position:'-7.15 0.26 0', rotation:'0 0 90',
+    color:'#b57aff', emissive:'#b57aff', 'emissive-intensity':'0.8', metalness:'0.9'});
+  arEntities.srcCap = srcCapEl;
+  // src glow light
+  const srcGlowLight = document.createElement('a-light');
+  srcGlowLight.setAttribute('type','point'); srcGlowLight.setAttribute('color','#b57aff');
+  srcGlowLight.setAttribute('intensity','0.5'); srcGlowLight.setAttribute('distance','4');
+  srcGlowLight.setAttribute('position','-6.8 0.3 0');
+  sg.appendChild(srcGlowLight);
+  arEntities.srcGlowLight = srcGlowLight;
+
+  // ── Shield Slot group ── (group at x=0)
+  // slotBase: BoxGeo(0.3,0.14,1.6), pos(0,-0.9,0)
+  mk('a-box',{width:'0.3', height:'0.14', depth:'1.6', position:'0 -0.9 0', color:'#2a3b50', metalness:'0.7', roughness:'0.3'});
+  // slotPost: CylinderGeo(0.06,0.06,0.86), pos(0,-0.45,0)
+  mk('a-cylinder',{radius:'0.06', height:'0.86', position:'0 -0.45 0', color:'#2a3b50', metalness:'0.7', roughness:'0.3'});
+  // guide rail left: BoxGeo(0.08,2.0,0.08), pos(0,0.22,0.9)
+  mk('a-box',{width:'0.08', height:'2.0', depth:'0.08', position:'0 0.22 0.9', color:'#2a3b50', metalness:'0.7'});
+  // guide rail right: BoxGeo(0.08,2.0,0.08), pos(0,0.22,-0.9)
+  mk('a-box',{width:'0.08', height:'2.0', depth:'0.08', position:'0 0.22 -0.9', color:'#2a3b50', metalness:'0.7'});
+  // shield plate: BoxGeo(0.12,1.8,1.6), pos(0,0.28,0), hidden initially
+  const shieldPlateEl = mk('a-box',{width:'0.12', height:'1.8', depth:'1.6', position:'0 0.28 0',
+    color:'#888888', metalness:'0.8', roughness:'0.2', visible:'false'});
+  arEntities.shieldPlate = shieldPlateEl;
+
+  // Block-line visual (thin plane at shield position, amber, when blocked)
+  const blockLineEl = mk('a-plane',{width:'0.06', height:'3.0', position:'0 0.5 0', rotation:'0 0 0',
+    color:'#ffc857', opacity:'0', transparent:'true', 'material':'side:double;transparent:true;opacity:0'});
+  arEntities.blockLine = blockLineEl;
+
+  // ── Screen / Monitor group ── (group at x=10.5)
+  // monitor body: BoxGeo(0.12,3.5,4.5), pos(0,1.05,0) → (10.5,1.05,0)
+  mk('a-box',{width:'0.12', height:'3.5', depth:'4.5', position:'10.5 1.05 0',
+    color:'#1a2540', metalness:'0.6', roughness:'0.4'});
+  // screen panel: PlaneGeo(4.0,3.2), rotY=-90, pos(-0.08,1.1,0) → (10.42,1.1,0)
+  const screenPanelEl = document.createElement('a-plane');
+  screenPanelEl.setAttribute('width','4.0');
+  screenPanelEl.setAttribute('height','3.2');
+  screenPanelEl.setAttribute('position','10.42 1.1 0');
+  screenPanelEl.setAttribute('rotation','0 -90 0');
+  screenPanelEl.setAttribute('material','src:#ar-screen-canvas;roughness:0.5;emissive:#000000;emissiveIntensity:0');
+  sg.appendChild(screenPanelEl);
+  arEntities.screenPanel = screenPanelEl;
+  // monitor stand base: BoxGeo(0.6,0.14,1.8)
+  mk('a-box',{width:'0.6', height:'0.14', depth:'1.8', position:'10.5 -0.9 0', color:'#1a2540', metalness:'0.6'});
+  // monitor stand post: CylinderGeo(0.09,0.09,0.86)
+  mk('a-cylinder',{radius:'0.09', height:'0.86', position:'10.5 -0.46 0', color:'#1a2540', metalness:'0.6'});
+  // screen glow light
+  const scrGlowLight = document.createElement('a-light');
+  scrGlowLight.setAttribute('type','point'); scrGlowLight.setAttribute('color','#5bc8ff');
+  scrGlowLight.setAttribute('intensity','0.2'); scrGlowLight.setAttribute('distance','5');
+  scrGlowLight.setAttribute('position','9.9 1.1 0');
+  sg.appendChild(scrGlowLight);
+  arEntities.screenGlowLight = scrGlowLight;
+
+  // Marker found/lost events
+  marker.addEventListener('markerFound', ()=>{
+    const s=document.getElementById('ar-status');
+    s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(77,255,160,.12)';
+    s.style.border='1px solid rgba(77,255,160,.4)'; s.style.color='#4dffa0';
+  });
+  marker.addEventListener('markerLost', ()=>{
+    const s=document.getElementById('ar-status');
+    s.textContent='🔍 SCANNING FOR MARKER…'; s.style.background='rgba(255,180,0,.12)';
+    s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+  });
+
+  // Camera
+  const cam = document.createElement('a-entity');
+  cam.setAttribute('camera','');
+  scene.appendChild(marker);
+  scene.appendChild(cam);
+  wrap.appendChild(scene);
+  arScene = scene;
+
+  // Touch events — use passive:false only where needed; iPad Safari is strict
+  wrap.addEventListener('touchstart', onARTouch, {passive:false});
+  wrap.addEventListener('touchmove', onARTouchMove, {passive:false});
+  wrap.addEventListener('touchend', onARTouchEnd, {passive:true});
+
+  updateARScreen();
+  arLoopStart();
+}
+
+function arLoopStart(){
+  function arLoop(){
+    if(!arMode) return;
+    requestAnimationFrame(arLoop);
+    arSimTick();
+    const pulse = 0.5 + 0.5*Math.sin(Date.now()*0.004);
+    if(AR_S.running){
+      if(arEntities.srcCap) arEntities.srcCap.setAttribute('emissive-intensity', (0.6+pulse*1.0).toFixed(2));
+      if(arEntities.srcGlowLight) arEntities.srcGlowLight.setAttribute('intensity', (0.2+pulse*0.6).toFixed(2));
+      if(arEntities.gmWin) arEntities.gmWin.setAttribute('emissive-intensity', (0.3+pulse*0.6).toFixed(2));
+      if(arEntities.screenGlowLight) arEntities.screenGlowLight.setAttribute('intensity', (0.2+pulse*0.2).toFixed(2));
+    }
+    // Update shield plate — match Three.js colors exactly
+    if(arEntities.shieldPlate){
+      const shColors = {none:'#888888', paper:'#ddeebb', al:'#9ab0cc', pb:'#556677'};
+      const shMetal  = {none:'0.8', paper:'0.1', al:'0.8', pb:'0.9'};
+      const shRough  = {none:'0.2', paper:'0.9', al:'0.2', pb:'0.2'};
+      const isShielded = AR_S.shield !== 'none';
+      arEntities.shieldPlate.setAttribute('visible', isShielded ? 'true' : 'false');
+      if(isShielded){
+        arEntities.shieldPlate.setAttribute('color', shColors[AR_S.shield]);
+        arEntities.shieldPlate.setAttribute('metalness', shMetal[AR_S.shield]);
+        arEntities.shieldPlate.setAttribute('roughness', shRough[AR_S.shield]);
+      }
+    }
+  }
+  requestAnimationFrame(arLoop);
+}
+
+function onARTouch(e){
+  e.preventDefault();
+  if(e.touches.length===2){
+    arPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    arScale0=arScale;
+  }
+}
+function onARTouchMove(e){
+  e.preventDefault();
+  if(e.touches.length===2&&arPinchDist0!==null){
+    const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    arScale=Math.max(0.05, Math.min(0.25, arScale0*(nd/arPinchDist0)));
+    if(arEntities.scaleGroup) arEntities.scaleGroup.setAttribute('scale',`${arScale} ${arScale} ${arScale}`);
+  }
+}
+function onARTouchEnd(e){ if(e.touches.length<2){arPinchDist0=null; arScale0=null;} }
+
+function enterAR(){
+  arMode = true;
+
+  // Randomize mystery source for this AR session
+  const pool = ['alpha','beta','gamma'];
+  const shuffled = pool.sort(()=>Math.random()-0.5);
+  const count = 1 + Math.floor(Math.random()*3);
+  AR_S.mysteryTypes = shuffled.slice(0, count);
+  AR_S.hlSec = 10 + Math.floor(Math.random()*21);
+  AR_S.initialActivity = 1500 + Math.floor(Math.random()*2500);
+  AR_S.running = false;
+  AR_S.bgMeasured = false;
+  AR_S.decayData = [];
+  AR_S.shield = 'none';
+  AR_S.elapsed = 0;
+
+  // Reset AR UI state
+  arActivity = null;
+  selectARShield('none');
+  document.getElementById('ar-halflife-panel').style.display='none';
+  document.getElementById('ar-identify-panel').style.display='none';
+  document.getElementById('ar-act-hl').style.cssText='';
+  document.getElementById('ar-act-id').style.cssText='';
+  document.getElementById('ar-btn-start').textContent='▶ Start';
+  document.getElementById('ar-btn-start').classList.remove('on');
+  document.getElementById('ar-cpm-val').textContent='0';
+  document.getElementById('ar-elapsed-val').textContent='0.0s';
+  ['ar-res-hl','ar-res-identify'].forEach(id=>{ const el=document.getElementById(id); if(el){el.style.display='none';el.innerHTML='';} });
+  ['ar-mchk-alpha','ar-mchk-beta','ar-mchk-gamma'].forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=false; });
+
+  document.body.classList.add('ar-active');
+  document.getElementById('simWrap').style.display = 'none';
+  document.getElementById('ar-instructions').classList.add('show');
+  document.getElementById('ar-status').style.display='block';
+  document.getElementById('ar-status').textContent='🔍 SCANNING FOR MARKER…';
+  document.getElementById('ar-status').style.background='rgba(255,180,0,.12)';
+  document.getElementById('ar-status').style.border='1px solid rgba(255,180,0,.4)';
+  document.getElementById('ar-status').style.color='#ffb400';
+  showARStep(1);
+
+  const btnAR = document.getElementById('btn-ar');
+  btnAR.textContent = '✕ Exit AR'; btnAR.classList.add('on');
+}
+
+function exitAR(){
+  arMode = false;
+  AR_S.running = false;
+
+  document.querySelectorAll('video').forEach(function(v){ if(v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop();}); v.srcObject=null;} v.pause(); });
+  setTimeout(function(){
+    var wrap = document.getElementById('arWrap');
+    wrap.classList.remove('show');
+    wrap.innerHTML = '';
+    arScene = null; arEntities = {};
+  }, 150);
+
+  document.getElementById('ar-instructions').classList.remove('show');
+  document.getElementById('ar-status').style.display='none';
+  document.body.classList.remove('ar-active');
+  document.getElementById('simWrap').style.display='';
+
+  const btnAR = document.getElementById('btn-ar');
+  btnAR.textContent = '📷 AR Mode'; btnAR.classList.remove('on');
+
+  // Restore 3D renderer size
+  const w=window.innerWidth, h=window.innerHeight;
+  renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix();
+  labelCanvas.width=w; labelCanvas.height=h;
+  requestAnimationFrame(animate);
+}
+window.exitAR = exitAR;
+
+// AR start-camera button handler
+document.getElementById('ar-start-btn').addEventListener('click', function(){
+  showARStep(2);
+
+  function showLibError(msg){
+    var el = document.getElementById('ar-step2');
+    if(el) el.innerHTML = '❌ ' + msg + '<br><small style="color:rgba(255,120,120,.6);">Check internet connection and try again, or open via a local server (not file://).</small>';
+  }
+
+  function onLibsReady(){
+    if(!window.AFRAME){
+      showLibError('A-Frame did not load correctly.');
+      return;
+    }
+    showARStep(3);
+    setTimeout(function(){
+      var wrap = document.getElementById('arWrap');
+      var old = wrap.querySelector('a-scene');
+      if(old){
+        old.querySelectorAll('video').forEach(function(v){
+          if(v.srcObject){ v.srcObject.getTracks().forEach(function(t){t.stop();}); v.srcObject=null; }
+        });
+        wrap.removeChild(old);
+      }
+      arScene=null; arEntities={};
+      buildARScene();
+    }, 200);
+  }
+
+  function startCameraAndBuild(){
+    // iOS/Safari: getUserMedia MUST be called from a direct user gesture (this click)
+    var gum = (navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+      ? navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+      : null;
+    if(!gum){
+      // Legacy API for very old Safari
+      var legacyGUM = navigator.getUserMedia || navigator.webkitGetUserMedia;
+      if(legacyGUM){
+        legacyGUM.call(navigator, {video:{facingMode:'environment'}, audio:false},
+          function(s){ s.getTracks().forEach(function(t){t.stop();}); onLibsReady(); },
+          function(){ onLibsReady(); }
+        );
+      } else {
+        showLibError('Camera API not available on this browser.');
+      }
+      return;
+    }
+    gum({video:{facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}, audio:false})
+      .then(function(s){ s.getTracks().forEach(function(t){t.stop();}); onLibsReady(); })
+      .catch(function(err){
+        console.warn('Camera permission denied or unavailable:', err);
+        // Still proceed — AR.js will prompt for camera itself
+        onLibsReady();
+      });
+  }
+
+  // If libs already loaded in background, go straight to camera
+  if(window._arLibsReady){
+    startCameraAndBuild();
+    return;
+  }
+
+  // Wait for background load (started at page load), with a fallback attempt
+  var waited = 0;
+  var pollInterval = setInterval(function(){
+    waited += 200;
+    if(window._arLibsReady){
+      clearInterval(pollInterval);
+      startCameraAndBuild();
+    } else if(waited >= 20000){
+      clearInterval(pollInterval);
+      if(window.AFRAME){
+        // Libs loaded but flag not set
+        window._arLibsReady = true;
+        startCameraAndBuild();
+      } else {
+        showLibError('Could not load A-Frame after 20s.');
+      }
+    }
+  }, 200);
+});
+
+// AR Mode button
+document.getElementById('btn-ar').addEventListener('click', ()=>{ if(!arMode) enterAR(); else exitAR(); });
 
 // Init
 selectShield('none');
