@@ -564,7 +564,7 @@ root3.add(blockLine);
 
 // ── Orbit Controls (manual) ──
 let isDragging = false, lastMX=0, lastMY=0;
-let camTheta = -0.42, camPhi = 0.52, camR = 18;
+let camTheta = -0.68, camPhi = 0.30, camR = 22;
 function applyCam(){
   cam3.position.set(
     camR * Math.sin(camTheta) * Math.cos(camPhi),
@@ -699,6 +699,8 @@ function toggleAcquisition(){
     btn.textContent = '▶ Start Acquisition';
     btn.classList.remove('on');
     updateSourceVisual();
+    // Kill all active particles immediately — no animation when not acquiring
+    partSpheres.forEach(p=>{ p.active=false; p.mesh.visible=false; });
     // Show zoom button
     document.getElementById('btn-zoom-decay').style.display = 'inline-block';
   }
@@ -739,6 +741,7 @@ function resetAll(){
   srcCapsule.visible = false; srcGlow.intensity = 0;
   shieldPlate.visible = false;
   blockLine.material.opacity = 0;
+  partSpheres.forEach(p=>{ p.active=false; p.mesh.visible=false; });
   updateDecayCanvas();
 }
 
@@ -758,25 +761,24 @@ function spawnParticles(){
 
   const src = SOURCES[S.source];
   const types = S.source==='mystery' ? S.mysteryTypes : src.types;
-  const sh = SHIELDS[S.shield];
 
   types.forEach(type=>{
     // find free sphere
     const p = partSpheres.find(p=>!p.active);
     if(!p) return;
 
-    const isBlocked = sh.stops.includes(type) || (type==='gamma' && sh.gammaAtt && Math.random()<sh.gammaAtt*0.7);
     const cols = {alpha:0xff5e72, beta:0x5bc8ff, gamma:0x4dffa0};
+    const speed = 4.0 + Math.random()*1.0;
     p.active = true;
     p.x = -7.0; p.y = 0.3 + (Math.random()-0.5)*0.15; p.z = (Math.random()-0.5)*0.15;
-    p.vx = 4.0 + Math.random()*1.0;
+    p.vx = speed;
     p.vy = (Math.random()-0.5)*0.08;
     p.vz = (Math.random()-0.5)*0.08;
     p.life = 0;
-    // Non-blocked: need ~3.5s to travel 14 units at v≈4. maxLife ~3.5
-    p.maxLife = isBlocked ? (Math.random()*0.35+0.2) : (Math.random()*0.4+3.2);
+    // Particles travel ~3.5 units (from -7.0 to -3.5) at ~4.5 speed → ~0.8s
+    p.maxLife = 3.5 / speed * 1.1 + 0.1;
     p.type = type;
-    p.blocked = isBlocked;
+    p.blocked = false; // animation is identical regardless of shielding
     p.mesh.material.color.setHex(cols[type]||0xffffff);
     p.mesh.material.emissive.setHex(cols[type]||0xffffff);
     p.mesh.material.opacity = 0.9;
@@ -785,40 +787,35 @@ function spawnParticles(){
 }
 
 const DT = 1/30;
+// Particles travel from source (-7.0) and fade out at halfway (-3.5)
+// Fade starts at -5.25 (halfway between source and fade-end), gone by -3.5
+const FADE_START_X = -5.25;
+const SHIELD_MOUNT_X = -3.5;  // fade fully out here (half of original travel)
+
 function updateParticles(){
-  // Shield position in world space is x≈0
-  const SHIELD_X = 0.0;
   partSpheres.forEach(p=>{
     if(!p.active){ p.mesh.visible=false; return; }
     p.life += DT;
     const t = p.life / p.maxLife;
     if(t >= 1){ p.active=false; p.mesh.visible=false; return; }
 
-    // Stop blocked particles at shield position
-    if(p.blocked && p.x >= SHIELD_X - 0.1){
-      p.active=false; p.mesh.visible=false;
-      return;
-    }
-
     p.x += p.vx * DT;
     p.y += p.vy * DT;
     p.z += p.vz * DT;
 
-    // Always fade as particles reach the shield mount position (x≈0)
+    // Fade starts at halfway point (-3.75) and reaches 0 at shield mount (0)
+    // Same fade for ALL particles regardless of shield or blocking — always identical animation
     let opacity;
-    const FADE_START = -1.5; // start fading 1.5 units before shield
-    if(p.x >= SHIELD_X){
-      // At or past shield position: fully faded out
+    if(p.x >= SHIELD_MOUNT_X){
       opacity = 0;
-    } else if(p.x >= FADE_START){
-      // Approaching shield: linearly fade to 0
-      const fadeProgress = (p.x - FADE_START) / (SHIELD_X - FADE_START);
+    } else if(p.x >= FADE_START_X){
+      const fadeProgress = (p.x - FADE_START_X) / (SHIELD_MOUNT_X - FADE_START_X);
       opacity = 0.85 * (1 - fadeProgress);
     } else {
       opacity = 0.85;
     }
     p.mesh.material.opacity = opacity;
-    p.mesh.material.emissiveIntensity = 1.2 * (opacity/0.85);
+    p.mesh.material.emissiveIntensity = 1.2 * (opacity / 0.85);
     p.mesh.position.set(p.x, p.y, p.z);
     p.mesh.visible = opacity > 0.01;
   });
