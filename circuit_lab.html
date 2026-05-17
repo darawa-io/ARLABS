@@ -1590,10 +1590,12 @@ function drawComponent(c) {
     ctx.fillStyle = c.color || '#00d4ff';
     ctx.font = 'bold 12px "Share Tech Mono"';
     ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 15);
-  } else if (powerOn && c.type === 'voltmeter' && (c._voltage || 0) > 0.001) {
+  } else if (powerOn && c.type === 'voltmeter') {
+    const vReading = c._voltage || 0;
     ctx.fillStyle = c.color || '#ffe066';
     ctx.font = 'bold 12px "Share Tech Mono"';
-    ctx.fillText(c._voltage.toFixed(2) + 'V', c.x, c.y + labelOffset + 15);
+    // Show reading whenever powered — so user can see meter is active even at 0V
+    ctx.fillText(vReading.toFixed(2) + 'V', c.x, c.y + labelOffset + 15);
   }
 
   ctx.restore();
@@ -1871,6 +1873,33 @@ function updateReadings() {
 }
 
 // ---- Add Component ----
+// Find a canvas position that doesn't overlap existing components or wires.
+// Scans a grid of candidate spots and picks the one farthest from all occupied positions.
+function findFreeSpot() {
+  const margin = GRID * 3;
+  const cw = canvas.width, ch = canvas.height;
+  // Build list of occupied centres (components + wire midpoints)
+  const occupied = [];
+  for (const c of components) occupied.push({ x: c.x, y: c.y });
+  for (const w of wires) {
+    const mx = (w.pts[0].x + w.pts[w.pts.length-1].x) / 2;
+    const my = (w.pts[0].y + w.pts[w.pts.length-1].y) / 2;
+    occupied.push({ x: mx, y: my });
+  }
+  if (!occupied.length) return { x: snap(cw / 2), y: snap(ch / 2) };
+
+  // Candidate grid — avoid edges
+  let bestX = snap(cw / 2), bestY = snap(ch / 2), bestDist = -1;
+  for (let gx = margin; gx < cw - margin; gx += GRID * 3) {
+    for (let gy = margin; gy < ch - margin; gy += GRID * 3) {
+      const sx = snap(gx), sy = snap(gy);
+      const minD = Math.min(...occupied.map(o => Math.hypot(o.x - sx, o.y - sy)));
+      if (minD > bestDist) { bestDist = minD; bestX = sx; bestY = sy; }
+    }
+  }
+  return { x: bestX, y: bestY };
+}
+
 function addComponent(type, x, y) {
   saveUndo();
   const def = COMP_DEFAULTS[type];
@@ -2009,11 +2038,10 @@ document.querySelectorAll('.comp-btn[data-type]').forEach(btn => {
     _tapScrollTop = null;
     // Ignore if finger moved a lot OR the sidebar actually scrolled
     if (dy > 12 || scrolled > 4) return;
-    // Tap confirmed: add component near centre of canvas with slight jitter
+    // Tap confirmed: find a free spot on the canvas away from existing components
     const type = btn.dataset.type;
-    const jx = (Math.random() - 0.5) * 80;
-    const jy = (Math.random() - 0.5) * 80;
-    addComponent(type, canvas.width / 2 + jx, canvas.height / 2 + jy);
+    const _fs = findFreeSpot();
+    addComponent(type, _fs.x, _fs.y);
     updateCircuit();
     setHint('Component added! Tap a terminal to wire it up · Double-tap to edit values');
   }, { passive: true });
@@ -3006,6 +3034,7 @@ document.getElementById('fabBar').addEventListener('touchstart', () => {}, { pas
 let stType = 'series';
 let stR1 = 10, stR2 = 10, stR3 = 10;
 let stV = 9;
+let stMixedVariant = 0; // 0 = (R1+R2)∥R3, 1 = R1∥(R2 series R3 vertical)
 
 document.getElementById('btnStudentTest').addEventListener('click', enterStudentTestMode);
 
@@ -3034,7 +3063,10 @@ function newStudentTestChallenge() {
     stR1 = multiples[Math.floor(Math.random() * multiples.length)];
     stR2 = multiples[Math.floor(Math.random() * multiples.length)];
     stR3 = multiples[Math.floor(Math.random() * multiples.length)];
-    var correctR = (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2);
+    stMixedVariant = Math.floor(Math.random() * 2);
+    var correctR = stMixedVariant === 0
+      ? (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2)   // (R1+R2)∥R3
+      : stR1 + (stR2 * stR3) / (stR2 + stR3);            // R1 series (R2∥R3)
     var sliderMax = Math.ceil(correctR / 100) * 100;
     if (sliderMax <= correctR) sliderMax += 100; // ensure strictly above
   } else {
@@ -3083,8 +3115,9 @@ function newStudentTestChallenge() {
 function stCorrectR() {
   if (stType === 'series') return stR1 + stR2;
   if (stType === 'parallel') return (stR1 * stR2) / (stR1 + stR2);
-  // mixed: (R1 series R2) in parallel with R3
-  return (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2);
+  // mixed: two variants (variant set per challenge in newStudentTestChallenge)
+  if (stMixedVariant === 0) return (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2); // (R1+R2)∥R3
+  return stR1 + (stR2 * stR3) / (stR2 + stR3); // R1 series (R2∥R3)
 }
 function stCurrentLeft() {
   return stV / stCorrectR();
@@ -3258,56 +3291,70 @@ function drawStudentLeftCircuit() {
     _stNode(cx,rL,brTopY);_stNode(cx,rR,brTopY);_stNode(cx,rL,brBotY);_stNode(cx,rR,brBotY);
     _stNode(cx,batL2,botY);_stNode(cx,batR2,botY);
   } else {
-    // MIXED topology: R1 series with (R2 ∥ R3)
-    // Layout: battery vertical on left, top/bottom horizontal rails,
-    // middle column = R3 alone (parallel branch),
-    // right column  = R1 and R2 in series (two vertical resistors stacked).
-    // Wire segments are drawn only between resistor boxes — the box background
-    // covers any underlying wire so nothing bleeds through the resistor symbol.
-    var midY    = (topY + botY) / 2;
-    var batHalf = 22;   // half-height of battery symbol
-    var rh      = 30;   // half-height of each vertical resistor box
+    // MIXED topology — two variants selected randomly per challenge
+    if (stMixedVariant === 0) {
+      // Variant 0: (R1+R2) in series on right column, R3 alone on middle column (parallel)
+      // Battery vertical left. Formula: (R1+R2)∥R3
+      var midY    = (topY + botY) / 2;
+      var batHalf = 22;
+      var rh      = 30;
+      var batX    = leftX;
+      var r3X     = leftX + (rightX - leftX) * 0.52;
+      var r12X    = rightX;
+      var r1MidY  = topY + (midY - topY) * 0.5;
+      var r2MidY  = midY + (botY - midY) * 0.5;
 
-    // Column x-positions
-    var batX = leftX;
-    var r3X  = leftX + (rightX - leftX) * 0.52;  // R3 column (parallel branch)
-    var r12X = rightX;                             // R1+R2 column (series branch)
+      _stSeg(cx, batX, topY, r12X, topY);
+      _stSeg(cx, batX, botY, r12X, botY);
+      _stSeg(cx, batX, topY,           batX, midY - batHalf);
+      _stSeg(cx, batX, midY + batHalf, batX, botY);
+      _stSeg(cx, r3X, topY,      r3X, midY - rh);
+      _stSeg(cx, r3X, midY + rh, r3X, botY);
+      _stSeg(cx, r12X, topY,          r12X, r1MidY - rh);
+      _stSeg(cx, r12X, r1MidY + rh,   r12X, r2MidY - rh);
+      _stSeg(cx, r12X, r2MidY + rh,   r12X, botY);
 
-    // R1 sits in the upper half, R2 in the lower half of the right column
-    var r1MidY = topY  + (midY - topY)  * 0.5;   // centre of R1 box
-    var r2MidY = midY  + (botY - midY)  * 0.5;   // centre of R2 box
+      _stBatteryV(cx, batX, midY, stV);
+      _stResistorV(cx, r3X,  midY,   stR3, 'R₃');
+      _stResistorV(cx, r12X, r1MidY, stR1, 'R₁');
+      _stResistorV(cx, r12X, r2MidY, stR2, 'R₂');
 
-    // ── Wires ────────────────────────────────────────────────────
-    // Top horizontal rail
-    _stSeg(cx, batX, topY, r12X, topY);
-    // Bottom horizontal rail
-    _stSeg(cx, batX, botY, r12X, botY);
+      _stNode(cx, batX, topY); _stNode(cx, batX, botY);
+      _stNode(cx, r3X,  topY); _stNode(cx, r3X,  botY);
+      _stNode(cx, r12X, topY); _stNode(cx, r12X, botY);
+      _stNode(cx, r12X, r1MidY + rh);
 
-    // Battery column: wire above and below battery body
-    _stSeg(cx, batX, topY,           batX, midY - batHalf);
-    _stSeg(cx, batX, midY + batHalf, batX, botY);
+    } else {
+      // Variant 1: R1 horizontal on top (series), R2 & R3 vertical parallel on right
+      // Battery vertical left. Formula: R1 series (R2∥R3)
+      var midY1   = (topY + botY) / 2;
+      var juncX   = leftX + (rightX - leftX) * 0.42;
+      var r2X     = leftX + (rightX - leftX) * 0.65;
+      var r3X2    = rightX - 8;
+      var rw1     = 60;
+      var r1CX    = (leftX + juncX) / 2;
+      var batHalf1 = 22;
 
-    // R3 column: wire above and below resistor box
-    _stSeg(cx, r3X, topY,        r3X, midY - rh);
-    _stSeg(cx, r3X, midY + rh,   r3X, botY);
+      _stSeg(cx, leftX, topY, r1CX - rw1/2, topY);
+      _stSeg(cx, r1CX + rw1/2, topY, r3X2, topY);
+      _stSeg(cx, leftX, botY, r3X2, botY);
+      _stSeg(cx, leftX, topY,            leftX, midY1 - batHalf1);
+      _stSeg(cx, leftX, midY1 + batHalf1, leftX, botY);
+      _stSeg(cx, r2X, topY, r2X, midY1 - 30);
+      _stSeg(cx, r2X, midY1 + 30, r2X, botY);
+      _stSeg(cx, r3X2, topY, r3X2, midY1 - 30);
+      _stSeg(cx, r3X2, midY1 + 30, r3X2, botY);
 
-    // R1+R2 column: wire above R1, between R1 and R2, below R2
-    _stSeg(cx, r12X, topY,           r12X, r1MidY - rh);
-    _stSeg(cx, r12X, r1MidY + rh,    r12X, r2MidY - rh);
-    _stSeg(cx, r12X, r2MidY + rh,    r12X, botY);
+      _stBatteryV(cx, leftX, midY1, stV);
+      _stResistorH(cx, r1CX, topY, stR1, 'R₁', false);
+      _stResistorV(cx, r2X,  midY1, stR2, 'R₂');
+      _stResistorV(cx, r3X2, midY1, stR3, 'R₃');
 
-    // ── Components (drawn after wires so backgrounds cover wire lines) ──
-    _stBatteryV(cx, batX, midY, stV);
-    _stResistorV(cx, r3X,  midY,   stR3, 'R₃');
-    _stResistorV(cx, r12X, r1MidY, stR1, 'R₁');
-    _stResistorV(cx, r12X, r2MidY, stR2, 'R₂');
-
-    // ── Junction nodes ──────────────────────────────────────────
-    _stNode(cx, batX, topY); _stNode(cx, batX, botY);
-    _stNode(cx, r3X,  topY); _stNode(cx, r3X,  botY);
-    _stNode(cx, r12X, topY); _stNode(cx, r12X, botY);
-    // Mid-node between R1 and R2 on the series branch
-    _stNode(cx, r12X, r1MidY + rh);
+      _stNode(cx, leftX, topY); _stNode(cx, leftX, botY);
+      _stNode(cx, r1CX - rw1/2, topY); _stNode(cx, r1CX + rw1/2, topY);
+      _stNode(cx, r2X, topY); _stNode(cx, r3X2, topY);
+      _stNode(cx, r2X, botY); _stNode(cx, r3X2, botY);
+    }
   }
   cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Share Tech Mono"'; cx.textAlign='left';
   cx.fillText('I = '+(stCurrentLeft()*1000).toFixed(2)+' mA',6,H-6);
