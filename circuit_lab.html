@@ -473,7 +473,7 @@
   }
   .st-circuit-info {
     margin-top: 10px; font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; color: var(--dim); line-height: 1.9;
+    font-size: 13px; color: var(--dim); line-height: 1.9;
   }
   #st-feedback-bar {
     width: 960px; max-width: 97vw; padding: 12px 20px;
@@ -552,9 +552,9 @@
         <line x1="36" y1="6" x2="36" y2="22" stroke="#00d4ff" stroke-width="3"/>
         <!-- right lead -->
         <line x1="36" y1="14" x2="42" y2="14" stroke="#00d4ff" stroke-width="2"/>
-        <!-- + label near left, − near right -->
-        <text x="1" y="9" fill="#00d4ff" font-size="6" font-family="monospace" font-weight="bold">+</text>
-        <text x="37" y="9" fill="#00d4ff" font-size="7" font-family="monospace">−</text>
+        <!-- − label near left (short thin = − terminal), + label near right (long thick = + terminal) -->
+        <text x="1" y="9" fill="#00d4ff" font-size="7" font-family="monospace">−</text>
+        <text x="37" y="9" fill="#00d4ff" font-size="6" font-family="monospace" font-weight="bold">+</text>
       </svg>
       <span>Battery</span>
     </div>
@@ -835,6 +835,45 @@ function compResistance(c) {
   return 0;
 }
 
+// ── MNA helpers ─────────────────────────────────────────────────────────────
+// Solve Ax = b using Gaussian elimination with partial pivoting.
+// Returns solution vector x, or null if singular.
+function gaussianSolve(A, b) {
+  const n = b.length;
+  // Augmented matrix [A|b]
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let col = 0; col < n; col++) {
+    // Partial pivot
+    let maxRow = col;
+    let maxVal = Math.abs(M[col][col]);
+    for (let row = col + 1; row < n; row++) {
+      if (Math.abs(M[row][col]) > maxVal) { maxVal = Math.abs(M[row][col]); maxRow = row; }
+    }
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    if (Math.abs(M[col][col]) < 1e-12) return null; // singular
+    const pivot = M[col][col];
+    for (let row = col + 1; row < n; row++) {
+      const factor = M[row][col] / pivot;
+      for (let k = col; k <= n; k++) M[row][k] -= factor * M[col][k];
+    }
+  }
+  // Back-substitution
+  const x = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) {
+    x[i] = M[i][n];
+    for (let j = i + 1; j < n; j++) x[i] -= M[i][j] * x[j];
+    x[i] /= M[i][i];
+  }
+  return x;
+}
+
+// ── Main circuit solver (MNA — Modified Nodal Analysis) ─────────────────────
+// Correctly handles ANY topology: series, parallel, mixed, bridges, etc.
+// The MNA approach:
+//   - Stamp conductances (1/R) into a G matrix (KCL at each node)
+//   - Stamp voltage sources into extra rows/columns
+//   - Solve [G|B; C|D] * [V; I_src] = [I_inj; V_src]
+//   - Read back node voltages, then derive branch currents
 function solveCircuit() {
   components.forEach(c => { c._current = 0; c._voltage = 0; c._lit = false; });
   circuitCurrent = 0; circuitVoltage = 0; circuitResistance = 0;
@@ -856,139 +895,273 @@ function solveCircuit() {
 
   const graph = buildGraph();
   const WIRE_R = simMode === 'realistic' ? 0.05 : 0;
+  const N = graph.nodes.length; // total graph nodes
 
-  for (const src of sources) {
-    const t = getTerminals(src);
-    const nodePos = findNode(graph, t.a);
-    const nodeNeg = findNode(graph, t.b);
-    if (nodePos === -1 || nodeNeg === -1) continue;
-    if (nodePos === nodeNeg) continue;
-
-    const allPaths = findAllPaths(graph, nodePos, nodeNeg, src, 32);
-    if (!allPaths.length) continue;
-
-    const validPaths = allPaths.filter(path => {
-      const comps = getPathComponents(path, graph);
-      if (comps.some(c => c.type === 'switch' && !c.closed)) return false;
-      // Voltmeters are open circuits for the main solve — exclude any
-      // path that passes through a voltmeter, whether or not it also
-      // contains real components. This prevents VM wires from being
-      // animated, keeps the parallel-R calc clean, and lets the
-      // dedicated voltmeter-reading pass below compute |Va-Vb| correctly
-      // from the node voltages set by the pure-resistor paths.
-      if (comps.some(c => c.type === 'voltmeter')) return false;
-      for (let i = 0; i < path.length - 1; i++) {
-        const from = path[i], to = path[i + 1];
-        for (const { to: t2, edge } of (graph.adj[from] || [])) {
-          if (t2 === to && edge.comp && edge.comp.type === 'led') {
-            const led = edge.comp;
-            if (from === led._nodeB && to === led._nodeA) return false;
-          }
-        }
+  // ── Step 1: build "super-nodes" by merging nodes connected by ideal wires ──
+  // Each super-node is a set of graph-node indices that are at the same potential.
+  const superNodeOf = new Array(N).fill(-1); // graph node → super-node id
+  let numSN = 0;
+  function snUnion(a, b) {
+    const sa = superNodeOf[a], sb = superNodeOf[b];
+    if (sa === -1 && sb === -1) { superNodeOf[a] = superNodeOf[b] = numSN++; }
+    else if (sa === -1) { superNodeOf[a] = sb; }
+    else if (sb === -1) { superNodeOf[b] = sa; }
+    else if (sa !== sb) { // merge: remap all of sb → sa
+      for (let i = 0; i < N; i++) if (superNodeOf[i] === sb) superNodeOf[i] = sa;
+    }
+  }
+  // Assign every node its own super-node first
+  for (let i = 0; i < N; i++) superNodeOf[i] = i;
+  numSN = N;
+  // Merge via zero-resistance wires (ideal) or very low resistance wires
+  for (const e of graph.edges) {
+    if (e.wire) {
+      const r = WIRE_R; // in ideal mode this is 0
+      if (r < 1e-9) {
+        snUnion(e.from, e.to);
       }
-      return true;
-    });
-    if (!validPaths.length) continue;
+    }
+    // Closed switch = ideal wire
+    if (e.comp && e.comp.type === 'switch' && e.comp.closed) {
+      snUnion(e.from, e.to);
+    }
+  }
+  // Compact super-node IDs
+  const snRemap = new Array(N).fill(-1);
+  let snCount = 0;
+  for (let i = 0; i < N; i++) {
+    const s = superNodeOf[i];
+    if (snRemap[s] === -1) snRemap[s] = snCount++;
+  }
+  const sn = i => snRemap[superNodeOf[i]]; // graph node → compact super-node id
 
-    const V = src.voltage;
-    const srcR = simMode === 'realistic' ? (src.resistance || 0.1) : 0.001;
+  // ── Step 2: collect passive elements and voltage sources ────────────────────
+  // Passive: resistors, bulbs, LEDs, ammeters, capacitors, hi-R resistors etc.
+  // Voltmeters → treated as very high resistance (1e7 Ω) passive element — no animation.
+  // Voltage sources (battery/dcpsu) → MNA voltage source stamps.
+  // Open switches → omitted (infinite R).
+  const passiveEdges = []; // { from_sn, to_sn, R, comp, wire }
+  const vsEdges = [];      // { from_sn, to_sn, V, src_comp }
 
-    const branchData = validPaths.map(path => {
-      const comps = getPathComponents(path, graph);
-      let R = comps.reduce((s, c) => s + compResistance(c), 0);
-      if (simMode === 'realistic') {
+  for (const e of graph.edges) {
+    const fSN = sn(e.from), tSN = sn(e.to);
+    if (fSN === tSN) continue; // short-circuited by wire merge — skip
+
+    if (e.wire) {
+      if (WIRE_R >= 1e-9) passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: WIRE_R, comp: null, wire: e.wire });
+      // ideal wires already merged via super-nodes, nothing to do
+    } else if (e.comp) {
+      const c = e.comp;
+      if (c.type === 'battery' || c.type === 'dcpsu') {
+        // Voltage source: terminal A = + (higher potential by convention)
+        // In buildGraph, edge goes from _nodeA to _nodeB (comp terminal a → b).
+        // For battery: terminal 'a' is + (anode), 'b' is − (cathode).
+        const V = c.voltage || 0;
+        const intR = simMode === 'realistic' ? (c.resistance || 0.1) : 0.001;
+        // Model as ideal V source in series with intR:
+        // We stamp as a voltage source with series resistance using Norton equiv:
+        // (handled below as a Thevenin source — V source + series R)
+        vsEdges.push({ from_sn: fSN, to_sn: tSN, V, intR, comp: c });
+      } else if (c.type === 'switch') {
+        if (c.closed) {
+          // already merged via super-nodes
+        }
+        // open switch → omit
+      } else if (c.type === 'voltmeter') {
+        passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: 1e7, comp: c, wire: null });
+      } else if (c.type === 'led') {
+        // Check forward direction: graph edge from→to matches nodeA→nodeB (anode→cathode)
+        // Current only flows from anode to cathode
+        passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: compResistance(c), comp: c, wire: null, isLed: true, ledNodeA: fSN, ledNodeB: tSN });
+      } else if (c.type === 'capacitor') {
+        passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: compResistance(c), comp: c, wire: null });
+      } else {
+        const R = compResistance(c);
+        if (R > 0) passiveEdges.push({ from_sn: fSN, to_sn: tSN, R, comp: c, wire: null });
+      }
+    }
+  }
+
+  if (!vsEdges.length) { _tickCapacitors(sources, graph); return; }
+
+  // ── Step 3: build MNA matrix ────────────────────────────────────────────────
+  // We model each voltage source as a Thevenin source (V + series intR).
+  // This avoids the need for extra current unknowns and keeps the matrix purely
+  // conductance-based (G matrix), making it simpler and more numerically stable.
+  // Technique: replace each Vsrc with an equivalent Norton: I_N = V/intR, G_N = 1/intR
+  // and stamp it as a current injection + conductance.
+
+  // Choose ground: the − terminal super-node of the first source
+  const groundSN = vsEdges[0].to_sn;
+
+  // All super-nodes except ground become unknowns (node voltages)
+  const unknownSNs = [];
+  const snToIdx = new Array(snCount).fill(-1);
+  for (let s = 0; s < snCount; s++) {
+    if (s === groundSN) continue;
+    snToIdx[s] = unknownSNs.length;
+    unknownSNs.push(s);
+  }
+  const M = unknownSNs.length;
+  if (M === 0) { _tickCapacitors(sources, graph); return; }
+
+  // Initialize G matrix and RHS current vector
+  const G = Array.from({length: M}, () => new Array(M).fill(0));
+  const I = new Array(M).fill(0);
+
+  function stampConductance(snA, snB, g) {
+    const ia = snToIdx[snA], ib = snToIdx[snB];
+    if (ia !== -1) G[ia][ia] += g;
+    if (ib !== -1) G[ib][ib] += g;
+    if (ia !== -1 && ib !== -1) { G[ia][ib] -= g; G[ib][ia] -= g; }
+  }
+  function stampCurrentInj(snA, snB, i_val) {
+    // current flowing from snB into snA (i.e. into snA node)
+    const ia = snToIdx[snA], ib = snToIdx[snB];
+    if (ia !== -1) I[ia] += i_val;
+    if (ib !== -1) I[ib] -= i_val;
+  }
+
+  // Stamp passive elements
+  for (const pe of passiveEdges) {
+    if (pe.R <= 0 || !isFinite(pe.R)) continue;
+    stampConductance(pe.from_sn, pe.to_sn, 1 / pe.R);
+  }
+
+  // Stamp voltage sources as Norton equivalents
+  for (const vs of vsEdges) {
+    const g = 1 / vs.intR;
+    // + terminal = from_sn, − terminal = to_sn
+    stampConductance(vs.from_sn, vs.to_sn, g);
+    // Norton current source: I_N = V/intR, flowing INTO + terminal
+    stampCurrentInj(vs.from_sn, vs.to_sn, vs.V / vs.intR);
+  }
+
+  // ── Step 4: solve ────────────────────────────────────────────────────────────
+  const sol = gaussianSolve(G, I);
+  if (!sol) { _tickCapacitors(sources, graph); return; }
+
+  // Build super-node voltage map
+  const snVoltage = new Array(snCount).fill(0);
+  for (let i = 0; i < M; i++) snVoltage[unknownSNs[i]] = sol[i];
+  // ground = 0 (already 0)
+
+  // ── Step 5: derive branch currents and update components ────────────────────
+  // For each passive edge, I = (V_from - V_to) / R
+  // For each voltage source, I = (V_from - V_to - V_emf) / intR ... but since
+  // we used Norton equiv, actual voltage at + terminal is snVoltage[from_sn].
+  // Source current = Norton: I_src = (snV[+] - snV[−]) / intR ... no, the
+  // actual current delivered by the source = (V_emf - (snV[+]-snV[−])) / intR
+  // But since we're in Norton form, current through source = I_N - g*(snV[+]-snV[-])
+  // Simpler: I_branch = (snV[from] - snV[to]) * g_branch (for passive)
+
+  shortCircuitDetected = false;
+
+  for (const vs of vsEdges) {
+    const vDiff = snVoltage[vs.from_sn] - snVoltage[vs.to_sn];
+    const I_src = (vs.V - vDiff) / vs.intR; // current delivered by source
+    vs.comp._current = Math.abs(I_src);
+    vs.comp._voltage = vs.V;
+    circuitVoltage = vs.V;
+    circuitCurrent = Math.abs(I_src);
+    // Equivalent resistance seen by source
+    const Req = I_src !== 0 ? vs.V / Math.abs(I_src) : Infinity;
+    circuitResistance = Req;
+    if (Math.abs(vDiff) < 0.5 && vs.V > 0.5) shortCircuitDetected = true;
+  }
+
+  for (const pe of passiveEdges) {
+    if (!pe.comp && !pe.wire) continue;
+    const vDiff = snVoltage[pe.from_sn] - snVoltage[pe.to_sn];
+    const I_branch = vDiff / pe.R;
+    const absI = Math.abs(I_branch);
+
+    if (pe.comp) {
+      const c = pe.comp;
+      // LED: only conduct in forward direction
+      if (pe.isLed) {
+        const forward = I_branch > 0; // from_sn is ledNodeA (anode)
+        c._current = forward ? absI : 0;
+        c._voltage = forward ? absI * pe.R : 0;
+        c._lit = forward && absI > 0.001 && snVoltage[pe.from_sn] > (c.forwardV || 2.0);
+      } else {
+        c._current = absI;
+        c._voltage = absI * pe.R;
+        if (c.type === 'bulb') c._lit = absI > 0.01;
+        if (c.type === 'capacitor') { c._charging = true; c._sourceV = circuitVoltage; }
+      }
+    }
+  }
+
+  // ── Step 6: mark active wires and set flow direction ────────────────────────
+  // Strategy: use the MNA-computed node voltages to trace directed current paths
+  // from each voltage source's + terminal to its − terminal.  Walking the graph
+  // in voltage-descending order guarantees that _flowForward is set correctly for
+  // every wire (same approach as circuit_goodcurrent.html's markPathWires, but
+  // driven by MNA voltages instead of a simple branch solver).
+
+  const nodeVoltages = graph.nodes.map((_, i) => snVoltage[sn(i)]);
+
+  if (WIRE_R >= 1e-9) {
+    // Realistic mode: current through wire = ΔV / WIRE_R — direction is unambiguous.
+    for (const e of graph.edges) {
+      if (!e.wire) continue;
+      const vA = nodeVoltages[e.from], vB = nodeVoltages[e.to];
+      const I_wire = (vA - vB) / WIRE_R;
+      if (Math.abs(I_wire) > 1e-9) {
+        e.wire._active = true;
+        e.wire._flowForward = (vA > vB) === (e.wire._nodeA === e.from);
+      }
+    }
+  } else {
+    // Ideal mode: find all simple paths from each source’s + node to its − node
+    // (same algorithm as circuit_goodcurrent.html), filtered by MNA-computed
+    // currents so open branches are never animated.
+    // markPathWires() sets _flowForward correctly because paths walk + → −.
+
+    function compHasCurrent(c) {
+      const pe = passiveEdges.find(p => p.comp === c);
+      if (pe) return Math.abs((snVoltage[pe.from_sn] - snVoltage[pe.to_sn]) / pe.R) > 1e-9;
+      return false;
+    }
+
+    for (const vs of vsEdges) {
+      const posNode = graph.nodes.findIndex((_, i) => sn(i) === vs.from_sn);
+      const negNode = graph.nodes.findIndex((_, i) => sn(i) === vs.to_sn);
+      if (posNode === -1 || negNode === -1) continue;
+
+      const allPaths = findAllPaths(graph, posNode, negNode, vs.comp, 32);
+      const validPaths = allPaths.filter(path => {
         for (let i = 0; i < path.length - 1; i++) {
-          const from = path[i], to = path[i+1];
+          const from = path[i], to = path[i + 1];
           for (const { to: t2, edge } of (graph.adj[from] || [])) {
-            if (t2 === to && edge.wire) R += WIRE_R;
+            if (t2 !== to || !edge.comp) continue;
+            const c = edge.comp;
+            if (c.type === 'switch' && !c.closed) return false;
+            if (c.type === 'voltmeter') return false;
+            if (c.type === 'led' && from === c._nodeB && to === c._nodeA) return false;
+            // Reject open-branch components (no MNA current)
+            if (c.type !== 'battery' && c.type !== 'dcpsu' && !compHasCurrent(c)) return false;
           }
         }
+        return true;
+      });
+
+      for (const path of validPaths) {
+        markPathWires(path, graph);
       }
-      return { path, comps, R };
-    });
-
-    // Short circuit: any branch with near-zero resistance
-    if (branchData.some(b => b.R < 0.5)) shortCircuitDetected = true;
-
-    const invParallel = branchData.reduce((s, b) => s + (b.R > 0 ? 1/b.R : 1e6), 0);
-    const Rparallel = invParallel > 0 ? 1 / invParallel : 0;
-    const totalR = srcR + Rparallel;
-    const Itotal = V / Math.max(totalR, 0.001);
-    const Vparallel = Itotal * Rparallel;
-
-    circuitVoltage = V;
-    circuitCurrent = Itotal;
-    circuitResistance = totalR;
-    src._current = Itotal;
-    src._voltage = V;
-
-    // Build node voltage map — walk every main branch and accumulate drops.
-    // Voltmeters are excluded from paths entirely (they're handled below).
-    const nodeVoltages = new Array(graph.nodes.length).fill(null);
-    nodeVoltages[nodePos] = V;
-    nodeVoltages[nodeNeg] = 0;
-
-    for (const { path, comps, R } of branchData) {
-      const Ibranch = R > 0 ? Vparallel / R : 0;
-      let vWalk = V;
-      for (let i = 0; i < path.length - 1; i++) {
-        const from = path[i], to = path[i+1];
-        if (nodeVoltages[from] === null) nodeVoltages[from] = vWalk;
-        let drop = 0;
-        for (const { to: t2, edge } of (graph.adj[from] || [])) {
-          if (t2 === to) {
-            if (edge.comp) drop = Ibranch * compResistance(edge.comp);
-            else if (edge.wire) drop = Ibranch * WIRE_R;
-          }
-        }
-        vWalk -= drop;
-        if (nodeVoltages[to] === null) nodeVoltages[to] = vWalk;
-      }
-      for (const c of comps) {
-        c._current = Ibranch;
-        c._voltage = Ibranch * compResistance(c);
-        if (c.type === 'led')  { c._lit = Ibranch > 0.001 && V > (c.forwardV || 2.0); }
-        if (c.type === 'bulb') { c._lit = Ibranch > 0.01; }
-        if (c.type === 'capacitor') { c._charging = true; c._sourceV = V; }
-      }
-      markPathWires(path, graph);
     }
+  }
 
-    // ── Voltmeter readings ────────────────────────────────────────
-    // For each voltmeter, find the two main-circuit nodes that its
-    // terminals physically connect to (via wires / junctions), then
-    // read the potential difference directly from nodeVoltages.
-    // We do NOT route current through voltmeters — they're open for
-    // the purpose of the main solve and only read node potentials.
-    for (const c of components) {
-      if (c.type !== 'voltmeter') continue;
-      const tA = getTerminals(c).a, tB = getTerminals(c).b;
-      // Walk wires from each voltmeter terminal to find the nearest
-      // graph node that has a known voltage (set by a main branch).
-      const resolveV = (termPos) => {
-        // Try direct graph node at terminal position first
-        const ni = findNode(graph, termPos);
-        if (ni !== -1 && nodeVoltages[ni] !== null) return nodeVoltages[ni];
-        // BFS along wire edges only to find a node with a known voltage
-        const startNi = ni !== -1 ? ni : -1;
-        if (startNi === -1) return null;
-        const visited = new Set([startNi]);
-        const q = [startNi];
-        while (q.length) {
-          const n = q.shift();
-          if (nodeVoltages[n] !== null) return nodeVoltages[n];
-          for (const { to, edge } of (graph.adj[n] || [])) {
-            if (edge.wire && !visited.has(to)) { visited.add(to); q.push(to); }
-          }
-        }
-        return null;
-      };
-      const vA = resolveV(tA), vB = resolveV(tB);
-      if (vA !== null && vB !== null) {
-        c._voltage = Math.abs(vA - vB);
-      }
-      c._current = 0;
+  // ── Step 7: voltmeter readings ───────────────────────────────────────────────
+  for (const c of components) {
+    if (c.type !== 'voltmeter') continue;
+    // Find the passive edge for this voltmeter
+    const pe = passiveEdges.find(p => p.comp === c);
+    if (pe) {
+      c._voltage = Math.abs(snVoltage[pe.from_sn] - snVoltage[pe.to_sn]);
     }
+    c._current = 0;
   }
 
   _tickCapacitors(sources, graph);
@@ -1428,6 +1601,10 @@ function drawComponent(c) {
 
 function drawSource(c, hw, hh, col) {
   ctx.strokeStyle = col; ctx.lineWidth = 2;
+  // Blank out the body area first so underlying wires don't bleed through when rotated
+  const bodyW = hw * 2 / 3;
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#080c14';
+  ctx.fillRect(-hw/3 - 2, -hh*0.75, bodyW + 4, hh*1.5);
   // Leads
   ctx.beginPath(); ctx.moveTo(-hw, 0); ctx.lineTo(-hw/3, 0); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(hw/3, 0); ctx.lineTo(hw, 0); ctx.stroke();
@@ -1458,7 +1635,9 @@ function drawResistor(c, hw, hh, col) {
   // Leads
   ctx.beginPath(); ctx.moveTo(-hw, 0); ctx.lineTo(-bx, 0); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(bx, 0); ctx.lineTo(hw, 0); ctx.stroke();
-  // Box
+  // Box — fill first so underlying wires don't bleed through when rotated
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#080c14';
+  ctx.fillRect(-bx, -by, bx * 2, by * 2);
   ctx.strokeRect(-bx, -by, bx * 2, by * 2);
   if (c.type === 'varresistor') {
     ctx.strokeStyle = col; ctx.lineWidth = 1.5;
@@ -2794,6 +2973,7 @@ document.getElementById('fabBar').addEventListener('touchstart', () => {}, { pas
     <div class="st-type-btns">
       <button class="st-type-btn on" id="st-btn-series" onclick="setStudentTestType('series')">Series</button>
       <button class="st-type-btn" id="st-btn-parallel" onclick="setStudentTestType('parallel')">Parallel</button>
+      <button class="st-type-btn" id="st-btn-mixed" onclick="setStudentTestType('mixed')">Mixed</button>
     </div>
   </div>
   <div id="student-test-main">
@@ -2824,7 +3004,7 @@ document.getElementById('fabBar').addEventListener('touchstart', () => {}, { pas
 <script>
 // ── STUDENT TEST MODE ─────────────────────────────────────
 let stType = 'series';
-let stR1 = 10, stR2 = 10;
+let stR1 = 10, stR2 = 10, stR3 = 10;
 let stV = 9;
 
 document.getElementById('btnStudentTest').addEventListener('click', enterStudentTestMode);
@@ -2840,19 +3020,29 @@ function setStudentTestType(type) {
   stType = type;
   document.getElementById('st-btn-series').classList.toggle('on', type === 'series');
   document.getElementById('st-btn-parallel').classList.toggle('on', type === 'parallel');
-  document.getElementById('st-mode-title').textContent = type === 'series'
-    ? 'Series — Find Equivalent Resistance'
-    : 'Parallel — Find Equivalent Resistance';
-  document.getElementById('st-left-label').textContent = type === 'series'
-    ? 'Reference Circuit — 2 Resistors in Series'
-    : 'Reference Circuit — 2 Resistors in Parallel';
+  document.getElementById('st-btn-mixed').classList.toggle('on', type === 'mixed');
+  var titles = { series: 'Series — Find Equivalent Resistance', parallel: 'Parallel — Find Equivalent Resistance', mixed: 'Mixed — Find Equivalent Resistance' };
+  var labels = { series: 'Reference Circuit — 2 Resistors in Series', parallel: 'Reference Circuit — 2 Resistors in Parallel', mixed: 'Reference Circuit — Mixed (Series + Parallel)' };
+  document.getElementById('st-mode-title').textContent = titles[type] || titles.series;
+  document.getElementById('st-left-label').textContent = labels[type] || labels.series;
   newStudentTestChallenge();
 }
 function newStudentTestChallenge() {
-  stR1 = Math.floor(Math.random() * 20) + 1;
-  stR2 = Math.floor(Math.random() * 20) + 1;
-  stV = 9;
-  var sliderMax = 2 * (stR1 + stR2);
+  if (stType === 'mixed') {
+    // Mixed: R1 in series with (R2 parallel R3). Values 10–100 in multiples of 10.
+    var multiples = [10,20,30,40,50,60,70,80,90,100];
+    stR1 = multiples[Math.floor(Math.random() * multiples.length)];
+    stR2 = multiples[Math.floor(Math.random() * multiples.length)];
+    stR3 = multiples[Math.floor(Math.random() * multiples.length)];
+    var correctR = (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2);
+    var sliderMax = Math.ceil(correctR / 100) * 100;
+    if (sliderMax <= correctR) sliderMax += 100; // ensure strictly above
+  } else {
+    stR1 = Math.floor(Math.random() * 20) + 1;
+    stR2 = Math.floor(Math.random() * 20) + 1;
+    stR3 = stR2; // unused for series/parallel
+    var sliderMax = 2 * (stR1 + stR2);
+  }
   var sliderEl = document.getElementById('st-req-slider');
   var inputEl  = document.getElementById('st-req-input');
   sliderEl.min = '0.1'; sliderEl.max = String(sliderMax); sliderEl.step = '0.1';
@@ -2890,15 +3080,23 @@ function newStudentTestChallenge() {
     updateStudentRightInfo(v);
   };
 }
+function stCorrectR() {
+  if (stType === 'series') return stR1 + stR2;
+  if (stType === 'parallel') return (stR1 * stR2) / (stR1 + stR2);
+  // mixed: (R1 series R2) in parallel with R3
+  return (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2);
+}
 function stCurrentLeft() {
-  if (stType === 'series') return stV / (stR1 + stR2);
-  return stV / ((stR1 * stR2) / (stR1 + stR2));
+  return stV / stCorrectR();
 }
 function stCurrentRight(req) { return stV / Math.max(req, 0.001); }
 function updateStudentInfoLeft() {
   var I = stCurrentLeft();
+  var rInfo = stType === 'mixed'
+    ? 'R₁ = <b style="color:var(--accent4)">' + stR1 + ' Ω</b> &nbsp; R₂ = <b style="color:var(--accent4)">' + stR2 + ' Ω</b> &nbsp; R₃ = <b style="color:var(--accent4)">' + stR3 + ' Ω</b>'
+    : 'R₁ = <b style="color:var(--accent4)">' + stR1 + ' Ω</b> &nbsp; R₂ = <b style="color:var(--accent4)">' + stR2 + ' Ω</b>';
   document.getElementById('st-left-info').innerHTML =
-    'R₁ = <b style="color:var(--accent4)">' + stR1 + ' Ω</b> &nbsp; R₂ = <b style="color:var(--accent4)">' + stR2 + ' Ω</b> &nbsp; Battery = <b style="color:var(--accent)">' + stV + ' V</b> &nbsp;&nbsp; I = <b style="color:var(--accent3)">' + (I*1000).toFixed(2) + ' mA</b>';
+    rInfo + ' &nbsp; Battery = <b style="color:var(--accent)">' + stV + ' V</b> &nbsp;&nbsp; I = <b style="color:var(--accent3)">' + (I*1000).toFixed(2) + ' mA</b>';
 }
 function updateStudentRightInfo(req) {
   var I = stCurrentRight(req);
@@ -2907,9 +3105,7 @@ function updateStudentRightInfo(req) {
 }
 function validateStudentTest() {
   var req = parseFloat(document.getElementById('st-req-input').value) || 0.1;
-  var correctR = stType === 'series'
-    ? parseFloat((stR1 + stR2).toFixed(1))
-    : parseFloat(((stR1 * stR2) / (stR1 + stR2)).toFixed(2));
+  var correctR = parseFloat(stCorrectR().toFixed(2));
   var diff = Math.abs(req - correctR);
   var fb = document.getElementById('st-feedback-bar');
   var IL = stCurrentLeft();
@@ -2942,8 +3138,14 @@ function _stNode(cx,x,y) {
   cx.beginPath(); cx.arc(x,y,5,0,Math.PI*2); cx.fill(); cx.restore();
 }
 function _stResistorH(cx,rx,cy,R,label,editable) {
-  var rw=56, rh=24, x=rx-rw/2, y=cy-rh/2;
+  var rw=60, rh=28, x=rx-rw/2, y=cy-rh/2;
   cx.save();
+  // Solid background fill first so underlying wire lines don't bleed through
+  cx.fillStyle='rgba(6,8,14,1)';
+  cx.beginPath();
+  if(cx.roundRect) cx.roundRect(x,y,rw,rh,5); else cx.rect(x,y,rw,rh);
+  cx.fill();
+  // Coloured tint + border
   cx.fillStyle=editable?'rgba(0,212,255,0.08)':'rgba(255,224,102,0.08)';
   cx.strokeStyle=editable?'#00d4ff':'#ffe066';
   cx.lineWidth=2; cx.shadowColor=editable?'rgba(0,212,255,0.3)':'rgba(255,224,102,0.2)'; cx.shadowBlur=8;
@@ -2951,15 +3153,18 @@ function _stResistorH(cx,rx,cy,R,label,editable) {
   if(cx.roundRect) cx.roundRect(x,y,rw,rh,5); else cx.rect(x,y,rw,rh);
   cx.fill(); cx.stroke(); cx.shadowBlur=0;
   cx.fillStyle=editable?'#00d4ff':'#ffe066';
-  cx.font='bold 11px "Share Tech Mono"'; cx.textAlign='center';
-  cx.fillText(parseFloat(R).toFixed(1)+'Ω',rx,cy+4);
+  cx.font='bold 15px "Share Tech Mono"'; cx.textAlign='center';
+  cx.fillText(parseFloat(R).toFixed(1)+'Ω',rx,cy+5);
   cx.fillStyle=editable?'rgba(0,212,255,0.8)':'rgba(255,224,102,0.7)';
-  cx.font='10px "Share Tech Mono"'; cx.fillText(label,rx,y-7);
-  if(editable){cx.fillStyle='rgba(0,212,255,0.4)';cx.font='7px "Share Tech Mono"';cx.fillText('▲ editable',rx,y+rh+13);}
+  cx.font='12px "Share Tech Mono"'; cx.fillText(label,rx,y-8);
+  if(editable){cx.fillStyle='rgba(0,212,255,0.4)';cx.font='9px "Share Tech Mono"';cx.fillText('▲ editable',rx,y+rh+14);}
   cx.restore();
 }
 function _stBatteryH(cx,bx,cy,V) {
   var gap=8; cx.save(); cx.lineCap='butt';
+  // Solid background behind the cell area
+  cx.fillStyle='rgba(6,8,14,1)';
+  cx.fillRect(bx-gap*2-6, cy-16, (gap*4+12), 32);
   cx.strokeStyle='#39ff14'; cx.lineWidth=1.8;
   cx.beginPath(); cx.moveTo(bx-gap*2,cy-14); cx.lineTo(bx-gap*2,cy+14); cx.stroke();
   cx.strokeStyle='#ff3355'; cx.lineWidth=4;
@@ -2969,11 +3174,56 @@ function _stBatteryH(cx,bx,cy,V) {
   cx.strokeStyle='#ff3355'; cx.lineWidth=4;
   cx.beginPath(); cx.moveTo(bx+gap*2,cy-9); cx.lineTo(bx+gap*2,cy+9); cx.stroke();
   cx.restore(); cx.save();
-  cx.font='bold 10px "Share Tech Mono"'; cx.textAlign='center';
-  cx.fillStyle='rgba(57,255,20,0.9)'; cx.fillText('+',bx-gap*2-9,cy+4);
-  cx.fillStyle='rgba(255,51,85,0.9)';  cx.fillText('−',bx+gap*2+9,cy+4);
-  cx.fillStyle='#00d4ff'; cx.font='bold 11px "Share Tech Mono"'; cx.fillText(V+'V',bx,cy-22);
-  cx.fillStyle='rgba(100,160,200,0.55)'; cx.font='9px "Share Tech Mono"'; cx.fillText('Battery',bx,cy+26);
+  cx.font='bold 12px "Share Tech Mono"'; cx.textAlign='center';
+  cx.fillStyle='rgba(57,255,20,0.9)'; cx.fillText('+',bx-gap*2-10,cy+4);
+  cx.fillStyle='rgba(255,51,85,0.9)';  cx.fillText('−',bx+gap*2+10,cy+4);
+  cx.fillStyle='#00d4ff'; cx.font='bold 14px "Share Tech Mono"'; cx.fillText(V+'V',bx,cy-24);
+  cx.fillStyle='rgba(100,160,200,0.55)'; cx.font='11px "Share Tech Mono"'; cx.fillText('Battery',bx,cy+28);
+  cx.restore();
+}
+function _stBatteryV(cx, bx, cy, V) {
+  // Vertical battery: cells stacked top-to-bottom. Top terminal = +, bottom = −
+  var gap=8; cx.save(); cx.lineCap='butt';
+  // Solid background behind the cell area
+  cx.fillStyle='rgba(6,8,14,1)';
+  cx.fillRect(bx-16, cy-gap*2-6, 32, gap*4+12);
+  cx.strokeStyle='#39ff14'; cx.lineWidth=1.8;
+  cx.beginPath(); cx.moveTo(bx-14,cy-gap*2); cx.lineTo(bx+14,cy-gap*2); cx.stroke();
+  cx.strokeStyle='#ff3355'; cx.lineWidth=4;
+  cx.beginPath(); cx.moveTo(bx-9,cy-gap*0.5); cx.lineTo(bx+9,cy-gap*0.5); cx.stroke();
+  cx.strokeStyle='#39ff14'; cx.lineWidth=1.8;
+  cx.beginPath(); cx.moveTo(bx-14,cy+gap*0.5); cx.lineTo(bx+14,cy+gap*0.5); cx.stroke();
+  cx.strokeStyle='#ff3355'; cx.lineWidth=4;
+  cx.beginPath(); cx.moveTo(bx-9,cy+gap*2); cx.lineTo(bx+9,cy+gap*2); cx.stroke();
+  cx.restore(); cx.save();
+  cx.font='bold 12px "Share Tech Mono"'; cx.textAlign='center';
+  cx.fillStyle='rgba(57,255,20,0.9)'; cx.fillText('+',bx-24,cy-gap*2+5);
+  cx.fillStyle='rgba(255,51,85,0.9)';  cx.fillText('−',bx-24,cy+gap*2+5);
+  cx.fillStyle='#00d4ff'; cx.font='bold 14px "Share Tech Mono"'; cx.fillText(V+'V',bx+30,cy+5);
+  cx.fillStyle='rgba(100,160,200,0.55)'; cx.font='11px "Share Tech Mono"'; cx.fillText('Battery',bx,cy+40);
+  cx.restore();
+}
+function _stResistorV(cx, cx2, cy, R, label) {
+  // Vertical resistor centered at (cx2, cy)
+  var rw=28, rh=60, x=cx2-rw/2, y=cy-rh/2;
+  cx.save();
+  // Solid background fill first so underlying wire lines don't bleed through
+  cx.fillStyle='rgba(6,8,14,1)';
+  cx.beginPath();
+  if(cx.roundRect) cx.roundRect(x,y,rw,rh,5); else cx.rect(x,y,rw,rh);
+  cx.fill();
+  // Now draw the coloured tint + border
+  cx.fillStyle='rgba(255,224,102,0.08)';
+  cx.strokeStyle='#ffe066';
+  cx.lineWidth=2; cx.shadowColor='rgba(255,224,102,0.2)'; cx.shadowBlur=8;
+  cx.beginPath();
+  if(cx.roundRect) cx.roundRect(x,y,rw,rh,5); else cx.rect(x,y,rw,rh);
+  cx.fill(); cx.stroke(); cx.shadowBlur=0;
+  cx.fillStyle='#ffe066';
+  cx.font='bold 13px "Share Tech Mono"'; cx.textAlign='center';
+  cx.fillText(parseFloat(R).toFixed(0)+'Ω',cx2,cy+5);
+  cx.fillStyle='rgba(255,224,102,0.7)';
+  cx.font='11px "Share Tech Mono"'; cx.fillText(label,cx2+rw/2+18,cy+5);
   cx.restore();
 }
 function drawStudentLeftCircuit() {
@@ -2992,7 +3242,7 @@ function drawStudentLeftCircuit() {
     _stNode(cx,leftX,topY);_stNode(cx,leftX,botY);_stNode(cx,rightX,topY);_stNode(cx,rightX,botY);
     _stNode(cx,r1L,topY);_stNode(cx,r1R,topY);_stNode(cx,r2L,topY);_stNode(cx,r2R,topY);
     _stNode(cx,batL,botY);_stNode(cx,batR,botY);
-  } else {
+  } else if(stType==='parallel') {
     var brTopY=topY,brBotY=topY+65,rMidX=midX,rw2=56,batHW2=22;
     var batL2=midX-batHW2,batR2=midX+batHW2,rL=rMidX-rw2/2,rR=rMidX+rw2/2;
     _stSeg(cx,leftX,brTopY,rL,brTopY);_stSeg(cx,rR,brTopY,rightX,brTopY);
@@ -3007,14 +3257,65 @@ function drawStudentLeftCircuit() {
     _stNode(cx,leftX,botY);_stNode(cx,rightX,botY);
     _stNode(cx,rL,brTopY);_stNode(cx,rR,brTopY);_stNode(cx,rL,brBotY);_stNode(cx,rR,brBotY);
     _stNode(cx,batL2,botY);_stNode(cx,batR2,botY);
+  } else {
+    // MIXED topology: R1 series with (R2 ∥ R3)
+    // Layout: battery vertical on left, top/bottom horizontal rails,
+    // middle column = R3 alone (parallel branch),
+    // right column  = R1 and R2 in series (two vertical resistors stacked).
+    // Wire segments are drawn only between resistor boxes — the box background
+    // covers any underlying wire so nothing bleeds through the resistor symbol.
+    var midY    = (topY + botY) / 2;
+    var batHalf = 22;   // half-height of battery symbol
+    var rh      = 30;   // half-height of each vertical resistor box
+
+    // Column x-positions
+    var batX = leftX;
+    var r3X  = leftX + (rightX - leftX) * 0.52;  // R3 column (parallel branch)
+    var r12X = rightX;                             // R1+R2 column (series branch)
+
+    // R1 sits in the upper half, R2 in the lower half of the right column
+    var r1MidY = topY  + (midY - topY)  * 0.5;   // centre of R1 box
+    var r2MidY = midY  + (botY - midY)  * 0.5;   // centre of R2 box
+
+    // ── Wires ────────────────────────────────────────────────────
+    // Top horizontal rail
+    _stSeg(cx, batX, topY, r12X, topY);
+    // Bottom horizontal rail
+    _stSeg(cx, batX, botY, r12X, botY);
+
+    // Battery column: wire above and below battery body
+    _stSeg(cx, batX, topY,           batX, midY - batHalf);
+    _stSeg(cx, batX, midY + batHalf, batX, botY);
+
+    // R3 column: wire above and below resistor box
+    _stSeg(cx, r3X, topY,        r3X, midY - rh);
+    _stSeg(cx, r3X, midY + rh,   r3X, botY);
+
+    // R1+R2 column: wire above R1, between R1 and R2, below R2
+    _stSeg(cx, r12X, topY,           r12X, r1MidY - rh);
+    _stSeg(cx, r12X, r1MidY + rh,    r12X, r2MidY - rh);
+    _stSeg(cx, r12X, r2MidY + rh,    r12X, botY);
+
+    // ── Components (drawn after wires so backgrounds cover wire lines) ──
+    _stBatteryV(cx, batX, midY, stV);
+    _stResistorV(cx, r3X,  midY,   stR3, 'R₃');
+    _stResistorV(cx, r12X, r1MidY, stR1, 'R₁');
+    _stResistorV(cx, r12X, r2MidY, stR2, 'R₂');
+
+    // ── Junction nodes ──────────────────────────────────────────
+    _stNode(cx, batX, topY); _stNode(cx, batX, botY);
+    _stNode(cx, r3X,  topY); _stNode(cx, r3X,  botY);
+    _stNode(cx, r12X, topY); _stNode(cx, r12X, botY);
+    // Mid-node between R1 and R2 on the series branch
+    _stNode(cx, r12X, r1MidY + rh);
   }
-  cx.fillStyle='rgba(57,255,20,0.55)'; cx.font='9px "Share Tech Mono"'; cx.textAlign='left';
+  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Share Tech Mono"'; cx.textAlign='left';
   cx.fillText('I = '+(stCurrentLeft()*1000).toFixed(2)+' mA',6,H-6);
 }
 function drawStudentRightCircuit(req) {
   var o=_stCanvas('st-canvas-right'), cx=o.ctx, W=o.W, H=o.H;
   var pad=44,topY=90,botY=H-55,leftX=pad,rightX=W-pad,midX=W/2;
-  var rw=56,rL=midX-rw/2,rR=midX+rw/2,batHW=22,batL=midX-batHW,batR=midX+batHW;
+  var rw=60,rL=midX-rw/2,rR=midX+rw/2,batHW=22,batL=midX-batHW,batR=midX+batHW;
   _stSeg(cx,leftX,topY,rL,topY); _stSeg(cx,rR,topY,rightX,topY);
   _stSeg(cx,rightX,topY,rightX,botY); _stSeg(cx,leftX,topY,leftX,botY);
   _stSeg(cx,leftX,botY,batL,botY); _stSeg(cx,batR,botY,rightX,botY);
@@ -3022,7 +3323,7 @@ function drawStudentRightCircuit(req) {
   _stResistorH(cx,midX,topY,req,'Rᵉq',true);
   _stNode(cx,leftX,topY);_stNode(cx,leftX,botY);_stNode(cx,rightX,topY);_stNode(cx,rightX,botY);
   _stNode(cx,rL,topY);_stNode(cx,rR,topY);_stNode(cx,batL,botY);_stNode(cx,batR,botY);
-  cx.fillStyle='rgba(57,255,20,0.55)'; cx.font='9px "Share Tech Mono"'; cx.textAlign='left';
+  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Share Tech Mono"'; cx.textAlign='left';
   cx.fillText('I = '+(stCurrentRight(req)*1000).toFixed(2)+' mA',6,H-6);
 }
 </script>
