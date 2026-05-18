@@ -225,6 +225,18 @@ body.ar-active #ar-activity-panel{display:block;}
 .quiz-result.ok{background:rgba(77,255,160,0.1);border:1px solid rgba(77,255,160,0.3);color:var(--green);}
 .quiz-result.fail{background:rgba(255,94,114,0.1);border:1px solid rgba(255,94,114,0.3);color:var(--red);}
 
+/* Electric field controls */
+#ef-controls{
+  margin-top:8px;
+}
+#ef-controls h2{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.ef-slider-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.ef-slider-label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.55);white-space:nowrap;}
+#ef-field-slider{flex:1;accent-color:var(--blue);height:4px;cursor:pointer;}
+.ef-path-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ef-path-row label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.65);cursor:pointer;}
+#chk-showpath{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;}
+
 /* QR Modal */
 #qr-modal{
   display:none;position:fixed;inset:0;z-index:100;
@@ -390,10 +402,11 @@ body.ar-active #ar-activity-panel{display:block;}
   <p>Radiation Shielding &amp; Decay Kinetics</p>
 </div>
 
-<!-- Decay Curve Panel (top-left) -->
+<!-- Decay Curve / EF Frontal Screen Panel (top-left) -->
 <div id="decay-panel">
-  <h3>Decay Curve</h3>
+  <h3 id="decay-panel-title">Decay Curve</h3>
   <canvas id="decay-canvas" width="220" height="140" style="border-radius:6px;border:1px solid var(--border);display:block;"></canvas>
+  <canvas id="ef-frontal-canvas" width="220" height="140" style="border-radius:6px;border:1px solid var(--border);display:none;background:#000;"></canvas>
   <button id="btn-zoom-decay" onclick="openZoomModal()" style="display:none;margin-top:7px;width:100%;padding:5px 10px;border-radius:10px;border:1px solid rgba(91,200,255,0.35);background:rgba(91,200,255,0.08);color:var(--blue);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">🔍 ZOOM GRAPH</button>
 </div>
 
@@ -437,15 +450,15 @@ body.ar-active #ar-activity-panel{display:block;}
 <!-- HUD -->
 <div id="hud">
   <h2>Detector Readout</h2>
-  <div class="cpm-big" id="cpm-display" style="color: var(--green);">20</div>
+  <div class="cpm-big" id="cpm-display" style="color: var(--green);">0</div>
   <div class="cpm-lbl">counts per minute</div>
   <div style="margin-top:4px;margin-bottom:4px;">
-    <div class="act-bar-track"><div class="act-bar-fill" id="cpm-bar" style="background: var(--green); width: 6.74573%;"></div></div>
+    <div class="act-bar-track"><div class="act-bar-fill" id="cpm-bar" style="background: var(--green); width: 0%;"></div></div>
   </div>
-  <div class="dr"><span class="dl">Gross CPM</span><span class="dv" id="val-gross" style="color:var(--green);">20.2</span></div>
-  <div class="dr"><span class="dl">Background</span><span class="dv" id="val-bg" style="color: var(--green);">31.6</span></div>
-  <div class="dr"><span class="dl">Net CPM</span><span class="dv" id="val-net" style="color: var(--amber);">0.0</span></div>
-  <div class="dr"><span class="dl">Elapsed</span><span class="dv" id="val-time" style="color:var(--blue);">1442.4s</span></div>
+  <div class="dr"><span class="dl">Gross CPM</span><span class="dv" id="val-gross" style="color:var(--muted);">—</span></div>
+  <div class="dr"><span class="dl">Background</span><span class="dv" id="val-bg" style="color:var(--muted);">—</span></div>
+  <div class="dr"><span class="dl">Net CPM</span><span class="dv" id="val-net" style="color: var(--amber);">—</span></div>
+  <div class="dr"><span class="dl">Elapsed</span><span class="dv" id="val-time" style="color:var(--blue);">0.0s</span></div>
 
   <div class="hdiv"></div>
   <h2>Source Selection</h2>
@@ -466,6 +479,17 @@ body.ar-active #ar-activity-panel{display:block;}
   </div>
   <div class="dr" style="margin-top:4px;"><span class="dl">Shield Status</span><span class="dv" id="val-shield" style="color:var(--amber);">Aluminum</span></div>
 
+  <!-- Electric Field Controls — shown only when plates charged -->
+  <div id="ef-controls" style="display:none;">
+    <div class="hdiv"></div>
+    <h2>⚡ Electric Field</h2>
+    <div class="ef-slider-row">
+      <span class="ef-slider-label">Intensity</span>
+      <input type="range" id="ef-field-slider" min="1" max="5" value="2.5" step="0.1">
+      <span class="ef-slider-label" id="ef-field-val" style="color:var(--blue);min-width:14px;">5</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- Bottom Controls -->
@@ -475,6 +499,8 @@ body.ar-active #ar-activity-panel{display:block;}
   <button class="btn amber ctrl-ar-hide" id="btn-zero" onclick="zeroBackground()">⊘ Zero / Tare</button>
   <div class="sep ctrl-ar-hide"></div>
   <button class="btn red ctrl-ar-hide" id="btn-reset" onclick="resetAll()">↺ Reset</button>
+  <div class="sep ctrl-ar-hide"></div>
+  <button class="btn ctrl-ar-hide" id="btn-charge-plates" onclick="toggleChargePlates()" style="border-color:rgba(255,140,66,0.5);color:var(--orange);background:rgba(255,140,66,0.06);">⚡ Charge Plates</button>
   <div class="sep"></div>
   <button class="btn" id="btn-ar">📷 AR Mode</button>
   <div class="sep ctrl-ar-hide"></div>
@@ -770,6 +796,294 @@ const screenGlowLight = new THREE.PointLight(0x5bc8ff, 0.2, 5); screenGlowLight.
   root3.add(cMesh);
 })();
 
+// ═══════════════════════════════════════════════════════
+//  ELECTRIC FIELD PLATES
+// ═══════════════════════════════════════════════════════
+// Layout: source at x=-7.5, screen at x=7.5–10.5
+// Distance source→detector mid: 0 (center). Plates midpoint at x=0
+// Plates span 2/3 of the source-to-detector distance (~15 units total → 10 units apart)
+// Plates are along X axis, one above (positive, red) one below (negative, blue)
+// The electric field is in Y direction (Z in world = vertical perpendicular to beam)
+
+const EF = {
+  charged: false,
+  intensity: 5,        // 1–10
+  showPath: false,
+  // Plate geometry: plates run along X from about x=-2.8 to x=2.8 (25% shorter)
+  plateMinX: -2.8125,
+  plateMaxX: 2.8125,
+  platePosZ:  2.2,   // positive plate (will deflect alpha toward it)
+  plateNegZ: -2.2,   // negative plate
+  plateY: 0.3,       // height matching particle stream
+};
+
+const efGroup = new THREE.Group();
+root3.add(efGroup);
+
+// Plate dimensions: length along X = 5.625 (25% shorter), height Y = 2.2, thin in Z
+const plateGeoEF = new THREE.BoxGeometry(5.625, 2.2, 0.12);
+
+// Positive plate (reddish) — alpha will deflect toward this
+const posPlate = new THREE.Mesh(plateGeoEF, new THREE.MeshStandardMaterial({
+  color:0x553322, metalness:0.6, roughness:0.35, transparent:true, opacity:0
+}));
+posPlate.position.set(0, EF.plateY, EF.platePosZ);
+efGroup.add(posPlate);
+
+// Negative plate (blueish) — beta will deflect toward this
+const negPlate = new THREE.Mesh(plateGeoEF, new THREE.MeshStandardMaterial({
+  color:0x223355, metalness:0.6, roughness:0.35, transparent:true, opacity:0
+}));
+negPlate.position.set(0, EF.plateY, EF.plateNegZ);
+efGroup.add(negPlate);
+
+// Connector posts for plates (thin vertical pillars)
+const postMatEF = new THREE.MeshStandardMaterial({color:0x1a2a3a, metalness:0.7});
+[-2.5, 2.5].forEach(xOff => {
+  [EF.platePosZ, EF.plateNegZ].forEach(zPos => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.4, 8), postMatEF);
+    post.position.set(xOff, EF.plateY - 1.4, zPos);
+    efGroup.add(post);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.4), postMatEF);
+    base.position.set(xOff, EF.plateY - 2.1, zPos);
+    efGroup.add(base);
+  });
+});
+
+// Wide detection screen (replaces monitor in EF mode)
+// Wider in Z direction (the direction of field/deflection)
+const efScreenGroup = new THREE.Group();
+efScreenGroup.position.set(8.5, 0, 0);
+efScreenGroup.visible = false;
+root3.add(efScreenGroup);
+
+const efScreenTC = document.createElement('canvas');
+efScreenTC.width = 256; efScreenTC.height = 512;
+const efScreenTCtx = efScreenTC.getContext('2d');
+const efScreenTex = new THREE.CanvasTexture(efScreenTC);
+
+// Wide screen: tall in Z (field direction), thin in Y
+const efScreenMat = new THREE.MeshStandardMaterial({
+  color:0x1a2540, metalness:0.5, roughness:0.45
+});
+const efScreenBody = new THREE.Mesh(new THREE.BoxGeometry(0.1, 5.0, 11.25), efScreenMat);
+efScreenBody.position.y = 1.2;
+efScreenGroup.add(efScreenBody);
+
+const efScreenPanel = new THREE.Mesh(
+  new THREE.PlaneGeometry(10.75, 4.6),
+  new THREE.MeshStandardMaterial({map:efScreenTex, roughness:0.5, emissive:0x000000, emissiveIntensity:0})
+);
+efScreenPanel.rotation.y = -Math.PI/2;
+efScreenPanel.position.set(-0.07, 1.2, 0);
+efScreenGroup.add(efScreenPanel);
+
+const efScreenBase = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 3.0), new THREE.MeshStandardMaterial({color:0x1e2e45, metalness:0.6}));
+efScreenBase.position.set(0, -0.9, 0);
+efScreenGroup.add(efScreenBase);
+const efScreenPost = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.86, 8), new THREE.MeshStandardMaterial({color:0x1e2e45, metalness:0.6}));
+efScreenPost.position.set(0, -0.46, 0);
+efScreenGroup.add(efScreenPost);
+
+// Path visualization lines (labelCanvas 2D overlay)
+let efPathLines = []; // will be computed per-frame
+
+// Symbol sprites for + and - on plates (drawn on labelCanvas)
+function paintEFPlateSymbols(){
+  if(!EF.charged) return;
+
+  function worldToScreen(wx, wy, wz){
+    const v = new THREE.Vector3(wx, wy, wz);
+    v.project(cam3);
+    return { x:(v.x+1)/2*labelCanvas.width, y:(-v.y+1)/2*labelCanvas.height };
+  }
+
+  const t = (EF.intensity - 1) / 4; // 0..1 across slider range 1..5
+  // Number of symbols: 1 at minimum, up to 5 at maximum
+  const count = 1 + Math.round(t * 4);  // 1 .. 5
+  const baseAlpha = 0.5 + t * 0.5;
+  const fontSize = Math.round(16 + t * 8); // 16px .. 24px
+
+  // Symbols spread along the plate length (X axis).
+  // Plate spans from plateMinX to plateMaxX in world X.
+  const xMin = EF.plateMinX, xMax = EF.plateMaxX;
+
+  [
+    { symbol: '+', z: EF.platePosZ, color: `rgba(255,80,60,${baseAlpha})`, glow: 'rgba(255,60,40,0.85)' },
+    { symbol: '−', z: EF.plateNegZ, color: `rgba(60,140,255,${baseAlpha})`, glow: 'rgba(40,120,255,0.85)' },
+  ].forEach(({ symbol, z, color, glow }) => {
+    for(let i = 0; i < count; i++){
+      // Distribute evenly: for count=1 place at centre, otherwise spread
+      const xFrac = count === 1 ? 0.5 : i / (count - 1);
+      const wx = xMin + xFrac * (xMax - xMin);
+      const sc = worldToScreen(wx, EF.plateY + 0.55, z);
+      if(sc.x < 0 || sc.x > labelCanvas.width || sc.y < 0 || sc.y > labelCanvas.height) continue;
+
+      lctx.save();
+      lctx.font = `bold ${fontSize}px Space Mono`;
+      lctx.textAlign = 'center';
+      lctx.textBaseline = 'middle';
+      lctx.globalAlpha = baseAlpha;
+      lctx.fillStyle = color;
+      lctx.shadowColor = glow;
+      lctx.shadowBlur = 8 + t * 8;
+      lctx.fillText(symbol, sc.x, sc.y);
+      lctx.restore();
+    }
+  });
+}
+
+function updateEFPlateIntensity(){
+  if(!EF.charged) return;
+  const t = (EF.intensity - 1) / 4; // 0..1 across slider range 1..5
+  // Positive plate: dark red at low, bright red at high
+  const posR = Math.round(80 + t * 175);
+  const posG = Math.round(10 + t * 20);
+  const posB = Math.round(10 + t * 10);
+  posPlate.material.color.setRGB(posR/255, posG/255, posB/255);
+  posPlate.material.emissive.setRGB((posR*0.4)/255, 0, 0);
+  posPlate.material.emissiveIntensity = 0.2 + t * 0.8;
+  // Negative plate: dark blue at low, bright blue at high
+  const negR = Math.round(10 + t * 10);
+  const negG = Math.round(20 + t * 40);
+  const negB = Math.round(80 + t * 175);
+  negPlate.material.color.setRGB(negR/255, negG/255, negB/255);
+  negPlate.material.emissive.setRGB(0, 0, (negB*0.4)/255);
+  negPlate.material.emissiveIntensity = 0.2 + t * 0.8;
+}
+
+function setEFCharged(charged){
+  EF.charged = charged;
+  if(charged){
+    posPlate.material.opacity = 0.88;
+    posPlate.material.transparent = true;
+    posPlate.visible = true;
+    negPlate.material.opacity = 0.88;
+    negPlate.material.transparent = true;
+    negPlate.visible = true;
+    updateEFPlateIntensity();
+  } else {
+    posPlate.material.color.setHex(0x553322);
+    posPlate.material.emissive = new THREE.Color(0x000000);
+    posPlate.material.emissiveIntensity = 0;
+    posPlate.material.opacity = 0;
+    posPlate.material.transparent = true;
+    posPlate.visible = false;
+    negPlate.material.color.setHex(0x223355);
+    negPlate.material.emissive = new THREE.Color(0x000000);
+    negPlate.material.emissiveIntensity = 0;
+    negPlate.material.opacity = 0;
+    negPlate.material.transparent = true;
+    negPlate.visible = false;
+  }
+
+  // Show/hide wide screen vs normal screen/GM tube/shield
+  efScreenGroup.visible = charged;
+  screenGroup.visible = !charged;
+  gmGroup.visible = !charged;
+  shieldGroup.visible = !charged;
+
+  // Shield buttons
+  const shieldBtns = document.getElementById('shield-btns');
+  const shieldDiv = shieldBtns ? shieldBtns.closest('.hdiv, div')?.parentElement : null;
+  // Hide entire shield slot section in HUD
+  document.querySelectorAll('#shield-btns .sbtn').forEach(b => {
+    b.style.display = charged ? 'none' : '';
+  });
+  // Hide shield heading and divider
+  document.querySelectorAll('#hud h2').forEach(el => {
+    if(el.textContent.trim()==='Shield Slot'){
+      el.style.display = charged ? 'none' : '';
+      const next = el.nextElementSibling;
+      if(next && next.classList.contains('btn-group')) next.style.display = charged ? 'none' : '';
+      const dr = el.nextElementSibling?.nextElementSibling;
+      if(dr) dr.style.display = charged ? 'none' : '';
+      const hdiv = el.previousElementSibling;
+      if(hdiv && hdiv.classList.contains('hdiv')) hdiv.style.display = charged ? 'none' : '';
+    }
+  });
+
+  // EF controls in HUD
+  document.getElementById('ef-controls').style.display = charged ? 'block' : 'none';
+
+  // Hide/show "Determine Half-Life" quiz option in EF mode
+  const hlBtn = document.getElementById('qmode-halflife');
+  if(hlBtn){
+    hlBtn.style.display = charged ? 'none' : '';
+    // If currently in halflife quiz mode and charging, reset to identify
+    if(charged && S.quizMode === 'halflife'){
+      selectQuizMode('identify');
+    }
+  }
+
+  // Switch decay panel top-left between decay curve and EF frontal screen
+  const decayCanvas = document.getElementById('decay-canvas');
+  const efFrontal = document.getElementById('ef-frontal-canvas');
+  const decayTitle = document.getElementById('decay-panel-title');
+  if(charged){
+    if(decayCanvas) decayCanvas.style.display='none';
+    if(efFrontal){ efFrontal.style.display='block'; paintEFFrontalScreen(); }
+    if(decayTitle) decayTitle.textContent='Deflection Screen';
+    document.getElementById('btn-zoom-decay').style.display='none';
+  } else {
+    if(decayCanvas) decayCanvas.style.display='block';
+    if(efFrontal) efFrontal.style.display='none';
+    if(decayTitle) decayTitle.textContent='Decay Curve';
+    clearEFHits();
+    clearEFFrontalHits();
+  }
+
+  if(charged){
+    paintEFScreen();
+  } else {
+    paintScreenTexture();
+  }
+}
+
+function toggleChargePlates(){
+  if(S.running){ showFlash('Stop acquisition before changing setup!', '#ff5e72'); return; }
+  EF.charged = !EF.charged;
+  const btn = document.getElementById('btn-charge-plates');
+  if(EF.charged){
+    btn.textContent = '⚡ Discharge Plates';
+    btn.style.background = 'rgba(255,140,66,0.2)';
+    btn.style.borderColor = 'var(--orange)';
+    setEFCharged(true);
+    showFlash('Plates charged! + plate (red/top) attracts α  — (blue/bottom) attracts β', '#ff8c42');
+  } else {
+    btn.textContent = '⚡ Charge Plates';
+    btn.style.background = 'rgba(255,140,66,0.06)';
+    btn.style.borderColor = 'rgba(255,140,66,0.5)';
+    setEFCharged(false);
+    showFlash('Plates discharged.', '#5bc8ff');
+  }
+  // Kill particles in flight
+  partSpheres.forEach(p=>{ p.active=false; p.mesh.visible=false; });
+}
+window.toggleChargePlates = toggleChargePlates;
+
+// Slider event
+document.addEventListener('DOMContentLoaded', ()=>{});
+setTimeout(()=>{
+  const sl = document.getElementById('ef-field-slider');
+  if(sl){
+    sl.addEventListener('input', ()=>{
+      EF.intensity = parseFloat(sl.value);
+      document.getElementById('ef-field-val').textContent = sl.value;
+      if(EF.charged){
+        updateEFPlateIntensity();
+        clearEFHits();
+        // Kill all in-flight particles so none hit the screen with stale deflection
+        partSpheres.forEach(p=>{ p.active=false; p.mesh.visible=false; });
+      }
+    });
+  }
+  const chk = document.getElementById('chk-showpath');
+  if(chk){
+    chk.addEventListener('change', ()=>{ EF.showPath = chk.checked; });
+  }
+}, 100);
+
 // ── Particle Stream (radiation) ──
 const PARTICLE_COUNT = 120;
 const particleGeo = new THREE.BufferGeometry();
@@ -929,6 +1243,7 @@ function toggleAcquisition(){
     acqStartReal = Date.now();
     S.elapsed = 0;
     S.decayData = [];
+    clearEFHits();
     const btn = document.getElementById('btn-start');
     btn.textContent = '■ Stop Acquisition';
     btn.classList.add('on');
@@ -1009,29 +1324,61 @@ function spawnParticles(){
     if(!p) return;
 
     const cols = {alpha:0xff5e72, beta:0x5bc8ff, gamma:0x4dffa0};
-    const speed = 4.0 + Math.random()*1.0;
-    p.active = true;
-    p.x = -7.0; p.y = 0.3 + (Math.random()-0.5)*0.15; p.z = (Math.random()-0.5)*0.15;
-    p.vx = speed;
-    p.vy = (Math.random()-0.5)*0.08;
-    p.vz = (Math.random()-0.5)*0.08;
-    p.life = 0;
-    // Particles travel ~3.5 units (from -7.0 to -3.5) at ~4.5 speed → ~0.8s
-    p.maxLife = 3.5 / speed * 1.1 + 0.1;
-    p.type = type;
-    p.blocked = false; // animation is identical regardless of shielding
-    p.mesh.material.color.setHex(cols[type]||0xffffff);
-    p.mesh.material.emissive.setHex(cols[type]||0xffffff);
-    p.mesh.material.opacity = 0.9;
-    p.mesh.visible = true;
+
+    if(!EF.charged){
+      // Original behavior: short path fading out at shield
+      const speed = 4.0 + Math.random()*1.0;
+      p.active = true;
+      p.x = -7.0; p.y = 0.3 + (Math.random()-0.5)*0.15; p.z = (Math.random()-0.5)*0.15;
+      p.vx = speed; p.vy = (Math.random()-0.5)*0.08; p.vz = (Math.random()-0.5)*0.08;
+      p.life = 0;
+      p.maxLife = 3.5 / speed * 1.1 + 0.1;
+      p.type = type;
+      p.blocked = false;
+      p.efMode = false;
+      p.hitRecorded = false;
+      p.mesh.material.color.setHex(cols[type]||0xffffff);
+      p.mesh.material.emissive.setHex(cols[type]||0xffffff);
+      p.mesh.material.opacity = 0.9;
+      p.mesh.visible = true;
+    } else {
+      // EF mode: particles travel all the way to the wide screen at x~8.5
+      const speed = 3.5 + Math.random()*0.8;
+      p.active = true;
+      p.x = -7.0; p.y = 0.3 + (Math.random()-0.5)*0.08; p.z = (Math.random()-0.5)*0.08;
+      p.vx = speed; p.vy = 0; p.vz = 0;
+      p.life = 0;
+      p.maxLife = 15.5 / speed + 0.2; // full path to screen
+      p.type = type;
+      p.blocked = false;
+      p.efMode = true;
+      p.hitRecorded = false;
+      // Deflection: alpha→positive plate (+Z), beta→negative plate (-Z), gamma→none
+      // intensity scale: 1→weak, 10→strong
+      const intensityFactor = EF.intensity / 5.0; // normalized: 1.0 at mid
+      if(type==='alpha'){
+        // Alpha: +2 charge → deflects toward negative plate (−Z)
+        // small deflection
+        p.efAz = -0.32 * intensityFactor + (Math.random()-0.5)*0.04;
+      } else if(type==='beta'){
+        // Beta: −1 charge, much lighter → deflects toward positive plate (+Z), larger deflection
+        p.efAz = 1.8 * intensityFactor + (Math.random()-0.5)*0.12;
+      } else {
+        // Gamma: no charge
+        p.efAz = 0;
+      }
+      p.mesh.material.color.setHex(cols[type]||0xffffff);
+      p.mesh.material.emissive.setHex(cols[type]||0xffffff);
+      p.mesh.material.opacity = 0.9;
+      p.mesh.visible = true;
+    }
   });
 }
 
 const DT = 1/30;
 // Particles travel from source (-7.0) and fade out at halfway (-3.5)
-// Fade starts at -5.25 (halfway between source and fade-end), gone by -3.5
 const FADE_START_X = -5.25;
-const SHIELD_MOUNT_X = -3.5;  // fade fully out here (half of original travel)
+const SHIELD_MOUNT_X = -3.5;
 
 function updateParticles(){
   partSpheres.forEach(p=>{
@@ -1040,29 +1387,321 @@ function updateParticles(){
     const t = p.life / p.maxLife;
     if(t >= 1){ p.active=false; p.mesh.visible=false; return; }
 
-    p.x += p.vx * DT;
-    p.y += p.vy * DT;
-    p.z += p.vz * DT;
-
-    // Fade starts at halfway point (-3.75) and reaches 0 at shield mount (0)
-    // Same fade for ALL particles regardless of shield or blocking — always identical animation
-    let opacity;
-    if(p.x >= SHIELD_MOUNT_X){
-      opacity = 0;
-    } else if(p.x >= FADE_START_X){
-      const fadeProgress = (p.x - FADE_START_X) / (SHIELD_MOUNT_X - FADE_START_X);
-      opacity = 0.85 * (1 - fadeProgress);
+    if(!p.efMode){
+      // Original mode: fade out at shield mount
+      p.x += p.vx * DT;
+      p.y += p.vy * DT;
+      p.z += p.vz * DT;
+      let opacity;
+      if(p.x >= SHIELD_MOUNT_X){
+        opacity = 0;
+      } else if(p.x >= FADE_START_X){
+        const fadeProgress = (p.x - FADE_START_X) / (SHIELD_MOUNT_X - FADE_START_X);
+        opacity = 0.85 * (1 - fadeProgress);
+      } else {
+        opacity = 0.85;
+      }
+      p.mesh.material.opacity = opacity;
+      p.mesh.material.emissiveIntensity = 1.2 * (opacity / 0.85);
+      p.mesh.position.set(p.x, p.y, p.z);
+      p.mesh.visible = opacity > 0.01;
     } else {
-      opacity = 0.85;
+      // EF mode: deflection physics
+      // Region: straight before plates (x < EF.plateMinX), curved between (EF.plateMinX ≤ x ≤ EF.plateMaxX), straight after
+      p.x += p.vx * DT;
+      p.y += p.vy * DT;
+
+      if(p.x >= EF.plateMinX && p.x <= EF.plateMaxX){
+        // Apply lateral acceleration in Z inside plates
+        p.vz += p.efAz * DT * 3.0;
+      }
+      p.z += p.vz * DT;
+
+      // Fade: fully visible until near the screen
+      let opacity = 0.88;
+      if(p.x > 7.5){
+        opacity = Math.max(0, 0.88 * (1 - (p.x - 7.5)/1.2));
+      }
+      p.mesh.material.opacity = opacity;
+      p.mesh.material.emissiveIntensity = 1.2;
+      p.mesh.position.set(p.x, p.y, p.z);
+      p.mesh.visible = opacity > 0.01;
+
+      // Register hit on EF screen — once per particle only
+      if(!p.hitRecorded && p.x >= 8.4 && p.x < 8.6){
+        p.hitRecorded = true;
+        recordEFHit(p.type, p.z, p.y);
+      }
     }
-    p.mesh.material.opacity = opacity;
-    p.mesh.material.emissiveIntensity = 1.2 * (opacity / 0.85);
-    p.mesh.position.set(p.x, p.y, p.z);
-    p.mesh.visible = opacity > 0.01;
   });
 }
 
-// ── Main simulation tick ──
+// ─────────────────────────────────────────────────────
+//  EF SCREEN: record hits and paint
+// ─────────────────────────────────────────────────────
+const efHits = {alpha:[], beta:[], gamma:[]};
+
+// Phosphorescent glow hits on the 3D screen and 2D frontal panel
+// Each hit: {type, z (world), y (world actual particle Y), t (timestamp)}
+const efPhosHits = [];
+const EF_PHOS_DECAY = 400; // ms — short phosphor burst
+
+function clearEFFrontalHits(){
+  efPhosHits.length = 0;
+}
+
+function recordEFHit(type, z, y){
+  if(efHits[type] && efHits[type].length < 120){
+    efHits[type].push({z, y, t: Date.now()});
+  }
+  efPhosHits.push({type, z, y, t: Date.now()});
+  if(efPhosHits.length > 300) efPhosHits.shift();
+}
+
+function clearEFHits(){
+  efHits.alpha=[]; efHits.beta=[]; efHits.gamma=[];
+  clearEFFrontalHits();
+}
+
+function paintEFScreen(){
+  const ctx = efScreenTCtx;
+  const W = efScreenTC.width, H = efScreenTC.height; // 256 × 512
+  ctx.fillStyle='#000308'; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle='rgba(91,200,255,0.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=12;i++){ctx.beginPath();ctx.moveTo(0,i*H/12);ctx.lineTo(W,i*H/12);ctx.stroke();}
+  for(let i=0;i<=6;i++){ctx.beginPath();ctx.moveTo(i*W/6,0);ctx.lineTo(i*W/6,H);ctx.stroke();}
+
+  // Border
+  ctx.strokeStyle='rgba(255,140,66,0.3)'; ctx.lineWidth=2; ctx.strokeRect(2,2,W-4,H-4);
+
+  // Title
+  ctx.fillStyle='rgba(255,140,66,0.7)'; ctx.font='bold 16px Space Mono'; ctx.textAlign='center';
+  ctx.fillText('DEFLECTION SCREEN', W/2, 24);
+
+  // Field direction labels
+  ctx.fillStyle='rgba(255,80,50,0.6)'; ctx.font='10px Space Mono'; ctx.textAlign='right';
+  ctx.fillText('+ PLATE', W-6, 44);
+  ctx.fillStyle='rgba(80,120,255,0.6)'; ctx.textAlign='left';
+  ctx.fillText('− PLATE', 6, H-6);
+
+  // Center axis marker
+  ctx.strokeStyle='rgba(180,200,255,0.18)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(W/2, 40); ctx.lineTo(W/2, H-20); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(180,200,255,0.3)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+  ctx.fillText('CENTER', W/2, H-8);
+
+  if(!S.running && efHits.alpha.length===0 && efHits.beta.length===0 && efHits.gamma.length===0){
+    ctx.fillStyle='rgba(255,140,66,0.25)'; ctx.font='12px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('SELECT SOURCE', W/2, H/2 - 12);
+    ctx.fillText('START ACQUISITION', W/2, H/2 + 12);
+    efScreenTex.needsUpdate = true;
+    return;
+  }
+
+  // World Z → screen X:  Z ∈ [−4, +4] → [10, W−10]
+  // World Y → screen Y: panel center y=1.2, height=4.6 → Y ∈ [−1.1, 3.3] → [H−10, 10]
+  const zRange = 4.0;
+  const yWorld0 = -1.1, yWorld1 = 3.3; // world Y range matching mesh extents
+  const zToX = z => W/2 + (z / zRange) * (W/2 - 10);
+  const yToY = y => (H-10) - ((y - yWorld0) / (yWorld1 - yWorld0)) * (H - 20);
+
+  // Horizontal axis (deflection scale) — drawn at particle beam height y=0.3
+  const axisY = yToY(0.3);
+  ctx.strokeStyle='rgba(180,200,255,0.25)'; ctx.lineWidth=1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(10, axisY); ctx.lineTo(W-10, axisY); ctx.stroke();
+  // Axis ticks and labels — every 1 unit of Z from -4 to +4
+  ctx.fillStyle='rgba(180,200,255,0.45)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+  for(let z=-4; z<=4; z++){
+    const tx = zToX(z);
+    ctx.strokeStyle='rgba(180,200,255,0.25)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(tx, axisY-3); ctx.lineTo(tx, axisY+3); ctx.stroke();
+    if(z !== 0) ctx.fillText(z, tx, axisY+14);
+  }
+  ctx.fillStyle='rgba(180,200,255,0.3)'; ctx.font='7px Space Mono'; ctx.textAlign='center';
+  ctx.fillText('z (m)', W/2, axisY+22);
+  // Center "0" label
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='8px Space Mono';
+  ctx.fillText('0', zToX(0), axisY+14);
+
+  // Draw accumulated hit blobs — fade out 2.5s after acquisition stops
+  const HIT_FADE = 2500;
+  const nowHits = Date.now();
+  const drawHits = (hits, color) => {
+    if(!hits.length) return;
+    ctx.fillStyle = color;
+    hits.forEach(h => {
+      const age = nowHits - (h.t || 0);
+      const a = S.running ? 0.5 : Math.max(0, 0.5 * (1 - age / HIT_FADE));
+      if(a <= 0) return;
+      ctx.globalAlpha = a;
+      const sx = zToX(h.z);
+      const sy = yToY(h.y) + (Math.random()-0.5)*6;
+      ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  };
+
+  if(efHits.alpha.length)  drawHits(efHits.alpha,  '#ff5e72');
+  if(efHits.beta.length)   drawHits(efHits.beta,   '#5bc8ff');
+  if(efHits.gamma.length)  drawHits(efHits.gamma,  '#4dffa0');
+
+  // Legend
+  const legendY = 56;
+  const types = [{type:'alpha',col:'#ff5e72',label:'α'},{type:'beta',col:'#5bc8ff',label:'β'},{type:'gamma',col:'#4dffa0',label:'γ'}];
+  let legendX = 14;
+  types.forEach(({type,col,label})=>{
+    if(!efHits[type].length) return;
+    ctx.fillStyle = col; ctx.font='bold 13px Space Mono'; ctx.textAlign='left';
+    ctx.fillText(label, legendX, legendY);
+    legendX += 22;
+  });
+
+  // Phosphorescent glow — type-specific colors, short decay, one-shot per particle
+  const glowCols = {
+    alpha: {r:'255,94,114',  g:'255,80,90'},
+    beta:  {r:'91,200,255',  g:'80,180,255'},
+    gamma: {r:'77,255,160',  g:'60,220,130'}
+  };
+  const now3d = Date.now();
+  efPhosHits.forEach(h => {
+    const age = now3d - h.t;
+    if(age > EF_PHOS_DECAY) return;
+    const frac = age / EF_PHOS_DECAY;
+    // Flash in quickly, fade out
+    const a = frac < 0.12 ? frac/0.12 : 1 - (frac - 0.12)/0.88;
+    const alpha = Math.max(0, a);
+    const sx = zToX(h.z);
+    const sy = yToY(h.y);
+    const gc = glowCols[h.type] || glowCols.gamma;
+    // Small radial glow (radius 8px max)
+    const gr = ctx.createRadialGradient(sx, sy, 0, sx, sy, 8);
+    gr.addColorStop(0, `rgba(255,255,255,${alpha*0.95})`);
+    gr.addColorStop(0.3, `rgba(${gc.r},${alpha*0.8})`);
+    gr.addColorStop(1, `rgba(${gc.g},0)`);
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(sx, sy, 8, 0, Math.PI*2); ctx.fill();
+    // Bright 1.5px white core
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI*2); ctx.fill();
+  });
+
+  efScreenTex.needsUpdate = true;
+}
+
+// ─────────────────────────────────────────────────────
+//  EF FRONTAL SCREEN: 2D top-left panel (black background, phosphor impacts only)
+// ─────────────────────────────────────────────────────
+function paintEFFrontalScreen(){
+  const fc = document.getElementById('ef-frontal-canvas');
+  if(!fc) return;
+  const ctx = fc.getContext('2d');
+  const W = fc.width, H = fc.height; // 220 × 140
+
+  // Black background
+  ctx.fillStyle = '#000308';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid — match 3D screen style
+  ctx.strokeStyle='rgba(91,200,255,0.06)'; ctx.lineWidth=0.5;
+  for(let i=0;i<=6;i++){ctx.beginPath();ctx.moveTo(0,i*H/6);ctx.lineTo(W,i*H/6);ctx.stroke();}
+  for(let i=0;i<=6;i++){ctx.beginPath();ctx.moveTo(i*W/6,0);ctx.lineTo(i*W/6,H);ctx.stroke();}
+
+  // Border
+  ctx.strokeStyle='rgba(255,140,66,0.35)'; ctx.lineWidth=1.5; ctx.strokeRect(1,1,W-2,H-2);
+
+  // Center axis dashed
+  ctx.strokeStyle='rgba(180,200,255,0.15)'; ctx.lineWidth=0.5; ctx.setLineDash([3,5]);
+  ctx.beginPath(); ctx.moveTo(W/2, 6); ctx.lineTo(W/2, H-6); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Field labels — tiny
+  ctx.font='7px Space Mono'; ctx.textAlign='right';
+  ctx.fillStyle='rgba(255,80,50,0.55)'; ctx.fillText('+', W-4, 12);
+  ctx.textAlign='left';
+  ctx.fillStyle='rgba(80,120,255,0.55)'; ctx.fillText('−', 4, H-4);
+
+  if(!S.running && efHits.alpha.length===0 && efHits.beta.length===0 && efHits.gamma.length===0){
+    ctx.fillStyle='rgba(255,140,66,0.2)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('SELECT SOURCE & START', W/2, H/2 - 6);
+    ctx.fillText('ACQUISITION', W/2, H/2 + 8);
+    return;
+  }
+
+  // SAME coordinate mapping as paintEFScreen — corrected to match mesh extents
+  const zRange = 4.0;
+  const yWorld0 = -1.1, yWorld1 = 3.3;
+  const zToX = z => W/2 + (z / zRange) * (W/2 - 8);
+  const yToY = y => (H-8) - ((y - yWorld0) / (yWorld1 - yWorld0)) * (H - 16);
+
+  // Horizontal axis at beam height (y=0.3)
+  const axisY = yToY(0.3);
+  ctx.strokeStyle='rgba(180,200,255,0.22)'; ctx.lineWidth=0.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(8, axisY); ctx.lineTo(W-8, axisY); ctx.stroke();
+  // Ticks every 2 units of Z
+  ctx.fillStyle='rgba(180,200,255,0.40)'; ctx.font='6px Space Mono'; ctx.textAlign='center';
+  for(let z=-4; z<=4; z+=2){
+    const tx = zToX(z);
+    ctx.strokeStyle='rgba(180,200,255,0.22)'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(tx, axisY-2); ctx.lineTo(tx, axisY+2); ctx.stroke();
+    ctx.fillText(z, tx, axisY+10);
+  }
+  ctx.fillStyle='rgba(180,200,255,0.28)'; ctx.font='6px Space Mono';
+  ctx.fillText('z', W/2, axisY+18);
+
+  // Accumulated hits — same data, per-type colours, fade out after acquisition stops
+  const HIT_FADE_F = 2500;
+  const nowHitsF = Date.now();
+  const drawHits = (hits, color) => {
+    if(!hits.length) return;
+    ctx.fillStyle = color;
+    hits.forEach(h => {
+      const age = nowHitsF - (h.t || 0);
+      const a = S.running ? 0.5 : Math.max(0, 0.5 * (1 - age / HIT_FADE_F));
+      if(a <= 0) return;
+      ctx.globalAlpha = a;
+      const sx = zToX(h.z);
+      const sy = yToY(h.y) + (Math.random()-0.5)*4;
+      ctx.beginPath(); ctx.arc(sx, Math.max(4, Math.min(H-4, sy)), 2, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  };
+
+  if(efHits.alpha.length)  drawHits(efHits.alpha,  '#ff5e72');
+  if(efHits.beta.length)   drawHits(efHits.beta,   '#5bc8ff');
+  if(efHits.gamma.length)  drawHits(efHits.gamma,  '#4dffa0');
+
+  // Phosphorescent glow — type-specific colors, same logic as 3D screen
+  const glowCols = {
+    alpha: {r:'255,94,114',  g:'255,80,90'},
+    beta:  {r:'91,200,255',  g:'80,180,255'},
+    gamma: {r:'77,255,160',  g:'60,220,130'}
+  };
+  const scale = W / 256; // ~0.86
+  const nowF = Date.now();
+  efPhosHits.forEach(h => {
+    const age = nowF - h.t;
+    if(age > EF_PHOS_DECAY) return;
+    const frac = age / EF_PHOS_DECAY;
+    const a = frac < 0.12 ? frac/0.12 : 1 - (frac - 0.12)/0.88;
+    const alpha = Math.max(0, a);
+    const sx = zToX(h.z);
+    const sy = yToY(h.y);
+    const gc = glowCols[h.type] || glowCols.gamma;
+    const r = 7 * scale;
+    const gr = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+    gr.addColorStop(0, `rgba(255,255,255,${alpha*0.95})`);
+    gr.addColorStop(0.3, `rgba(${gc.r},${alpha*0.8})`);
+    gr.addColorStop(1, `rgba(${gc.g},0)`);
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath(); ctx.arc(sx, sy, 1.2*scale, 0, Math.PI*2); ctx.fill();
+  });
+}
+
 function simTick(){
   const now = Date.now();
   if(!S.running) return;
@@ -1267,12 +1906,13 @@ function drawLabels(){
     return { x:(v.x+1)/2*labelCanvas.width, y:(-v.y+1)/2*labelCanvas.height };
   }
   const labels3d = [
-    {wx:7.5, wy:1.2, wz:0, text:'GM TUBE', col:'rgba(91,200,255,0.7)'},
-    {wx:-7.5, wy:1.2, wz:0, text:'SOURCE', col:'rgba(255,94,114,0.7)'},
-    {wx:0, wy:1.8, wz:0, text:'SHIELD', col:'rgba(255,200,80,0.7)'},
-    {wx:10.5, wy:2.8, wz:0, text:'MONITOR', col:'rgba(77,255,160,0.5)'},
+    {wx:7.5, wy:1.2, wz:0, text:'GM TUBE', col:'rgba(91,200,255,0.7)', hideInEF:true},
+    {wx:-7.5, wy:1.2, wz:0, text:'SOURCE', col:'rgba(255,94,114,0.7)', hideInEF:false},
+    {wx:0, wy:1.8, wz:0, text:'SHIELD', col:'rgba(255,200,80,0.7)', hideInEF:true},
+    {wx:10.5, wy:2.8, wz:0, text:'MONITOR', col:'rgba(77,255,160,0.5)', hideInEF:true},
   ];
   labels3d.forEach(l=>{
+    if(EF.charged && l.hideInEF) return;
     const sc = worldToScreen(l.wx, l.wy, l.wz);
     if(sc.x<0||sc.x>labelCanvas.width||sc.y<0||sc.y>labelCanvas.height) return;
     lctx.font = '10px Space Mono';
@@ -1280,6 +1920,9 @@ function drawLabels(){
     lctx.textAlign = 'center';
     lctx.fillText(l.text, sc.x, sc.y);
   });
+
+  // Draw + / − symbols on the charged plates
+  paintEFPlateSymbols();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1720,6 +2363,10 @@ function animate(ts){
   }
 
   drawLabels();
+
+  // Refresh EF deflection screen texture every frame so phosphor hits render live
+  if(EF.charged){ paintEFScreen(); paintEFFrontalScreen(); }
+
   renderer.render(scene3, cam3);
 }
 
