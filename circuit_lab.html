@@ -664,10 +664,21 @@
   <button class="fab-btn danger" id="btnClear">⊗ Clear</button>
   <button class="fab-btn" id="btnUndo">↩ Undo</button>
   <button class="fab-btn" id="btnView">◎ Fit</button>
-  <button class="fab-btn" id="btnTest">✦ Demo</button>
+  <button class="fab-btn" id="btnQR">⬛ QR Code</button>
   <button class="fab-btn" id="btnTheme" title="Switch theme">🌙</button>
   <button class="fab-btn" id="btnStudentTest">📐 Challenge</button>
 </div>
+
+<!-- QR CODE MODAL -->
+<div id="qrOverlay" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;gap:0;">
+  <div id="qrModal" style="background:#0d1117;border:1.5px solid #00d4ff;border-radius:18px;padding:28px 32px;display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 0 40px rgba(0,212,255,0.25);max-width:320px;width:90%;">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:2px;color:#00d4ff;text-transform:uppercase;">Scan to Open</div>
+    <canvas id="qrCanvas" width="220" height="220" style="border-radius:10px;background:#fff;"></canvas>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#4a7fa5;word-break:break-all;text-align:center;max-width:220px;">https://darawa-io.github.io/ARLABS/circuit_lab.html</div>
+    <button onclick="document.getElementById('qrOverlay').style.display='none'" style="margin-top:4px;padding:8px 28px;background:transparent;border:1.5px solid #00d4ff;border-radius:8px;color:#00d4ff;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1.5px;cursor:pointer;">CLOSE</button>
+  </div>
+</div>
+
 <!-- Hint bar still exists for desktop, just not visible on mobile -->
 <div class="hint-bar" id="hintBar" style="position:fixed;bottom:calc(max(14px, env(safe-area-inset-bottom, 14px)) + 46px);left:50%;transform:translateX(-50%);pointer-events:none;z-index:199;background:var(--panel);border-radius:12px;padding:3px 10px;border:1px solid var(--border);font-size:10px;"></div>
 
@@ -878,7 +889,7 @@ function solveCircuit() {
   components.forEach(c => { c._current = 0; c._voltage = 0; c._lit = false; });
   circuitCurrent = 0; circuitVoltage = 0; circuitResistance = 0;
   shortCircuitDetected = false;
-  wires.forEach(w => { w._active = false; });
+  wires.forEach(w => { w._active = false; w._current = 0; });
 
   const sources = components.filter(c => c.type === 'battery' || c.type === 'dcpsu');
 
@@ -1022,6 +1033,15 @@ function solveCircuit() {
     if (ib !== -1) I[ib] -= i_val;
   }
 
+  // GMIN: stamp a tiny conductance from every unknown SN to ground.
+  // This prevents a singular G matrix when a floating component creates an
+  // isolated super-node with no other conductance connections (SPICE trick).
+  const GMIN = 1e-12;
+  for (let s = 0; s < snCount; s++) {
+    const ia = snToIdx[s];
+    if (ia !== -1) G[ia][ia] += GMIN;
+  }
+
   // Stamp passive elements
   for (const pe of passiveEdges) {
     if (pe.R <= 0 || !isFinite(pe.R)) continue;
@@ -1149,6 +1169,32 @@ function solveCircuit() {
 
       for (const path of validPaths) {
         markPathWires(path, graph);
+
+        // Assign per-path current to every wire on this path.
+        // Find the passive component on this path and use its _current.
+        // If multiple passive components exist (series), they share the same current.
+        // This correctly gives parallel branches different animation speeds.
+        let pathI = vs.comp._current || 0; // fallback: source current
+        for (let i = 0; i < path.length - 1; i++) {
+          const from = path[i], to = path[i + 1];
+          for (const { to: t2, edge } of (graph.adj[from] || [])) {
+            if (t2 !== to || !edge.comp) continue;
+            const c = edge.comp;
+            if (c._current > 0 && c.type !== 'battery' && c.type !== 'dcpsu') {
+              pathI = c._current;
+              break;
+            }
+          }
+        }
+        // Stamp pathI onto every wire segment on this path
+        for (let i = 0; i < path.length - 1; i++) {
+          const from = path[i], to = path[i + 1];
+          for (const { to: t2, edge } of (graph.adj[from] || [])) {
+            if (t2 !== to || !edge.wire) continue;
+            const w = edge.wire;
+            if (w._active) w._current = pathI;
+          }
+        }
       }
     }
   }
@@ -1414,7 +1460,12 @@ function drawWire(w) {
 }
 
 function drawFlowParticles(w) {
-  const speed = Math.min(circuitCurrent * 60, 120);
+  // Use per-wire current for proportional animation speed.
+  // w._current is set in solveCircuit Step 5 for active wires.
+  const wireI = (w._current != null && w._current > 0) ? w._current : circuitCurrent;
+  // Speed purely proportional to current — no additive baseline so parallel
+  // branches at different currents are visually distinguishable.
+  const speed = Math.min(Math.max(wireI * 250, 4), 180);
   const spacing = 28;
   ctx.save();
   ctx.shadowColor = '#00d4ff';
@@ -2176,10 +2227,14 @@ canvas.addEventListener('touchend', e => {
   e.preventDefault();
   const touch = e.changedTouches[0];
   const { x: mx, y: my } = canvasTouchPos(touch);
+  const wasDraggingComp = !!draggingComp;
   const wasDragging = !!(draggingComp || draggingNode);
   isMouseDown = false;
   draggingComp = null; draggingNode = null; pendingNodePress = null;
   pendingDragComp = null; pendingDragOffset = null;
+
+  // If we were dragging a component, just release it — don't snap or steal connections.
+  if (wasDraggingComp) { updateCircuit(); return; }
 
   // ── Complete drag-from-terminal wire on touchend ───────────
   if (wireDragActive && wireStart) {
@@ -2602,6 +2657,16 @@ canvas.addEventListener('mouseup', e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
 
+  // If we were dragging a component, just release it — don't snap or steal connections.
+  if (draggingComp) {
+    isMouseDown = false;
+    draggingComp = null;
+    draggingNode = null;
+    pendingNodePress = null;
+    updateCircuit();
+    return;
+  }
+
   // ── Complete drag-from-terminal wire on mouseup ────────────
   if (wireDragActive && wireStart) {
     const dragDist = mouseDownPos ? dist({x:mx,y:my}, mouseDownPos) : 0;
@@ -2927,41 +2992,73 @@ document.getElementById('btnView').addEventListener('click', () => {
   wires.forEach(w => w.pts.forEach(p => { p.x += dx; p.y += dy; }));
 });
 
-document.getElementById('btnTest').addEventListener('click', () => {
-  testMode = !testMode;
-  document.getElementById('btnTest').classList.toggle('active', testMode);
-  if (testMode) {
-    // Demo circuit
-    saveUndo();
-    components = []; wires = [];
-    const cx = canvas.width/2, cy = canvas.height/2;
-    const bat = addComponent('battery', cx - 120, cy);
-    const sw  = addComponent('switch',  cx - 60,  cy - 90);
-    const res = addComponent('resistor', cx + 60,  cy - 90);
-    const led = addComponent('led',      cx + 120, cy);
-    const bulb= addComponent('bulb',     cx + 60,  cy + 90);
-
-    sw.closed = true;
-    bat.voltage = 9;
-    res.resistance = 200;
-
-    const connect = (ca, termA, cb, termB) => {
-      const ta = getTerminals(ca), tb = getTerminals(cb);
-      const sp = termA === 'b' ? ta.b : ta.a;
-      const ep = termB === 'a' ? tb.a : tb.b;
-      const pts = manhattanRoute(sp, ep);
-      wires.push({ id: wireIdCounter++, pts, _active: false, _nodeA: -1, _nodeB: -1 });
-    };
-
-    connect(bat, 'b', sw, 'a');
-    connect(sw, 'b', res, 'a');
-    connect(res, 'b', led, 'a');
-    connect(led, 'b', bat, 'a');
-
-    updateCircuit();
-    setHint('Demo circuit loaded! Toggle POWER ON to simulate · Double-click components to edit');
-  }
+// ---- QR Code ----
+// Lightweight QR code generator (Reed-Solomon + bit matrix) for the share URL.
+document.getElementById('btnQR').addEventListener('click', () => {
+  const overlay = document.getElementById('qrOverlay');
+  overlay.style.display = 'flex';
+  // Draw QR on first open (or redraw if canvas was cleared)
+  const qc = document.getElementById('qrCanvas');
+  drawQRCode(qc, 'https://darawa-io.github.io/ARLABS/circuit_lab.html');
 });
+
+// Close QR overlay on backdrop click
+document.getElementById('qrOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('qrOverlay'))
+    document.getElementById('qrOverlay').style.display = 'none';
+});
+
+// Minimal QR Code v3/v4 generator (alphanumeric mode, ECC level M)
+// Uses the qrcodejs approach but fully self-contained.
+function drawQRCode(canvas, url) {
+  // Use a reliable third-party QR lib loaded from CDN via a dynamic script tag
+  if (window._qrLibReady) { _renderQR(canvas, url); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  s.onload = () => { window._qrLibReady = true; _renderQR(canvas, url); };
+  s.onerror = () => { _renderQRFallback(canvas, url); };
+  document.head.appendChild(s);
+}
+
+function _renderQR(canvas, url) {
+  // qrcodejs needs a div, not a canvas — create a temp div, let it render, copy to our canvas
+  const tmp = document.createElement('div');
+  tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+  document.body.appendChild(tmp);
+  try {
+    new QRCode(tmp, {
+      text: url, width: 220, height: 220,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    // qrcodejs creates an img or canvas inside tmp
+    setTimeout(() => {
+      const src = tmp.querySelector('canvas') || tmp.querySelector('img');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, 220, 220);
+      if (src && src.tagName === 'CANVAS') {
+        ctx.drawImage(src, 0, 0, 220, 220);
+      } else if (src && src.tagName === 'IMG') {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0, 220, 220);
+        img.src = src.src;
+      }
+      document.body.removeChild(tmp);
+    }, 80);
+  } catch(e) { document.body.removeChild(tmp); _renderQRFallback(canvas, url); }
+}
+
+function _renderQRFallback(canvas, url) {
+  // If CDN fails: show the URL as text with a simple placeholder box
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,220,220);
+  ctx.fillStyle = '#000'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('QR unavailable', 110, 100);
+  ctx.font = '8px monospace';
+  const words = url.split('/');
+  words.forEach((w,i) => ctx.fillText(w, 110, 120 + i*12));
+}
 
 // ---- Start ----
 setHint('Drag from sidebar to add · Click a terminal to start wiring · Double-click to edit · Power to simulate');
