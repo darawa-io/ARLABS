@@ -224,6 +224,25 @@ body.ar-active #ar-activity-panel{display:block;}
 .quiz-result{padding:8px 10px;border-radius:8px;font-size:10px;display:none;font-family:'Space Mono',monospace;line-height:1.5;}
 .quiz-result.ok{background:rgba(77,255,160,0.1);border:1px solid rgba(77,255,160,0.3);color:var(--green);}
 .quiz-result.fail{background:rgba(255,94,114,0.1);border:1px solid rgba(255,94,114,0.3);color:var(--red);}
+
+/* QR Modal */
+#qr-modal{
+  display:none;position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;
+}
+#qr-modal.show{display:flex;}
+.qr-box{
+  background:rgba(8,12,26,0.97);border:1px solid rgba(91,200,255,0.35);
+  border-radius:22px;padding:28px 30px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  position:relative;min-width:240px;
+}
+.qr-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;}
+.qr-box img{border-radius:12px;border:4px solid #fff;display:block;image-rendering:pixelated;}
+.qr-box p{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.4);text-align:center;max-width:200px;word-break:break-all;}
+.qr-close{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;line-height:1;}
+.qr-close:hover{color:#fff;}
 </style>
 
 <!-- AR libs: loaded eagerly so dynamic injection CSP issues are avoided -->
@@ -458,6 +477,18 @@ body.ar-active #ar-activity-panel{display:block;}
   <button class="btn red ctrl-ar-hide" id="btn-reset" onclick="resetAll()">↺ Reset</button>
   <div class="sep"></div>
   <button class="btn" id="btn-ar">📷 AR Mode</button>
+  <div class="sep ctrl-ar-hide"></div>
+  <button class="btn ctrl-ar-hide" id="btn-qr" onclick="document.getElementById('qr-modal').classList.add('show')">⬛ QR</button>
+</div>
+
+<!-- QR Modal -->
+<div id="qr-modal">
+  <div class="qr-box">
+    <button class="qr-close" onclick="document.getElementById('qr-modal').classList.remove('show')">✕</button>
+    <h3>Open on Device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fdecay.html&bgcolor=ffffff&color=000000&margin=8" alt="QR Code" width="200" height="200">
+    <p>https://darawa-io.github.io/ARLABS/decay.html</p>
+  </div>
 </div>
 
 <!-- AR-only bottom controls -->
