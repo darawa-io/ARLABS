@@ -407,7 +407,7 @@ body.ar-active #ar-activity-panel{display:block;}
   <h3 id="decay-panel-title">Decay Curve</h3>
   <canvas id="decay-canvas" width="220" height="140" style="border-radius:6px;border:1px solid var(--border);display:block;"></canvas>
   <canvas id="ef-frontal-canvas" width="220" height="140" style="border-radius:6px;border:1px solid var(--border);display:none;background:#000;"></canvas>
-  <button id="btn-zoom-decay" onclick="openZoomModal()" style="display:none;margin-top:7px;width:100%;padding:5px 10px;border-radius:10px;border:1px solid rgba(91,200,255,0.35);background:rgba(91,200,255,0.08);color:var(--blue);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">🔍 ZOOM GRAPH</button>
+  <button id="btn-zoom-decay" onclick="EF.charged ? openEFZoomModal() : openZoomModal()" style="display:none;margin-top:7px;width:100%;padding:5px 10px;border-radius:10px;border:1px solid rgba(91,200,255,0.35);background:rgba(91,200,255,0.08);color:var(--blue);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">🔍 ZOOM GRAPH</button>
 </div>
 
 <!-- Mystery quiz (shown only when mystery source is selected, placed below decay panel) -->
@@ -461,7 +461,7 @@ body.ar-active #ar-activity-panel{display:block;}
   <div class="dr"><span class="dl">Elapsed</span><span class="dv" id="val-time" style="color:var(--blue);">0.0s</span></div>
 
   <div class="hdiv"></div>
-  <h2>Source Selection</h2>
+  <h2 id="src-info-trigger" style="cursor:pointer;text-decoration:underline dotted;color:var(--blue);" title="Tap to learn about radiation types">Source Selection</h2>
   <div class="btn-group" id="source-btns">
     <button class="sbtn" data-src="alpha" onclick="selectSource(&#39;alpha&#39;)">⚛ α Alpha</button>
     <button class="sbtn" data-src="beta" onclick="selectSource(&#39;beta&#39;)">β Beta</button>
@@ -1073,8 +1073,6 @@ setTimeout(()=>{
       if(EF.charged){
         updateEFPlateIntensity();
         clearEFHits();
-        // Kill all in-flight particles so none hit the screen with stale deflection
-        partSpheres.forEach(p=>{ p.active=false; p.mesh.visible=false; });
       }
     });
   }
@@ -2191,6 +2189,115 @@ function closeZoomModal(){
 }
 window.closeZoomModal = closeZoomModal;
 
+// ── EF Frontal Screen Zoom ──
+function openEFZoomModal(){
+  const modal = document.getElementById('zoom-modal');
+  modal.classList.add('show');
+  modal.style.display = 'flex';
+  setTimeout(drawEFZoomCanvas, 30);
+}
+window.openEFZoomModal = openEFZoomModal;
+
+function drawEFZoomCanvas(){
+  const canvas = document.getElementById('zoom-canvas');
+  if(!canvas) return;
+  const parent = canvas.parentElement;
+  canvas.width  = parent.clientWidth  - 40;
+  canvas.height = parent.clientHeight - 80;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#06080f'; ctx.fillRect(0,0,W,H);
+
+  // Reuse the same coordinate mapping as paintEFFrontalScreen but scaled to this canvas
+  const zRange = 4.0;
+  const yWorld0 = -1.1, yWorld1 = 3.3;
+  const pad = 50;
+  const zToX = z => W/2 + (z/zRange)*((W/2)-pad);
+  const yToY = y => (H-pad) - ((y-yWorld0)/(yWorld1-yWorld0))*(H-pad*2);
+
+  // Horizontal axis at beam height
+  const axisY = yToY(0.3);
+  ctx.strokeStyle='rgba(180,200,255,0.3)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pad/2,axisY); ctx.lineTo(W-pad/2,axisY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Ticks and labels every 1 unit
+  ctx.fillStyle='rgba(180,200,255,0.6)'; ctx.font='11px Space Mono'; ctx.textAlign='center';
+  for(let z=-4; z<=4; z++){
+    const tx = zToX(z);
+    ctx.strokeStyle='rgba(180,200,255,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(tx,axisY-5); ctx.lineTo(tx,axisY+5); ctx.stroke();
+    ctx.fillText(z, tx, axisY+18);
+  }
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='10px Space Mono';
+  ctx.fillText('z  (m)', W/2, axisY+32);
+
+  // Draw hits
+  const HIT_FADE = 1800;
+  const nowZ = Date.now();
+  const drawHitsZ = (hits, color) => {
+    if(!hits.length) return;
+    ctx.fillStyle = color;
+    hits.forEach(h=>{
+      const age = nowZ - (h.t||0);
+      const a = Math.max(0, 0.7*(1-age/HIT_FADE));
+      if(a<=0) return;
+      ctx.globalAlpha=a;
+      const sx = zToX(h.z);
+      const sy = yToY(h.y) + (Math.random()-0.5)*8;
+      ctx.beginPath(); ctx.arc(sx, sy, 5, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha=1;
+  };
+  drawHitsZ(efHits.alpha, '#ff5e72');
+  drawHitsZ(efHits.beta,  '#5bc8ff');
+  drawHitsZ(efHits.gamma, '#4dffa0');
+
+  // Phosphor glows
+  const glowCols = {
+    alpha:{r:'255,94,114', g:'255,80,90'},
+    beta: {r:'91,200,255',  g:'80,180,255'},
+    gamma:{r:'77,255,160',  g:'60,220,130'}
+  };
+  efPhosHits.forEach(h=>{
+    const age = nowZ - h.t;
+    if(age > EF_PHOS_DECAY) return;
+    const frac = age/EF_PHOS_DECAY;
+    const a = frac<0.12 ? frac/0.12 : 1-(frac-0.12)/0.88;
+    const alpha = Math.max(0,a);
+    const sx = zToX(h.z), sy = yToY(h.y);
+    const gc = glowCols[h.type]||glowCols.gamma;
+    const r = 14;
+    const gr = ctx.createRadialGradient(sx,sy,0,sx,sy,r);
+    gr.addColorStop(0,`rgba(255,255,255,${alpha*0.95})`);
+    gr.addColorStop(0.3,`rgba(${gc.r},${alpha*0.8})`);
+    gr.addColorStop(1,`rgba(${gc.g},0)`);
+    ctx.fillStyle=gr;
+    ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=`rgba(255,255,255,${alpha})`;
+    ctx.beginPath(); ctx.arc(sx,sy,2,0,Math.PI*2); ctx.fill();
+  });
+
+  // Legend
+  const types = [{t:'alpha',c:'#ff5e72',l:'α (Alpha)'},{t:'beta',c:'#5bc8ff',l:'β (Beta)'},{t:'gamma',c:'#4dffa0',l:'γ (Gamma)'}];
+  let lx=pad; const ly=H-10;
+  ctx.font='11px Space Mono'; ctx.textBaseline='bottom';
+  types.forEach(({t,c,l})=>{
+    if(!efHits[t].length) return;
+    ctx.fillStyle=c; ctx.fillRect(lx,ly-14,12,12);
+    ctx.fillStyle='rgba(180,200,255,0.7)'; ctx.textAlign='left';
+    ctx.fillText(l, lx+16, ly);
+    lx+=110;
+  });
+
+  // Title
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='10px Space Mono';
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('DEFLECTION SCREEN — FRONTAL VIEW', W/2, 8);
+}
+window.drawEFZoomCanvas = drawEFZoomCanvas;
+
 document.getElementById('zoom-modal').addEventListener('click', e=>{
   if(e.target === document.getElementById('zoom-modal')) closeZoomModal();
 });
@@ -3231,7 +3338,7 @@ const BG_SOURCES = [
   { label:'Medical (e.g. X-Rays)',    pct:13, natural:false },
   { label:'Food',                     pct:11, natural:true  },
   { label:'Cosmic Rays',              pct:10, natural:true  },
-  { label:'Other',                    pct:1,  natural:false },
+  { label:'Other',                    pct:1,  natural:true, pieOnly:true },
 ];
 // Colors: natural=green family, man-made=red/amber family
 const BG_COLORS = ['#5bc8ff','#ff8c42','#ff5e72','#ffd166','#b5a0ff','#4dffa0'];
@@ -3272,13 +3379,37 @@ function drawBgPie(){
     ctx.fillStyle = BG_COL_MAP[s.label];
     ctx.fill();
     ctx.strokeStyle='rgba(4,8,20,0.6)'; ctx.lineWidth=2; ctx.stroke();
-    // label inside slice if pct>=10
-    if(s.pct>=10){
-      const mid = angle+sweep/2;
-      const lx = cx + Math.cos(mid)*R*0.65;
-      const ly = cy + Math.sin(mid)*R*0.65;
-      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.font='bold 11px DM Sans'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(s.pct+'%', lx, ly);
+    // label inside/outside slice
+    const mid = angle + sweep/2;
+    const bigSlice = s.pct >= 13;
+    const lr = bigSlice ? R*0.60 : R*1.22;
+    const lx = cx + Math.cos(mid)*lr;
+    const ly = cy + Math.sin(mid)*lr;
+    if(bigSlice){
+      // inside large slices
+      ctx.fillStyle='rgba(0,0,0,0.85)'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font='bold 10px DM Sans';
+      // wrap label to two lines if needed
+      const words = s.label.split(' ');
+      if(words.length > 2){
+        ctx.fillText(words.slice(0,2).join(' '), lx, ly-8);
+        ctx.fillText(words.slice(2).join(' ')+' '+s.pct+'%', lx, ly+6);
+      } else {
+        ctx.fillText(s.label, lx, ly-7);
+        ctx.font='bold 11px DM Sans';
+        ctx.fillText(s.pct+'%', lx, ly+7);
+      }
+    } else {
+      // outside small slices — draw leader line + label
+      const lx0 = cx + Math.cos(mid)*R*1.02;
+      const ly0 = cy + Math.sin(mid)*R*1.02;
+      ctx.strokeStyle = BG_COL_MAP[s.label]; ctx.lineWidth=1; ctx.globalAlpha=0.7;
+      ctx.beginPath(); ctx.moveTo(lx0,ly0); ctx.lineTo(lx,ly); ctx.stroke();
+      ctx.globalAlpha=1;
+      ctx.fillStyle=BG_COL_MAP[s.label]; ctx.font='bold 9px DM Sans';
+      ctx.textAlign = Math.cos(mid)>0 ? 'left':'right';
+      ctx.textBaseline='middle';
+      ctx.fillText(s.label+' '+s.pct+'%', lx+(Math.cos(mid)>0?3:-3), ly);
     }
     angle += sweep;
   });
@@ -3309,7 +3440,7 @@ function openBgQuiz(){
   // Q1: checkboxes for man-made sources
   const list = document.getElementById('bg-quiz-list');
   list.innerHTML='';
-  BG_SOURCES.forEach((s,i)=>{
+  BG_SOURCES.filter(s=>!s.pieOnly).forEach((s,i)=>{
     const id='bgq_'+i;
     list.innerHTML+=`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:8px;background:rgba(180,200,255,0.04);border:1px solid rgba(180,200,255,0.08);" id="bgql_${i}">
       <input type="checkbox" id="${id}" style="width:16px;height:16px;accent-color:#ff5e72;cursor:pointer;">
@@ -3320,7 +3451,7 @@ function openBgQuiz(){
   // Q2: radio options
   const opts = document.getElementById('bg-q2-opts');
   opts.innerHTML='';
-  BG_SOURCES.forEach((s,i)=>{
+  BG_SOURCES.filter(s=>!s.pieOnly).forEach((s,i)=>{
     const id='bgq2_'+i;
     opts.innerHTML+=`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="bgq2l_${i}">
       <input type="radio" name="bgq2" id="${id}" value="${s.label}" style="accent-color:var(--blue);cursor:pointer;">
@@ -3342,7 +3473,7 @@ function validateBgQuiz(){
   const manMade = BG_SOURCES.filter(s=>!s.natural).map(s=>s.label);
   const natural = BG_SOURCES.filter(s=>s.natural).map(s=>s.label);
   let q1correct=0, q1wrong=0;
-  BG_SOURCES.forEach((s,i)=>{
+  BG_SOURCES.filter(s=>!s.pieOnly).forEach((s,i)=>{
     const cb = document.getElementById('bgq_'+i);
     const lbl = document.getElementById('bgql_'+i);
     const checked = cb && cb.checked;
@@ -3364,7 +3495,7 @@ function validateBgQuiz(){
   // Q2: biggest source
   const q2sel = document.querySelector('input[name="bgq2"]:checked');
   const correct2 = 'Radon Gas';
-  BG_SOURCES.forEach((s,i)=>{
+  BG_SOURCES.filter(s=>!s.pieOnly).forEach((s,i)=>{
     const lbl2=document.getElementById('bgq2l_'+i);
     if(!lbl2) return;
     if(s.label===correct2) lbl2.style.color='#4dffa0';
@@ -3387,5 +3518,427 @@ document.addEventListener('DOMContentLoaded',()=>{
   const t=document.getElementById('bg-info-trigger');
   if(t) t.addEventListener('click', openBgModal);
 });
+</script>
+
+<!-- ══════════ RADIATION TYPES MODAL ══════════ -->
+<div id="rad-modal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(4,8,20,0.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;">
+  <div style="width:85vw;max-width:620px;max-height:93vh;overflow-y:auto;background:rgba(10,16,36,0.97);border:1px solid rgba(91,200,255,0.22);border-radius:18px;padding:20px 18px 24px;box-shadow:0 8px 48px rgba(0,0,0,0.7);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--blue);letter-spacing:1px;">RADIATION TYPES</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="openDecayModal()" style="background:rgba(77,255,160,0.12);border:1px solid rgba(77,255,160,0.35);color:var(--green);border-radius:20px;padding:4px 14px;font-size:11px;cursor:pointer;font-family:'Space Mono',monospace;">⚛ DECAY EQUATIONS</button>
+        <button onclick="closeRadModal()" style="background:rgba(255,94,114,0.12);border:1px solid rgba(255,94,114,0.3);color:var(--red);border-radius:20px;padding:4px 14px;font-size:12px;cursor:pointer;">✕</button>
+      </div>
+    </div>
+
+    <!-- 3 column table header -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#ff5e72;padding:6px 0;border-bottom:2px solid #ff5e72;">α ALPHA</div>
+      <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#5bc8ff;padding:6px 0;border-bottom:2px solid #5bc8ff;">β BETA</div>
+      <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#4dffa0;padding:6px 0;border-bottom:2px solid #4dffa0;">γ GAMMA</div>
+    </div>
+
+    <!-- 3D models row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+      <canvas id="rad-canvas-alpha" width="160" height="160" style="width:100%;border-radius:10px;background:#060c1a;display:block;"></canvas>
+      <canvas id="rad-canvas-beta"  width="160" height="160" style="width:100%;border-radius:10px;background:#060c1a;display:block;"></canvas>
+      <canvas id="rad-canvas-gamma" width="160" height="160" style="width:100%;border-radius:10px;background:#060c1a;display:block;"></canvas>
+    </div>
+
+    <!-- Properties table -->
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px;">
+      <tr style="background:rgba(180,200,255,0.06);">
+        <td style="padding:7px 8px;color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;border-bottom:1px solid rgba(180,200,255,0.08);">PROPERTY</td>
+        <td style="padding:7px 8px;color:#ff5e72;text-align:center;border-bottom:1px solid rgba(180,200,255,0.08);">α</td>
+        <td style="padding:7px 8px;color:#5bc8ff;text-align:center;border-bottom:1px solid rgba(180,200,255,0.08);">β</td>
+        <td style="padding:7px 8px;color:#4dffa0;text-align:center;border-bottom:1px solid rgba(180,200,255,0.08);">γ</td>
+      </tr>
+      <tr><td style="padding:6px 8px;color:var(--muted);border-bottom:1px solid rgba(180,200,255,0.06);">Identity</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);">⁴He nucleus</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);">Electron (e⁻)</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);">EM photon</td></tr>
+      <tr style="background:rgba(180,200,255,0.03);"><td style="padding:6px 8px;color:var(--muted);border-bottom:1px solid rgba(180,200,255,0.06);">Charge</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);color:#ff5e72;">+2</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);color:#5bc8ff;">−1</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);color:#4dffa0;">0</td></tr>
+      <tr><td style="padding:6px 8px;color:var(--muted);border-bottom:1px solid rgba(180,200,255,0.06);">Mass (u)</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);">4.0015</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);">0.000549</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);">0</td></tr>
+      <tr style="background:rgba(180,200,255,0.03);"><td style="padding:6px 8px;color:var(--muted);border-bottom:1px solid rgba(180,200,255,0.06);">Penetration</td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);color:#ff5e72;">Very Low<br><span style="color:rgba(255,94,114,0.6);font-size:9px;">Stopped by paper</span></td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);color:#ffd166;">Low<br><span style="color:rgba(255,209,102,0.6);font-size:9px;">Stopped by 3mm Al</span></td>
+        <td style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(180,200,255,0.06);color:#4dffa0;">High<br><span style="color:rgba(77,255,160,0.6);font-size:9px;">Reduced by thick Pb</span></td></tr>
+      <tr><td style="padding:6px 8px;color:var(--muted);">Ionisation</td>
+        <td style="padding:6px 8px;text-align:center;color:#4dffa0;">Very Strong</td>
+        <td style="padding:6px 8px;text-align:center;color:#ffd166;">Moderate</td>
+        <td style="padding:6px 8px;text-align:center;color:#ff5e72;">Weak</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ DECAY EQUATIONS MODAL ══════════ -->
+<div id="decay-modal" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(4,8,20,0.92);backdrop-filter:blur(12px);align-items:center;justify-content:center;">
+  <div style="width:86vw;max-width:560px;background:rgba(10,16,36,0.98);border:1px solid rgba(91,200,255,0.22);border-radius:18px;padding:22px 20px 24px;box-shadow:0 8px 48px rgba(0,0,0,0.8);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--blue);letter-spacing:1px;">NUCLEAR DECAY EQUATIONS</span>
+      <button onclick="closeDecayModal()" style="background:rgba(255,94,114,0.12);border:1px solid rgba(255,94,114,0.3);color:var(--red);border-radius:20px;padding:4px 14px;font-size:12px;cursor:pointer;">✕ CLOSE</button>
+    </div>
+    <p style="font-size:10px;color:var(--muted);margin-bottom:16px;">Fill in the missing values, then tap VALIDATE. Equations appear in random order.</p>
+
+    <div id="deq-progress" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:12px;"></div>
+
+    <!-- Equation display area -->
+    <div id="deq-box" style="background:rgba(180,200,255,0.04);border:1px solid rgba(180,200,255,0.12);border-radius:12px;padding:18px 14px;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;">
+      <div id="deq-equation" style="font-size:22px;font-family:Georgia,serif;color:var(--text);line-height:2;text-align:center;"></div>
+    </div>
+
+    <div id="deq-feedback" style="font-size:11px;min-height:20px;margin-bottom:14px;text-align:center;"></div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button onclick="validateDecayEq()" style="background:rgba(91,200,255,0.14);border:1px solid rgba(91,200,255,0.4);color:var(--blue);border-radius:20px;padding:7px 22px;font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;">✓ VALIDATE</button>
+      <button id="deq-next-btn" onclick="nextDecayEq()" style="display:none;background:rgba(77,255,160,0.12);border:1px solid rgba(77,255,160,0.35);color:var(--green);border-radius:20px;padding:7px 22px;font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;">▶ NEXT</button>
+    </div>
+
+    <div id="deq-score-box" style="display:none;margin-top:16px;padding:14px;border-radius:10px;background:rgba(180,200,255,0.06);border:1px solid rgba(180,200,255,0.15);font-size:12px;text-align:center;"></div>
+  </div>
+</div>
+
+<script>
+// ══════════ RADIATION TYPES 3D MODELS ══════════
+(function(){
+  // Simple canvas 2D "3D" rendering with rotation animation
+  function drawAlpha(canvas){
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2;
+    let angle=0;
+    let dragging=false, lastX=0, velocity=0, rafId=null;
+    const protonCol='#ff5e72', neutronCol='#5bc8ff';
+    const r=22;
+    // Fixed positions in a rigid square arrangement — rotate as a block
+    const BASE=[{bx:-1,by:-1,bz:0},{bx:1,by:-1,bz:0},{bx:-1,by:1,bz:0},{bx:1,by:1,bz:0}];
+    const D=22; // half-spacing between nucleon centres
+    function getPos(i,a){
+      const b=BASE[i];
+      // rotate around Y axis by angle a
+      const rx = b.bx*D*Math.cos(a) - b.bz*D*Math.sin(a);
+      const rz = b.bx*D*Math.sin(a) + b.bz*D*Math.cos(a);
+      const ry = b.by*D;
+      return {x:cx+rx, y:cy+ry, z:rz};
+    }
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#060c1a'; ctx.fillRect(0,0,W,H);
+      const g=ctx.createRadialGradient(cx,cy,10,cx,cy,70);
+      g.addColorStop(0,'rgba(255,94,114,0.08)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      const nucleons=[{i:0,type:'p'},{i:1,type:'n'},{i:2,type:'n'},{i:3,type:'p'}]
+        .map(n=>({...n,...getPos(n.i,angle)})).sort((a,b)=>a.z-b.z);
+      nucleons.forEach(n=>{
+        const col=n.type==='p'?protonCol:neutronCol;
+        ctx.beginPath(); ctx.arc(n.x+3,n.y+3,r,0,Math.PI*2);
+        ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fill();
+        const sg=ctx.createRadialGradient(n.x-r*0.3,n.y-r*0.3,2,n.x,n.y,r);
+        sg.addColorStop(0,'#fff'); sg.addColorStop(0.3,col); sg.addColorStop(1,'rgba(0,0,0,0.6)');
+        ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2);
+        ctx.fillStyle=sg; ctx.fill();
+        ctx.fillStyle='#fff'; ctx.font=`bold ${r*0.55}px Arial`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(n.type==='p'?'+':'n', n.x, n.y);
+      });
+    }
+    function inertiaLoop(){
+      if(Math.abs(velocity)<0.0005){ rafId=null; return; }
+      angle+=velocity;
+      velocity*=0.92;
+      draw();
+      rafId=requestAnimationFrame(inertiaLoop);
+    }
+    function getClientX(e){ return e.touches?e.touches[0].clientX:e.clientX; }
+    canvas.addEventListener('mousedown', e=>{ dragging=true; lastX=getClientX(e); velocity=0; if(rafId){cancelAnimationFrame(rafId);rafId=null;} });
+    canvas.addEventListener('touchstart',e=>{ dragging=true; lastX=getClientX(e); velocity=0; if(rafId){cancelAnimationFrame(rafId);rafId=null;} },{passive:true});
+    window.addEventListener('mousemove', e=>{ if(!dragging) return; const dx=getClientX(e)-lastX; lastX=getClientX(e); velocity=dx*0.012; angle+=velocity; draw(); });
+    window.addEventListener('touchmove', e=>{ if(!dragging) return; const dx=getClientX(e)-lastX; lastX=getClientX(e); velocity=dx*0.012; angle+=velocity; draw(); },{passive:true});
+    window.addEventListener('mouseup', ()=>{ if(dragging){dragging=false; rafId=requestAnimationFrame(inertiaLoop);} });
+    window.addEventListener('touchend',()=>{ if(dragging){dragging=false; rafId=requestAnimationFrame(inertiaLoop);} });
+    draw(); // static initial render
+  }
+
+  function drawBeta(canvas){
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+    let angle=0;
+    const r=14;
+    function frame(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#060c1a'; ctx.fillRect(0,0,W,H);
+      const g=ctx.createRadialGradient(cx,cy,4,cx,cy,50);
+      g.addColorStop(0,'rgba(91,200,255,0.1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // electron sphere (no orbit ring)
+      // pulsing glow effect
+      const pulse = 0.5 + 0.5*Math.sin(angle*3);
+      const glow = ctx.createRadialGradient(cx,cy,r*0.5,cx,cy,r*2.5);
+      glow.addColorStop(0,`rgba(91,200,255,${0.15*pulse})`);
+      glow.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=glow; ctx.fillRect(0,0,W,H);
+      // sphere shadow
+      ctx.beginPath(); ctx.arc(cx+3,cy+3,r,0,Math.PI*2);
+      ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fill();
+      // sphere
+      const sg=ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,1,cx,cy,r);
+      sg.addColorStop(0,'#fff'); sg.addColorStop(0.3,'#5bc8ff'); sg.addColorStop(1,'rgba(0,0,50,0.8)');
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.fillStyle=sg; ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font=`bold ${r*0.75}px Arial`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('−',cx,cy);
+      angle+=0.04;
+      requestAnimationFrame(frame);
+    }
+    frame();
+  }
+
+  function drawGamma(canvas){
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+    let t=0;
+    function frame(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#060c1a'; ctx.fillRect(0,0,W,H);
+      // draw sine wave representing EM wave
+      const amp=28, waveLen=30, nCycles=3;
+      const totalW=waveLen*nCycles;
+      const startX=cx-totalW/2;
+      ctx.beginPath();
+      for(let x=0;x<=totalW;x+=1){
+        const y=cy+amp*Math.sin((x/waveLen)*Math.PI*2 - t);
+        if(x===0) ctx.moveTo(startX+x,y); else ctx.lineTo(startX+x,y);
+      }
+      const wg=ctx.createLinearGradient(startX,0,startX+totalW,0);
+      wg.addColorStop(0,'rgba(77,255,160,0)');
+      wg.addColorStop(0.5,'rgba(77,255,160,0.9)');
+      wg.addColorStop(1,'rgba(77,255,160,0)');
+      ctx.strokeStyle=wg; ctx.lineWidth=2.5; ctx.stroke();
+      // arrow indicating direction
+      ctx.fillStyle='rgba(77,255,160,0.5)';
+      ctx.beginPath(); ctx.moveTo(cx+totalW/2+4,cy);
+      ctx.lineTo(cx+totalW/2-8,cy-5); ctx.lineTo(cx+totalW/2-8,cy+5); ctx.fill();
+      // γ label
+      ctx.fillStyle='rgba(77,255,160,0.8)'; ctx.font='bold 28px Georgia';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('γ',cx,cy-45);
+      // λ label
+      ctx.fillStyle='rgba(77,255,160,0.4)'; ctx.font='11px Space Mono';
+      ctx.fillText('electromagnetic wave',cx,cy+48);
+      t+=0.07;
+      requestAnimationFrame(frame);
+    }
+    frame();
+  }
+
+  function initRadModels(){
+    const ca=document.getElementById('rad-canvas-alpha');
+    const cb=document.getElementById('rad-canvas-beta');
+    const cg=document.getElementById('rad-canvas-gamma');
+    if(ca) drawAlpha(ca);
+    if(cb) drawBeta(cb);
+    if(cg) drawGamma(cg);
+  }
+
+  function openRadModal(){
+    const m=document.getElementById('rad-modal');
+    m.style.display='flex';
+    setTimeout(initRadModels,30);
+  }
+  function closeRadModal(){
+    document.getElementById('rad-modal').style.display='none';
+  }
+  window.openRadModal=openRadModal;
+  window.closeRadModal=closeRadModal;
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const t=document.getElementById('src-info-trigger');
+    if(t) t.addEventListener('click',openRadModal);
+  });
+})();
+
+// ══════════ DECAY EQUATIONS ══════════
+(function(){
+  // Each equation: array of parts. Each part is either:
+  // {t:'text', v:'51'} — static display (superscript/subscript handled by type)
+  // {t:'sup', v:'51'} — superscript
+  // {t:'sub', v:'23'} — subscript
+  // {t:'input', key:'k', correct:'2'} — fillable box
+  // {t:'arrow'} — →
+  // {t:'plus'} — +
+  // {t:'sym', v:'V'} — element symbol
+
+  const EQS = [
+    { label:'α decay of U-238',
+      parts:[
+        {t:'nuclide',A:'?',Z:'92',sym:'U',inputA:'eqA_A',corrA:'238',inputZ:null,corrZ:null},
+        {t:'arrow'},
+        {t:'nuclide',A:'234',Z:'90',sym:'Th',inputA:null,corrA:null,inputZ:null,corrZ:null},
+        {t:'plus'},
+        {t:'nuclide',A:'4',Z:'2',sym:'He',inputA:null,corrA:null,inputZ:null,corrZ:null},
+      ],
+      blanks:[{key:'eqA_A',correct:'238'}]
+    },
+    // We'll define them inline below as HTML strings with inputs for simplicity
+  ];
+
+  // Define equations as structured data: {desc, html_template, answers:{id:value}}
+  // Uses inline HTML with <input> tags rendered inside the equation box
+  const EQUATIONS = [
+    { desc:'β⁻ decay: Vanadium-51',
+      // ⁵¹V → ²⁴Cr + β⁻  (missing: mass of V=51, Z of V=23)
+      eq: `<sup><inp id="d0" size="2"></sup><sub><inp id="d1" size="2"></sub>V &rarr; <sup>51</sup><sub>24</sub>Cr + &beta;<sup>&minus;</sup>`,
+      answers:{d0:'51',d1:'23'}
+    },
+    { desc:'β⁺ decay: Germanium-70',
+      eq: `<sup>70</sup><sub><inp id="d0" size="2"></sub>Ge &rarr; <sup>70</sup><sub>31</sub>Ga + e<sup>+</sup>`,
+      answers:{d0:'32'}
+    },
+    { desc:'β⁺ decay: Vanadium-49',
+      eq: `<sup>49</sup><sub>23</sub>V &rarr; <sup>49</sup><sub>22</sub>Ti + <sel id="d0">`,
+      answers:{d0:'BPLUS'}
+    },
+    { desc:'β decay: Carbon-14',
+      eq: `<sup>14</sup><sub>6</sub>C &rarr; <sup>14</sup><sub>7</sub>N + <sel id="d0">`,
+      answers:{d0:'BMINUS'}
+    },
+    { desc:'α decay: Uranium-238',
+      eq: `<sup><inp id="d0" size="2"></sup><sub>92</sub>U &rarr; <sup>234</sup><sub>90</sub>Th + <sup><inp id="d1" size="1"></sup><sub><inp id="d2" size="1"></sub>He`,
+      answers:{d0:'238',d1:'4',d2:'2'}
+    },
+    { desc:'γ emission: Tin-105',
+      eq: `<sup>105</sup><sub>50</sub>Sn &rarr; <sup>105</sup><sub>50</sub><inp id="d0" size="3"> + <sel id="d1">`,
+      answers:{d0:'Sn', d1:'GAMMA'}
+    },
+    { desc:'γ decay: Thorium-234',
+      eq: `<sup>234</sup><sub>90</sub>Th &rarr; <sup><inp id="d0" size="2"></sup><sub><inp id="d1" size="2"></sub>Th + &gamma;`,
+      answers:{d0:'234',d1:'90'}
+    },
+    { desc:'α decay: Polonium-210',
+      eq: `<sup>210</sup><sub>84</sub>Po &rarr; <sup><inp id="d0" size="2"></sup><sub><inp id="d1" size="2"></sub>Pb + &alpha;`,
+      answers:{d0:'206',d1:'82'}
+    },
+  ];
+
+  // Shared input style
+  const INP_STYLE=`style="width:36px;display:inline-block;background:rgba(91,200,255,0.08);border:1px solid rgba(91,200,255,0.4);border-radius:5px;color:#fff;font-size:15px;font-family:Georgia,serif;text-align:center;padding:1px 2px;outline:none;vertical-align:middle;"`;
+
+  let order=[], idx=0, scores=[], current=null;
+
+  function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+
+  function openDecayModal(){
+    document.getElementById('rad-modal').style.display='none';
+    const m=document.getElementById('decay-modal');
+    m.style.display='flex';
+    order=shuffle(EQUATIONS.map((_,i)=>i));
+    idx=0; scores=[];
+    showDecayEq();
+  }
+  function closeDecayModal(){
+    document.getElementById('decay-modal').style.display='none';
+  }
+  window.openDecayModal=openDecayModal;
+  window.closeDecayModal=closeDecayModal;
+
+  function showDecayEq(){
+    if(idx>=order.length){
+      showFinalScore(); return;
+    }
+    current=EQUATIONS[order[idx]];
+    document.getElementById('deq-progress').textContent=`Equation ${idx+1} of ${order.length}`;
+    document.getElementById('deq-feedback').textContent='';
+    document.getElementById('deq-next-btn').style.display='none';
+    document.getElementById('deq-score-box').style.display='none';
+
+    // Build HTML — replace <inp with actual <input, <sel with styled <select
+    let html=current.eq
+      .replace(/<sel id="([^"]+)">/g, `<select id="$1" style="display:inline-block;background:rgba(91,200,255,0.08);border:1px solid rgba(91,200,255,0.4);border-radius:5px;color:#fff;font-size:14px;font-family:Georgia,serif;padding:2px 4px;outline:none;vertical-align:middle;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;"><option value="">— type —</option><option value="ALPHA">α (Alpha)</option><option value="BMINUS">β⁻ (Beta minus)</option><option value="BPLUS">β⁺ (Beta plus)</option><option value="GAMMA">γ (Gamma)</option></select>`)
+      .replace(/<inp /g,`<input ${INP_STYLE} `);
+
+    // Wrap consecutive <sup>...</sup><sub>...</sub> pairs in a vertical flex stack
+    // so the boxes line up directly above each other
+    html = html.replace(
+      /(<sup>)([\s\S]*?)(<\/sup>)(<sub>)([\s\S]*?)(<\/sub>)/g,
+      (m, s1, sup, s2, s3, sub, s4) =>
+        `<span style="display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 1px;">` +
+        `<span style="font-size:0.62em;">${sup}</span>` +
+        `<span style="font-size:0.62em;">${sub}</span>` +
+        `</span>`
+    );
+    document.getElementById('deq-equation').innerHTML=html;
+  }
+  window.nextDecayEq=function(){
+    idx++;
+    showDecayEq();
+  };
+
+  function normalise(s){ 
+    // Flatten everything to simple tokens for comparison
+    return s.trim()
+      .replace(/β⁻/g,'BMINUS').replace(/β⁺/g,'BPLUS')
+      .replace(/beta[\s-]?minus/gi,'BMINUS').replace(/beta[\s-]?plus/gi,'BPLUS')
+      .replace(/beta[\s-]/gi,'BMINUS') // "beta-" alone
+      .replace(/β/g,'BMINUS') // bare β → β⁻ by convention
+      .replace(/α/g,'ALPHA').replace(/γ/g,'GAMMA')
+      .replace(/alpha/gi,'ALPHA').replace(/gamma/gi,'GAMMA')
+      .replace(/\s+/g,'').replace(/[()]/g,'').toLowerCase();
+  }
+
+  window.validateDecayEq=function(){
+    if(!current) return;
+    const ans=current.answers;
+    const alts=(ans._alts)||{};
+    let correct=0,total=0;
+    let details='';
+    for(const key in ans){
+      if(key==='_alts') continue;
+      total++;
+      const inp=document.getElementById(key);
+      if(!inp){ correct++; continue; }
+      const userVal=normalise(inp.value);
+      const rightVal=normalise(ans[key]);
+      const altVals=(alts[key]||[]).map(normalise);
+      const ok=userVal===rightVal||altVals.includes(userVal);
+      const isSelect = inp.tagName === 'SELECT';
+      inp.style.borderColor=ok?'#4dffa0':'#ff5e72';
+      inp.style.background=ok?'rgba(77,255,160,0.12)':'rgba(255,94,114,0.12)';
+      if(ok) correct++;
+      else if(!isSelect){ inp.value=''; inp.placeholder=''; }
+    }
+    const pct=total>0?Math.round(100*correct/total):100;
+    scores.push(pct);
+    const fb=document.getElementById('deq-feedback');
+    if(pct===100){
+      fb.style.color='#4dffa0';
+      fb.textContent='✓ Perfect! '+current.desc;
+    } else {
+      fb.style.color='#ffd166';
+      fb.textContent=`${correct}/${total} correct — incorrect answers shown. Try again or move on.`;
+    }
+    document.getElementById('deq-next-btn').style.display='inline-block';
+  };
+
+  function showFinalScore(){
+    const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):0;
+    const col=avg>=80?'#4dffa0':avg>=50?'#ffd166':'#ff5e72';
+    document.getElementById('deq-equation').innerHTML='';
+    document.getElementById('deq-feedback').textContent='';
+    document.getElementById('deq-next-btn').style.display='none';
+    document.getElementById('deq-progress').textContent='All equations completed!';
+    const sb=document.getElementById('deq-score-box');
+    sb.innerHTML=`<div style="font-family:'Space Mono',monospace;font-size:18px;color:${col};margin-bottom:8px;">FINAL SCORE: ${avg} / 100</div>
+    <div style="font-size:11px;color:var(--muted);">Average across ${scores.length} equations.<br>
+    ${avg===100?'Outstanding! All equations solved perfectly.':avg>=80?'Great work! Review the missed blanks.':'Keep practising — nuclear equations take time.'}</div>
+    <button onclick="openDecayModal()" style="margin-top:12px;background:rgba(91,200,255,0.14);border:1px solid rgba(91,200,255,0.4);color:var(--blue);border-radius:20px;padding:6px 20px;font-size:11px;cursor:pointer;font-family:'Space Mono',monospace;">↺ RETRY</button>`;
+    sb.style.display='block';
+  }
+})();
 </script>
 </body></html>
