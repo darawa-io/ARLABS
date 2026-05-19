@@ -456,7 +456,7 @@ body.ar-active #ar-activity-panel{display:block;}
     <div class="act-bar-track"><div class="act-bar-fill" id="cpm-bar" style="background: var(--green); width: 0%;"></div></div>
   </div>
   <div class="dr"><span class="dl">Gross CPM</span><span class="dv" id="val-gross" style="color:var(--muted);">—</span></div>
-  <div class="dr"><span class="dl">Background</span><span class="dv" id="val-bg" style="color:var(--muted);">—</span></div>
+  <div class="dr"><span class="dl" id="bg-info-trigger" style="cursor:pointer;text-decoration:underline dotted;color:var(--blue);" title="Tap to learn about background radiation">Background</span><span class="dv" id="val-bg" style="color:var(--muted);">—</span></div>
   <div class="dr"><span class="dl">Net CPM</span><span class="dv" id="val-net" style="color: var(--amber);">—</span></div>
   <div class="dr"><span class="dl">Elapsed</span><span class="dv" id="val-time" style="color:var(--blue);">0.0s</span></div>
 
@@ -1527,14 +1527,14 @@ function paintEFScreen(){
   ctx.fillText('0', zToX(0), axisY+14);
 
   // Draw accumulated hit blobs — fade out 2.5s after acquisition stops
-  const HIT_FADE = 2500;
+  const HIT_FADE = 1800;
   const nowHits = Date.now();
   const drawHits = (hits, color) => {
     if(!hits.length) return;
     ctx.fillStyle = color;
     hits.forEach(h => {
       const age = nowHits - (h.t || 0);
-      const a = S.running ? 0.5 : Math.max(0, 0.5 * (1 - age / HIT_FADE));
+      const a = Math.max(0, 0.5 * (1 - age / HIT_FADE));
       if(a <= 0) return;
       ctx.globalAlpha = a;
       const sx = zToX(h.z);
@@ -1652,14 +1652,14 @@ function paintEFFrontalScreen(){
   ctx.fillText('z', W/2, axisY+18);
 
   // Accumulated hits — same data, per-type colours, fade out after acquisition stops
-  const HIT_FADE_F = 2500;
+  const HIT_FADE_F = 1800;
   const nowHitsF = Date.now();
   const drawHits = (hits, color) => {
     if(!hits.length) return;
     ctx.fillStyle = color;
     hits.forEach(h => {
       const age = nowHitsF - (h.t || 0);
-      const a = S.running ? 0.5 : Math.max(0, 0.5 * (1 - age / HIT_FADE_F));
+      const a = Math.max(0, 0.5 * (1 - age / HIT_FADE_F));
       if(a <= 0) return;
       ctx.globalAlpha = a;
       const sx = zToX(h.z);
@@ -3176,4 +3176,216 @@ animate(0);
 </script>
 
 
+
+<!-- ══════════ BACKGROUND RADIATION MODAL ══════════ -->
+<div id="bg-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(4,8,20,0.88);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;">
+  <div style="width:82vw;max-width:560px;max-height:92vh;overflow-y:auto;background:rgba(10,16,36,0.97);border:1px solid rgba(91,200,255,0.22);border-radius:18px;padding:22px 20px 24px;box-shadow:0 8px 48px rgba(0,0,0,0.7);">
+
+    <!-- HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span style="font-family:'Space Mono',monospace;font-size:13px;color:var(--blue);letter-spacing:1px;">BACKGROUND RADIATION</span>
+      <button onclick="closeBgModal()" style="background:rgba(255,94,114,0.12);border:1px solid rgba(255,94,114,0.3);color:var(--red);border-radius:20px;padding:4px 14px;font-size:12px;cursor:pointer;">✕ CLOSE</button>
+    </div>
+
+    <!-- PIE CHART VIEW -->
+    <div id="bg-chart-view">
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Sources of background radiation. <span style="color:#ff5e72;">■</span> Man-made &nbsp;<span style="color:#4dffa0;">■</span> Natural</p>
+      <canvas id="bg-pie" width="320" height="320" style="display:block;margin:0 auto;max-width:100%;"></canvas>
+      <div id="bg-legend" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:11px;"></div>
+      <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;">
+        <button onclick="openBgQuiz()" style="background:rgba(77,255,160,0.12);border:1px solid rgba(77,255,160,0.35);color:var(--green);border-radius:20px;padding:6px 20px;font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;">⚡ TEST ME</button>
+      </div>
+    </div>
+
+    <!-- QUIZ VIEW -->
+    <div id="bg-quiz-view" style="display:none;">
+      <p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--blue);margin-bottom:10px;">IDENTIFY THE MAN-MADE SOURCES</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Select all sources that are <strong style="color:#ff5e72;">man-made</strong>:</p>
+      <div id="bg-quiz-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;"></div>
+
+      <!-- Q2 -->
+      <div style="border:1px solid rgba(180,200,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <p style="font-size:11px;color:var(--text);margin-bottom:10px;line-height:1.5;">Which type of radiation accounts for the <strong style="color:var(--blue);">most</strong> background radiation?</p>
+        <details id="bg-q2-details" style="font-size:11px;">
+          <summary style="cursor:pointer;color:var(--blue);font-family:'Space Mono',monospace;font-size:10px;margin-bottom:8px;">▶ SHOW OPTIONS</summary>
+          <div id="bg-q2-opts" style="display:flex;flex-direction:column;gap:7px;margin-top:10px;"></div>
+        </details>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button onclick="validateBgQuiz()" style="background:rgba(91,200,255,0.14);border:1px solid rgba(91,200,255,0.4);color:var(--blue);border-radius:20px;padding:6px 20px;font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;">✓ VALIDATE</button>
+        <button onclick="closeBgQuiz()" style="background:rgba(255,94,114,0.1);border:1px solid rgba(255,94,114,0.3);color:var(--red);border-radius:20px;padding:6px 16px;font-size:12px;cursor:pointer;">✕ EXIT QUIZ</button>
+      </div>
+
+      <div id="bg-score-box" style="display:none;margin-top:16px;padding:14px;border-radius:10px;background:rgba(180,200,255,0.06);border:1px solid rgba(180,200,255,0.15);font-size:12px;line-height:1.7;"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Background radiation data ──
+const BG_SOURCES = [
+  { label:'Radon Gas',                pct:50, natural:true  },
+  { label:'Rocks & Building Materials', pct:15, natural:true  },
+  { label:'Medical (e.g. X-Rays)',    pct:13, natural:false },
+  { label:'Food',                     pct:11, natural:true  },
+  { label:'Cosmic Rays',              pct:10, natural:true  },
+  { label:'Other',                    pct:1,  natural:false },
+];
+// Colors: natural=green family, man-made=red/amber family
+const BG_COLORS = ['#5bc8ff','#ff8c42','#ff5e72','#ffd166','#b5a0ff','#4dffa0'];
+// natural palette: blues/greens/purples; manmade: reds/ambers
+const BG_COL_MAP = {
+  'Radon Gas':               '#5bc8ff',
+  'Rocks & Building Materials':'#4dffa0',
+  'Medical (e.g. X-Rays)':  '#ff5e72',
+  'Food':                    '#ffd166',
+  'Cosmic Rays':             '#b5a0ff',
+  'Other':                   '#ff8c42',
+};
+
+function openBgModal(){
+  const m = document.getElementById('bg-modal');
+  m.style.display='flex';
+  document.getElementById('bg-chart-view').style.display='block';
+  document.getElementById('bg-quiz-view').style.display='none';
+  document.getElementById('bg-score-box').style.display='none';
+  setTimeout(drawBgPie, 30);
+}
+function closeBgModal(){
+  document.getElementById('bg-modal').style.display='none';
+}
+function drawBgPie(){
+  const canvas = document.getElementById('bg-pie');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const cx=W/2, cy=H/2, R=Math.min(W,H)*0.40;
+  ctx.clearRect(0,0,W,H);
+  let angle = -Math.PI/2;
+  BG_SOURCES.forEach((s,i)=>{
+    const sweep = (s.pct/100)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,angle,angle+sweep);
+    ctx.closePath();
+    ctx.fillStyle = BG_COL_MAP[s.label];
+    ctx.fill();
+    ctx.strokeStyle='rgba(4,8,20,0.6)'; ctx.lineWidth=2; ctx.stroke();
+    // label inside slice if pct>=10
+    if(s.pct>=10){
+      const mid = angle+sweep/2;
+      const lx = cx + Math.cos(mid)*R*0.65;
+      const ly = cy + Math.sin(mid)*R*0.65;
+      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.font='bold 11px DM Sans'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(s.pct+'%', lx, ly);
+    }
+    angle += sweep;
+  });
+  // Natural / man-made ring hint
+  ctx.beginPath(); ctx.arc(cx,cy,R+6,0,Math.PI*2);
+  ctx.strokeStyle='rgba(180,200,255,0.08)'; ctx.lineWidth=4; ctx.stroke();
+
+  // Legend
+  const leg = document.getElementById('bg-legend');
+  leg.innerHTML='';
+  BG_SOURCES.forEach(s=>{
+    const col = BG_COL_MAP[s.label];
+    const tag = s.natural
+      ? `<span style="color:#4dffa0;font-size:9px;">NATURAL</span>`
+      : `<span style="color:#ff5e72;font-size:9px;">MAN-MADE</span>`;
+    leg.innerHTML+=`<div style="display:flex;align-items:center;gap:6px;">
+      <span style="width:10px;height:10px;border-radius:3px;background:${col};flex-shrink:0;display:inline-block;"></span>
+      <span style="color:var(--text);">${s.label} <span style="color:var(--muted);">${s.pct}%</span> ${tag}</span>
+    </div>`;
+  });
+}
+
+function openBgQuiz(){
+  document.getElementById('bg-chart-view').style.display='none';
+  document.getElementById('bg-quiz-view').style.display='block';
+  document.getElementById('bg-score-box').style.display='none';
+
+  // Q1: checkboxes for man-made sources
+  const list = document.getElementById('bg-quiz-list');
+  list.innerHTML='';
+  BG_SOURCES.forEach((s,i)=>{
+    const id='bgq_'+i;
+    list.innerHTML+=`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:8px;background:rgba(180,200,255,0.04);border:1px solid rgba(180,200,255,0.08);" id="bgql_${i}">
+      <input type="checkbox" id="${id}" style="width:16px;height:16px;accent-color:#ff5e72;cursor:pointer;">
+      <span style="font-size:12px;color:var(--text);">${s.label}</span>
+    </label>`;
+  });
+
+  // Q2: radio options
+  const opts = document.getElementById('bg-q2-opts');
+  opts.innerHTML='';
+  BG_SOURCES.forEach((s,i)=>{
+    const id='bgq2_'+i;
+    opts.innerHTML+=`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="bgq2l_${i}">
+      <input type="radio" name="bgq2" id="${id}" value="${s.label}" style="accent-color:var(--blue);cursor:pointer;">
+      <span style="font-size:11px;color:var(--text);">${s.label}</span>
+    </label>`;
+  });
+}
+
+function closeBgQuiz(){
+  document.getElementById('bg-quiz-view').style.display='none';
+  document.getElementById('bg-chart-view').style.display='block';
+  setTimeout(drawBgPie,30);
+}
+
+function validateBgQuiz(){
+  let score=0, feedback='';
+
+  // Q1: man-made identification (each correct = 100/n points weighted)
+  const manMade = BG_SOURCES.filter(s=>!s.natural).map(s=>s.label);
+  const natural = BG_SOURCES.filter(s=>s.natural).map(s=>s.label);
+  let q1correct=0, q1wrong=0;
+  BG_SOURCES.forEach((s,i)=>{
+    const cb = document.getElementById('bgq_'+i);
+    const lbl = document.getElementById('bgql_'+i);
+    const checked = cb && cb.checked;
+    const shouldCheck = !s.natural;
+    if(checked && shouldCheck){ q1correct++; lbl.style.borderColor='rgba(77,255,160,0.5)'; lbl.style.background='rgba(77,255,160,0.08)'; }
+    else if(checked && !shouldCheck){ q1wrong++; lbl.style.borderColor='rgba(255,94,114,0.5)'; lbl.style.background='rgba(255,94,114,0.08)'; }
+    else if(!checked && shouldCheck){ lbl.style.borderColor='rgba(255,200,80,0.5)'; lbl.style.background='rgba(255,200,80,0.06)'; }
+    else { lbl.style.borderColor='rgba(180,200,255,0.08)'; }
+  });
+  // Q1 score: 50 pts max, lose 10 per wrong, gain per correct
+  const q1max = manMade.length;
+  const q1pts = Math.max(0, Math.round(50*(q1correct/q1max) - q1wrong*8));
+  score += q1pts;
+
+  const q1names = manMade.join(', ');
+  feedback+=`<div style="margin-bottom:8px;"><strong style="color:var(--blue);">Q1 — Man-made sources:</strong> ${q1correct}/${q1max} correct${q1wrong>0?' ('+q1wrong+' wrong selection'+(q1wrong>1?'s':'')+')':''}.<br>
+  <span style="color:var(--muted);font-size:10px;">Man-made: <span style="color:#ff5e72;">${q1names}</span></span></div>`;
+
+  // Q2: biggest source
+  const q2sel = document.querySelector('input[name="bgq2"]:checked');
+  const correct2 = 'Radon Gas';
+  BG_SOURCES.forEach((s,i)=>{
+    const lbl2=document.getElementById('bgq2l_'+i);
+    if(!lbl2) return;
+    if(s.label===correct2) lbl2.style.color='#4dffa0';
+    else lbl2.style.color='rgba(255,94,114,0.7)';
+  });
+  const q2pts = q2sel && q2sel.value===correct2 ? 50 : 0;
+  score += q2pts;
+  feedback+=`<div><strong style="color:var(--blue);">Q2 — Biggest source:</strong> ${q2sel ? (q2sel.value===correct2?'✓ Correct!':'✗ Incorrect.') : 'Not answered.'}<br>
+  <span style="color:var(--muted);font-size:10px;">Answer: <span style="color:#5bc8ff;">Radon Gas (50%)</span></span></div>`;
+
+  const scoreBox = document.getElementById('bg-score-box');
+  const col = score>=80?'#4dffa0':score>=50?'#ffd166':'#ff5e72';
+  scoreBox.innerHTML=`<div style="font-family:'Space Mono',monospace;font-size:16px;color:${col};margin-bottom:10px;">SCORE: ${score} / 100</div>${feedback}`;
+  scoreBox.style.display='block';
+  document.getElementById('bg-q2-details').open=true;
+}
+
+// Wire up trigger
+document.addEventListener('DOMContentLoaded',()=>{
+  const t=document.getElementById('bg-info-trigger');
+  if(t) t.addEventListener('click', openBgModal);
+});
+</script>
 </body></html>
