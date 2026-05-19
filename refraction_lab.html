@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Refraction Lab</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:'Syne',sans-serif;color:#e8f4ff;}
+#mainCanvas{position:fixed;inset:0;z-index:1;}
+#labelCanvas{position:fixed;top:0;left:0;pointer-events:none;z-index:3;}
+#title{position:fixed;top:16px;left:18px;z-index:10;}
+#title h1{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:#fff;letter-spacing:1.5px;}
+#title p{font-size:9px;color:rgba(140,200,255,.45);letter-spacing:2.5px;text-transform:uppercase;margin-top:3px;}
+#hud{position:fixed;top:16px;right:16px;background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:16px;padding:14px 16px;min-width:222px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(140,200,255,.5);text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid rgba(140,200,255,.14);padding-bottom:6px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding:3px 6px;border-radius:6px;background:rgba(140,200,255,.05);}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(170,205,255,.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#78b4ff;}
+.amber{color:#ffcc44!important;}.green{color:#7fffb2!important;}.red{color:#ff7799!important;}.tir{color:#ff5544!important;}
+.hdiv{height:1px;background:rgba(140,200,255,.12);margin:7px 0;}
+#formula-box{padding:7px 10px;border-radius:8px;background:rgba(80,160,255,.07);border:1px solid rgba(80,160,255,.22);font-size:10px;font-family:'Space Mono',monospace;color:rgba(160,220,255,.85);line-height:1.9;text-align:center;}
+.frow{display:flex;gap:6px;margin-top:5px;align-items:center;}
+.fwrap{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;}
+.fbar{height:100%;border-radius:3px;transition:width .3s;}
+#fT{background:linear-gradient(90deg,#3aefaa,#78b4ff);}
+#fR{background:linear-gradient(90deg,#ff7799,#ffaa44);}
+.flbl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,.5);min-width:32px;}
+#mpanel{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(18px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:10px 16px;z-index:10;display:flex;gap:14px;align-items:flex-start;}
+.mblk{display:flex;flex-direction:column;gap:5px;min-width:138px;}
+.mblk label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(140,200,255,.5);text-transform:uppercase;}
+select{background:rgba(8,14,30,.95);border:1px solid rgba(140,200,255,.28);color:#e8f4ff;border-radius:8px;padding:5px 8px;font-family:'Syne',sans-serif;font-size:11px;cursor:pointer;outline:none;width:100%;}
+select:focus{border-color:rgba(140,200,255,.55);}
+.ndsp{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#78b4ff;}
+.crow{display:none;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,.6);}
+.crow input[type=range]{width:80px;}
+#msdiv{width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;}
+#controls{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:50px;padding:7px 14px;z-index:10;display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 28px);}
+.btn{padding:5px 12px;border-radius:30px;border:1px solid rgba(140,200,255,.32);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;}
+.btn:hover{background:rgba(140,200,255,.22);border-color:rgba(140,200,255,.65);}
+.btn.on{background:rgba(140,200,255,.28);border-color:#78b4ff;color:#fff;}
+.sep{width:1px;height:16px;background:rgba(140,200,255,.18);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:5px;color:rgba(180,210,255,.75);font-size:10px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:3px;border-radius:2px;background:rgba(140,200,255,.22);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#78b4ff;cursor:pointer;}
+.asl::-webkit-slider-thumb{background:#ffcc44;}
+.asl{background:rgba(255,200,60,.2)!important;}
+input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
+#hint{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(140,200,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+#tirn{position:fixed;bottom:98px;left:50%;transform:translateX(-50%);background:rgba(255,80,30,.12);border:1px solid rgba(255,80,30,.55);border-radius:12px;padding:8px 20px;font-family:'Space Mono',monospace;font-size:11px;color:#ff7744;z-index:20;display:none;pointer-events:none;text-align:center;}
+#loupe{position:fixed;width:160px;height:160px;border-radius:50%;border:2.5px solid rgba(255,220,80,.85);background:#0c1526;overflow:hidden;pointer-events:none;z-index:60;display:none;box-shadow:0 0 32px rgba(255,220,80,.3),inset 0 0 20px rgba(0,0,0,.6);}
+#loupeCvs{width:100%;height:100%;display:block;}
+#loupeHint{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:rgba(255,220,80,.12);border:1px solid rgba(255,220,80,.4);border-radius:8px;padding:4px 12px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,220,80,.8);z-index:20;display:none;pointer-events:none;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+<div id="title"><h1>REFRACTION LAB</h1><p>Snell's Law · 3D Interactive</p></div>
+
+<div id="mpanel">
+  <div class="mblk">
+    <label>Incident Medium</label>
+    <select id="m1sel" onchange="onM1()">
+      <option value="vacuum">Air / Vacuum  n=1.00</option>
+      <option value="water">Water  n=1.33</option>
+      <option value="ice">Ice  n=1.31</option>
+      <option value="glass">Glass  n=1.50</option>
+      <option value="crystal">Crystal  n=1.70</option>
+      <option value="diamond">Diamond  n=2.42</option>
+      <option value="custom">Custom…</option>
+    </select>
+    <div class="ndsp" id="n1dsp">n₁ = 1.000</div>
+    <div class="crow" id="n1crow">n=<input type="range" id="n1sl" min="1" max="5" step="0.1" value="1.0" oninput="onN1C()"><span id="n1cv">1.0</span></div>
+  </div>
+  <div id="msdiv"></div>
+  <div class="mblk">
+    <label>Refracted Medium</label>
+    <select id="m2sel" onchange="onM2()">
+      <option value="vacuum">Air / Vacuum  n=1.00</option>
+      <option value="water">Water  n=1.33</option>
+      <option value="ice">Ice  n=1.31</option>
+      <option value="glass" selected>Glass  n=1.50</option>
+      <option value="crystal">Crystal  n=1.70</option>
+      <option value="diamond">Diamond  n=2.42</option>
+      <option value="custom">Custom…</option>
+    </select>
+    <div class="ndsp" id="n2dsp">n₂ = 1.500</div>
+    <div class="crow" id="n2crow">n=<input type="range" id="n2sl" min="1" max="5" step="0.1" value="1.5" oninput="onN2C()"><span id="n2cv">1.5</span></div>
+  </div>
+</div>
+
+<div id="hud">
+  <h2>Measurements</h2>
+  <div class="dr"><span class="dl">λ wavelength</span><span class="dv" id="vL">532 nm</span></div>
+  <div class="dr"><span class="dl">n₁ incident</span><span class="dv" id="vn1">1.000</span></div>
+  <div class="dr"><span class="dl">n₂ refracted</span><span class="dv" id="vn2">1.500</span></div>
+  <div class="hdiv"></div>
+  <div class="dr"><span class="dl">θ₁ incident</span><span class="dv amber" id="vt1">45.0°</span></div>
+  <div class="dr"><span class="dl">θ₂ refracted</span><span class="dv green" id="vt2">28.1°</span></div>
+  <div class="dr"><span class="dl">θᵣ reflected</span><span class="dv red" id="vtr">45.0°</span></div>
+  <div class="dr"><span class="dl">θc critical</span><span class="dv" id="vtc">—</span></div>
+  <div class="hdiv"></div>
+  <div class="frow"><span class="flbl">T</span><div class="fwrap"><div class="fbar" id="fT" style="width:96%"></div></div><span class="flbl" id="vT">0.96</span></div>
+  <div class="frow"><span class="flbl">R</span><div class="fwrap"><div class="fbar" id="fR" style="width:4%"></div></div><span class="flbl" id="vR">0.04</span></div>
+  <div class="hdiv"></div>
+  <div id="formula-box">n₁ · sin θ₁ = n₂ · sin θ₂</div>
+</div>
+
+<div id="controls">
+  <div class="sw">λ
+    <input type="range" id="lsl" min="380" max="750" value="532" step="1" style="width:66px;" oninput="onLam()">
+    <span id="lval" style="min-width:46px;">532 nm</span>
+  </div>
+  <div class="sep"></div>
+  <label class="sw"><input type="checkbox" id="wcb" onchange="onWL()"> white</label>
+  <div class="sep"></div>
+  <label class="sw"><input type="checkbox" id="rcb" checked onchange="onRfl()"> reflected</label>
+  <div class="sep"></div>
+  <div class="sw">θ₁
+    <input type="range" id="asl" min="1" max="89" value="45" step="0.5" style="width:66px;" class="asl" oninput="onAng()">
+    <span id="aval" style="min-width:32px;">45°</span>
+  </div>
+  <div class="sep"></div>
+  <button class="btn" onclick="setTopView()">⊙ Top</button>
+  <button class="btn" onclick="setFrontView()">◫ Front</button>
+  <button class="btn" onclick="resetView()">↺ Reset</button>
+  <div class="sep"></div>
+  <button class="btn" onclick="rotateLaser(-1)">⟵ Laser</button>
+  <button class="btn" onclick="rotateLaser(1)">Laser ⟶</button>
+</div>
+
+<div id="hint">Drag to orbit · Scroll to zoom · In Top view: long-press protractor to magnify</div>
+<div id="tirn">⚠ Total Internal Reflection — θ₁ ≥ θc</div>
+<div id="loupeHint">🔍 Zoom active — drag to move magnifier</div>
+<div id="loupe"><canvas id="loupeCvs" width="320" height="320"></canvas></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ── PHYSICS ────────────────────────────────────────────
+const MD={
+  vacuum:{n:1.000},
+  water: {n:1.333},
+  ice:   {n:1.310},
+  glass: {n:1.500},
+  crystal:{n:1.700},
+  diamond:{n:2.420},
+};
+const MN={vacuum:'Air/Vacuum',water:'Water',ice:'Ice',glass:'Glass',crystal:'Crystal',diamond:'Diamond',custom:'Custom'};
+
+const S={lambda:532,theta1:45,n1:1.0,n2:1.5,showR:true,white:false,m1:'vacuum',m2:'glass',nc1:1.0,nc2:1.5,laz:0};
+
+// ── INTRO ANIMATION ────────────────────────────────────
+let introAnim={active:true,t:0,duration:1.8,laserVisible:false};
+let prismOffset=0; // separation offset along Z for intro anim
+
+function wf(nm){
+  let r=0,g=0,b=0;
+  if(nm<440){r=(440-nm)/60;b=1;}
+  else if(nm<490){g=(nm-440)/50;b=1;}
+  else if(nm<510){g=1;b=(510-nm)/20;}
+  else if(nm<580){r=(nm-510)/70;g=1;}
+  else if(nm<645){r=1;g=(645-nm)/65;}
+  else r=1;
+  const f=nm<420?(0.3+0.7*(nm-380)/40):nm>700?(0.3+0.7*(750-nm)/50):1;
+  return[r*f,g*f,b*f];
+}
+function wh(nm){const[r,g,b]=wf(nm);return(Math.round(r*255)<<16)|(Math.round(g*255)<<8)|Math.round(b*255);}
+function wc(nm){const[r,g,b]=wf(nm);return`rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;}
+
+function snell2(n1,n2,t1){const s=n1/n2*Math.sin(t1*Math.PI/180);if(s>=1)return null;return Math.asin(s)*180/Math.PI;}
+function crit(n1,n2){return n1>n2?Math.asin(n2/n1)*180/Math.PI:null;}
+function fresnel(n1,n2,t1,t2){
+  if(t2===null)return{R:1,T:0};
+  const a=t1*Math.PI/180,b=t2*Math.PI/180;
+  const Rs=((n1*Math.cos(a)-n2*Math.cos(b))/(n1*Math.cos(a)+n2*Math.cos(b)))**2;
+  const Rp=((n1*Math.cos(b)-n2*Math.cos(a))/(n1*Math.cos(b)+n2*Math.cos(a)))**2;
+  const R=(Rs+Rp)/2;
+  return{R:Math.min(1,Math.max(0,R)),T:Math.max(0,1-Math.min(1,R))};
+}
+function getN(k,c){return k==='custom'?c:(MD[k]?.n??1);}
+
+// prism color based on n index — violet tones for low-n, deep indigo/blue for high-n
+function prismColor(n){
+  const t=Math.min((n-1)/1.5,1);
+  // n=1 → bright violet (high R, low G, full B), n≈2.5 → deep indigo-blue
+  const r=Math.round(160-t*100);
+  const g=Math.round(20+t*20);
+  const b=Math.round(255-t*30);
+  return new THREE.Color(r/255,g/255,b/255);
+}
+function prismEmissive(n){
+  const t=Math.min((n-1)/1.5,1);
+  const r=Math.round(30-t*20);
+  const g=Math.round(0);
+  const b=Math.round(50-t*20);
+  return new THREE.Color(r/255,g/255,b/255);
+}
+function prismOpacity(n){
+  // Minimum 0.45 so air/vacuum is still visible; max 0.88
+  return Math.min(0.45 + ((n-1)/1.5) * 0.43, 0.88);
+}
+
+function getN_dispersion(key,nc,wl){
+  const base=getN(key,nc);
+  const B={vacuum:0,water:0.004,ice:0.003,glass:0.008,crystal:0.012,diamond:0.022,custom:0.006};
+  const bv=B[key]??0.006;
+  return base+bv*((550-wl)/100);
+}
+
+// ── RENDERER ───────────────────────────────────────────
+const cvs=document.getElementById('mainCanvas');
+const rnd=new THREE.WebGLRenderer({canvas:cvs,antialias:true,preserveDrawingBuffer:true});
+rnd.setPixelRatio(Math.min(devicePixelRatio,2));
+rnd.shadowMap.enabled=true; rnd.shadowMap.type=THREE.PCFSoftShadowMap;
+rnd.setClearColor(0x141c2e,1);
+rnd.toneMapping=THREE.ACESFilmicToneMapping; rnd.toneMappingExposure=1.1;
+
+const sc=new THREE.Scene();
+sc.fog=new THREE.FogExp2(0x141c2e,0.008);
+
+const cam=new THREE.PerspectiveCamera(50,1,0.05,200);
+
+const lCvs=document.getElementById('labelCanvas');
+const lctx=lCvs.getContext('2d');
+
+function resize(){
+  const w=innerWidth,h=innerHeight;
+  rnd.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix();
+  lCvs.width=w; lCvs.height=h;
+}
+window.addEventListener('resize',resize);
+
+// LIGHTS
+sc.add(new THREE.AmbientLight(0xffffff,2.8));
+const kl=new THREE.DirectionalLight(0xfff8f0,3.5);
+kl.position.set(10,22,12); kl.castShadow=true;
+kl.shadow.mapSize.set(2048,2048);
+kl.shadow.camera.near=0.1; kl.shadow.camera.far=70;
+kl.shadow.camera.left=-22; kl.shadow.camera.right=22;
+kl.shadow.camera.top=22; kl.shadow.camera.bottom=-22;
+sc.add(kl);
+const fl=new THREE.DirectionalLight(0xd0e8ff,2.0); fl.position.set(-12,8,-6); sc.add(fl);
+const bl=new THREE.DirectionalLight(0xffe8d0,1.2); bl.position.set(0,-4,14); sc.add(bl);
+const pu=new THREE.PointLight(0x6090ff,1.0,40); pu.position.set(0,5,6); sc.add(pu);
+
+// ORBIT
+const orb={theta:0.65,phi:0.30,radius:19,cx:0,cy:0,cz:0};
+function isTopView(){return orb.phi>Math.PI/2-0.15;}
+function orbit(){
+  orb.phi=Math.max(-Math.PI/2.1,Math.min(Math.PI/2.1,orb.phi));
+  cam.position.set(
+    orb.cx+orb.radius*Math.cos(orb.phi)*Math.sin(orb.theta),
+    orb.cy+orb.radius*Math.sin(orb.phi),
+    orb.cz+orb.radius*Math.cos(orb.phi)*Math.cos(orb.theta)
+  );
+  cam.lookAt(orb.cx,orb.cy,orb.cz);
+}
+orbit();
+
+// ── TABLE & SCENE ──────────────────────────────────────
+const TY=-1.5, IY=0.0;
+const PRISM_H=1.5;
+const PRISM_R=5.2;
+
+const tMat=new THREE.MeshStandardMaterial({color:0x060c18,roughness:0.60,metalness:0.10});
+const tTop=new THREE.Mesh(new THREE.BoxGeometry(28,0.32,22),tMat);
+tTop.position.y=TY; tTop.receiveShadow=true; sc.add(tTop);
+
+const eMat=new THREE.MeshStandardMaterial({color:0x1a2a3a,roughness:0.30,metalness:0.5});
+[[0,TY+0.16,11],[0,TY+0.16,-11]].forEach(([x,y,z])=>{
+  const e=new THREE.Mesh(new THREE.BoxGeometry(28,0.06,0.06),eMat); e.position.set(x,y,z); sc.add(e);
+});
+[[-14,TY+0.16,0],[14,TY+0.16,0]].forEach(([x,y,z])=>{
+  const e=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.06,22),eMat); e.position.set(x,y,z); sc.add(e);
+});
+
+const lMat=new THREE.MeshStandardMaterial({color:0x0a1018,roughness:0.8,metalness:0.3});
+[[-11,-5,-9],[11,-5,-9],[-11,-5,9],[11,-5,9]].forEach(([x,y,z])=>{
+  const l=new THREE.Mesh(new THREE.BoxGeometry(0.5,5.5,0.5),lMat); l.position.set(x,y,z); l.castShadow=true; sc.add(l);
+  const f=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.2,1.2),lMat); f.position.set(x,y-2.85,z); sc.add(f);
+});
+
+const flMat=new THREE.MeshStandardMaterial({color:0x060a10,roughness:0.98});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),flMat);
+floor.rotation.x=-Math.PI/2; floor.position.y=-7.85; floor.receiveShadow=true; sc.add(floor);
+const gr=new THREE.GridHelper(100,100,0x0e1a28,0x080f18); gr.position.y=-7.8; sc.add(gr);
+
+
+// ── PROTRACTOR (darkened) ──────────────────────────────
+function makeProtTex(sz,full){
+  const c=document.createElement('canvas'); c.width=sz; c.height=sz;
+  const ctx=c.getContext('2d');
+  const cx=sz/2,cy=sz/2,R=sz/2-10;
+  ctx.clearRect(0,0,sz,sz);
+  const grad=ctx.createRadialGradient(cx,cy,R*0.3,cx,cy,R);
+  grad.addColorStop(0,'rgba(6,12,24,0.96)');
+  grad.addColorStop(1,'rgba(2,5,12,0.96)');
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.strokeStyle='rgba(100,150,200,0.45)'; ctx.lineWidth=3; ctx.stroke();
+  [0.25,0.5,0.75].forEach(f=>{
+    ctx.beginPath(); ctx.arc(cx,cy,R*f,0,Math.PI*2);
+    ctx.strokeStyle='rgba(80,145,225,0.1)'; ctx.lineWidth=1; ctx.stroke();
+  });
+
+  if(full){
+    // Full protractor: 0° aligned with the NORMAL direction (top, 12 o'clock).
+    // Tick labels: from 0 at top, go up to 90 at each side (both left & right),
+    // then back down to 0 at bottom — symmetric in all 4 quadrants.
+    // So the displayed angle at canvas angle α (measured from top, clockwise) is:
+    //   quadrant I   (0–90°)  → show α
+    //   quadrant II  (90–180°) → show 180-α  (mirror back to 90→0)
+    //   quadrant III (180–270°) → show α-180  (0 at bottom, going to 90)
+    //   quadrant IV  (270–360°) → show 360-α  (mirror back 90→0)
+    for(let deg=0;deg<360;deg++){
+      const is10=deg%10===0,is5=deg%5===0;
+      if(!is5)continue; // skip non-5s for performance
+      const tl=is10?R*0.13:R*0.08;
+      // canvas 0 = right (3 o'clock). We want 0° at top (12 o'clock) = -90° in canvas = 270°.
+      // So map: canvasAngle = (deg - 90) * π/180
+      const rad=(deg-90)*Math.PI/180;
+      const cos=Math.cos(rad),sin=Math.sin(rad);
+      ctx.beginPath();
+      ctx.moveTo(cx+(R-tl-1)*cos,cy+(R-tl-1)*sin);
+      ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
+      // Compute the symmetric display degree (0 at top/bottom, 90 at sides)
+      let disp=deg<=90?deg:deg<=180?180-deg:deg<=270?deg-180:360-deg;
+      const isZero=disp===0;
+      ctx.strokeStyle=is10?'rgba(150,200,255,0.65)':'rgba(120,160,220,0.4)';
+      ctx.lineWidth=is10?2:1.3; ctx.stroke();
+      if(is10){
+        const lR=R-tl-18;
+        ctx.save(); ctx.translate(cx+lR*cos,cy+lR*sin); ctx.rotate(rad+Math.PI/2);
+        ctx.font=`bold ${Math.round(sz*0.024)}px monospace`;
+        ctx.fillStyle=isZero?'rgba(255,220,80,0.95)':'rgba(160,210,255,0.75)';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(String(disp),0,0); ctx.restore();
+      }
+    }
+    // Also draw minor ticks (1°) without labels for density
+    for(let deg=0;deg<360;deg++){
+      if(deg%5===0)continue;
+      const rad=(deg-90)*Math.PI/180;
+      const cos=Math.cos(rad),sin=Math.sin(rad);
+      ctx.beginPath();
+      ctx.moveTo(cx+(R-R*0.04-1)*cos,cy+(R-R*0.04-1)*sin);
+      ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
+      ctx.strokeStyle='rgba(70,120,180,0.22)'; ctx.lineWidth=0.7; ctx.stroke();
+    }
+    // Normal line (vertical dashed)
+    ctx.save(); ctx.setLineDash([10,7]);
+    ctx.strokeStyle='rgba(180,150,60,0.55)'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy-R+8); ctx.lineTo(cx,cy+R-8); ctx.stroke();
+    ctx.restore();
+    // Interface line (horizontal)
+    ctx.strokeStyle='rgba(50,160,140,0.55)'; ctx.lineWidth=2.0;
+    ctx.beginPath(); ctx.moveTo(cx-R+8,cy); ctx.lineTo(cx+R-8,cy); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,5.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,160,60,0.9)'; ctx.fill();
+    ctx.font=`bold ${Math.round(sz*0.022)}px monospace`;
+    ctx.fillStyle='rgba(180,160,60,0.65)'; ctx.textAlign='center';
+    ctx.fillText('NORMAL',cx,cy-R*0.84);
+    ctx.fillStyle='rgba(70,220,200,0.45)';
+    ctx.fillText('INTERFACE',cx+R*0.64,cy+13);
+    ctx.fillStyle='rgba(150,200,255,0.35)'; ctx.font=`${Math.round(sz*0.019)}px monospace`;
+    ctx.fillText('θ₁',cx-R*0.3,cy-R*0.42);
+    ctx.fillText('θᵣ',cx+R*0.3,cy-R*0.42);
+    ctx.fillText('θ₂',cx+R*0.3,cy+R*0.42);
+  } else {
+    // Semi-circular prism protractor (bottom half only, since refracted ray goes downward).
+    // 0° at center bottom (normal direction, pointing into the prism), ±90 at sides.
+    for(let deg=0;deg<=180;deg++){
+      const is10=deg%10===0,is5=deg%5===0;
+      if(!is5)continue;
+      const tl=is10?R*0.13:R*0.08;
+      // Map deg=0 to bottom (90° in canvas), deg=90 to right (0°), deg=180 to left (180°)
+      const canvasAngle=(deg+90)*Math.PI/180;
+      const cos=Math.cos(canvasAngle),sin=Math.sin(canvasAngle);
+      ctx.beginPath();
+      ctx.moveTo(cx+(R-tl-1)*cos,cy+(R-tl-1)*sin);
+      ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
+      const displayDeg=deg<=90?deg:180-deg;
+      ctx.strokeStyle=is10?'rgba(150,200,255,0.65)':'rgba(120,160,220,0.4)';
+      ctx.lineWidth=is10?2:1.3; ctx.stroke();
+      if(is10){
+        const lR=R-tl-18;
+        ctx.save(); ctx.translate(cx+lR*cos,cy+lR*sin); ctx.rotate(canvasAngle+Math.PI/2);
+        ctx.font=`bold ${Math.round(sz*0.030)}px monospace`;
+        ctx.fillStyle=displayDeg===0?'rgba(255,220,80,0.95)':'rgba(80,225,165,0.75)';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(String(displayDeg),0,0); ctx.restore();
+      }
+    }
+    // Minor ticks
+    for(let deg=0;deg<=180;deg++){
+      if(deg%5===0)continue;
+      const canvasAngle=(deg+90)*Math.PI/180;
+      const cos=Math.cos(canvasAngle),sin=Math.sin(canvasAngle);
+      ctx.beginPath();
+      ctx.moveTo(cx+(R-R*0.04-1)*cos,cy+(R-R*0.04-1)*sin);
+      ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
+      ctx.strokeStyle='rgba(70,120,180,0.22)'; ctx.lineWidth=0.7; ctx.stroke();
+    }
+    // Normal line (pointing down into prism)
+    ctx.save(); ctx.setLineDash([10,7]);
+    ctx.strokeStyle='rgba(180,150,60,0.55)'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx,cy+R-8); ctx.stroke();
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(cx,cy,5.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,160,60,0.9)'; ctx.fill();
+    ctx.font=`bold ${Math.round(sz*0.035)}px monospace`;
+    ctx.fillStyle='rgba(80,225,165,0.6)'; ctx.textAlign='center';
+    ctx.fillText('θ₂',cx+R*0.38,cy+R*0.56);
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+const PR=5.8;
+const pm=new THREE.Mesh(
+  new THREE.CylinderGeometry(PR,PR,0.045,128),
+  new THREE.MeshStandardMaterial({map:makeProtTex(1024,true),roughness:0.2,transparent:true,opacity:0.75,side:THREE.DoubleSide})
+);
+const TABLE_TOP_Y = TY + 0.16;
+pm.rotation.y=Math.PI/2; // rotate 90° so 0° aligns with Z-axis (normal direction)
+pm.position.set(0, TABLE_TOP_Y + 0.02, 0); sc.add(pm);
+
+
+// ── PRISMS ─────────────────────────────────────────────
+let prGrp1=null,prGrp2=null;
+
+function makeSemiCircleGeo(radius,height,segments=64){
+  const shape=new THREE.Shape();
+  shape.moveTo(-radius,0);
+  shape.lineTo(radius,0);
+  shape.absarc(0,0,radius,0,Math.PI,false);
+  shape.closePath();
+  const extSettings={depth:height,bevelEnabled:false};
+  const geo=new THREE.ExtrudeGeometry(shape,extSettings);
+  geo.rotateX(-Math.PI/2);
+  return geo;
+}
+
+function makeRectPrismGeo(width,depth,height){
+  return new THREE.BoxGeometry(width,height,depth);
+}
+
+function prismMat(n){
+  const col=prismColor(n);
+  const em=prismEmissive(n);
+  const op=prismOpacity(n);
+  return new THREE.MeshPhysicalMaterial({
+    color:col,
+    emissive:em,
+    emissiveIntensity:1.0,
+    roughness:0.12,
+    metalness:0.0,       // must be 0 when transmission>0 to avoid THREE.js warning
+    transmission:0.45,
+    thickness:2.0,
+    ior:n,
+    transparent:true,
+    opacity:op,
+    side:THREE.DoubleSide,
+    envMapIntensity:0.5,
+  });
+}
+
+function prismEdgeMat(n){
+  const col=prismColor(n);
+  // Brighter wireframe edges for low-n prisms
+  const intensity=Math.max(0.35, 0.18 + (n-1)*0.08);
+  return new THREE.MeshBasicMaterial({color:col,wireframe:true,transparent:true,opacity:intensity});
+}
+
+function disposeGroup(grp){
+  if(!grp)return;
+  grp.traverse(obj=>{
+    if(obj.geometry)obj.geometry.dispose();
+    if(obj.material){
+      if(Array.isArray(obj.material))obj.material.forEach(m=>m.dispose());
+      else obj.material.dispose();
+    }
+  });
+}
+
+function buildPrisms(){
+  if(prGrp1){sc.remove(prGrp1);disposeGroup(prGrp1);prGrp1=null;}
+  if(prGrp2){sc.remove(prGrp2);disposeGroup(prGrp2);prGrp2=null;}
+
+  const tableTopY=TY+0.16;
+  const prismBot=tableTopY;
+  const prismTop=IY;
+  const pH=prismTop-prismBot;
+  const pCenterY=(prismBot+prismTop)/2;
+
+  const n1=S.n1, n2=S.n2;
+
+  // Prism 1: semicircular (positive Z side + offset)
+  prGrp1=new THREE.Group();
+  const semiGeo=makeSemiCircleGeo(PRISM_R,pH);
+  semiGeo.translate(0,prismBot,0);
+  semiGeo.rotateY(Math.PI);
+  const mat1=prismMat(n1);
+  const m1=new THREE.Mesh(semiGeo,mat1);
+  m1.castShadow=true; m1.receiveShadow=true;
+  const e1=new THREE.Mesh(semiGeo.clone(),prismEdgeMat(n1));
+  prGrp1.add(m1,e1);
+  prGrp1.position.z=prismOffset;
+  sc.add(prGrp1);
+
+  // Prism 2: rectangular (negative Z side - offset)
+  prGrp2=new THREE.Group();
+  const rectW=PRISM_R*2, rectD=PRISM_R, rectH=pH;
+  const rectGeo=makeRectPrismGeo(rectW,rectD,rectH);
+  const mat2=prismMat(n2);
+  const m2=new THREE.Mesh(rectGeo,mat2);
+  m2.position.set(0,pCenterY,-rectD/2);
+  m2.castShadow=true; m2.receiveShadow=true;
+  const e2=new THREE.Mesh(rectGeo.clone(),prismEdgeMat(n2));
+  e2.position.copy(m2.position);
+  prGrp2.add(m2,e2);
+  prGrp2.position.z=-prismOffset;
+  sc.add(prGrp2);
+}
+
+// ── VISIBLE INTERFACE (parallel to contact surface) ────
+function addInterfacePlane(){
+  const tableTopY = TY + 0.16;
+  const prismTop = IY;
+  const height = prismTop - tableTopY;        // vertical height
+  const width = PRISM_R * 2;                  // horizontal span (diameter)
+  const depth = 0.02;                         // very thin, parallel to Z=0 plane
+  
+  // Semi-transparent slab lying exactly on the contact surface (Z=0)
+  const interfaceMat = new THREE.MeshPhongMaterial({
+    color: 0x88aaff,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.2,
+    emissive: 0x224466,
+    emissiveIntensity: 0.1
+  });
+  const interfaceSlab = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, depth),
+    interfaceMat
+  );
+  // Position: centered at X=0, Y at mid-height, Z=0 (since slab straddles Z= ±depth/2)
+  interfaceSlab.position.set(0, tableTopY + height/2, 0);
+  sc.add(interfaceSlab);
+  
+  // Add a white wireframe edge around the slab
+  const edgesGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(width, height, depth));
+  const edgesMat = new THREE.LineBasicMaterial({ color: 0xffffff });
+  const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
+  wireframe.position.copy(interfaceSlab.position);
+  sc.add(wireframe);
+}
+
+// ── LASER ──────────────────────────────────────────────
+const lazGrp=new THREE.Group(); sc.add(lazGrp);
+let bandMat=null,frontMat=null;
+const LR=8.5;
+
+function buildLaser(){
+  lazGrp.clear();
+  const bodyM=new THREE.MeshStandardMaterial({color:0x6e7e8e,roughness:0.22,metalness:0.75});
+  const body=new THREE.Mesh(new THREE.BoxGeometry(3.8,0.65,0.65),bodyM);
+  body.castShadow=true; lazGrp.add(body);
+  [-1.0,-0.3,0.3,1.0].forEach(x=>{
+    const r=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.67,0.67),
+      new THREE.MeshStandardMaterial({color:0x4e5e6e,roughness:0.28,metalness:0.82}));
+    r.position.x=x; lazGrp.add(r);
+  });
+  const c=S.white?0xffffff:wh(S.lambda);
+  bandMat=new THREE.MeshStandardMaterial({color:c,roughness:0.28,metalness:0.18,emissive:c,emissiveIntensity:0.8});
+  const band=new THREE.Mesh(new THREE.BoxGeometry(0.30,0.67,0.67),bandMat);
+  band.position.x=-0.7; lazGrp.add(band);
+  const lhM=new THREE.MeshStandardMaterial({color:0x2a3a4a,roughness:0.1,metalness:0.92});
+  const lh=new THREE.Mesh(new THREE.CylinderGeometry(0.20,0.24,0.40,32),lhM);
+  lh.rotation.z=Math.PI/2; lh.position.x=2.0; lazGrp.add(lh);
+  frontMat=new THREE.MeshStandardMaterial({color:c,roughness:0.0,emissive:c,emissiveIntensity:2.5,transparent:true,opacity:0.95});
+  const front=new THREE.Mesh(new THREE.CircleGeometry(0.14,32),frontMat);
+  front.rotation.y=Math.PI/2; front.position.x=2.22; lazGrp.add(front);
+  for(let i=0;i<3;i++){
+    const ledM=new THREE.MeshStandardMaterial({color:i===0?0x00ff44:0x003311,emissive:i===0?0x00ff44:0,emissiveIntensity:1.5});
+    const led=new THREE.Mesh(new THREE.CircleGeometry(0.04,12),ledM);
+    led.rotation.y=Math.PI/2; led.position.set(2.23,0.18-i*0.14,0.26); lazGrp.add(led);
+  }
+  const pM=new THREE.MeshStandardMaterial({color:0x3a4a5a,roughness:0.5,metalness:0.6});
+  const foot=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.18,1.0),pM);
+  foot.position.set(0,-0.415,0); lazGrp.add(foot);
+  const padM=new THREE.MeshStandardMaterial({color:0x1a2230,roughness:0.9});
+  [[-0.6,0.5],[0.6,0.5],[-0.6,-0.5],[0.6,-0.5]].forEach(([px,pz])=>{
+    const pad=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.05,0.22),padM);
+    pad.position.set(px,-0.505,pz); lazGrp.add(pad);
+  });
+}
+
+function updateLaserPose(){
+  const t1rad=S.theta1*Math.PI/180;
+  const lx=LR*Math.sin(t1rad);
+  const lz=LR*Math.cos(t1rad);
+  const tableTopY=TY+0.16;
+  const laserBaseY = tableTopY + 0.505;
+  lazGrp.position.set(lx, laserBaseY, lz);
+  const targetDir=new THREE.Vector3(-lx,0,-lz).normalize();
+  if(targetDir.length()>0.001){
+    lazGrp.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),targetDir);
+  }
+  const c=S.white?0xffffff:wh(S.lambda);
+  if(bandMat){bandMat.color.setHex(c);bandMat.emissive.setHex(c);}
+  if(frontMat){frontMat.color.setHex(c);frontMat.emissive.setHex(c);}
+}
+
+// ── BEAMS (ray starts at laser tip, visible from all angles) ──
+const bMeshes=[];
+function clearBeams(){
+  bMeshes.forEach(m=>{
+    sc.remove(m);
+    if(m.geometry)m.geometry.dispose();
+    if(m.material)m.material.dispose();
+  });
+  bMeshes.length=0;
+}
+
+function cyl(r,len,col,alpha){
+  const g=new THREE.CylinderGeometry(r,r,len,10,1);
+  const m=new THREE.MeshBasicMaterial({
+    color:col,
+    transparent:true,
+    opacity:alpha,
+    depthWrite:false,
+    depthTest:false,
+    side:THREE.DoubleSide
+  });
+  return new THREE.Mesh(g,m);
+}
+function pCyl(mesh,p1,p2){
+  const d=new THREE.Vector3().subVectors(p2,p1),len=d.length();
+  if(len<0.001)return;
+  // Dispose old geometry to avoid leak warning, then assign new one
+  if(mesh.geometry)mesh.geometry.dispose();
+  mesh.geometry=new THREE.CylinderGeometry(0.045,0.045,len,10,1);
+  mesh.position.copy(new THREE.Vector3().addVectors(p1,p2).multiplyScalar(0.5));
+  const axis=d.normalize();
+  // Avoid degenerate quaternion when axis is near (0,1,0)
+  const up=new THREE.Vector3(0,1,0);
+  if(Math.abs(axis.dot(up))>0.9999){
+    mesh.quaternion.set(0,0,0,1);
+    if(axis.y<0)mesh.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI);
+  } else {
+    mesh.quaternion.setFromUnitVectors(up,axis);
+  }
+}
+function addBeam(p1,p2,col,alpha,glow){
+  const r=glow?0.14:0.045, a=glow?Math.min(alpha*0.6,0.92):alpha;
+  const m=cyl(r,1,col,a); pCyl(m,p1,p2); sc.add(m); bMeshes.push(m); return m;
+}
+function refD(inc,N,n1,n2){
+  const ci=-inc.dot(N),rat=n1/n2,s2=rat*rat*(1-ci*ci);
+  if(s2>=1){const d=inc.dot(N);return new THREE.Vector3().copy(inc).addScaledVector(N,-2*d).normalize();}
+  return new THREE.Vector3().copy(inc).multiplyScalar(rat).addScaledVector(N,rat*ci-Math.sqrt(1-s2)).normalize();
+}
+function rflD(inc,N){const d=inc.dot(N);return new THREE.Vector3().copy(inc).addScaledVector(N,-2*d).normalize();}
+
+function buildBeams(){
+  clearBeams();
+  const t1rad=S.theta1*Math.PI/180;
+  const lx=LR*Math.sin(t1rad);
+  const lz=LR*Math.cos(t1rad);
+  const tableTopY=TY+0.16;
+  const beamY = tableTopY + 0.505;
+  const laserCenter = new THREE.Vector3(lx, beamY, lz);
+  
+  const lensOffset = 2.22;
+  const laserForward = new THREE.Vector3(1,0,0).applyQuaternion(lazGrp.quaternion);
+  const laserTip = laserCenter.clone().add(laserForward.multiplyScalar(lensOffset));
+  
+  const O = new THREE.Vector3(0, beamY, 0);
+  const Nup = new THREE.Vector3(0,0,1);
+  const incD = new THREE.Vector3().subVectors(O, laserTip).normalize();
+  const rfl = rflD(incD, Nup);
+  const t2 = snell2(S.n1, S.n2, S.theta1);
+  const isTIR = t2===null;
+  const fc = fresnel(S.n1, S.n2, S.theta1, t2);
+  const BL = 7.5;
+
+  if(!S.white){
+    const col=wh(S.lambda);
+    addBeam(laserTip, O, col, 0.92, false);
+    addBeam(laserTip, O, col, 1, true);
+    if(!isTIR){
+      const rD=refD(incD,Nup,S.n1,S.n2);
+      const Pr=new THREE.Vector3().copy(O).addScaledVector(rD,BL);
+      const ao=Math.max(0.15,fc.T*0.92);
+      addBeam(O,Pr,col,ao,false);
+      addBeam(O,Pr,col,1,true);
+    }
+    if(S.showR||isTIR){
+      const Pr=new THREE.Vector3().copy(O).addScaledVector(rfl,BL);
+      const ao=Math.max(0.08,(isTIR?1:fc.R)*0.88);
+      addBeam(O,Pr,col,ao,false);
+      addBeam(O,Pr,col,1,true);
+    }
+  } else {
+    // White light: incident, refracted and reflected all draw as white.
+    // Only the dispersed split (if dispersing) shows the rainbow spread.
+    addBeam(laserTip, O, 0xffffff, 0.85, false);
+    addBeam(laserTip, O, 0xffffff, 0.9, true);
+    if(!isTIR){
+      const rD=refD(incD,Nup,S.n1,S.n2);
+      const Pr=new THREE.Vector3().copy(O).addScaledVector(rD,BL);
+      addBeam(O,Pr,0xffffff,0.85,false);
+      addBeam(O,Pr,0xffffff,0.9,true);
+    }
+    if(S.showR||isTIR){
+      const Pr=new THREE.Vector3().copy(O).addScaledVector(rfl,BL);
+      addBeam(O,Pr,0xffffff,isTIR?0.9:0.55,false);
+      addBeam(O,Pr,0xffffff,isTIR?1.0:0.65,true);
+    }
+  }
+}
+
+// ── HUD ────────────────────────────────────────────────
+function updateHUD(){
+  const t2=snell2(S.n1,S.n2,S.theta1);
+  const tc=crit(S.n1,S.n2);
+  const fc=fresnel(S.n1,S.n2,S.theta1,t2);
+  document.getElementById('vL').textContent=S.white?'white':S.lambda+' nm';
+  document.getElementById('vL').style.color=S.white?'#fff':wc(S.lambda);
+  document.getElementById('vn1').textContent=S.n1.toFixed(3);
+  document.getElementById('vn2').textContent=S.n2.toFixed(3);
+  document.getElementById('vt1').textContent=S.theta1.toFixed(1)+'°';
+  document.getElementById('vtr').textContent=S.theta1.toFixed(1)+'°';
+  const t2el=document.getElementById('vt2');
+  t2el.textContent=t2!==null?t2.toFixed(1)+'°':'TIR';
+  t2el.className='dv '+(t2!==null?'green':'tir');
+  document.getElementById('vtc').textContent=tc?tc.toFixed(1)+'°':'—';
+  document.getElementById('vT').textContent=fc.T.toFixed(3);
+  document.getElementById('vR').textContent=fc.R.toFixed(3);
+  document.getElementById('fT').style.width=(fc.T*100)+'%';
+  document.getElementById('fR').style.width=(fc.R*100)+'%';
+  document.getElementById('n1dsp').textContent='n₁ = '+S.n1.toFixed(3);
+  document.getElementById('n2dsp').textContent='n₂ = '+S.n2.toFixed(3);
+  document.getElementById('tirn').style.display=t2===null?'block':'none';
+}
+
+// ── 2D LABEL CANVAS ────────────────────────────────────
+function toScr(v3){
+  const v=v3.clone().project(cam);
+  return{x:(v.x+1)/2*innerWidth,y:(-v.y+1)/2*innerHeight};
+}
+function drawArc(ox,oy,r,a1,a2,col,lbl){
+  lctx.beginPath(); lctx.arc(ox,oy,r,a1,a2);
+  lctx.strokeStyle=col; lctx.lineWidth=1.8; lctx.stroke();
+  const ma=(a1+a2)/2;
+  const lx=ox+(r+18)*Math.cos(ma), ly=oy+(r+18)*Math.sin(ma);
+  lctx.font='bold 11px Space Mono, monospace'; lctx.fillStyle=col; lctx.textAlign='center'; lctx.textBaseline='middle';
+  lctx.fillText(lbl,lx,ly);
+}
+
+let normalLineVisible=false;
+
+function drawLabels(){
+  const w=lCvs.width,h=lCvs.height;
+  lctx.clearRect(0,0,w,h);
+
+  // Draw normal dashed line in top view
+  if(normalLineVisible&&isTopView()&&!introAnim.active){
+    const beamY=TY+0.16+0.505;
+    const p1=toScr(new THREE.Vector3(0,beamY,-8));
+    const p2=toScr(new THREE.Vector3(0,beamY,8));
+    lctx.save();
+    lctx.setLineDash([10,6]);
+    lctx.strokeStyle='rgba(0,0,0,0.85)';
+    lctx.lineWidth=2.5;
+    lctx.beginPath();
+    lctx.moveTo(p1.x,p1.y);
+    lctx.lineTo(p2.x,p2.y);
+    lctx.stroke();
+    lctx.restore();
+  }
+
+  const tableTopY=TY+0.16;
+  const beamY = tableTopY + 0.505;
+  const t2 = snell2(S.n1, S.n2, S.theta1);
+
+  const m1s = toScr(new THREE.Vector3(0, beamY, PRISM_R*0.5));
+  const m2s = toScr(new THREE.Vector3(0, beamY, -PRISM_R*0.5));
+  lctx.font='bold 12px Syne, sans-serif'; lctx.textAlign='center';
+  lctx.fillStyle='rgba(200,230,255,0.60)';
+  lctx.fillText(`${MN[S.m1]??'Custom'} · n=${S.n1.toFixed(3)}`,m1s.x,m1s.y-14);
+  lctx.fillStyle='rgba(130,220,180,0.60)';
+  lctx.fillText(`${MN[S.m2]??'Custom'} · n=${S.n2.toFixed(3)}`,m2s.x,m2s.y+14);
+
+  if(loupeActive) doLoupe();
+}
+
+// ── LOUPE ──────────────────────────────────────────────
+const loupeEl=document.getElementById('loupe');
+const loupeCvs=document.getElementById('loupeCvs');
+const lCtx=loupeCvs.getContext('2d');
+let loupeActive=false,loupePos={x:0,y:0};
+
+function doLoupe(){
+  const{x,y}=loupePos;
+  // Position the loupe bubble near the pointer, avoiding edges
+  const loupeSz=160;
+  let lx=x+30,ly=y-190;
+  if(lx+loupeSz>innerWidth-10)lx=x-loupeSz-30;
+  if(ly<10)ly=y+30;
+  if(ly+loupeSz>innerHeight-10)ly=innerHeight-loupeSz-10;
+  loupeEl.style.left=lx+'px'; loupeEl.style.top=ly+'px'; loupeEl.style.display='block';
+  document.getElementById('loupeHint').style.display='block';
+
+  const outSz=320;
+  lCtx.clearRect(0,0,outSz,outSz);
+
+  // Clip to circle
+  lCtx.save();
+  lCtx.beginPath();
+  lCtx.arc(outSz/2,outSz/2,outSz/2-2,0,Math.PI*2);
+  lCtx.clip();
+
+  // WebGL canvas may be scaled by devicePixelRatio — account for it
+  const dpr=Math.min(devicePixelRatio,2);
+  const srcSz=55; // source region radius in CSS pixels → zoom factor ≈ outSz/(srcSz*2)
+  const sx=(x-srcSz)*dpr, sy=(y-srcSz)*dpr;
+  const sw=srcSz*2*dpr, sh=srcSz*2*dpr;
+
+  try{
+    lCtx.drawImage(rnd.domElement, sx, sy, sw, sh, 0, 0, outSz, outSz);
+  }catch(err){}
+
+  lCtx.restore();
+
+  // Subtle crosshair at centre
+  lCtx.save();
+  lCtx.strokeStyle='rgba(255,220,80,0.55)'; lCtx.lineWidth=1;
+  lCtx.beginPath(); lCtx.moveTo(outSz/2,outSz/2-10); lCtx.lineTo(outSz/2,outSz/2+10); lCtx.stroke();
+  lCtx.beginPath(); lCtx.moveTo(outSz/2-10,outSz/2); lCtx.lineTo(outSz/2+10,outSz/2); lCtx.stroke();
+  // Rim
+  lCtx.strokeStyle='rgba(255,220,80,0.45)'; lCtx.lineWidth=2;
+  lCtx.beginPath(); lCtx.arc(outSz/2,outSz/2,outSz/2-3,0,Math.PI*2); lCtx.stroke();
+  lCtx.restore();
+}
+function hideLoupe(){
+  loupeEl.style.display='none';
+  document.getElementById('loupeHint').style.display='none';
+  loupeActive=false;
+}
+function hitProt(x,y){
+  const ndc=new THREE.Vector2((x/innerWidth)*2-1,-(y/innerHeight)*2+1);
+  const ray=new THREE.Raycaster(); ray.setFromCamera(ndc,cam);
+  return ray.intersectObjects([pm]).length>0;
+}
+
+// ── CONTROLS ───────────────────────────────────────────
+function onM1(){S.m1=document.getElementById('m1sel').value;document.getElementById('n1crow').style.display=S.m1==='custom'?'flex':'none';S.n1=getN(S.m1,S.nc1);buildPrisms();updateLaserPose();buildBeams();updateHUD();}
+function onM2(){S.m2=document.getElementById('m2sel').value;document.getElementById('n2crow').style.display=S.m2==='custom'?'flex':'none';S.n2=getN(S.m2,S.nc2);buildPrisms();updateLaserPose();buildBeams();updateHUD();}
+function onN1C(){S.nc1=parseFloat(document.getElementById('n1sl').value);document.getElementById('n1cv').textContent=S.nc1.toFixed(1);S.n1=S.nc1;buildPrisms();updateLaserPose();buildBeams();updateHUD();}
+function onN2C(){S.nc2=parseFloat(document.getElementById('n2sl').value);document.getElementById('n2cv').textContent=S.nc2.toFixed(1);S.n2=S.nc2;buildPrisms();updateLaserPose();buildBeams();updateHUD();}
+function onLam(){S.lambda=parseInt(document.getElementById('lsl').value);document.getElementById('lval').textContent=S.lambda+' nm';buildLaser();updateLaserPose();buildBeams();updateHUD();}
+function onWL(){
+  S.white=document.getElementById('wcb').checked;
+  document.getElementById('lsl').disabled=S.white;
+  buildLaser();updateLaserPose();buildBeams();updateHUD();
+}
+function onRfl(){S.showR=document.getElementById('rcb').checked;buildBeams();}
+function onAng(){
+  S.theta1=parseFloat(document.getElementById('asl').value);
+  document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
+  updateLaserPose();buildBeams();updateHUD();
+}
+function rotateLaser(d){
+  S.theta1=Math.max(1,Math.min(89,S.theta1+d*4));
+  document.getElementById('asl').value=S.theta1;
+  document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
+  updateLaserPose();buildBeams();updateHUD();
+}
+function fullUpdate(){updateLaserPose();buildBeams();updateHUD();}
+
+function setTopView(){orb.phi=Math.PI/2-0.04;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=true;}
+function setFrontView(){orb.phi=0.08;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=false;}
+function resetView(){orb.theta=0.65;orb.phi=0.30;orb.radius=19;orbit();normalLineVisible=false;}
+
+// ── ORBIT INPUT ────────────────────────────────────────
+let drag=null,pressT=null,laserDrag=false,laserDragStart=null;
+
+function screenAngleToTheta1(cx,cy,sx,sy){
+  // Project center of scene to screen, compute angle from center to pointer
+  const beamY=TY+0.16+0.505;
+  const Os=toScr(new THREE.Vector3(0,beamY,0));
+  const dx=sx-Os.x,dy=sy-Os.y;
+  // atan2 in screen space - we need to figure which quadrant maps to theta1
+  // The laser angle goes from Z+ side; use atan2 relative to screen projection of Z-axis
+  const Zs=toScr(new THREE.Vector3(0,beamY,8));
+  const refAngle=Math.atan2(Zs.y-Os.y,Zs.x-Os.x);
+  const ptrAngle=Math.atan2(dy,dx);
+  let diff=ptrAngle-refAngle;
+  while(diff<-Math.PI)diff+=2*Math.PI;
+  while(diff>Math.PI)diff-=2*Math.PI;
+  return Math.max(1,Math.min(89,Math.abs(diff)*180/Math.PI));
+}
+
+function isNearLaser(x,y){
+  const beamY=TY+0.16+0.505;
+  const t1rad=S.theta1*Math.PI/180;
+  const lx=LR*Math.sin(t1rad),lz=LR*Math.cos(t1rad);
+  const Ls=toScr(new THREE.Vector3(lx,beamY,lz));
+  const d=Math.hypot(x-Ls.x,y-Ls.y);
+  return d<48;
+}
+
+cvs.addEventListener('mousedown',e=>{
+  if(isNearLaser(e.clientX,e.clientY)){
+    laserDrag=true;
+    laserDragStart={x:e.clientX,y:e.clientY,theta:S.theta1};
+    return;
+  }
+  drag={x:e.clientX,y:e.clientY,th:orb.theta,ph:orb.phi};
+  normalLineVisible=false;
+  pressT=setTimeout(()=>{
+    if(isTopView()){
+      loupeActive=true;
+      loupePos={x:e.clientX,y:e.clientY};
+    }
+  },550);
+});
+cvs.addEventListener('mousemove',e=>{
+  if(laserDrag){
+    const newTheta=screenAngleToTheta1(0,0,e.clientX,e.clientY);
+    S.theta1=newTheta;
+    document.getElementById('asl').value=S.theta1;
+    document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
+    updateLaserPose();buildBeams();updateHUD();
+    return;
+  }
+  if(!drag)return;
+  orb.theta=drag.th-(e.clientX-drag.x)*0.007;
+  orb.phi=drag.ph+(e.clientY-drag.y)*0.007;
+  normalLineVisible=false;
+  orbit();
+  if(loupeActive){loupePos={x:e.clientX,y:e.clientY};}
+});
+cvs.addEventListener('mouseup',()=>{
+  laserDrag=false;
+  clearTimeout(pressT);drag=null;
+  if(!loupeActive)hideLoupe();else setTimeout(hideLoupe,1200);
+});
+cvs.addEventListener('mouseleave',()=>{laserDrag=false;clearTimeout(pressT);drag=null;hideLoupe();});
+cvs.addEventListener('wheel',e=>{orb.radius=Math.max(5,Math.min(40,orb.radius+e.deltaY*0.022));normalLineVisible=false;orbit();e.preventDefault();},{passive:false});
+
+let tS={},tD0=null,tR0=null,pressT2=null,touchLaserDrag=false;
+cvs.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length===1){
+    const t=e.touches[0];
+    if(isNearLaser(t.clientX,t.clientY)){
+      touchLaserDrag=true;
+      tS={x:t.clientX,y:t.clientY,th:orb.theta,ph:orb.phi};
+      return;
+    }
+    tS={x:t.clientX,y:t.clientY,th:orb.theta,ph:orb.phi};
+    normalLineVisible=false;
+    pressT2=setTimeout(()=>{
+      if(isTopView()){loupeActive=true;loupePos={x:t.clientX,y:t.clientY};}
+    },550);
+  } else if(e.touches.length===2){
+    clearTimeout(pressT2);
+    tD0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    tR0=orb.radius;
+  }
+},{passive:false});
+cvs.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1){
+    const t=e.touches[0];
+    if(touchLaserDrag){
+      const newTheta=screenAngleToTheta1(0,0,t.clientX,t.clientY);
+      S.theta1=newTheta;
+      document.getElementById('asl').value=S.theta1;
+      document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
+      updateLaserPose();buildBeams();updateHUD();
+      return;
+    }
+    orb.theta=tS.th-(t.clientX-tS.x)*0.007;
+    orb.phi=tS.ph+(t.clientY-tS.y)*0.007;
+    normalLineVisible=false;
+    orbit();
+    if(loupeActive)loupePos={x:t.clientX,y:t.clientY};
+  } else if(e.touches.length===2&&tD0){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    orb.radius=Math.max(5,Math.min(40,tR0*(tD0/d))); orbit();
+  }
+},{passive:false});
+cvs.addEventListener('touchend',e=>{
+  clearTimeout(pressT2);
+  touchLaserDrag=false;
+  if(e.touches.length===0)setTimeout(hideLoupe,1200);
+},{passive:false});
+
+// ── RENDER LOOP ────────────────────────────────────────
+let lastT=null;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt=lastT?Math.min((ts-lastT)/1000,0.05):0.016;
+  lastT=ts;
+
+  // Intro animation: prisms slide in, then laser appears
+  if(introAnim.active){
+    introAnim.t+=dt;
+    const p=Math.min(introAnim.t/introAnim.duration,1);
+    // Ease out cubic
+    const ease=1-Math.pow(1-p,3);
+    prismOffset=(1-ease)*6.5; // start 6.5 units apart, converge to 0
+    if(prGrp1)prGrp1.position.z=prismOffset;
+    if(prGrp2)prGrp2.position.z=-prismOffset;
+    // Hide laser during approach
+    lazGrp.visible=false;
+    bMeshes.forEach(m=>m.visible=false);
+    if(p>=1){
+      introAnim.active=false;
+      prismOffset=0;
+      if(prGrp1)prGrp1.position.z=0;
+      if(prGrp2)prGrp2.position.z=0;
+      lazGrp.visible=true;
+      bMeshes.forEach(m=>m.visible=true);
+    }
+  }
+
+  drawLabels();
+  rnd.render(sc,cam);
+}
+
+// ── INIT ───────────────────────────────────────────────
+resize();
+S.n1=getN(S.m1,S.nc1); S.n2=getN(S.m2,S.nc2);
+prismOffset=6.5; // start separated
+buildPrisms();
+addInterfacePlane();
+buildLaser();
+updateLaserPose();
+buildBeams();
+fullUpdate();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
