@@ -66,13 +66,13 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
       <option value="vacuum">Air / Vacuum  n=1.00</option>
       <option value="water">Water  n=1.33</option>
       <option value="ice">Ice  n=1.31</option>
-      <option value="glass">Glass  n=1.50</option>
+      <option value="glass" selected>Glass  n=1.50</option>
       <option value="crystal">Crystal  n=1.70</option>
       <option value="diamond">Diamond  n=2.42</option>
       <option value="custom">Custom…</option>
     </select>
-    <div class="ndsp" id="n1dsp">n₁ = 1.000</div>
-    <div class="crow" id="n1crow">n=<input type="range" id="n1sl" min="1" max="5" step="0.1" value="1.0" oninput="onN1C()"><span id="n1cv">1.0</span></div>
+    <div class="ndsp" id="n1dsp">n₁ = 1.500</div>
+    <div class="crow" id="n1crow">n=<input type="range" id="n1sl" min="1" max="4" step="0.05" value="1.0" oninput="onN1C()"><span id="n1cv">1.0</span></div>
   </div>
   <div id="msdiv"></div>
   <div class="mblk">
@@ -87,14 +87,32 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
       <option value="custom">Custom…</option>
     </select>
     <div class="ndsp" id="n2dsp">n₂ = 1.500</div>
-    <div class="crow" id="n2crow">n=<input type="range" id="n2sl" min="1" max="5" step="0.1" value="1.5" oninput="onN2C()"><span id="n2cv">1.5</span></div>
+    <div class="crow" id="n2crow">n=<input type="range" id="n2sl" min="1" max="4" step="0.05" value="1.5" oninput="onN2C()"><span id="n2cv">1.5</span></div>
+  </div>
+  <div id="msdiv4" style="width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;"></div>
+  <div class="mblk" style="min-width:110px;">
+    <label>Prism Tint</label>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <select id="prismTintSel" onchange="onPrismTint()" style="flex:1;">
+        <option value="none">— No Tint —</option>
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+        <option value="yellow">Yellow</option>
+        <option value="cyan">Cyan</option>
+        <option value="magenta">Magenta</option>
+        <option value="orange">Orange</option>
+        <option value="violet">Violet</option>
+      </select>
+      <div id="tintSwatch" style="width:14px;height:14px;border-radius:3px;border:1px solid rgba(140,200,255,.35);background:transparent;flex-shrink:0;"></div>
+    </div>
   </div>
 </div>
 
 <div id="hud">
   <h2>Measurements</h2>
   <div class="dr"><span class="dl">λ wavelength</span><span class="dv" id="vL">532 nm</span></div>
-  <div class="dr"><span class="dl">n₁ incident</span><span class="dv" id="vn1">1.000</span></div>
+  <div class="dr"><span class="dl">n₁ incident</span><span class="dv" id="vn1">1.500</span></div>
   <div class="dr"><span class="dl">n₂ refracted</span><span class="dv" id="vn2">1.500</span></div>
   <div class="hdiv"></div>
   <div class="dr"><span class="dl">θ₁ incident</span><span class="dv amber" id="vt1">45.0°</span></div>
@@ -127,8 +145,62 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
   <button class="btn" onclick="setFrontView()">◫ Front</button>
   <button class="btn" onclick="resetView()">↺ Reset</button>
   <div class="sep"></div>
+  <button class="btn" onclick="zoomIn()">🔍+</button>
+  <button class="btn" onclick="zoomOut()">🔍−</button>
+  <div class="sep"></div>
+  <button class="btn" onclick="rotateViewLeft()">⟵ Orbit</button>
+  <button class="btn" onclick="rotateViewRight()">Orbit ⟶</button>
+  <div class="sep"></div>
   <button class="btn" onclick="rotateLaser(-1)">⟵ Laser</button>
   <button class="btn" onclick="rotateLaser(1)">Laser ⟶</button>
+  <div class="sep"></div>
+  <button class="btn" id="specModeBtn" onclick="toggleSpecMode()">🌈 Spectrum</button>
+</div>
+
+<!-- SPECTRUM MODE PANEL -->
+<div id="specPanel" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(18px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:10px 16px;z-index:10;display:none;gap:14px;align-items:flex-start;">
+  <div class="mblk">
+    <label>Prism Material</label>
+    <select id="spMatSel" onchange="onSpecMat()">
+      <option value="water">Water  n=1.33</option>
+      <option value="ice">Ice  n=1.31</option>
+      <option value="glass" selected>Glass  n=1.50</option>
+      <option value="crystal">Crystal  n=1.70</option>
+      <option value="diamond">Diamond  n=2.42</option>
+      <option value="custom">Custom…</option>
+    </select>
+    <div class="ndsp" id="spNdsp">n = 1.500</div>
+    <div class="crow" id="spNcrow" style="display:none;">n=<input type="range" id="spNsl" min="1" max="4" step="0.05" value="1.5" oninput="onSpecNC()"><span id="spNcv">1.5</span></div>
+  </div>
+  <div id="msdiv2" style="width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;"></div>
+  <div class="mblk">
+    <label>Prism Shape</label>
+    <select id="spShapeSel" onchange="onSpecShape()">
+      <option value="triangle">Equilateral Triangle</option>
+      <option value="rect" selected>Rectangle</option>
+      <option value="pentagon">Pentagon</option>
+      <option value="hex">Hexagon</option>
+    </select>
+    <div class="ndsp" id="spFaceDsp" style="font-size:9px;color:rgba(140,200,255,0.5);margin-top:2px;">Face: front</div>
+  </div>
+  <div id="msdiv5" style="width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;"></div>
+  <div class="mblk" style="min-width:110px;">
+    <label>Prism Tint</label>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <select id="prismTintSelSpec" onchange="onPrismTint()" style="flex:1;">
+        <option value="none">— No Tint —</option>
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+        <option value="yellow">Yellow</option>
+        <option value="cyan">Cyan</option>
+        <option value="magenta">Magenta</option>
+        <option value="orange">Orange</option>
+        <option value="violet">Violet</option>
+      </select>
+      <div id="tintSwatchSpec" style="width:14px;height:14px;border-radius:3px;border:1px solid rgba(140,200,255,.35);background:transparent;flex-shrink:0;"></div>
+    </div>
+  </div>
 </div>
 
 <div id="hint">Drag to orbit · Scroll to zoom · In Top view: long-press protractor to magnify</div>
@@ -151,7 +223,7 @@ const MD={
 };
 const MN={vacuum:'Air/Vacuum',water:'Water',ice:'Ice',glass:'Glass',crystal:'Crystal',diamond:'Diamond',custom:'Custom'};
 
-const S={lambda:532,theta1:45,n1:1.0,n2:1.5,showR:true,white:false,m1:'vacuum',m2:'glass',nc1:1.0,nc2:1.5,laz:0};
+const S={lambda:532,theta1:45,n1:1.5,n2:1.5,showR:true,white:false,m1:'glass',m2:'glass',nc1:1.5,nc2:1.5,laz:0};
 
 // ── INTRO ANIMATION ────────────────────────────────────
 let introAnim={active:true,t:0,duration:1.8,laserVisible:false};
@@ -183,25 +255,82 @@ function fresnel(n1,n2,t1,t2){
 }
 function getN(k,c){return k==='custom'?c:(MD[k]?.n??1);}
 
-// prism color based on n index — violet tones for low-n, deep indigo/blue for high-n
+// ── PRISM TINT ─────────────────────────────────────────
+let PRISM_TINT='none';
+const TINT_COLORS={
+  none:null,
+  red:[1.0,0.3,0.3],
+  green:[0.3,1.0,0.3],
+  blue:[0.3,0.5,1.0],
+  yellow:[1.0,1.0,0.2],
+  cyan:[0.2,1.0,1.0],
+  magenta:[1.0,0.2,1.0],
+  orange:[1.0,0.6,0.1],
+  violet:[0.6,0.2,1.0],
+};
+const TINT_CSS={
+  none:'transparent',
+  red:'rgb(220,60,60)',
+  green:'rgb(60,200,60)',
+  blue:'rgb(60,100,230)',
+  yellow:'rgb(230,230,40)',
+  cyan:'rgb(40,210,210)',
+  magenta:'rgb(210,40,210)',
+  orange:'rgb(230,140,30)',
+  violet:'rgb(140,50,220)',
+};
+function updateTintSwatches(){
+  const css=TINT_CSS[PRISM_TINT]||'transparent';
+  const s1=document.getElementById('tintSwatch');
+  const s2=document.getElementById('tintSwatchSpec');
+  if(s1) s1.style.background=css;
+  if(s2) s2.style.background=css;
+}
+function onPrismTint(){
+  const active=document.activeElement;
+  if(active&&(active.id==='prismTintSel'||active.id==='prismTintSelSpec')){
+    PRISM_TINT=active.value;
+  } else {
+    PRISM_TINT=document.getElementById('prismTintSel').value;
+  }
+  document.getElementById('prismTintSel').value=PRISM_TINT;
+  const specSel=document.getElementById('prismTintSelSpec');
+  if(specSel) specSel.value=PRISM_TINT;
+  updateTintSwatches();
+  if(specMode){buildSpecPrism();buildSpecBeams();}
+  else{buildPrisms();buildBeams();}
+}
+
+// Glass-like prism appearance: n=1 → fully invisible, increases sharply toward n=4
 function prismColor(n){
-  const t=Math.min((n-1)/1.5,1);
-  // n=1 → bright violet (high R, low G, full B), n≈2.5 → deep indigo-blue
-  const r=Math.round(160-t*100);
-  const g=Math.round(20+t*20);
-  const b=Math.round(255-t*30);
-  return new THREE.Color(r/255,g/255,b/255);
+  const t=Math.min((n-1)/3,1);
+  // Neutral glass tint: near-white with slight blue
+  let r=(210+t*20)/255;
+  let g=(225+t*10)/255;
+  let b=1.0;
+  const tc=TINT_COLORS[PRISM_TINT];
+  if(tc){
+    const blend=0.75;
+    r=r*(1-blend)+tc[0]*blend;
+    g=g*(1-blend)+tc[1]*blend;
+    b=b*(1-blend)+tc[2]*blend;
+  }
+  return new THREE.Color(r,g,b);
 }
 function prismEmissive(n){
-  const t=Math.min((n-1)/1.5,1);
-  const r=Math.round(30-t*20);
-  const g=Math.round(0);
-  const b=Math.round(50-t*20);
-  return new THREE.Color(r/255,g/255,b/255);
+  const t=Math.min((n-1)/3,1);
+  const tc=TINT_COLORS[PRISM_TINT];
+  if(tc){
+    return new THREE.Color(tc[0]*t*0.18, tc[1]*t*0.18, tc[2]*t*0.18);
+  }
+  return new THREE.Color(t*0.04, t*0.06, t*0.12);
 }
 function prismOpacity(n){
-  // Minimum 0.45 so air/vacuum is still visible; max 0.88
-  return Math.min(0.45 + ((n-1)/1.5) * 0.43, 0.88);
+  if(n<=1.0) return 0;
+  // n=1 → 0 (fully transparent), n=4 → 1.0 (fully opaque)
+  // Minimum (just above n=1) increased by 25% from 0.75 → ~0.94
+  const t=Math.min((n-1)/3,1);
+  return Math.min(1, 0.9375+t*0.0625);
 }
 
 function getN_dispersion(key,nc,wl){
@@ -422,7 +551,7 @@ function makeProtTex(sz,full){
 const PR=5.8;
 const pm=new THREE.Mesh(
   new THREE.CylinderGeometry(PR,PR,0.045,128),
-  new THREE.MeshStandardMaterial({map:makeProtTex(1024,true),roughness:0.2,transparent:true,opacity:0.75,side:THREE.DoubleSide})
+  new THREE.MeshStandardMaterial({map:makeProtTex(1024,true),roughness:0.6,transparent:true,opacity:0.75,side:THREE.DoubleSide})
 );
 const TABLE_TOP_Y = TY + 0.16;
 pm.rotation.y=Math.PI/2; // rotate 90° so 0° aligns with Z-axis (normal direction)
@@ -452,27 +581,41 @@ function prismMat(n){
   const col=prismColor(n);
   const em=prismEmissive(n);
   const op=prismOpacity(n);
+  const t=Math.min((n-1)/3,1);
+  const hasTint=PRISM_TINT!=='none';
+  if(n<=1.0){
+    return new THREE.MeshPhysicalMaterial({
+      color:col,
+      transparent:true,
+      opacity:0,
+      side:THREE.DoubleSide,
+      depthWrite:false,
+    });
+  }
+  // When tinted, reduce transmission so color is actually visible
+  const baseTransmission=Math.max(0, 0.92-t*0.35);
+  const transmission=hasTint?Math.max(0,baseTransmission-0.5):baseTransmission;
   return new THREE.MeshPhysicalMaterial({
     color:col,
     emissive:em,
-    emissiveIntensity:1.0,
-    roughness:0.12,
-    metalness:0.0,       // must be 0 when transmission>0 to avoid THREE.js warning
-    transmission:0.45,
+    emissiveIntensity:hasTint?2.0:1.0,
+    roughness:0.52,
+    metalness:0.0,
+    transmission,
     thickness:2.0,
     ior:n,
     transparent:true,
     opacity:op,
     side:THREE.DoubleSide,
-    envMapIntensity:0.5,
+    envMapIntensity:0.4,
   });
 }
 
 function prismEdgeMat(n){
+  const t=Math.min((n-1)/3,1);
   const col=prismColor(n);
-  // Brighter wireframe edges for low-n prisms
-  const intensity=Math.max(0.35, 0.18 + (n-1)*0.08);
-  return new THREE.MeshBasicMaterial({color:col,wireframe:true,transparent:true,opacity:intensity});
+  const edgeOp=Math.pow(t,0.5)*0.55;
+  return new THREE.MeshBasicMaterial({color:col,wireframe:true,transparent:true,opacity:edgeOp});
 }
 
 function disposeGroup(grp){
@@ -505,7 +648,6 @@ function buildPrisms(){
   semiGeo.rotateY(Math.PI);
   const mat1=prismMat(n1);
   const m1=new THREE.Mesh(semiGeo,mat1);
-  m1.castShadow=true; m1.receiveShadow=true;
   const e1=new THREE.Mesh(semiGeo.clone(),prismEdgeMat(n1));
   prGrp1.add(m1,e1);
   prGrp1.position.z=prismOffset;
@@ -518,7 +660,6 @@ function buildPrisms(){
   const mat2=prismMat(n2);
   const m2=new THREE.Mesh(rectGeo,mat2);
   m2.position.set(0,pCenterY,-rectD/2);
-  m2.castShadow=true; m2.receiveShadow=true;
   const e2=new THREE.Mesh(rectGeo.clone(),prismEdgeMat(n2));
   e2.position.copy(m2.position);
   prGrp2.add(m2,e2);
@@ -526,38 +667,9 @@ function buildPrisms(){
   sc.add(prGrp2);
 }
 
-// ── VISIBLE INTERFACE (parallel to contact surface) ────
-function addInterfacePlane(){
-  const tableTopY = TY + 0.16;
-  const prismTop = IY;
-  const height = prismTop - tableTopY;        // vertical height
-  const width = PRISM_R * 2;                  // horizontal span (diameter)
-  const depth = 0.02;                         // very thin, parallel to Z=0 plane
-  
-  // Semi-transparent slab lying exactly on the contact surface (Z=0)
-  const interfaceMat = new THREE.MeshPhongMaterial({
-    color: 0x88aaff,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.2,
-    emissive: 0x224466,
-    emissiveIntensity: 0.1
-  });
-  const interfaceSlab = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height, depth),
-    interfaceMat
-  );
-  // Position: centered at X=0, Y at mid-height, Z=0 (since slab straddles Z= ±depth/2)
-  interfaceSlab.position.set(0, tableTopY + height/2, 0);
-  sc.add(interfaceSlab);
-  
-  // Add a white wireframe edge around the slab
-  const edgesGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(width, height, depth));
-  const edgesMat = new THREE.LineBasicMaterial({ color: 0xffffff });
-  const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
-  wireframe.position.copy(interfaceSlab.position);
-  sc.add(wireframe);
-}
+// ── VISIBLE INTERFACE (removed) ────
+let interfaceSlabMesh=null, interfaceWireframeMesh=null;
+function addInterfacePlane(){}
 
 // ── LASER ──────────────────────────────────────────────
 const lazGrp=new THREE.Group(); sc.add(lazGrp);
@@ -674,53 +786,90 @@ function buildBeams(){
   const tableTopY=TY+0.16;
   const beamY = tableTopY + 0.505;
   const laserCenter = new THREE.Vector3(lx, beamY, lz);
-  
+
   const lensOffset = 2.22;
   const laserForward = new THREE.Vector3(1,0,0).applyQuaternion(lazGrp.quaternion);
   const laserTip = laserCenter.clone().add(laserForward.multiplyScalar(lensOffset));
-  
-  const O = new THREE.Vector3(0, beamY, 0);
-  const Nup = new THREE.Vector3(0,0,1);
-  const incD = new THREE.Vector3().subVectors(O, laserTip).normalize();
-  const rfl = rflD(incD, Nup);
-  const t2 = snell2(S.n1, S.n2, S.theta1);
-  const isTIR = t2===null;
-  const fc = fresnel(S.n1, S.n2, S.theta1, t2);
-  const BL = 7.5;
 
-  if(!S.white){
-    const col=wh(S.lambda);
+  // Interface 1: contact surface at Z=0, normal points toward prism1 (Z+)
+  const O = new THREE.Vector3(0, beamY, 0);
+  const N1 = new THREE.Vector3(0,0,1);  // normal at contact surface (points into medium n1)
+  const incD = new THREE.Vector3().subVectors(O, laserTip).normalize();
+  const rfl1 = rflD(incD, N1);
+  const t2 = snell2(S.n1, S.n2, S.theta1);
+  const isTIR1 = t2===null;
+  const fc1 = fresnel(S.n1, S.n2, S.theta1, t2);
+  const BL = 8.5;
+
+  // Exit face of rectangular prism: flat wall at Z = -PRISM_R
+  const exitZ = -PRISM_R;
+
+  function drawSingleColor(col, white){
+    // ── Incident ray (medium n1, from laser tip to O) ──
     addBeam(laserTip, O, col, 0.92, false);
     addBeam(laserTip, O, col, 1, true);
-    if(!isTIR){
-      const rD=refD(incD,Nup,S.n1,S.n2);
-      const Pr=new THREE.Vector3().copy(O).addScaledVector(rD,BL);
-      const ao=Math.max(0.15,fc.T*0.92);
-      addBeam(O,Pr,col,ao,false);
-      addBeam(O,Pr,col,1,true);
+
+    // ── Reflected ray at interface 1 ──
+    if(S.showR || isTIR1){
+      const Pr=new THREE.Vector3().copy(O).addScaledVector(rfl1, BL);
+      const ao=Math.max(0.08,(isTIR1?1:fc1.R)*0.9);
+      addBeam(O, Pr, col, ao, false);
+      addBeam(O, Pr, col, ao, true);
     }
-    if(S.showR||isTIR){
-      const Pr=new THREE.Vector3().copy(O).addScaledVector(rfl,BL);
-      const ao=Math.max(0.08,(isTIR?1:fc.R)*0.88);
-      addBeam(O,Pr,col,ao,false);
-      addBeam(O,Pr,col,1,true);
+
+    if(!isTIR1){
+      const refD1=refD(incD, N1, S.n1, S.n2);
+
+      // ── Segment inside prism2 (O → exit point at Z=-PRISM_R) ──
+      // Ray travels in direction refD1; find where it hits Z=exitZ plane
+      const tExit = (exitZ - O.z) / refD1.z;
+      const exitPt = new THREE.Vector3(
+        O.x + refD1.x * tExit,
+        O.y + refD1.y * tExit,
+        exitZ
+      );
+
+      addBeam(O, exitPt, col, Math.max(0.15, fc1.T*0.92), false);
+      addBeam(O, exitPt, col, 1, true);
+
+      // ── Snell at exit face (n2 → n1) ──
+      // N_in must point toward the incoming ray (into prism2 side = +Z).
+      // refD() convention: ci = -inc.dot(N), N points toward incoming medium.
+      const N2in = new THREE.Vector3(0,0,1); // points into prism2 (toward incoming ray)
+
+      // cos of angle of incidence: ray is going in -Z direction, N2in is +Z, so dot = negative; use abs
+      const cosExit = Math.abs(refD1.dot(N2in));
+      const sinExit = Math.sqrt(Math.max(0, 1 - cosExit*cosExit));
+      const sinOut = sinExit * S.n2 / S.n1;
+      const isTIR2 = sinOut >= 1;
+      const fc2 = fresnel(S.n2, S.n1,
+        Math.asin(Math.min(sinExit,1))*180/Math.PI,
+        isTIR2 ? null : Math.asin(Math.min(sinOut,1))*180/Math.PI);
+
+      // ── Internal reflection at exit face ──
+      if(S.showR || isTIR2){
+        const rfl2 = rflD(refD1, N2in);
+        const Pr2 = new THREE.Vector3().copy(exitPt).addScaledVector(rfl2, BL);
+        const ao2 = Math.max(0.06, (isTIR2?1:fc2.R)*0.85);
+        addBeam(exitPt, Pr2, col, ao2, false);
+        addBeam(exitPt, Pr2, col, ao2, true);
+      }
+
+      // ── Refracted ray exiting prism2 (into n1 beyond exit face) ──
+      if(!isTIR2){
+        const refD2 = refD(refD1, N2in, S.n2, S.n1);
+        const Pout = new THREE.Vector3().copy(exitPt).addScaledVector(refD2, BL);
+        const ao3 = Math.max(0.12, fc1.T * fc2.T * 0.92);
+        addBeam(exitPt, Pout, col, ao3, false);
+        addBeam(exitPt, Pout, col, 1, true);
+      }
     }
+  }
+
+  if(!S.white){
+    drawSingleColor(wh(S.lambda), false);
   } else {
-    // White light: incident, refracted and reflected all draw as white.
-    // Only the dispersed split (if dispersing) shows the rainbow spread.
-    addBeam(laserTip, O, 0xffffff, 0.85, false);
-    addBeam(laserTip, O, 0xffffff, 0.9, true);
-    if(!isTIR){
-      const rD=refD(incD,Nup,S.n1,S.n2);
-      const Pr=new THREE.Vector3().copy(O).addScaledVector(rD,BL);
-      addBeam(O,Pr,0xffffff,0.85,false);
-      addBeam(O,Pr,0xffffff,0.9,true);
-    }
-    if(S.showR||isTIR){
-      const Pr=new THREE.Vector3().copy(O).addScaledVector(rfl,BL);
-      addBeam(O,Pr,0xffffff,isTIR?0.9:0.55,false);
-      addBeam(O,Pr,0xffffff,isTIR?1.0:0.65,true);
-    }
+    drawSingleColor(0xffffff, true);
   }
 }
 
@@ -807,27 +956,26 @@ let loupeActive=false,loupePos={x:0,y:0};
 
 function doLoupe(){
   const{x,y}=loupePos;
-  // Position the loupe bubble near the pointer, avoiding edges
-  const loupeSz=160;
-  let lx=x+30,ly=y-190;
-  if(lx+loupeSz>innerWidth-10)lx=x-loupeSz-30;
-  if(ly<10)ly=y+30;
-  if(ly+loupeSz>innerHeight-10)ly=innerHeight-loupeSz-10;
+  const loupeSz=160; // CSS size of the loupe element
+  // Center the loupe div on the pointer position
+  let lx=x-loupeSz/2;
+  let ly=y-loupeSz/2;
+  // Clamp to viewport
+  lx=Math.max(4,Math.min(innerWidth-loupeSz-4,lx));
+  ly=Math.max(4,Math.min(innerHeight-loupeSz-4,ly));
   loupeEl.style.left=lx+'px'; loupeEl.style.top=ly+'px'; loupeEl.style.display='block';
   document.getElementById('loupeHint').style.display='block';
 
   const outSz=320;
   lCtx.clearRect(0,0,outSz,outSz);
 
-  // Clip to circle
   lCtx.save();
   lCtx.beginPath();
   lCtx.arc(outSz/2,outSz/2,outSz/2-2,0,Math.PI*2);
   lCtx.clip();
 
-  // WebGL canvas may be scaled by devicePixelRatio — account for it
   const dpr=Math.min(devicePixelRatio,2);
-  const srcSz=55; // source region radius in CSS pixels → zoom factor ≈ outSz/(srcSz*2)
+  const srcSz=37;
   const sx=(x-srcSz)*dpr, sy=(y-srcSz)*dpr;
   const sw=srcSz*2*dpr, sh=srcSz*2*dpr;
 
@@ -837,12 +985,10 @@ function doLoupe(){
 
   lCtx.restore();
 
-  // Subtle crosshair at centre
   lCtx.save();
   lCtx.strokeStyle='rgba(255,220,80,0.55)'; lCtx.lineWidth=1;
   lCtx.beginPath(); lCtx.moveTo(outSz/2,outSz/2-10); lCtx.lineTo(outSz/2,outSz/2+10); lCtx.stroke();
   lCtx.beginPath(); lCtx.moveTo(outSz/2-10,outSz/2); lCtx.lineTo(outSz/2+10,outSz/2); lCtx.stroke();
-  // Rim
   lCtx.strokeStyle='rgba(255,220,80,0.45)'; lCtx.lineWidth=2;
   lCtx.beginPath(); lCtx.arc(outSz/2,outSz/2,outSz/2-3,0,Math.PI*2); lCtx.stroke();
   lCtx.restore();
@@ -863,47 +1009,62 @@ function onM1(){S.m1=document.getElementById('m1sel').value;document.getElementB
 function onM2(){S.m2=document.getElementById('m2sel').value;document.getElementById('n2crow').style.display=S.m2==='custom'?'flex':'none';S.n2=getN(S.m2,S.nc2);buildPrisms();updateLaserPose();buildBeams();updateHUD();}
 function onN1C(){S.nc1=parseFloat(document.getElementById('n1sl').value);document.getElementById('n1cv').textContent=S.nc1.toFixed(1);S.n1=S.nc1;buildPrisms();updateLaserPose();buildBeams();updateHUD();}
 function onN2C(){S.nc2=parseFloat(document.getElementById('n2sl').value);document.getElementById('n2cv').textContent=S.nc2.toFixed(1);S.n2=S.nc2;buildPrisms();updateLaserPose();buildBeams();updateHUD();}
-function onLam(){S.lambda=parseInt(document.getElementById('lsl').value);document.getElementById('lval').textContent=S.lambda+' nm';buildLaser();updateLaserPose();buildBeams();updateHUD();}
+function onLam(){S.lambda=parseInt(document.getElementById('lsl').value);document.getElementById('lval').textContent=S.lambda+' nm';if(specMode){buildSpecBeams();}else{buildLaser();updateLaserPose();buildBeams();updateHUD();}}
 function onWL(){
   S.white=document.getElementById('wcb').checked;
   document.getElementById('lsl').disabled=S.white;
-  buildLaser();updateLaserPose();buildBeams();updateHUD();
+  if(specMode){buildSpecBeams();}else{buildLaser();updateLaserPose();buildBeams();updateHUD();}
 }
 function onRfl(){S.showR=document.getElementById('rcb').checked;buildBeams();}
 function onAng(){
   S.theta1=parseFloat(document.getElementById('asl').value);
   document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
-  updateLaserPose();buildBeams();updateHUD();
+  if(specMode){updateSpecLaserPose();buildSpecBeams();}
+  else{updateLaserPose();buildBeams();updateHUD();}
 }
 function rotateLaser(d){
   S.theta1=Math.max(1,Math.min(89,S.theta1+d*4));
   document.getElementById('asl').value=S.theta1;
   document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
-  updateLaserPose();buildBeams();updateHUD();
+  if(specMode){updateSpecLaserPose();buildSpecBeams();}
+  else{updateLaserPose();buildBeams();updateHUD();}
 }
 function fullUpdate(){updateLaserPose();buildBeams();updateHUD();}
 
 function setTopView(){orb.phi=Math.PI/2-0.04;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=true;}
 function setFrontView(){orb.phi=0.08;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=false;}
 function resetView(){orb.theta=0.65;orb.phi=0.30;orb.radius=19;orbit();normalLineVisible=false;}
+function zoomIn(){orb.radius=Math.max(5,orb.radius-2);orbit();}
+function zoomOut(){orb.radius=Math.min(40,orb.radius+2);orbit();}
+function rotateViewLeft(){orb.theta-=0.2;orbit();normalLineVisible=false;}
+function rotateViewRight(){orb.theta+=0.2;orbit();normalLineVisible=false;}
 
 // ── ORBIT INPUT ────────────────────────────────────────
 let drag=null,pressT=null,laserDrag=false,laserDragStart=null;
 
-function screenAngleToTheta1(cx,cy,sx,sy){
-  // Project center of scene to screen, compute angle from center to pointer
+function screenAngleToTheta1(sx,sy){
+  // Cast a ray from screen (sx,sy) onto the horizontal plane at beamY
   const beamY=TY+0.16+0.505;
-  const Os=toScr(new THREE.Vector3(0,beamY,0));
-  const dx=sx-Os.x,dy=sy-Os.y;
-  // atan2 in screen space - we need to figure which quadrant maps to theta1
-  // The laser angle goes from Z+ side; use atan2 relative to screen projection of Z-axis
-  const Zs=toScr(new THREE.Vector3(0,beamY,8));
-  const refAngle=Math.atan2(Zs.y-Os.y,Zs.x-Os.x);
-  const ptrAngle=Math.atan2(dy,dx);
-  let diff=ptrAngle-refAngle;
-  while(diff<-Math.PI)diff+=2*Math.PI;
-  while(diff>Math.PI)diff-=2*Math.PI;
-  return Math.max(1,Math.min(89,Math.abs(diff)*180/Math.PI));
+  const ndc=new THREE.Vector2((sx/innerWidth)*2-1,-(sy/innerHeight)*2+1);
+  const raycaster=new THREE.Raycaster();
+  raycaster.setFromCamera(ndc,cam);
+  // Intersect with horizontal plane y=beamY
+  const plane=new THREE.Plane(new THREE.Vector3(0,1,0),-beamY);
+  const pt=new THREE.Vector3();
+  if(!raycaster.ray.intersectPlane(plane,pt)) return S.theta1;
+  // pt is the 3D point on the table plane under the cursor
+  // theta1 is the angle from the Z+ axis in the XZ plane
+  const angle=Math.atan2(pt.x,pt.z)*180/Math.PI;
+  return Math.max(1,Math.min(89,Math.abs(angle)));
+}
+
+function applyLaserDrag(sx,sy){
+  const newTheta=screenAngleToTheta1(sx,sy);
+  S.theta1=newTheta;
+  document.getElementById('asl').value=S.theta1;
+  document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
+  if(specMode){updateSpecLaserPose();buildSpecBeams();}
+  else{updateLaserPose();buildBeams();updateHUD();}
 }
 
 function isNearLaser(x,y){
@@ -932,11 +1093,11 @@ cvs.addEventListener('mousedown',e=>{
 });
 cvs.addEventListener('mousemove',e=>{
   if(laserDrag){
-    const newTheta=screenAngleToTheta1(0,0,e.clientX,e.clientY);
-    S.theta1=newTheta;
-    document.getElementById('asl').value=S.theta1;
-    document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
-    updateLaserPose();buildBeams();updateHUD();
+    applyLaserDrag(e.clientX,e.clientY);
+    return;
+  }
+  if(loupeActive){
+    loupePos={x:e.clientX,y:e.clientY};
     return;
   }
   if(!drag)return;
@@ -944,7 +1105,6 @@ cvs.addEventListener('mousemove',e=>{
   orb.phi=drag.ph+(e.clientY-drag.y)*0.007;
   normalLineVisible=false;
   orbit();
-  if(loupeActive){loupePos={x:e.clientX,y:e.clientY};}
 });
 cvs.addEventListener('mouseup',()=>{
   laserDrag=false;
@@ -980,11 +1140,7 @@ cvs.addEventListener('touchmove',e=>{
   if(e.touches.length===1){
     const t=e.touches[0];
     if(touchLaserDrag){
-      const newTheta=screenAngleToTheta1(0,0,t.clientX,t.clientY);
-      S.theta1=newTheta;
-      document.getElementById('asl').value=S.theta1;
-      document.getElementById('aval').textContent=S.theta1.toFixed(1)+'°';
-      updateLaserPose();buildBeams();updateHUD();
+      applyLaserDrag(t.clientX,t.clientY);
       return;
     }
     orb.theta=tS.th-(t.clientX-tS.x)*0.007;
@@ -1036,7 +1192,374 @@ function loop(ts){
   rnd.render(sc,cam);
 }
 
-// ── INIT ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// SPECTRUM MODE
+// ═══════════════════════════════════════════════════════
+let specMode=false;
+let specPrismGrp=null;
+const SP={n:1.5,mat:'glass',nc:1.5,shape:'rect',faceIdx:0,prismAngle:0,_prismOffsetZ:0};
+
+// Shape definitions: each shape is an array of 2D vertices [x, y] for THREE.Shape.
+// NOTE: ExtrudeGeometry in XY plane, after rotateX(-π/2), maps shape Y → world -Z.
+// So to have a face at world +Z (toward laser), we need that face at shape Y = most-NEGATIVE.
+// Shapes are defined so at prismAngle=0, a flat face has the most-negative Y (maps to world +Z).
+function specShapeVerts(shape){
+  switch(shape){
+    case 'triangle':{
+      // Equilateral triangle, flat face at most-negative Y (= world +Z).
+      // Vertices: top two at Y=-R/2 (horizontal front face), apex at Y=+R (behind).
+      // Polar: front vertices at 210° and 330° (both at Y=-R/2), apex at 90° (Y=+R).
+      // Using i*2π/3 + π/2+π = 3π/2 for apex... simpler: angles 90°,210°,330° gives apex at top (+Y).
+      // We want apex at +Y (behind in world), flat face at -Y (front in world).
+      // Angles: 90° (apex, Y=+R), 210° (Y=-R/2), 330° (Y=-R/2). Start at -π/2 (270°=bottom vertex) rotated:
+      // Use: i*2π/3 - π/2 → 270°(-90°), 30°, 150°. Apex would be at... let's just define directly:
+      const R=3.2;
+      // vertices at 270°, 30°, 150° → Y values: -R, R·sin30°=R/2, R·sin150°=R/2. Front face between v1,v2 at Y=R/2 (world -R/2, wrong)
+      // Correct: apex at top (+Y), front face at bottom (-Y):
+      // v0=90°: [0,R], v1=210°: [-R√3/2,-R/2], v2=330°: [R√3/2,-R/2]
+      // Front face v1→v2: both at Y=-R/2 (world Z=+R/2 before offset). ✓
+      return[[0,R],[-R*Math.sqrt(3)/2,-R/2],[R*Math.sqrt(3)/2,-R/2]];
+    }
+    case 'rect': return[[-2.8,2],[2.8,2],[2.8,-2],[-2.8,-2]];
+    case 'pentagon':{
+      // Pentagon: flat face at most-negative Y.
+      // One face horizontal at the bottom (most-negative Y).
+      // For regular pentagon, circumradius R, flat-bottom: vertices at 270°, 270°±72°, 270°±144°
+      // 270°=bottom-apex? No. For flat-bottom: two vertices share the lowest Y, straddling 270°.
+      // Vertices at 270°-36°=234° and 270°+36°=306° form the bottom face.
+      // All 5 vertices: 90°, 90°+72°=162°, 234°, 306°, 18° (= 90°-72°).
+      // i*72° + 90°: 90°,162°,234°,306°,18°. Bottom face: v2(234°)→v3(306°), midpoint at 270° (Y=-R). ✓
+      const R=3.0;
+      return[0,1,2,3,4].map(i=>{const a=i*2*Math.PI/5+Math.PI/2;return[R*Math.cos(a),R*Math.sin(a)];});
+    }
+    case 'hex':{
+      // Hexagon: flat face at most-negative Y (= world +Z front).
+      // Start at 0°: vertices at 0°,60°,120°,180°,240°,300°. Bottom face (min Y) at 210°+330° midpoint → no.
+      // At offset=0: vertices at 0°,60°,...  bottom two at 210° and 330° (Y=-R√3/2). Flat bottom. ✓
+      const R=2.8;
+      return[0,1,2,3,4,5].map(i=>{const a=i*2*Math.PI/6;return[R*Math.cos(a),R*Math.sin(a)];});
+    }
+  }
+}
+
+// Compute the world-Z offset needed so the frontmost face sits at world Z=0.
+// Shape Y maps to world -Z (due to rotateX(-π/2)).
+// "Frontmost" = most-negative shape Y (= most-positive world Z before offset).
+// We apply group.position.z = offset to shift the whole group so that face lands at Z=0.
+// World Z of that face = -(minShapeY rotated) + offset = 0 → offset = minShapeY_rotated.
+function computeSpecOffsetZ(shape, angle){
+  const verts=specShapeVerts(shape);
+  const N=verts.length;
+  const cos=Math.cos(angle), sin=Math.sin(angle);
+  // World Z of shape vertex [x,y] = x*sin(a) - y*cos(a) + group.position.z
+  // Front face = max world Z → group.position.z = -max(x*sin(a) - y*cos(a))
+  let maxVal=-Infinity;
+  for(const [x,y] of verts){
+    const v=x*sin-y*cos;
+    if(v>maxVal) maxVal=v;
+  }
+  for(let i=0;i<N;i++){
+    const A=verts[i], B=verts[(i+1)%N];
+    const mx=(A[0]+B[0])/2, my=(A[1]+B[1])/2;
+    const v=mx*sin-my*cos;
+    if(v>maxVal) maxVal=v;
+  }
+  return -maxVal;
+}
+
+function buildSpecPrism(){
+  if(specPrismGrp){sc.remove(specPrismGrp);disposeGroup(specPrismGrp);specPrismGrp=null;}
+  const verts2d=specShapeVerts(SP.shape);
+  const N=verts2d.length;
+  const pH=1.0; // height (Y)
+  const tableTopY=TY+0.16;
+  const prismBotY=tableTopY;
+
+  // Compute the offset so the front face (at current rotation) sits at Z=0
+  const prismOffsetZ=computeSpecOffsetZ(SP.shape, SP.prismAngle);
+
+  // Build extruded polygon using ShapeGeometry + extrude
+  const shape=new THREE.Shape();
+  shape.moveTo(verts2d[0][0],verts2d[0][1]);
+  for(let i=1;i<N;i++) shape.lineTo(verts2d[i][0],verts2d[i][1]);
+  shape.closePath();
+
+  const extSettings={depth:pH,bevelEnabled:false};
+  const geo=new THREE.ExtrudeGeometry(shape,extSettings);
+  // Extruded along Z by default; rotate so it extrudes along Y
+  geo.rotateX(-Math.PI/2);
+  geo.translate(0,prismBotY,0);
+
+  const mat=prismMat(SP.n);
+  const mesh=new THREE.Mesh(geo,mat);
+
+  // Edge lines
+  const edgesGeo=new THREE.EdgesGeometry(geo);
+  const edgeMat=new THREE.LineBasicMaterial({color:prismColor(SP.n),transparent:true,opacity:Math.max(0.3,prismOpacity(SP.n)*0.6)});
+  const edges=new THREE.LineSegments(edgesGeo,edgeMat);
+
+  specPrismGrp=new THREE.Group();
+  specPrismGrp.add(mesh,edges);
+  specPrismGrp.rotation.y=SP.prismAngle;
+  // Offset so the front face sits at Z=0 (the 90° protractor line)
+  specPrismGrp.position.z=prismOffsetZ;
+  sc.add(specPrismGrp);
+
+  // Store offset so beam calculations can use world-space verts
+  SP._prismOffsetZ=prismOffsetZ;
+}
+
+// World XZ of shape vertex [x,y]: worldX = x*cos(a) - y*sin(a), worldZ = x*sin(a) - y*cos(a) + oz
+function specShapeVertsRotated(){
+  const verts=specShapeVerts(SP.shape);
+  const cos=Math.cos(SP.prismAngle), sin=Math.sin(SP.prismAngle);
+  const oz=computeSpecOffsetZ(SP.shape, SP.prismAngle);
+  return verts.map(([x,y])=>{
+    const wx=x*cos - y*sin;
+    const wz=x*sin - y*cos + oz;
+    return[wx, wz];
+  });
+}
+
+const SPEC_WLS=[400,430,460,490,520,550,580,610,640,670,700];
+
+// Find intersection of ray (origin ox,oz, direction dx,dz in XZ) with segment A→B
+function raySegIntersect(ox,oz,rdx,rdz,ax,az,bx,bz){
+  const ex=bx-ax,ez=bz-az;
+  const denom=rdx*ez-rdz*ex;
+  if(Math.abs(denom)<1e-10)return null;
+  const t=((ax-ox)*ez-(az-oz)*ex)/denom;
+  const u=((ax-ox)*rdz-(az-oz)*rdx)/denom;
+  if(t<1e-5||u<-1e-5||u>1+1e-5)return null;
+  return{t,x:ox+rdx*t,z:oz+rdz*t};
+}
+
+// Find which polygon edge a ray (in XZ) exits through, given entry face to skip
+function findExitFace(verts2d,ox,oz,rdx,rdz,skipFaceIdx){
+  const N=verts2d.length;
+  let best=null,bestT=Infinity;
+  for(let i=0;i<N;i++){
+    if(i===skipFaceIdx)continue;
+    const A=verts2d[i],B=verts2d[(i+1)%N];
+    const hit=raySegIntersect(ox,oz,rdx,rdz,A[0],A[1],B[0],B[1]);
+    if(hit&&hit.t<bestT){bestT=hit.t;best={...hit,faceIdx:i,A,B};}
+  }
+  return best;
+}
+
+// Get the face (edge) that faces the laser (outward normal most aligned with +Z in world space)
+// and is actually intersected by the laser ray at X = laser_x
+function getSpecFace(laserX){
+  const verts2d=specShapeVertsRotated();
+  const N=verts2d.length;
+  let bestDot=-Infinity, bestIdx=0;
+  for(let i=0;i<N;i++){
+    const A=verts2d[i], B=verts2d[(i+1)%N];
+    const dx=B[0]-A[0], dz=B[1]-A[1];
+    const len=Math.hypot(dx,dz);
+    if(len<1e-8) continue;
+    // Two candidate normals: (-dz/len, dx/len) and (dz/len, -dx/len)
+    let nx=-dz/len, nz=dx/len;
+    // Pick the one that points outward (away from polygon center)
+    const mx=(A[0]+B[0])/2, mz=(A[1]+B[1])/2;
+    // Polygon centroid
+    let cx=0,cz=0; verts2d.forEach(([vx,vz])=>{cx+=vx;cz+=vz;}); cx/=N;cz/=N;
+    if((mx-cx)*nx+(mz-cz)*nz<0){nx=-nx;nz=-nz;}
+    const dot=nz; // alignment with +Z (laser direction)
+    if(dot>bestDot){bestDot=dot;bestIdx=i;}
+  }
+  const fi=bestIdx;
+  const A=verts2d[fi], B=verts2d[(fi+1)%N];
+  const mx=(A[0]+B[0])/2, mz=(A[1]+B[1])/2;
+  const dx=B[0]-A[0], dz=B[1]-A[1];
+  const len=Math.hypot(dx,dz);
+  let nx=-dz/len, nz=dx/len;
+  let cx=0,cz=0; verts2d.forEach(([vx,vz])=>{cx+=vx;cz+=vz;}); cx/=verts2d.length;cz/=verts2d.length;
+  if((mx-cx)*nx+(mz-cz)*nz<0){nx=-nx;nz=-nz;}
+  return{A,B,mx,mz,nx,nz,faceIdx:fi};
+}
+
+function faceOutwardNormal(A,B,verts2d){
+  const dx=B[0]-A[0],dz=B[1]-A[1];
+  const len=Math.hypot(dx,dz);
+  let nx=-dz/len,nz=dx/len;
+  const mx=(A[0]+B[0])/2,mz=(A[1]+B[1])/2;
+  const N=verts2d.length;
+  let cx=0,cz=0; verts2d.forEach(([vx,vz])=>{cx+=vx;cz+=vz;}); cx/=N;cz/=N;
+  if((mx-cx)*nx+(mz-cz)*nz<0){nx=-nx;nz=-nz;}
+  return{nx,nz};
+}
+
+function buildSpecBeams(){
+  clearBeams();
+  if(!specMode)return;
+  const verts2d=specShapeVertsRotated();
+  const tableTopY=TY+0.16;
+  const beamY=tableTopY+0.55;
+  const BL=10;
+
+  // Laser angle from S.theta1 (same as normal mode)
+  const t1rad=S.theta1*Math.PI/180;
+  const laserX=LR*Math.sin(t1rad);
+  const laserZ=LR*Math.cos(t1rad);
+  const laserCenter=new THREE.Vector3(laserX,beamY,laserZ);
+  // Compute actual laser tip (front lens) just like normal mode
+  const laserForwardSpec=new THREE.Vector3(1,0,0).applyQuaternion(lazGrp.quaternion);
+  const laserTip=laserCenter.clone().add(laserForwardSpec.multiplyScalar(2.22));
+  // Incident direction toward origin (Z=0 surface)
+  const incD=new THREE.Vector3(-Math.sin(t1rad),0,-Math.cos(t1rad));
+
+  // Find entry face
+  const entryFaceInfo=getSpecFace(laserX);
+  const A=entryFaceInfo.A, B=entryFaceInfo.B;
+
+  // Find intersection of laser ray with entry face
+  // Ray in XZ: origin=(laserX, laserZ), dir=(-sin(t1), -cos(t1))
+  const hit=raySegIntersect(laserX,laserZ,-Math.sin(t1rad),-Math.cos(t1rad),A[0],A[1],B[0],B[1]);
+  let entryX, entryZ;
+  if(hit){entryX=hit.x;entryZ=hit.z;}
+  else{entryX=entryFaceInfo.mx;entryZ=entryFaceInfo.mz;}
+  const entryPt=new THREE.Vector3(entryX,beamY,entryZ);
+
+  // Entry face outward normal (pointing toward laser = +Z side)
+  const N1_3d=new THREE.Vector3(entryFaceInfo.nx,0,entryFaceInfo.nz);
+
+  // Determine which wavelengths to trace
+  const wls=S.white?SPEC_WLS:[S.lambda];
+
+  wls.forEach(wl=>{
+    const col=S.white?wh(wl):wh(S.lambda);
+    const n=S.white?getN_dispersion(SP.mat,SP.nc,wl):SP.n;
+    const n_air=1.0;
+
+    // Incident beam
+    addBeam(laserTip,entryPt,S.white?0xffffff:col,S.white?0.5:0.9,false);
+    if(!S.white) addBeam(laserTip,entryPt,col,1,true);
+
+    // Refract at entry face (air → prism)
+    const refD1_3d=refD(incD,N1_3d,n_air,n);
+    const refDx=refD1_3d.x, refDz=refD1_3d.z;
+
+    // Find exit face
+    const exit=findExitFace(verts2d,entryX,entryZ,refDx,refDz,entryFaceInfo.faceIdx);
+    if(!exit)return;
+    const exitPt=new THREE.Vector3(exit.x,beamY,exit.z);
+
+    // Beam inside prism
+    addBeam(entryPt,exitPt,col,S.white?0.6:0.7,false);
+    addBeam(entryPt,exitPt,col,S.white?0.8:0.9,true);
+
+    // Refract at exit face (prism → air)
+    const{nx:enxOut,nz:enzOut}=faceOutwardNormal(exit.A,exit.B,verts2d);
+    const N2_3d=new THREE.Vector3(-enxOut,0,-enzOut); // inward normal toward incoming ray
+    const refD2_3d=refD(refD1_3d,N2_3d,n,n_air);
+
+    const outPt=new THREE.Vector3(exit.x+refD2_3d.x*BL,beamY,exit.z+refD2_3d.z*BL);
+    addBeam(exitPt,outPt,col,S.white?0.7:0.8,false);
+    addBeam(exitPt,outPt,col,S.white?0.9:1,true);
+  });
+}
+
+function updateSpecLaserPose(){
+  if(!specMode)return;
+  const tableTopY=TY+0.16;
+  const beamY=tableTopY+0.55;
+  // Use same angle as normal mode
+  const t1rad=S.theta1*Math.PI/180;
+  const lx=LR*Math.sin(t1rad);
+  const lz=LR*Math.cos(t1rad);
+  lazGrp.position.set(lx,beamY,lz);
+  const aimDir=new THREE.Vector3(-lx,0,-lz).normalize();
+  lazGrp.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),aimDir);
+  // White light color
+  const c=0xffffff;
+  if(bandMat){bandMat.color.setHex(c);bandMat.emissive.setHex(c);}
+  if(frontMat){frontMat.color.setHex(c);frontMat.emissive.setHex(c);}
+}
+
+function toggleSpecMode(){
+  specMode=!specMode;
+  const btn=document.getElementById('specModeBtn');
+  const specPanel=document.getElementById('specPanel');
+  const mpanel=document.getElementById('mpanel');
+  const hud=document.getElementById('hud');
+
+  if(specMode){
+    btn.classList.add('on');
+    specPanel.style.display='flex';
+    mpanel.style.display='none';
+    hud.style.display='none';
+    // Hide Snell lab prisms and interface plane
+    if(prGrp1)prGrp1.visible=false;
+    if(prGrp2)prGrp2.visible=false;
+    if(interfaceSlabMesh)interfaceSlabMesh.visible=false;
+    if(interfaceWireframeMesh)interfaceWireframeMesh.visible=false;
+    // Force incident medium to vacuum (n=1) in spectrum mode
+    S._savedM1=S.m1; S._savedN1=S.n1;
+    S.m1='vacuum'; S.n1=1.0;
+    buildSpecPrism();
+    buildLaser();
+    updateSpecLaserPose();
+    buildSpecBeams();
+    // Camera stays exactly where it was (no setTopView call)
+  } else {
+    btn.classList.remove('on');
+    specPanel.style.display='none';
+    mpanel.style.display='flex';
+    hud.style.display='block';
+    if(specPrismGrp){sc.remove(specPrismGrp);disposeGroup(specPrismGrp);specPrismGrp=null;}
+    if(prGrp1)prGrp1.visible=true;
+    if(prGrp2)prGrp2.visible=true;
+    if(interfaceSlabMesh)interfaceSlabMesh.visible=true;
+    if(interfaceWireframeMesh)interfaceWireframeMesh.visible=true;
+    // Restore incident medium
+    if(S._savedM1!==undefined){S.m1=S._savedM1;S.n1=S._savedN1;}
+    buildLaser();
+    updateLaserPose();
+    buildBeams();
+    updateHUD();
+  }
+}
+
+function onSpecMat(){
+  SP.mat=document.getElementById('spMatSel').value;
+  document.getElementById('spNcrow').style.display=SP.mat==='custom'?'flex':'none';
+  SP.n=getN(SP.mat,SP.nc);
+  document.getElementById('spNdsp').textContent='n = '+SP.n.toFixed(3);
+  buildSpecPrism();buildSpecBeams();
+}
+function onSpecNC(){
+  SP.nc=parseFloat(document.getElementById('spNsl').value);
+  document.getElementById('spNcv').textContent=SP.nc.toFixed(2);
+  SP.n=SP.nc;
+  document.getElementById('spNdsp').textContent='n = '+SP.n.toFixed(3);
+  buildSpecPrism();buildSpecBeams();
+}
+function onSpecShape(){
+  SP.shape=document.getElementById('spShapeSel').value;
+  SP.faceIdx=0;
+  SP.prismAngle=0;
+  SP._prismOffsetZ=0;
+  buildSpecPrism();
+  updateSpecLaserPose();
+  buildSpecBeams();
+  updateFaceDsp();
+}
+function rotSpecFace(d){
+  // Rotation increments per shape: triangle: 30°, rect: 90°, pentagon: 72°, hex: 60°
+  const steps={triangle:30,rect:90,pentagon:72,hex:60};
+  const deg=steps[SP.shape]||(360/specShapeVerts(SP.shape).length);
+  SP.prismAngle+=d*deg*Math.PI/180;
+  buildSpecPrism();
+  buildSpecBeams();
+  updateFaceDsp();
+}
+function updateFaceDsp(){
+  const N=specShapeVerts(SP.shape).length;
+  const step=Math.round(SP.prismAngle/(2*Math.PI/N));
+  const face=((step%N)+N)%N+1;
+  document.getElementById('spFaceDsp').textContent=`Rotation: ${(SP.prismAngle*180/Math.PI).toFixed(0)}°`;
+}
 resize();
 S.n1=getN(S.m1,S.nc1); S.n2=getN(S.m2,S.nc2);
 prismOffset=6.5; // start separated
