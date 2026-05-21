@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¡Cómo se dice! - Video Podcast Dashboard</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            arabic: ['Cairo', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              gold: '#D4AF37',
+              teal: '#115E59', // Dark teal matching the original frames
+              tealLight: '#14B8A6',
+              charcoal: '#0F172A',
+            }
+          },
+          boxShadow: {
+            'premium': '0 20px 50px -12px rgba(17, 94, 89, 0.12)',
+            'glass': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Premium scrollbar behavior */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+    }
+    .arabic-font {
+      font-family: 'Cairo', sans-serif;
+    }
+  </style>
+</head>
+<body class="text-slate-900 antialiased selection:bg-brand-teal selection:text-white">
+
+  <header class="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="bg-gradient-to-tr from-brand-teal to-teal-700 text-white p-2.5 rounded-2xl shadow-md shadow-brand-teal/20 flex items-center justify-center">
+        <i class="fa-solid fa-microphone-lines text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-black tracking-tight text-slate-900 flex items-center gap-1.5">
+          ¡CÓMO SE DICE! 
+          <span class="text-[10px] bg-brand-gold/10 text-brand-gold border border-brand-gold/20 font-bold px-1.5 py-0.5 rounded-md">PRO VERSION</span>
+        </h1>
+        <p class="text-[11px] text-slate-500 font-medium">Bilingual Video Podcast Companion</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-6">
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex items-center space-x-4 shadow-sm">
+        <div class="text-left">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Course Progress</span>
+          <span id="progress-percentage-label" class="text-xs font-extrabold text-slate-700">0% Completed</span>
+        </div>
+        <div class="w-24 bg-slate-200 h-2 rounded-full overflow-hidden">
+          <div id="progress-bar-fill" class="bg-brand-teal h-full w-0 transition-all duration-500 rounded-full"></div>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-2 border-l border-slate-200 pl-4">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-xs font-semibold text-slate-500">Live Workspace</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1600px] mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <section class="lg:col-span-8 flex flex-col space-y-6">
+      
+      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-premium group border border-slate-900/10">
+        
+        <video class="absolute inset-0 w-full h-full object-cover filter brightness-[0.85]" id="video-backdrop" preload="auto" playsinline>
+          <source src="Episode1.mov" type="video/mp4">
+        </video>
+
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 pointer-events-none z-10"></div>
+
+        <div class="absolute top-4 left-4 z-20 flex items-center space-x-2">
+          <span id="video-topic-tag" class="bg-brand-teal/90 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-xl tracking-wider uppercase border border-teal-500/30 shadow-lg">GREETINGS</span>
+          <span class="bg-black/40 backdrop-blur-sm text-slate-200 text-[11px] font-bold px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1.5">
+            <i class="fa-solid fa-tower-broadcast text-brand-gold animate-pulse"></i> HD Streaming
+          </span>
+        </div>
+
+        <div id="video-center-button-overlay" class="absolute inset-0 flex items-center justify-center z-20 transition-all duration-300">
+          <button onclick="toggleVideoPlayback()" class="w-20 h-20 rounded-full bg-white/90 hover:bg-white text-brand-teal flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-200 group/btn">
+            <i id="central-play-icon" class="fa-solid fa-play text-3xl ml-1 transition-transform group-hover/btn:scale-110"></i>
+          </button>
+        </div>
+
+        <div id="player-loader" class="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center z-30 opacity-0 pointer-events-none transition-all duration-300">
+          <div class="w-12 h-12 border-4 border-brand-teal border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p class="text-sm font-bold text-white tracking-wide">Syncing Bilingual Audio Engine...</p>
+        </div>
+
+        <div class="absolute bottom-0 inset-x-0 p-4 lg:p-6 z-20 flex flex-col space-y-4">
+          
+          <div class="flex items-center space-x-3 group/timeline">
+            <span id="player-time-current" class="text-xs font-bold text-slate-300 font-mono w-10 text-right">0:00</span>
+            <div onclick="handleTimelineScrubClick(event)" id="timeline-track" class="flex-1 h-2 bg-white/20 hover:h-2.5 rounded-full relative cursor-pointer transition-all overflow-hidden">
+              <div id="timeline-progress-fill" class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-brand-gold via-yellow-400 to-brand-gold w-0 rounded-full transition-all duration-100 shadow-md shadow-brand-gold/50"></div>
+            </div>
+            <span id="player-time-total" class="text-xs font-bold text-slate-300 font-mono w-10">4:15</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <button onclick="stopPlayback()" class="text-slate-400 hover:text-white transition-colors p-1" title="Stop & Rewind">
+                <i class="fa-solid fa-backward-step text-lg"></i>
+              </button>
+              <button onclick="toggleVideoPlayback()" class="w-11 h-11 rounded-full bg-brand-gold hover:bg-yellow-500 text-slate-950 flex items-center justify-center shadow-lg transition-transform active:scale-95" title="Play / Pause">
+                <i id="btn-play-icon" class="fa-solid fa-play ml-0.5"></i>
+              </button>
+              <div class="flex items-center space-x-1.5 bg-black/40 border border-white/10 rounded-xl p-1.5">
+                <button onclick="adjustPlaybackSpeed(1)" id="speed-1x" class="text-[10px] font-extrabold px-2 py-1 rounded-lg bg-white/20 text-white transition-all">1.0x</button>
+                <button onclick="adjustPlaybackSpeed(1.5)" id="speed-15x" class="text-[10px] font-extrabold px-2 py-1 rounded-lg text-slate-400 hover:text-white transition-all">1.5x</button>
+                <button onclick="adjustPlaybackSpeed(2)" id="speed-2x" class="text-[10px] font-extrabold px-2 py-1 rounded-lg text-slate-400 hover:text-white transition-all">2.0x</button>
+              </div>
+            </div>
+
+            <div class="hidden sm:block text-right">
+              <p id="now-playing-banner-title" class="text-xs font-black text-white truncate max-w-[280px]">Episode 1: Greetings and Beyond</p>
+              <p class="text-[10px] font-bold text-brand-gold/90">Bilingual Active Stream</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-b from-white to-slate-50 border border-slate-200 rounded-3xl p-6 shadow-premium relative overflow-hidden">
+        <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-teal via-brand-gold to-teal-800"></div>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
+          <div class="flex items-center space-x-2">
+            <span class="flex w-2 h-2 bg-brand-teal rounded-full animate-ping"></span>
+            <h3 class="text-xs font-black text-slate-900 tracking-wider uppercase">Live Transcription Teleprompter</h3>
+          </div>
+          <span class="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-lg border border-slate-200">Real-time Sync</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+          <div class="hidden md:block absolute left-1/2 inset-y-0 w-px bg-dashed bg-slate-200"></div>
+
+          <div class="space-y-2 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] uppercase tracking-wider font-extrabold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                🇪🇸 Spanish Castillan
+              </span>
+              <span id="speaker-left-label" class="text-[11px] font-bold text-slate-400">Mateo (ES)</span>
+            </div>
+            <p id="subtitle-box-es" class="text-base font-bold text-slate-800 leading-relaxed italic mt-2 min-h-[50px]">
+              "¡Hola! ¿Cómo estás?"
+            </p>
+          </div>
+
+          <div class="space-y-2 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative text-right">
+            <div class="flex items-center justify-between direction-rtl">
+              <span id="speaker-right-label" class="text-[11px] font-bold text-slate-400">Yousef (AR)</span>
+              <span class="text-[10px] uppercase tracking-wider font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1 arabic-font">
+                🇦🇪 Arabic Khaleeji
+              </span>
+            </div>
+            <p id="subtitle-box-ar" class="text-xl font-extrabold text-slate-900 leading-normal arabic-font mt-2 min-h-[50px]">
+              "مرحباً! كيف حالك؟"
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-premium">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-2">
+          <div>
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-cubes text-brand-teal"></i> Interactive Grammar Lab
+            </h3>
+            <p class="text-[11px] text-slate-500 font-medium">Rebuild the core sentence. Distractors are hiding inside!</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="getAssemblerHelpHint()" class="text-xs text-brand-teal hover:text-teal-800 font-bold px-2.5 py-1 rounded-xl bg-teal-50 transition-colors">
+              Get Hint
+            </button>
+            <button onclick="resetGrammarLab()" class="text-xs text-slate-500 hover:text-slate-800 font-bold px-2.5 py-1 rounded-xl bg-slate-100 transition-colors">
+              Reset Lab
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 mb-4">
+          <span class="text-[10px] font-extrabold uppercase text-brand-gold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/40">Challenge Objective</span>
+          <p class="text-sm font-extrabold text-slate-700 mt-1">Translate: <span class="text-brand-teal">"How do you say penalty kick in Arabic?"</span></p>
+        </div>
+
+        <div id="assembler-drop-zone" class="border-2 border-dashed border-slate-200 bg-slate-50/40 rounded-2xl p-4 min-h-[64px] flex flex-wrap gap-2 items-center transition-all">
+          <p id="drop-zone-placeholder-text" class="text-xs text-slate-400 font-medium italic mx-auto">Click word pills below to build your syntax chain here...</p>
+        </div>
+
+        <div class="mt-4">
+          <span class="text-[10px] uppercase font-black text-slate-400 block mb-2 tracking-wide">Available Linguistic Units:</span>
+          <div id="word-pills-pool-container" class="flex flex-wrap gap-2">
+            </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="lg:col-span-4 flex flex-col space-y-6">
+      
+      <div class="bg-gradient-to-br from-brand-charcoal to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-teal/20 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -left-10 -top-10 w-3cd h-30 bg-brand-gold/10 rounded-full blur-xl pointer-events-none"></div>
+
+        <span class="text-[10px] font-black uppercase text-brand-gold tracking-widest block bg-white/10 px-2.5 py-1 rounded-xl w-fit border border-white/10">Now Playing Metadata</span>
+        <h2 id="main-episode-header-title" class="text-lg font-black tracking-tight mt-3">Episode 1: Greetings and Beyond</h2>
+        <p id="main-episode-description" class="text-xs text-slate-300 leading-relaxed font-medium mt-2 line-clamp-4">
+          Begin your cultural and linguistic voyage! In this premiere episode, Matteo (representing Madrid/London) and Yousef (representing Dubai, UAE) introduce essential greetings. Understand correct physical protocols, handshakes, polite forms of asking 'how are you,' and switching context seamlessly with clear bilingual translation breakdowns.
+        </p>
+
+        <div class="mt-5 border-t border-white/10 pt-4">
+          <span class="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-2">Episode Chapter Milestones:</span>
+          <div id="episode-topic-cards-container" class="grid grid-cols-1 gap-2">
+            </div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-premium flex flex-col flex-1">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Course Syllabus Index</h3>
+            <p class="text-[10px] text-slate-400 font-medium">3 Core Modules Available</p>
+          </div>
+          <i class="fa-solid fa-layer-group text-slate-400 text-sm"></i>
+        </div>
+
+        <div class="space-y-2 overflow-y-auto max-h-[460px] pr-1" id="playlist-cards-stack-container">
+          
+          <div onclick="loadEpisode(1)" data-id="1" class="playlist-item-card border-2 border-brand-teal bg-brand-teal/5 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.01] flex items-start space-x-3 group">
+            <div class="bg-brand-teal text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-md shadow-brand-teal/20 shrink-0">
+              01
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] font-black tracking-wide bg-brand-teal text-white px-2 py-0.5 rounded-md uppercase">GREETINGS</span>
+                <span class="text-[10px] text-slate-500 font-mono font-bold"><i class="fa-regular fa-clock mr-1"></i>4:15</span>
+              </div>
+              <h4 class="text-xs font-extrabold text-slate-900 mt-1.5 group-hover:text-brand-teal transition-colors truncate">Episode 1: Greetings and Beyond</h4>
+              <p class="text-[11px] text-slate-400 font-medium truncate mt-0.5">Learn fundamental introductory statements, manners, and greetings.</p>
+            </div>
+          </div>
+
+          <div onclick="loadEpisode(2)" data-id="2" class="playlist-item-card border border-slate-200 bg-slate-50/40 hover:bg-slate-50 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.01] flex items-start space-x-3 group">
+            <div class="bg-slate-200 text-slate-600 group-hover:bg-brand-teal group-hover:text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs transition-colors shrink-0">
+              02
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] font-black tracking-wide bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md uppercase">FOOTBALL</span>
+                <span class="text-[10px] text-slate-500 font-mono font-bold"><i class="fa-regular fa-clock mr-1"></i>5:30</span>
+              </div>
+              <h4 class="text-xs font-extrabold text-slate-900 mt-1.5 group-hover:text-brand-teal transition-colors truncate">Episode 2: Football</h4>
+              <p class="text-[11px] text-slate-400 font-medium truncate mt-0.5">Explore high-octane vocabulary regarding games, plays, and scores.</p>
+            </div>
+          </div>
+
+          <div onclick="loadEpisode(3)" data-id="3" class="playlist-item-card border border-slate-200 bg-slate-50/40 hover:bg-slate-50 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.01] flex items-start space-x-3 group">
+            <div class="bg-slate-200 text-slate-600 group-hover:bg-brand-teal group-hover:text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs transition-colors shrink-0">
+              03
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] font-black tracking-wide bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md uppercase">FEELINGS</span>
+                <span class="text-[10px] text-slate-500 font-mono font-bold"><i class="fa-regular fa-clock mr-1"></i>3:45</span>
+              </div>
+              <h4 class="text-xs font-extrabold text-slate-900 mt-1.5 group-hover:text-brand-teal transition-colors truncate">Episode 3: How do you feel?</h4>
+              <p class="text-[11px] text-slate-400 font-medium truncate mt-0.5">Identify physical and mental descriptors for complex states.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <div id="toast-notif" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white rounded-2xl p-4 shadow-2xl flex items-start space-x-3 transform translate-y-24 opacity-0 transition-all duration-300 max-w-sm border border-slate-800">
+    <div class="bg-brand-teal text-white p-2 rounded-xl flex items-center justify-center shrink-0">
+      <i class="fa-solid fa-bell text-xs"></i>
+    </div>
+    <div>
+      <h4 id="toast-title" class="text-xs font-black tracking-wide text-brand-gold">Class Progress Info</h4>
+      <p id="toast-desc" class="text-[11px] text-slate-300 font-medium mt-0.5">Workspace initialized successfully.</p>
+    </div>
+  </div>
+
+  <script>
+    // --- DATABASE MATRIX LAYER ---
+    const EPISODE_DATA = [
+      {
+        id: 1,
+        title: "Episode 1: Greetings and Beyond",
+        tag: "GREETINGS",
+        duration: "4:15",
+        backdropUrl: "Episode1.mov",
+        speakerLeft: "Mateo (ES)",
+        speakerRight: "Yousef (AR)",
+        desc: "Begin your cultural and linguistic voyage! In this premiere episode, Matteo (representing Madrid/London) and Yousef (representing Dubai, UAE) introduce essential greetings. Understand correct physical protocols, handshakes, polite forms of asking 'how are you,' and switching context seamlessly with clear bilingual translation breakdowns.",
+        subtitles: [
+          { time: 0, text_es: "¡Hola! ¿Cómo estás?", text_ar: "مرحباً! كيف حالك؟" },
+          { time: 10, text_es: "Buenos días, un placer conocerte.", text_ar: "صباح الخير، سررت بلقائك." },
+          { time: 25, text_es: "Muy bien, gracias. ¿Y tú?", text_ar: "بخير شكراً، وأنت؟" },
+          { time: 45, text_es: "Yo soy de España, vivo en Dubái.", text_ar: "أنا من إسبانيا، وأعيش في دبي." },
+          { time: 65, text_es: "¿De dónde eres?", text_ar: "من أين أنت؟" },
+          { time: 85, text_es: "¡Muchas gracias! ¡Hasta luego!", text_ar: "شكراً جزيلاً! إلى اللقاء!" }
+        ],
+        topics: [
+          { time: 0, title: "Basic Greetings", label: "Formal vs Informal" },
+          { time: 45, title: "Origin & Dialects", label: "National Flags" },
+          { time: 85, title: "Polite Departures", label: "Contextual Expressions" }
+        ]
+      },
+      {
+        id: 2,
+        title: "Episode 2: Football",
+        tag: "FOOTBALL",
+        duration: "5:30",
+        backdropUrl: "Episode2.mov",
+        speakerLeft: "Mateo (ES)",
+        speakerRight: "Yousef (AR)",
+        desc: "Goal! Learn the ultimate football lingo. Since football unites fans across Madrid and Dubai, we unpack key vocabulary like 'penalti' (penalty kick), 'árbitro' (referee), and passionate cheers. Mateo shares Spanish football club traditions, while Yousef illustrates the soaring sporting spirit of the UAE.",
+        subtitles: [
+          { time: 0, text_es: "¿Cómo se dice 'un penalti'?", text_ar: "كيف تقول ركلة جزاء؟" },
+          { time: 12, text_es: "¡Es un golazo increíble!", text_ar: "إنه هدف مذهل ورائع!" },
+          { time: 28, text_es: "El árbitro sanciona la falta.", text_ar: "الحكم يحتسب خطأ." },
+          { time: 45, text_es: "¿Cuál es tu equipo favorito?", text_ar: "ما هو فريقك المفضل？" },
+          { time: 65, text_es: "¡Vamos a ganar el partido!", text_ar: "سنفوز بالمباراة بالتأكيد!" },
+          { time: 85, text_es: "El pase fue perfecto.", text_ar: "التمريرة كانت مثالية جداً." }
+        ],
+        topics: [
+          { time: 0, title: "Penalty & Goal lingo", label: "Match terms" },
+          { time: 45, title: "Team Allegiance", label: "Conversational chats" },
+          { time: 65, title: "Winning Spirit", label: "Expressing excitement" }
+        ]
+      },
+      {
+        id: 3,
+        title: "Episode 3: How do you feel?",
+        tag: "FEELINGS",
+        duration: "3:45",
+        backdropUrl: "Episode3.mov",
+        speakerLeft: "Mateo (ES)",
+        speakerRight: "Yousef (AR)",
+        desc: "A heartfelt episode on emotions, empathy, and health. Discover how to describe your emotional states—whether you are excited, tired, or deeply curious. Practice pronunciation of core adjective structures, gender agreement markers in Spanish, and polite emotional responses in Arabic culture.",
+        subtitles: [
+          { time: 0, text_es: "¿Cómo te sientes hoy?", text_ar: "كيف تشعر اليوم؟" },
+          { time: 15, text_es: "Estoy muy alegre y emocionado.", text_ar: "أنا سعيد ومتحمس للغاية." },
+          { time: 30, text_es: "Un poco cansado pero feliz.", text_ar: "متعب قليلاً ولكنني سعيد." },
+          { time: 48, text_es: "No te preocupes, todo estará bien.", text_ar: "لا تقلق، كل شيء سيكون على ما يرام." },
+          { time: 70, text_es: "¿Tienes curiosidad por aprender?", text_ar: "هل لديك فضول للتعلم أكثر؟" },
+          { time: 90, text_es: "¡Me siento genial con el podcast!", text_ar: "أشعر بحماس رائع تجاه هذا البودكاست!" }
+        ],
+        topics: [
+          { time: 0, title: "Emotional States", label: "Expressing feelings" },
+          { time: 48, title: "Empathy & Support", label: "Cultural responses" },
+          { time: 70, title: "Inquisitiveness", label: "Excited learning" }
+        ]
+      }
+    ];
+
+    // --- APPLICATION RUNTIME CONTROLLER STATE ---
+    let currentEpisode = EPISODE_DATA[0];
+    let isPlaying = false;
+    let playbackTime = 0; 
+    let playbackDuration = 255; // 4:15 in seconds
+    let playSpeed = 1.0;
+    let intervalTimer = null;
+    let progressTracking = { 1: true }; // Tracking user interaction metrics
+
+    // --- PLAYBACK LOADER PIPELINE ENGINE ---
+    function loadEpisode(id) {
+      const loader = document.getElementById('player-loader');
+      loader.classList.remove('opacity-0', 'pointer-events-none');
+      
+      setTimeout(() => {
+        const episode = EPISODE_DATA.find(e => e.id === id);
+        if (!episode) return;
+        
+        currentEpisode = episode;
+        progressTracking[id] = true;
+        updateCourseProgressUI();
+
+        // Halt running states
+        stopPlayback();
+
+        // Update Media Element Video Native Source DYN
+        const realVideo = document.getElementById('video-backdrop');
+        realVideo.src = episode.backdropUrl;
+        realVideo.load();
+
+        // UI Header Updates
+        document.getElementById('video-topic-tag').innerText = episode.tag;
+        document.getElementById('main-episode-header-title').innerText = episode.title;
+        document.getElementById('now-playing-banner-title').innerText = episode.title;
+        document.getElementById('main-episode-description').innerText = episode.desc;
+        document.getElementById('player-time-total').innerText = episode.duration;
+        document.getElementById('speaker-left-label').innerText = episode.speakerLeft;
+        document.getElementById('speaker-right-label').innerText = episode.speakerRight;
+        
+        // Parse raw string clocks to integers
+        const parts = episode.duration.split(':');
+        playbackDuration = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        playbackTime = 0;
+        updateTimelineUI();
+        updateSubtitlesForTime(0);
+
+        // Rebuild Topic milestones UI links
+        const topicsBox = document.getElementById('episode-topic-cards-container');
+        topicsBox.innerHTML = '';
+        episode.topics.forEach((topic) => {
+          topicsBox.innerHTML += `
+            <button onclick="seekToTimeline(${topic.time}, '${topic.title}')" class="bg-white/5 hover:bg-white/10 border border-white/10 p-2.5 rounded-xl text-left transition-all group w-full flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-white group-hover:text-brand-gold transition-colors">${topic.title}</p>
+                <p class="text-[10px] text-slate-400">${topic.label}</p>
+              </div>
+              <span class="text-[10px] font-mono text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded border border-brand-gold/20 font-bold">
+                ${formatTime(topic.time)}
+              </span>
+            </button>
+          `;
+        });
+
+        // Toggle Playlist Cards styling array states
+        const items = document.querySelectorAll('.playlist-item-card');
+        items.forEach(card => {
+          const cardId = card.getAttribute('data-id');
+          if (parseInt(cardId) === id) {
+            card.classList.add('border-brand-teal', 'bg-brand-teal/5');
+            card.classList.remove('border-slate-200', 'bg-slate-50/40');
+            const badge = card.querySelector('.bg-slate-200');
+            if (badge) {
+              badge.classList.add('bg-brand-teal', 'text-white');
+              badge.classList.remove('bg-slate-200', 'text-slate-600');
+            }
+          } else {
+            card.classList.remove('border-brand-teal', 'bg-brand-teal/5');
+            card.classList.add('border-slate-200', 'bg-slate-50/40');
+            const badge = card.querySelector('.bg-brand-teal');
+            if (badge) {
+              badge.classList.remove('bg-brand-teal', 'text-white');
+              badge.classList.add('bg-slate-200', 'text-slate-600');
+            }
+          }
+        });
+
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        triggerFeedbackMessage(`Loaded ${episode.title}`, "success");
+      }, 500);
+    }
+
+    // --- VIDEO ENGINE PLAY/PAUSE LOGIC ---
+    function toggleVideoPlayback() {
+      const playIcon = document.getElementById('btn-play-icon');
+      const centerPlayIcon = document.getElementById('central-play-icon');
+      const centralOverlay = document.getElementById('video-center-button-overlay');
+      const realVideo = document.getElementById('video-backdrop');
+      
+      if (isPlaying) {
+        isPlaying = false;
+        clearInterval(intervalTimer);
+        if(realVideo.pause) realVideo.pause();
+        
+        playIcon.className = "fa-solid fa-play ml-0.5";
+        centerPlayIcon.className = "fa-solid fa-play text-3xl ml-1";
+        centralOverlay.classList.remove('opacity-0', 'pointer-events-none');
+      } else {
+        isPlaying = true;
+        if(realVideo.play) realVideo.play().catch(e => console.log("Playback context loaded pending user anchor interaction."));
+        
+        playIcon.className = "fa-solid fa-pause";
+        centerPlayIcon.className = "fa-solid fa-pause text-3xl";
+        centralOverlay.classList.add('opacity-0', 'pointer-events-none');
+        
+        intervalTimer = setInterval(() => {
+          if (realVideo.currentTime && Math.abs(realVideo.currentTime - playbackTime) > 1.5) {
+            playbackTime = realVideo.currentTime;
+          } else {
+            playbackTime += 1 * playSpeed;
+          }
+          
+          if (playbackTime >= playbackDuration) {
+            playbackTime = 0;
+            toggleVideoPlayback(); 
+          }
+          updateTimelineUI();
+          updateSubtitlesForTime(playbackTime);
+        }, 1000);
+      }
+    }
+
+    function stopPlayback() {
+      isPlaying = false;
+      clearInterval(intervalTimer);
+      playbackTime = 0;
+      
+      const realVideo = document.getElementById('video-backdrop');
+      if(realVideo.pause) {
+        realVideo.pause();
+        realVideo.currentTime = 0;
+      }
+      
+      updateTimelineUI();
+      updateSubtitlesForTime(0);
+      
+      document.getElementById('btn-play-icon').className = "fa-solid fa-play ml-0.5";
+      document.getElementById('central-play-icon').className = "fa-solid fa-play text-3xl ml-1";
+      document.getElementById('video-center-button-overlay').classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function adjustPlaybackSpeed(speed) {
+      playSpeed = speed;
+      const realVideo = document.getElementById('video-backdrop');
+      if(realVideo) realVideo.playbackRate = speed;
+      
+      document.getElementById('speed-1x').classList.remove('bg-white/20', 'text-white');
+      document.getElementById('speed-15x').classList.remove('bg-white/20', 'text-white');
+      document.getElementById('speed-2x').classList.remove('bg-white/20', 'text-white');
+      
+      document.getElementById('speed-1x').classList.add('text-slate-400');
+      document.getElementById('speed-15x').classList.add('text-slate-400');
+      document.getElementById('speed-2x').classList.add('text-slate-400');
+
+      if (speed === 1) {
+        document.getElementById('speed-1x').classList.add('bg-white/20', 'text-white');
+      } else if (speed === 1.5) {
+        document.getElementById('speed-15x').classList.add('bg-white/20', 'text-white');
+      } else if (speed === 2) {
+        document.getElementById('speed-2x').classList.add('bg-white/20', 'text-white');
+      }
+    }
+
+    function seekToTimeline(seconds, milestoneTitle = "") {
+      playbackTime = seconds;
+      const realVideo = document.getElementById('video-backdrop');
+      if(realVideo) realVideo.currentTime = seconds;
+      
+      updateTimelineUI();
+      updateSubtitlesForTime(seconds);
+      if (milestoneTitle) {
+        triggerFeedbackMessage(`Jumped to chapter: ${milestoneTitle}`, "info");
+      }
+    }
+
+    function handleTimelineScrubClick(event) {
+      const track = document.getElementById('timeline-track');
+      const rect = track.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const pct = clickX / rect.width;
+      const calculatedSeconds = Math.floor(pct * playbackDuration);
+      seekToTimeline(calculatedSeconds);
+    }
+
+    // --- TIMELINE TRACK RENDERING AND INTERACTIVE SYNC UTILS ---
+    function updateTimelineUI() {
+      document.getElementById('player-time-current').innerText = formatTime(playbackTime);
+      const pct = (playbackTime / playbackDuration) * 100;
+      document.getElementById('timeline-progress-fill').style.width = `${pct}%`;
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function updateSubtitlesForTime(time) {
+      let matched = currentEpisode.subtitles[0];
+      for (let i = 0; i < currentEpisode.subtitles.length; i++) {
+        if (time >= currentEpisode.subtitles[i].time) {
+          matched = currentEpisode.subtitles[i];
+        } else {
+          break;
+        }
+      }
+      if (matched) {
+        document.getElementById('subtitle-box-es').innerText = `"${matched.text_es}"`;
+        document.getElementById('subtitle-box-ar').innerText = `"${matched.text_ar}"`;
+      }
+    }
+
+    // --- GRAMMAR INTERACTIVE LAB ENGINE SIMULATION ARCHITECTURE ---
+    const LAB_PILLS_ANSWER_KEY = ["¿Cómo", "se", "dice", "ركلة", "جزاء؟"];
+    const LAB_PILLS_DISTRACTORS = ["hola", "árbitro", "mañana", "مرحباً"];
+    let currentAssembledChain = [];
+
+    function initGrammarLabPool() {
+      const container = document.getElementById('word-pills-pool-container');
+      container.innerHTML = '';
+      
+      // Combine key assets with dynamic engineering distractions
+      const merged = [...LAB_PILLS_ANSWER_KEY, ...LAB_PILLS_DISTRACTORS];
+      // Deterministic sorted scramble alternative pseudo shuffle
+      merged.sort(() => 0.5 - Math.random());
+
+      merged.forEach((word) => {
+        const isArabic = /[\u0600-\u06FF]/.test(word);
+        const fontClass = isArabic ? 'arabic-font font-bold text-sm' : 'text-xs font-bold';
+        container.innerHTML += `
+          <button onclick="handleWordPillSelection(this, '${word}')" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 px-3 py-1.5 rounded-xl transition-all ${fontClass} active:scale-95 shadow-sm">
+            ${word}
+          </button>
+        `;
+      });
+    }
+
+    function handleWordPillSelection(buttonElement, word) {
+      buttonElement.disabled = true;
+      buttonElement.classList.add('opacity-40', 'pointer-events-none');
+
+      const dropZone = document.getElementById('assembler-drop-zone');
+      const placeholder = document.getElementById('drop-zone-placeholder-text');
+      if (placeholder) placeholder.remove();
+
+      currentAssembledChain.push(word);
+      const isArabic = /[\u0600-\u06FF]/.test(word);
+      const fontClass = isArabic ? 'arabic-font font-bold text-sm' : 'text-xs font-bold';
+
+      dropZone.innerHTML += `
+        <span class="bg-brand-teal text-white border border-teal-600 px-3 py-1.5 rounded-xl flex items-center space-x-1.5 animation-pulse shadow-sm ${fontClass}">
+          <span>${word}</span>
+        </span>
+      `;
+
+      // Evaluate logic dynamically against strict string criteria chain arrays
+      checkGrammarSequenceProgress();
+    }
+
+    function checkGrammarSequenceProgress() {
+      if (currentAssembledChain.length === LAB_PILLS_ANSWER_KEY.length) {
+        let isValid = true;
+        for (let i = 0; i < LAB_PILLS_ANSWER_KEY.length; i++) {
+          if (currentAssembledChain[i] !== LAB_PILLS_ANSWER_KEY[i]) {
+            isValid = false;
+            break;
+          }
+        }
+
+        if (isValid) {
+          triggerFeedbackMessage("Excellent formulation! Sequence strings matched perfectly.", "success");
+          const dropZone = document.getElementById('assembler-drop-zone');
+          dropZone.classList.add('border-emerald-500', 'bg-emerald-50/50');
+          progressTracking["lab_completed"] = true;
+          updateCourseProgressUI();
+        } else {
+          triggerFeedbackMessage("Syntax mismatch or error tracking sequence found. Removing distractors!", "error");
+          const dropZone = document.getElementById('assembler-drop-zone');
+          dropZone.classList.add('border-red-400/50', 'bg-red-50');
+          setTimeout(() => {
+            dropZone.classList.remove('border-red-400/50', 'bg-red-50');
+            resetGrammarLab();
+          }, 2000);
+        }
+      }
+    }
+
+    function getAssemblerHelpHint() {
+      triggerFeedbackMessage("Hint: Start with the Spanish question marker word '¿Cómo' followed by 'se dice'...", "info");
+    }
+
+    function resetGrammarLab() {
+      currentAssembledChain = [];
+      const dropZone = document.getElementById('assembler-drop-zone');
+      dropZone.className = "border-2 border-dashed border-slate-200 bg-slate-50/40 rounded-2xl p-4 min-h-[64px] flex flex-wrap gap-2 items-center transition-all";
+      dropZone.innerHTML = `<p id="drop-zone-placeholder-text" class="text-xs text-slate-400 font-medium italic mx-auto">Click word pills below to build your syntax chain here...</p>`;
+      initGrammarLabPool();
+    }
+
+    // --- TOAST NOTIFICATIONS AND PROGRESS MONITOR ---
+    function triggerFeedbackMessage(message, type = "info") {
+      const toast = document.getElementById('toast-notif');
+      const toastTitle = document.getElementById('toast-title');
+      const toastDesc = document.getElementById('toast-desc');
+
+      toastTitle.innerText = type === "success" ? "Brilliant Match!" : type === "error" ? "Try Again" : "Class Progress Info";
+      toastDesc.innerText = message;
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      
+      setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 4000);
+    }
+
+    function updateCourseProgressUI() {
+      const total = 4; // 3 episodes + 1 grammar laboratory framework activity
+      let visitedCount = 0;
+      if (progressTracking[1]) visitedCount++;
+      if (progressTracking[2]) visitedCount++;
+      if (progressTracking[3]) visitedCount++;
+      if (progressTracking["lab_completed"]) visitedCount++;
+
+      const pct = Math.round((visitedCount / total) * 100);
+      document.getElementById('progress-percentage-label').innerText = `${pct}% Completed`;
+      document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+    }
+
+    // ON-LOAD CYCLE INITIALIZATION HOOK
+    window.addEventListener('DOMContentLoaded', () => {
+      loadEpisode(1);
+      initGrammarLabPool();
+      updateCourseProgressUI();
+    });
+  </script>
+</body>
+</html>
