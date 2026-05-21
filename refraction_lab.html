@@ -27,14 +27,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:
 #fT{background:linear-gradient(90deg,#3aefaa,#78b4ff);}
 #fR{background:linear-gradient(90deg,#ff7799,#ffaa44);}
 .flbl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,.5);min-width:32px;}
-#mpanel{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(18px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:10px 16px;z-index:10;display:flex;gap:14px;align-items:flex-start;}
-.mblk{display:flex;flex-direction:column;gap:5px;min-width:138px;}
+#mpanel{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(18px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:9px 18px;z-index:10;display:flex;gap:12px;align-items:center;}
+.mblk{display:flex;flex-direction:column;gap:4px;min-width:128px;}
 .mblk label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(140,200,255,.5);text-transform:uppercase;}
+.mblk-row{display:flex;align-items:center;gap:7px;}
+.ndsp{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#78b4ff;white-space:nowrap;}
+.crow{display:none;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,.6);}
+.crow input[type=range]{width:72px;}
 select{background:rgba(8,14,30,.95);border:1px solid rgba(140,200,255,.28);color:#e8f4ff;border-radius:8px;padding:5px 8px;font-family:'Syne',sans-serif;font-size:11px;cursor:pointer;outline:none;width:100%;}
 select:focus{border-color:rgba(140,200,255,.55);}
-.ndsp{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#78b4ff;}
-.crow{display:none;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,.6);}
-.crow input[type=range]{width:80px;}
 #msdiv{width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;}
 #controls{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:50px;padding:7px 14px;z-index:10;display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 28px);}
 .btn{padding:5px 12px;border-radius:30px;border:1px solid rgba(140,200,255,.32);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;}
@@ -47,11 +48,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .asl::-webkit-slider-thumb{background:#ffcc44;}
 .asl{background:rgba(255,200,60,.2)!important;}
 input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
-#hint{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(140,200,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
-#tirn{position:fixed;bottom:98px;left:50%;transform:translateX(-50%);background:rgba(255,80,30,.12);border:1px solid rgba(255,80,30,.55);border-radius:12px;padding:8px 20px;font-family:'Space Mono',monospace;font-size:11px;color:#ff7744;z-index:20;display:none;pointer-events:none;text-align:center;}
+#hint{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(140,200,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:9;white-space:nowrap;}
+#tirn{position:fixed;bottom:260px;left:50%;transform:translateX(-50%);background:rgba(255,80,30,.12);border:1px solid rgba(255,80,30,.55);border-radius:12px;padding:8px 20px;font-family:'Space Mono',monospace;font-size:11px;color:#ff7744;z-index:20;display:none;pointer-events:none;text-align:center;}
 #loupe{position:fixed;width:160px;height:160px;border-radius:50%;border:2.5px solid rgba(255,220,80,.85);background:#0c1526;overflow:hidden;pointer-events:none;z-index:60;display:none;box-shadow:0 0 32px rgba(255,220,80,.3),inset 0 0 20px rgba(0,0,0,.6);}
 #loupeCvs{width:100%;height:100%;display:block;}
-#loupeHint{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:rgba(255,220,80,.12);border:1px solid rgba(255,220,80,.4);border-radius:8px;padding:4px 12px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,220,80,.8);z-index:20;display:none;pointer-events:none;}
+#loupeHint{position:fixed;bottom:260px;left:50%;transform:translateX(-50%);background:rgba(255,220,80,.12);border:1px solid rgba(255,220,80,.4);border-radius:8px;padding:4px 12px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,220,80,.8);z-index:20;display:none;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -62,47 +63,51 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
 <div id="mpanel">
   <div class="mblk">
     <label>Incident Medium</label>
-    <select id="m1sel" onchange="onM1()">
-      <option value="vacuum">Air / Vacuum  n=1.00</option>
-      <option value="water">Water  n=1.33</option>
-      <option value="ice">Ice  n=1.31</option>
-      <option value="glass" selected>Glass  n=1.50</option>
-      <option value="crystal">Crystal  n=1.70</option>
-      <option value="diamond">Diamond  n=2.42</option>
-      <option value="custom">Custom…</option>
-    </select>
-    <div class="ndsp" id="n1dsp">n₁ = 1.500</div>
+    <div class="mblk-row">
+      <select id="m1sel" onchange="onM1()" style="width:160px;">
+        <option value="vacuum">Air / Vacuum  n=1.00</option>
+        <option value="water">Water  n=1.33</option>
+        <option value="ice" selected>Ice  n=1.31</option>
+        <option value="glass">Glass  n=1.50</option>
+        <option value="crystal">Crystal  n=1.70</option>
+        <option value="diamond">Diamond  n=2.42</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <div class="ndsp" id="n1dsp">n₁ = 1.310</div>
+    </div>
     <div class="crow" id="n1crow">n=<input type="range" id="n1sl" min="1" max="4" step="0.05" value="1.0" oninput="onN1C()"><span id="n1cv">1.0</span></div>
   </div>
-  <div id="msdiv"></div>
+  <div id="msdiv" style="width:1px;height:48px;background:rgba(140,200,255,.18);align-self:center;"></div>
   <div class="mblk">
     <label>Refracted Medium</label>
-    <select id="m2sel" onchange="onM2()">
-      <option value="vacuum">Air / Vacuum  n=1.00</option>
-      <option value="water">Water  n=1.33</option>
-      <option value="ice">Ice  n=1.31</option>
-      <option value="glass" selected>Glass  n=1.50</option>
-      <option value="crystal">Crystal  n=1.70</option>
-      <option value="diamond">Diamond  n=2.42</option>
-      <option value="custom">Custom…</option>
-    </select>
-    <div class="ndsp" id="n2dsp">n₂ = 1.500</div>
+    <div class="mblk-row">
+      <select id="m2sel" onchange="onM2()" style="width:160px;">
+        <option value="vacuum">Air / Vacuum  n=1.00</option>
+        <option value="water">Water  n=1.33</option>
+        <option value="ice">Ice  n=1.31</option>
+        <option value="glass">Glass  n=1.50</option>
+        <option value="crystal" selected>Crystal  n=1.70</option>
+        <option value="diamond">Diamond  n=2.42</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <div class="ndsp" id="n2dsp">n₂ = 1.700</div>
+    </div>
     <div class="crow" id="n2crow">n=<input type="range" id="n2sl" min="1" max="4" step="0.05" value="1.5" oninput="onN2C()"><span id="n2cv">1.5</span></div>
   </div>
-  <div id="msdiv4" style="width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;"></div>
-  <div class="mblk" style="min-width:110px;">
+  <div id="msdiv4" style="width:1px;height:48px;background:rgba(140,200,255,.18);align-self:center;"></div>
+  <div class="mblk" style="min-width:130px;">
     <label>Prism Tint</label>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <select id="prismTintSel" onchange="onPrismTint()" style="flex:1;">
+    <div class="mblk-row">
+      <select id="prismTintSel" onchange="onPrismTint()" style="width:120px;">
         <option value="none">— No Tint —</option>
-        <option value="red">Red</option>
-        <option value="green">Green</option>
-        <option value="blue">Blue</option>
-        <option value="yellow">Yellow</option>
-        <option value="cyan">Cyan</option>
-        <option value="magenta">Magenta</option>
-        <option value="orange">Orange</option>
-        <option value="violet">Violet</option>
+        <option value="red">■ Red</option>
+        <option value="green">■ Green</option>
+        <option value="blue">■ Blue</option>
+        <option value="yellow">■ Yellow</option>
+        <option value="cyan">■ Cyan</option>
+        <option value="magenta">■ Magenta</option>
+        <option value="orange">■ Orange</option>
+        <option value="violet">■ Violet</option>
       </select>
       <div id="tintSwatch" style="width:14px;height:14px;border-radius:3px;border:1px solid rgba(140,200,255,.35);background:transparent;flex-shrink:0;"></div>
     </div>
@@ -126,84 +131,131 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
   <div id="formula-box">n₁ · sin θ₁ = n₂ · sin θ₂</div>
 </div>
 
-<div id="controls">
-  <div class="sw">λ
-    <input type="range" id="lsl" min="380" max="750" value="532" step="1" style="width:66px;" oninput="onLam()">
-    <span id="lval" style="min-width:46px;">532 nm</span>
+<style>
+#bottom-panels{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:flex-end;z-index:10;flex-wrap:nowrap;justify-content:center;max-width:calc(100vw - 20px);}
+.panel{background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:7px 14px;display:flex;flex-direction:column;gap:5px;min-width:0;}
+.panel-title{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:2.5px;color:rgba(140,200,255,.4);text-transform:uppercase;text-align:center;padding-bottom:4px;border-bottom:1px solid rgba(140,200,255,.1);}
+.panel-row{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:nowrap;}
+.sl-lbl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(140,200,255,.55);min-width:16px;text-align:right;flex-shrink:0;}
+.sl-val{font-family:'Space Mono',monospace;font-size:9px;color:#78b4ff;min-width:38px;flex-shrink:0;}
+input[type=range].wide{flex:1;min-width:60px;}
+</style>
+
+<div id="bottom-panels">
+
+  <!-- LASER PANEL -->
+  <div class="panel" style="min-width:260px;">
+    <div class="panel-title">⬡ Laser</div>
+    <div class="panel-row">
+      <span class="sl-lbl">λ</span>
+      <input type="range" id="lsl" min="380" max="750" value="532" step="1" class="wide" oninput="onLam()">
+      <span id="lval" class="sl-val">532 nm</span>
+      <label class="sw" style="flex-shrink:0;"><input type="checkbox" id="wcb" onchange="onWL()"> white</label>
+    </div>
+    <div class="panel-row">
+      <span class="sl-lbl">θ₁</span>
+      <input type="range" id="asl" min="1" max="89" value="45" step="0.5" class="wide asl" oninput="onAng()">
+      <span id="aval" class="sl-val">45°</span>
+      <label class="sw" style="flex-shrink:0;"><input type="checkbox" id="rcb" checked onchange="onRfl()"> refl.</label>
+    </div>
+    <div class="panel-row" style="justify-content:center;">
+      <button class="btn" id="specModeBtn" onclick="toggleSpecMode()">🌈 Spectrum</button>
+    </div>
   </div>
-  <div class="sep"></div>
-  <label class="sw"><input type="checkbox" id="wcb" onchange="onWL()"> white</label>
-  <div class="sep"></div>
-  <label class="sw"><input type="checkbox" id="rcb" checked onchange="onRfl()"> reflected</label>
-  <div class="sep"></div>
-  <div class="sw">θ₁
-    <input type="range" id="asl" min="1" max="89" value="45" step="0.5" style="width:66px;" class="asl" oninput="onAng()">
-    <span id="aval" style="min-width:32px;">45°</span>
+
+  <!-- NAVIGATION PANEL -->
+  <div class="panel" style="min-width:310px;">
+    <div class="panel-title">◎ View</div>
+    <div class="panel-row">
+      <button class="btn" onclick="setTopView()">⊙ Top</button>
+      <button class="btn" onclick="setFrontView()">◫ Front</button>
+      <button class="btn" onclick="resetView()">↺ Reset</button>
+      <button class="btn" id="loupeBtn" onclick="toggleLoupe()">🔍 Loupe</button>
+    </div>
+    <div class="panel-row">
+      <span class="sl-lbl" title="Zoom">⊕</span>
+      <input type="range" id="zoomSl" min="5" max="40" value="19" step="0.5" class="wide" oninput="onZoomSl()">
+      <span id="zoomVal" class="sl-val">19</span>
+      <span class="sl-lbl" title="Orbit" style="margin-left:4px;">↔</span>
+      <input type="range" id="orbitSl" min="-3.14" max="3.14" value="0.65" step="0.02" class="wide" oninput="onOrbitSl()">
+    </div>
+    <div class="panel-row">
+      <span class="sl-lbl" title="Tilt">↕</span>
+      <input type="range" id="tiltSl" min="-1.47" max="1.47" value="0.30" step="0.02" class="wide" oninput="onTiltSl()">
+    </div>
   </div>
-  <div class="sep"></div>
-  <button class="btn" onclick="setTopView()">⊙ Top</button>
-  <button class="btn" onclick="setFrontView()">◫ Front</button>
-  <button class="btn" onclick="resetView()">↺ Reset</button>
-  <div class="sep"></div>
-  <button class="btn" onclick="zoomIn()">🔍+</button>
-  <button class="btn" onclick="zoomOut()">🔍−</button>
-  <div class="sep"></div>
-  <button class="btn" onclick="rotateViewLeft()">⟵ Orbit</button>
-  <button class="btn" onclick="rotateViewRight()">Orbit ⟶</button>
-  <div class="sep"></div>
-  <button class="btn" onclick="rotateLaser(-1)">⟵ Laser</button>
-  <button class="btn" onclick="rotateLaser(1)">Laser ⟶</button>
-  <div class="sep"></div>
-  <button class="btn" id="specModeBtn" onclick="toggleSpecMode()">🌈 Spectrum</button>
+
+  <!-- PROTRACTOR PANEL -->
+  <div class="panel" style="min-width:260px;">
+    <div class="panel-title">📐 Protractor</div>
+    <div class="panel-row">
+      <button class="btn" id="miniProtBtn" onclick="toggleMiniProt()">👁 Show</button>
+      <button class="btn" onclick="resetMiniProt()" title="Reset">↺ Reset</button>
+    </div>
+    <div class="panel-row">
+      <span class="sl-lbl">↻</span>
+      <input type="range" id="miniProtRotSl" min="0" max="180" value="0" step="1" class="wide" oninput="onMiniProtRot()">
+      <span id="miniProtRotVal" class="sl-val">0°</span>
+      <span class="sl-lbl" style="margin-left:4px;">⊕</span>
+      <input type="range" id="miniProtSizeSl" min="0.4" max="3.0" value="1.0" step="0.05" class="wide" oninput="onMiniProtSize()">
+      <span id="miniProtSizeVal" class="sl-val">1.0×</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- SPECTRUM MODE PANEL -->
-<div id="specPanel" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(18px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:10px 16px;z-index:10;display:none;gap:14px;align-items:flex-start;">
+<div id="specPanel" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.96);backdrop-filter:blur(18px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:9px 18px;z-index:10;gap:12px;align-items:center;">
   <div class="mblk">
     <label>Prism Material</label>
-    <select id="spMatSel" onchange="onSpecMat()">
-      <option value="water">Water  n=1.33</option>
-      <option value="ice">Ice  n=1.31</option>
-      <option value="glass" selected>Glass  n=1.50</option>
-      <option value="crystal">Crystal  n=1.70</option>
-      <option value="diamond">Diamond  n=2.42</option>
-      <option value="custom">Custom…</option>
-    </select>
-    <div class="ndsp" id="spNdsp">n = 1.500</div>
+    <div class="mblk-row">
+      <select id="spMatSel" onchange="onSpecMat()" style="width:160px;">
+        <option value="water">Water  n=1.33</option>
+        <option value="ice">Ice  n=1.31</option>
+        <option value="glass" selected>Glass  n=1.50</option>
+        <option value="crystal">Crystal  n=1.70</option>
+        <option value="diamond">Diamond  n=2.42</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <div class="ndsp" id="spNdsp">n = 1.500</div>
+    </div>
     <div class="crow" id="spNcrow" style="display:none;">n=<input type="range" id="spNsl" min="1" max="4" step="0.05" value="1.5" oninput="onSpecNC()"><span id="spNcv">1.5</span></div>
   </div>
-  <div id="msdiv2" style="width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;"></div>
+  <div id="msdiv2" style="width:1px;height:48px;background:rgba(140,200,255,.18);align-self:center;"></div>
   <div class="mblk">
     <label>Prism Shape</label>
-    <select id="spShapeSel" onchange="onSpecShape()">
-      <option value="triangle">Equilateral Triangle</option>
-      <option value="rect" selected>Rectangle</option>
-      <option value="pentagon">Pentagon</option>
-      <option value="hex">Hexagon</option>
-    </select>
-    <div class="ndsp" id="spFaceDsp" style="font-size:9px;color:rgba(140,200,255,0.5);margin-top:2px;">Face: front</div>
+    <div class="mblk-row">
+      <select id="spShapeSel" onchange="onSpecShape()" style="width:160px;">
+        <option value="triangle">Equilateral Triangle</option>
+        <option value="rect" selected>Rectangle</option>
+        <option value="pentagon">Pentagon</option>
+        <option value="hex">Hexagon</option>
+        <option value="semicircle">Semicircular</option>
+      </select>
+      <div class="ndsp" id="spFaceDsp" style="font-size:9px;color:rgba(140,200,255,0.5);white-space:nowrap;">Face: front</div>
+    </div>
   </div>
-  <div id="msdiv5" style="width:1px;height:78px;background:rgba(140,200,255,.18);align-self:center;"></div>
-  <div class="mblk" style="min-width:110px;">
+  <div id="msdiv5" style="width:1px;height:48px;background:rgba(140,200,255,.18);align-self:center;"></div>
+  <div class="mblk" style="min-width:130px;">
     <label>Prism Tint</label>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <select id="prismTintSelSpec" onchange="onPrismTint()" style="flex:1;">
+    <div class="mblk-row">
+      <select id="prismTintSelSpec" onchange="onPrismTint()" style="width:120px;">
         <option value="none">— No Tint —</option>
-        <option value="red">Red</option>
-        <option value="green">Green</option>
-        <option value="blue">Blue</option>
-        <option value="yellow">Yellow</option>
-        <option value="cyan">Cyan</option>
-        <option value="magenta">Magenta</option>
-        <option value="orange">Orange</option>
-        <option value="violet">Violet</option>
+        <option value="red">■ Red</option>
+        <option value="green">■ Green</option>
+        <option value="blue">■ Blue</option>
+        <option value="yellow">■ Yellow</option>
+        <option value="cyan">■ Cyan</option>
+        <option value="magenta">■ Magenta</option>
+        <option value="orange">■ Orange</option>
+        <option value="violet">■ Violet</option>
       </select>
       <div id="tintSwatchSpec" style="width:14px;height:14px;border-radius:3px;border:1px solid rgba(140,200,255,.35);background:transparent;flex-shrink:0;"></div>
     </div>
   </div>
 </div>
 
-<div id="hint">Drag to orbit · Scroll to zoom · In Top view: long-press protractor to magnify</div>
+<div id="hint">Drag to orbit · Scroll to zoom · Drag laser to aim</div>
 <div id="tirn">⚠ Total Internal Reflection — θ₁ ≥ θc</div>
 <div id="loupeHint">🔍 Zoom active — drag to move magnifier</div>
 <div id="loupe"><canvas id="loupeCvs" width="320" height="320"></canvas></div>
@@ -223,7 +275,7 @@ const MD={
 };
 const MN={vacuum:'Air/Vacuum',water:'Water',ice:'Ice',glass:'Glass',crystal:'Crystal',diamond:'Diamond',custom:'Custom'};
 
-const S={lambda:532,theta1:45,n1:1.5,n2:1.5,showR:true,white:false,m1:'glass',m2:'glass',nc1:1.5,nc2:1.5,laz:0};
+const S={lambda:532,theta1:45,n1:1.31,n2:1.70,showR:true,white:false,m1:'ice',m2:'crystal',nc1:1.31,nc2:1.70,laz:0};
 
 // ── INTRO ANIMATION ────────────────────────────────────
 let introAnim={active:true,t:0,duration:1.8,laserVisible:false};
@@ -310,7 +362,7 @@ function prismColor(n){
   let b=1.0;
   const tc=TINT_COLORS[PRISM_TINT];
   if(tc){
-    const blend=0.75;
+    const blend=0.88;
     r=r*(1-blend)+tc[0]*blend;
     g=g*(1-blend)+tc[1]*blend;
     b=b*(1-blend)+tc[2]*blend;
@@ -321,16 +373,15 @@ function prismEmissive(n){
   const t=Math.min((n-1)/3,1);
   const tc=TINT_COLORS[PRISM_TINT];
   if(tc){
-    return new THREE.Color(tc[0]*t*0.18, tc[1]*t*0.18, tc[2]*t*0.18);
+    return new THREE.Color(tc[0]*t*0.30, tc[1]*t*0.30, tc[2]*t*0.30);
   }
   return new THREE.Color(t*0.04, t*0.06, t*0.12);
 }
 function prismOpacity(n){
   if(n<=1.0) return 0;
-  // n=1 → 0 (fully transparent), n=4 → 1.0 (fully opaque)
-  // Minimum (just above n=1) increased by 25% from 0.75 → ~0.94
+  // Reduced by 25%: max at n=4 is now 0.75, min just above n=1 is ~0.56
   const t=Math.min((n-1)/3,1);
-  return Math.min(1, 0.9375+t*0.0625);
+  return 0.56 + t*0.19;
 }
 
 function getN_dispersion(key,nc,wl){
@@ -420,57 +471,53 @@ const gr=new THREE.GridHelper(100,100,0x0e1a28,0x080f18); gr.position.y=-7.8; sc
 
 
 // ── PROTRACTOR (darkened) ──────────────────────────────
-function makeProtTex(sz,full){
+// theme: 'blue' (default) or 'red'
+function makeProtTex(sz,full,theme){
+  const isRed=theme==='red';
   const c=document.createElement('canvas'); c.width=sz; c.height=sz;
   const ctx=c.getContext('2d');
   const cx=sz/2,cy=sz/2,R=sz/2-10;
   ctx.clearRect(0,0,sz,sz);
   const grad=ctx.createRadialGradient(cx,cy,R*0.3,cx,cy,R);
-  grad.addColorStop(0,'rgba(6,12,24,0.96)');
-  grad.addColorStop(1,'rgba(2,5,12,0.96)');
+  grad.addColorStop(0,isRed?'rgba(24,8,8,0.96)':'rgba(6,12,24,0.96)');
+  grad.addColorStop(1,isRed?'rgba(14,3,3,0.96)':'rgba(2,5,12,0.96)');
   ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
   ctx.fillStyle=grad; ctx.fill();
-  ctx.strokeStyle='rgba(100,150,200,0.45)'; ctx.lineWidth=3; ctx.stroke();
+  ctx.strokeStyle=isRed?'rgba(200,100,100,0.45)':'rgba(100,150,200,0.45)'; ctx.lineWidth=3; ctx.stroke();
   [0.25,0.5,0.75].forEach(f=>{
     ctx.beginPath(); ctx.arc(cx,cy,R*f,0,Math.PI*2);
-    ctx.strokeStyle='rgba(80,145,225,0.1)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle=isRed?'rgba(220,80,80,0.1)':'rgba(80,145,225,0.1)'; ctx.lineWidth=1; ctx.stroke();
   });
 
+  // Tick color helpers
+  const tickBig  =isRed?'rgba(255,160,160,0.65)':'rgba(150,200,255,0.65)';
+  const tickSmall=isRed?'rgba(220,100,120,0.4)' :'rgba(120,160,220,0.4)';
+  const tickMinor=isRed?'rgba(160,60,60,0.22)'  :'rgba(70,120,180,0.22)';
+  const lblColor =isRed?'rgba(255,180,180,0.75)':'rgba(160,210,255,0.75)';
+
   if(full){
-    // Full protractor: 0° aligned with the NORMAL direction (top, 12 o'clock).
-    // Tick labels: from 0 at top, go up to 90 at each side (both left & right),
-    // then back down to 0 at bottom — symmetric in all 4 quadrants.
-    // So the displayed angle at canvas angle α (measured from top, clockwise) is:
-    //   quadrant I   (0–90°)  → show α
-    //   quadrant II  (90–180°) → show 180-α  (mirror back to 90→0)
-    //   quadrant III (180–270°) → show α-180  (0 at bottom, going to 90)
-    //   quadrant IV  (270–360°) → show 360-α  (mirror back 90→0)
     for(let deg=0;deg<360;deg++){
       const is10=deg%10===0,is5=deg%5===0;
-      if(!is5)continue; // skip non-5s for performance
+      if(!is5)continue;
       const tl=is10?R*0.13:R*0.08;
-      // canvas 0 = right (3 o'clock). We want 0° at top (12 o'clock) = -90° in canvas = 270°.
-      // So map: canvasAngle = (deg - 90) * π/180
       const rad=(deg-90)*Math.PI/180;
       const cos=Math.cos(rad),sin=Math.sin(rad);
       ctx.beginPath();
       ctx.moveTo(cx+(R-tl-1)*cos,cy+(R-tl-1)*sin);
       ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
-      // Compute the symmetric display degree (0 at top/bottom, 90 at sides)
       let disp=deg<=90?deg:deg<=180?180-deg:deg<=270?deg-180:360-deg;
       const isZero=disp===0;
-      ctx.strokeStyle=is10?'rgba(150,200,255,0.65)':'rgba(120,160,220,0.4)';
+      ctx.strokeStyle=is10?tickBig:tickSmall;
       ctx.lineWidth=is10?2:1.3; ctx.stroke();
       if(is10){
         const lR=R-tl-18;
         ctx.save(); ctx.translate(cx+lR*cos,cy+lR*sin); ctx.rotate(rad+Math.PI/2);
         ctx.font=`bold ${Math.round(sz*0.024)}px monospace`;
-        ctx.fillStyle=isZero?'rgba(255,220,80,0.95)':'rgba(160,210,255,0.75)';
+        ctx.fillStyle=isZero?'rgba(255,220,80,0.95)':lblColor;
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(String(disp),0,0); ctx.restore();
       }
     }
-    // Also draw minor ticks (1°) without labels for density
     for(let deg=0;deg<360;deg++){
       if(deg%5===0)continue;
       const rad=(deg-90)*Math.PI/180;
@@ -478,7 +525,7 @@ function makeProtTex(sz,full){
       ctx.beginPath();
       ctx.moveTo(cx+(R-R*0.04-1)*cos,cy+(R-R*0.04-1)*sin);
       ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
-      ctx.strokeStyle='rgba(70,120,180,0.22)'; ctx.lineWidth=0.7; ctx.stroke();
+      ctx.strokeStyle=tickMinor; ctx.lineWidth=0.7; ctx.stroke();
     }
     // Normal line (vertical dashed)
     ctx.save(); ctx.setLineDash([10,7]);
@@ -495,25 +542,22 @@ function makeProtTex(sz,full){
     ctx.fillText('NORMAL',cx,cy-R*0.84);
     ctx.fillStyle='rgba(70,220,200,0.45)';
     ctx.fillText('INTERFACE',cx+R*0.64,cy+13);
-    ctx.fillStyle='rgba(150,200,255,0.35)'; ctx.font=`${Math.round(sz*0.019)}px monospace`;
+    ctx.fillStyle=isRed?'rgba(255,170,170,0.35)':'rgba(150,200,255,0.35)'; ctx.font=`${Math.round(sz*0.019)}px monospace`;
     ctx.fillText('θ₁',cx-R*0.3,cy-R*0.42);
     ctx.fillText('θᵣ',cx+R*0.3,cy-R*0.42);
     ctx.fillText('θ₂',cx+R*0.3,cy+R*0.42);
   } else {
-    // Semi-circular prism protractor (bottom half only, since refracted ray goes downward).
-    // 0° at center bottom (normal direction, pointing into the prism), ±90 at sides.
     for(let deg=0;deg<=180;deg++){
       const is10=deg%10===0,is5=deg%5===0;
       if(!is5)continue;
       const tl=is10?R*0.13:R*0.08;
-      // Map deg=0 to bottom (90° in canvas), deg=90 to right (0°), deg=180 to left (180°)
       const canvasAngle=(deg+90)*Math.PI/180;
       const cos=Math.cos(canvasAngle),sin=Math.sin(canvasAngle);
       ctx.beginPath();
       ctx.moveTo(cx+(R-tl-1)*cos,cy+(R-tl-1)*sin);
       ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
       const displayDeg=deg<=90?deg:180-deg;
-      ctx.strokeStyle=is10?'rgba(150,200,255,0.65)':'rgba(120,160,220,0.4)';
+      ctx.strokeStyle=is10?tickBig:tickSmall;
       ctx.lineWidth=is10?2:1.3; ctx.stroke();
       if(is10){
         const lR=R-tl-18;
@@ -524,7 +568,6 @@ function makeProtTex(sz,full){
         ctx.fillText(String(displayDeg),0,0); ctx.restore();
       }
     }
-    // Minor ticks
     for(let deg=0;deg<=180;deg++){
       if(deg%5===0)continue;
       const canvasAngle=(deg+90)*Math.PI/180;
@@ -532,9 +575,8 @@ function makeProtTex(sz,full){
       ctx.beginPath();
       ctx.moveTo(cx+(R-R*0.04-1)*cos,cy+(R-R*0.04-1)*sin);
       ctx.lineTo(cx+(R-3)*cos,cy+(R-3)*sin);
-      ctx.strokeStyle='rgba(70,120,180,0.22)'; ctx.lineWidth=0.7; ctx.stroke();
+      ctx.strokeStyle=tickMinor; ctx.lineWidth=0.7; ctx.stroke();
     }
-    // Normal line (pointing down into prism)
     ctx.save(); ctx.setLineDash([10,7]);
     ctx.strokeStyle='rgba(180,150,60,0.55)'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx,cy+R-8); ctx.stroke();
@@ -551,11 +593,61 @@ function makeProtTex(sz,full){
 const PR=5.8;
 const pm=new THREE.Mesh(
   new THREE.CylinderGeometry(PR,PR,0.045,128),
-  new THREE.MeshStandardMaterial({map:makeProtTex(1024,true),roughness:0.6,transparent:true,opacity:0.75,side:THREE.DoubleSide})
+  new THREE.MeshStandardMaterial({map:makeProtTex(1024,true,'blue'),roughness:0.6,transparent:true,opacity:0.75,side:THREE.DoubleSide})
 );
 const TABLE_TOP_Y = TY + 0.16;
-pm.rotation.y=Math.PI/2; // rotate 90° so 0° aligns with Z-axis (normal direction)
+pm.rotation.y=Math.PI/2;
 pm.position.set(0, TABLE_TOP_Y + 0.02, 0); sc.add(pm);
+
+// ── MINI PROTRACTOR ────────────────────────────────────
+const MINI_PR = PR * 0.25; // 25% of main protractor
+const miniProtMesh=new THREE.Mesh(
+  new THREE.CylinderGeometry(MINI_PR,MINI_PR,0.055,128),
+  new THREE.MeshStandardMaterial({map:makeProtTex(512,true,'red'),roughness:0.5,transparent:true,opacity:0.85,side:THREE.DoubleSide})
+);
+miniProtMesh.rotation.y=Math.PI/2;
+let miniProtPos={x:3,z:3}; // position on table in world XZ
+miniProtMesh.position.set(miniProtPos.x, TABLE_TOP_Y+0.03, miniProtPos.z);
+miniProtMesh.visible=false;
+sc.add(miniProtMesh);
+
+let miniProtVisible=false;
+let miniProtDrag=false;
+let miniProtDragStart={x:0,y:0,px:0,pz:0};
+
+function toggleMiniProt(){
+  miniProtVisible=!miniProtVisible;
+  miniProtMesh.visible=miniProtVisible;
+  const btn=document.getElementById('miniProtBtn');
+  btn.classList.toggle('on',miniProtVisible);
+  btn.textContent=miniProtVisible?'👁 Hide':'👁 Show';
+}
+
+function isNearMiniProt(sx,sy){
+  if(!miniProtVisible) return false;
+  const s=toScr(new THREE.Vector3(miniProtPos.x,TABLE_TOP_Y+0.03,miniProtPos.z));
+  return Math.hypot(sx-s.x,sy-s.y)<60;
+}
+
+function applyMiniProtDrag(sx,sy){
+  if(!miniProtDragStart) return;
+  // Project screen delta onto table plane
+  const tableY=TABLE_TOP_Y;
+  const castPoint=(screenX,screenY)=>{
+    const ndc=new THREE.Vector2((screenX/innerWidth)*2-1,-(screenY/innerHeight)*2+1);
+    const ray=new THREE.Raycaster(); ray.setFromCamera(ndc,cam);
+    const plane=new THREE.Plane(new THREE.Vector3(0,1,0),-tableY);
+    const pt=new THREE.Vector3();
+    return ray.ray.intersectPlane(plane,pt)?pt:null;
+  };
+  const start=castPoint(miniProtDragStart.x,miniProtDragStart.y);
+  const cur=castPoint(sx,sy);
+  if(!start||!cur) return;
+  const dx=cur.x-start.x, dz=cur.z-start.z;
+  miniProtPos.x=Math.max(-12,Math.min(12,miniProtDragStart.px+dx));
+  miniProtPos.z=Math.max(-9,Math.min(9,miniProtDragStart.pz+dz));
+  miniProtMesh.position.set(miniProtPos.x,TABLE_TOP_Y+0.03,miniProtPos.z);
+}
 
 
 // ── PRISMS ─────────────────────────────────────────────
@@ -648,8 +740,7 @@ function buildPrisms(){
   semiGeo.rotateY(Math.PI);
   const mat1=prismMat(n1);
   const m1=new THREE.Mesh(semiGeo,mat1);
-  const e1=new THREE.Mesh(semiGeo.clone(),prismEdgeMat(n1));
-  prGrp1.add(m1,e1);
+  prGrp1.add(m1);
   prGrp1.position.z=prismOffset;
   sc.add(prGrp1);
 
@@ -660,9 +751,7 @@ function buildPrisms(){
   const mat2=prismMat(n2);
   const m2=new THREE.Mesh(rectGeo,mat2);
   m2.position.set(0,pCenterY,-rectD/2);
-  const e2=new THREE.Mesh(rectGeo.clone(),prismEdgeMat(n2));
-  e2.position.copy(m2.position);
-  prGrp2.add(m2,e2);
+  prGrp2.add(m2);
   prGrp2.position.z=-prismOffset;
   sc.add(prGrp2);
 }
@@ -997,6 +1086,16 @@ function hideLoupe(){
   loupeEl.style.display='none';
   document.getElementById('loupeHint').style.display='none';
   loupeActive=false;
+  document.getElementById('loupeBtn').classList.remove('on');
+}
+function toggleLoupe(){
+  if(loupeActive){
+    hideLoupe();
+  } else {
+    loupeActive=true;
+    loupePos={x:innerWidth/2,y:innerHeight/2};
+    document.getElementById('loupeBtn').classList.add('on');
+  }
 }
 function hitProt(x,y){
   const ndc=new THREE.Vector2((x/innerWidth)*2-1,-(y/innerHeight)*2+1);
@@ -1031,16 +1130,53 @@ function rotateLaser(d){
 }
 function fullUpdate(){updateLaserPose();buildBeams();updateHUD();}
 
-function setTopView(){orb.phi=Math.PI/2-0.04;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=true;}
-function setFrontView(){orb.phi=0.08;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=false;}
-function resetView(){orb.theta=0.65;orb.phi=0.30;orb.radius=19;orbit();normalLineVisible=false;}
+function setTopView(){orb.phi=Math.PI/2-0.04;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=true;syncViewSliders();}
+function setFrontView(){orb.phi=0.08;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=false;syncViewSliders();}
+function resetView(){orb.theta=0.65;orb.phi=0.30;orb.radius=19;orbit();normalLineVisible=false;syncViewSliders();}
 function zoomIn(){orb.radius=Math.max(5,orb.radius-2);orbit();}
 function zoomOut(){orb.radius=Math.min(40,orb.radius+2);orbit();}
 function rotateViewLeft(){orb.theta-=0.2;orbit();normalLineVisible=false;}
 function rotateViewRight(){orb.theta+=0.2;orbit();normalLineVisible=false;}
+function tiltViewUp(){orb.phi=Math.max(-Math.PI/2.1,orb.phi-0.15);orbit();normalLineVisible=false;}
+function tiltViewDown(){orb.phi=Math.min(Math.PI/2.1,orb.phi+0.15);orbit();normalLineVisible=false;}
+function onZoomSl(){orb.radius=parseFloat(document.getElementById('zoomSl').value);document.getElementById('zoomVal').textContent=Math.round(orb.radius);orbit();}
+function onOrbitSl(){orb.theta=parseFloat(document.getElementById('orbitSl').value);normalLineVisible=false;orbit();}
+function onTiltSl(){orb.phi=parseFloat(document.getElementById('tiltSl').value);normalLineVisible=false;orbit();}
+function syncViewSliders(){
+  const zs=document.getElementById('zoomSl'); if(zs){zs.value=orb.radius;document.getElementById('zoomVal').textContent=Math.round(orb.radius);}
+  const os=document.getElementById('orbitSl'); if(os) os.value=orb.theta;
+  const ts=document.getElementById('tiltSl'); if(ts) ts.value=orb.phi;
+}
+
+// Mini protractor rotate & resize (slider-driven)
+let miniProtAngle=0;
+let miniProtScale=1.0;
+
+function onMiniProtRot(){
+  miniProtAngle=parseFloat(document.getElementById('miniProtRotSl').value)*Math.PI/180;
+  document.getElementById('miniProtRotVal').textContent=Math.round(miniProtAngle*180/Math.PI)+'°';
+  miniProtMesh.rotation.y=Math.PI/2+miniProtAngle;
+}
+function onMiniProtSize(){
+  miniProtScale=parseFloat(document.getElementById('miniProtSizeSl').value);
+  document.getElementById('miniProtSizeVal').textContent=miniProtScale.toFixed(1)+'×';
+  miniProtMesh.scale.set(miniProtScale,miniProtScale,miniProtScale);
+}
+function resetMiniProt(){
+  miniProtAngle=0;
+  miniProtScale=1.0;
+  miniProtMesh.rotation.y=Math.PI/2;
+  miniProtMesh.scale.set(1,1,1);
+  miniProtPos={x:3,z:3};
+  miniProtMesh.position.set(miniProtPos.x,TABLE_TOP_Y+0.03,miniProtPos.z);
+  document.getElementById('miniProtRotSl').value=0;
+  document.getElementById('miniProtRotVal').textContent='0°';
+  document.getElementById('miniProtSizeSl').value=1.0;
+  document.getElementById('miniProtSizeVal').textContent='1.0×';
+}
 
 // ── ORBIT INPUT ────────────────────────────────────────
-let drag=null,pressT=null,laserDrag=false,laserDragStart=null;
+let drag=null,laserDrag=false,laserDragStart=null;
 
 function screenAngleToTheta1(sx,sy){
   // Cast a ray from screen (sx,sy) onto the horizontal plane at beamY
@@ -1082,18 +1218,21 @@ cvs.addEventListener('mousedown',e=>{
     laserDragStart={x:e.clientX,y:e.clientY,theta:S.theta1};
     return;
   }
+  if(miniProtDrag||isNearMiniProt(e.clientX,e.clientY)){
+    miniProtDrag=true;
+    miniProtDragStart={x:e.clientX,y:e.clientY,px:miniProtPos.x,pz:miniProtPos.z};
+    return;
+  }
   drag={x:e.clientX,y:e.clientY,th:orb.theta,ph:orb.phi};
   normalLineVisible=false;
-  pressT=setTimeout(()=>{
-    if(isTopView()){
-      loupeActive=true;
-      loupePos={x:e.clientX,y:e.clientY};
-    }
-  },550);
 });
 cvs.addEventListener('mousemove',e=>{
   if(laserDrag){
     applyLaserDrag(e.clientX,e.clientY);
+    return;
+  }
+  if(miniProtDrag){
+    applyMiniProtDrag(e.clientX,e.clientY);
     return;
   }
   if(loupeActive){
@@ -1108,13 +1247,14 @@ cvs.addEventListener('mousemove',e=>{
 });
 cvs.addEventListener('mouseup',()=>{
   laserDrag=false;
-  clearTimeout(pressT);drag=null;
-  if(!loupeActive)hideLoupe();else setTimeout(hideLoupe,1200);
+  miniProtDrag=false;
+  drag=null;
+  syncViewSliders();
 });
-cvs.addEventListener('mouseleave',()=>{laserDrag=false;clearTimeout(pressT);drag=null;hideLoupe();});
-cvs.addEventListener('wheel',e=>{orb.radius=Math.max(5,Math.min(40,orb.radius+e.deltaY*0.022));normalLineVisible=false;orbit();e.preventDefault();},{passive:false});
+cvs.addEventListener('mouseleave',()=>{laserDrag=false;miniProtDrag=false;drag=null;});
+cvs.addEventListener('wheel',e=>{orb.radius=Math.max(5,Math.min(40,orb.radius+e.deltaY*0.022));normalLineVisible=false;orbit();syncViewSliders();e.preventDefault();},{passive:false});
 
-let tS={},tD0=null,tR0=null,pressT2=null,touchLaserDrag=false;
+let tS={},tD0=null,tR0=null,pressT2=null,touchLaserDrag=false,touchMiniProtDrag=false;
 cvs.addEventListener('touchstart',e=>{
   e.preventDefault();
   if(e.touches.length===1){
@@ -1124,13 +1264,14 @@ cvs.addEventListener('touchstart',e=>{
       tS={x:t.clientX,y:t.clientY,th:orb.theta,ph:orb.phi};
       return;
     }
+    if(isNearMiniProt(t.clientX,t.clientY)){
+      touchMiniProtDrag=true;
+      miniProtDragStart={x:t.clientX,y:t.clientY,px:miniProtPos.x,pz:miniProtPos.z};
+      return;
+    }
     tS={x:t.clientX,y:t.clientY,th:orb.theta,ph:orb.phi};
     normalLineVisible=false;
-    pressT2=setTimeout(()=>{
-      if(isTopView()){loupeActive=true;loupePos={x:t.clientX,y:t.clientY};}
-    },550);
   } else if(e.touches.length===2){
-    clearTimeout(pressT2);
     tD0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
     tR0=orb.radius;
   }
@@ -1143,20 +1284,27 @@ cvs.addEventListener('touchmove',e=>{
       applyLaserDrag(t.clientX,t.clientY);
       return;
     }
+    if(touchMiniProtDrag){
+      applyMiniProtDrag(t.clientX,t.clientY);
+      return;
+    }
+    if(loupeActive){
+      loupePos={x:t.clientX,y:t.clientY};
+      return;
+    }
     orb.theta=tS.th-(t.clientX-tS.x)*0.007;
     orb.phi=tS.ph+(t.clientY-tS.y)*0.007;
     normalLineVisible=false;
     orbit();
-    if(loupeActive)loupePos={x:t.clientX,y:t.clientY};
   } else if(e.touches.length===2&&tD0){
     const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
     orb.radius=Math.max(5,Math.min(40,tR0*(tD0/d))); orbit();
   }
 },{passive:false});
 cvs.addEventListener('touchend',e=>{
-  clearTimeout(pressT2);
   touchLaserDrag=false;
-  if(e.touches.length===0)setTimeout(hideLoupe,1200);
+  touchMiniProtDrag=false;
+  miniProtDrag=false;
 },{passive:false});
 
 // ── RENDER LOOP ────────────────────────────────────────
@@ -1206,38 +1354,45 @@ const SP={n:1.5,mat:'glass',nc:1.5,shape:'rect',faceIdx:0,prismAngle:0,_prismOff
 function specShapeVerts(shape){
   switch(shape){
     case 'triangle':{
-      // Equilateral triangle, flat face at most-negative Y (= world +Z).
-      // Vertices: top two at Y=-R/2 (horizontal front face), apex at Y=+R (behind).
-      // Polar: front vertices at 210° and 330° (both at Y=-R/2), apex at 90° (Y=+R).
-      // Using i*2π/3 + π/2+π = 3π/2 for apex... simpler: angles 90°,210°,330° gives apex at top (+Y).
-      // We want apex at +Y (behind in world), flat face at -Y (front in world).
-      // Angles: 90° (apex, Y=+R), 210° (Y=-R/2), 330° (Y=-R/2). Start at -π/2 (270°=bottom vertex) rotated:
-      // Use: i*2π/3 - π/2 → 270°(-90°), 30°, 150°. Apex would be at... let's just define directly:
       const R=3.2;
-      // vertices at 270°, 30°, 150° → Y values: -R, R·sin30°=R/2, R·sin150°=R/2. Front face between v1,v2 at Y=R/2 (world -R/2, wrong)
-      // Correct: apex at top (+Y), front face at bottom (-Y):
-      // v0=90°: [0,R], v1=210°: [-R√3/2,-R/2], v2=330°: [R√3/2,-R/2]
-      // Front face v1→v2: both at Y=-R/2 (world Z=+R/2 before offset). ✓
       return[[0,R],[-R*Math.sqrt(3)/2,-R/2],[R*Math.sqrt(3)/2,-R/2]];
     }
     case 'rect': return[[-2.8,2],[2.8,2],[2.8,-2],[-2.8,-2]];
     case 'pentagon':{
-      // Pentagon: flat face at most-negative Y.
-      // One face horizontal at the bottom (most-negative Y).
-      // For regular pentagon, circumradius R, flat-bottom: vertices at 270°, 270°±72°, 270°±144°
-      // 270°=bottom-apex? No. For flat-bottom: two vertices share the lowest Y, straddling 270°.
-      // Vertices at 270°-36°=234° and 270°+36°=306° form the bottom face.
-      // All 5 vertices: 90°, 90°+72°=162°, 234°, 306°, 18° (= 90°-72°).
-      // i*72° + 90°: 90°,162°,234°,306°,18°. Bottom face: v2(234°)→v3(306°), midpoint at 270° (Y=-R). ✓
       const R=3.0;
       return[0,1,2,3,4].map(i=>{const a=i*2*Math.PI/5+Math.PI/2;return[R*Math.cos(a),R*Math.sin(a)];});
     }
     case 'hex':{
-      // Hexagon: flat face at most-negative Y (= world +Z front).
-      // Start at 0°: vertices at 0°,60°,120°,180°,240°,300°. Bottom face (min Y) at 210°+330° midpoint → no.
-      // At offset=0: vertices at 0°,60°,...  bottom two at 210° and 330° (Y=-R√3/2). Flat bottom. ✓
       const R=2.8;
       return[0,1,2,3,4,5].map(i=>{const a=i*2*Math.PI/6;return[R*Math.cos(a),R*Math.sin(a)];});
+    }
+    case 'semicircle':{
+      // Flat face at most-negative Y (front face toward laser).
+      // Flat diameter along X at Y=-R, curved arc at top (Y from -R to +R).
+      // Approximated as polygon: flat base + arc (32 segments).
+      const R=3.0;
+      const verts=[];
+      verts.push([-R,-R]); // left corner of flat base
+      const segs=32;
+      for(let i=0;i<=segs;i++){
+        const a=Math.PI+(i/segs)*Math.PI; // π to 2π (bottom-left to bottom-right via top)
+        verts.push([R*Math.cos(a),-R+R*Math.sin(a)+R]); // center at (0,0), arc from y=-R upward
+      }
+      // Actually let's use a simpler canonical form:
+      // semicircle with flat bottom at Y=-R, arc going up.
+      // Vertices: left (-R,-R), right (R,-R), then arc from right going counterclockwise to left.
+      const v2=[];
+      v2.push([-R,-R],[R,-R]);
+      for(let i=0;i<=segs;i++){
+        const a=-(Math.PI/2)+(i/segs)*Math.PI; // from -90° to +90° (right to left via top)
+        // Wait, we want arc from right (R,-R)→top (0,0+offset)→left (-R,-R) but half circle centered at (0,-R)
+        const ang=-(Math.PI/2)+(i/segs)*Math.PI; // right (+90) to left (-90)?
+        // Parametric: center (0,-R), radius R. Start at angle 0 (rightmost = (R,-R)), go to π (leftmost = (-R,-R)) via top.
+        const aa=(i/segs)*Math.PI; // 0 → π
+        v2.push([R*Math.cos(aa), -R + R*Math.sin(aa)]);
+      }
+      // Remove duplicate endpoints (first and last arc points coincide with flat base verts)
+      return v2;
     }
   }
 }
@@ -1278,28 +1433,38 @@ function buildSpecPrism(){
   // Compute the offset so the front face (at current rotation) sits at Z=0
   const prismOffsetZ=computeSpecOffsetZ(SP.shape, SP.prismAngle);
 
-  // Build extruded polygon using ShapeGeometry + extrude
-  const shape=new THREE.Shape();
-  shape.moveTo(verts2d[0][0],verts2d[0][1]);
-  for(let i=1;i<N;i++) shape.lineTo(verts2d[i][0],verts2d[i][1]);
-  shape.closePath();
+  let geo;
+  if(SP.shape==='semicircle'){
+    // Use the dedicated semicircle geometry (flat face at Y=0, arc pointing away)
+    const R=3.0;
+    const shape3=new THREE.Shape();
+    shape3.moveTo(-R,0);
+    shape3.lineTo(R,0);
+    shape3.absarc(0,0,R,0,Math.PI,false);
+    shape3.closePath();
+    const extS={depth:pH,bevelEnabled:false};
+    geo=new THREE.ExtrudeGeometry(shape3,extS);
+    geo.rotateX(-Math.PI/2);
+    geo.translate(0,prismBotY,0);
+  } else {
+    // Build extruded polygon using ShapeGeometry + extrude
+    const shape=new THREE.Shape();
+    shape.moveTo(verts2d[0][0],verts2d[0][1]);
+    for(let i=1;i<N;i++) shape.lineTo(verts2d[i][0],verts2d[i][1]);
+    shape.closePath();
 
-  const extSettings={depth:pH,bevelEnabled:false};
-  const geo=new THREE.ExtrudeGeometry(shape,extSettings);
-  // Extruded along Z by default; rotate so it extrudes along Y
-  geo.rotateX(-Math.PI/2);
-  geo.translate(0,prismBotY,0);
+    const extSettings={depth:pH,bevelEnabled:false};
+    geo=new THREE.ExtrudeGeometry(shape,extSettings);
+    // Extruded along Z by default; rotate so it extrudes along Y
+    geo.rotateX(-Math.PI/2);
+    geo.translate(0,prismBotY,0);
+  }
 
   const mat=prismMat(SP.n);
   const mesh=new THREE.Mesh(geo,mat);
 
-  // Edge lines
-  const edgesGeo=new THREE.EdgesGeometry(geo);
-  const edgeMat=new THREE.LineBasicMaterial({color:prismColor(SP.n),transparent:true,opacity:Math.max(0.3,prismOpacity(SP.n)*0.6)});
-  const edges=new THREE.LineSegments(edgesGeo,edgeMat);
-
   specPrismGrp=new THREE.Group();
-  specPrismGrp.add(mesh,edges);
+  specPrismGrp.add(mesh);
   specPrismGrp.rotation.y=SP.prismAngle;
   // Offset so the front face sits at Z=0 (the 90° protractor line)
   specPrismGrp.position.z=prismOffsetZ;
@@ -1546,9 +1711,9 @@ function onSpecShape(){
   updateFaceDsp();
 }
 function rotSpecFace(d){
-  // Rotation increments per shape: triangle: 30°, rect: 90°, pentagon: 72°, hex: 60°
-  const steps={triangle:30,rect:90,pentagon:72,hex:60};
-  const deg=steps[SP.shape]||(360/specShapeVerts(SP.shape).length);
+  // Rotation increments per shape: triangle: 30°, rect: 90°, pentagon: 72°, hex: 60°, semicircle: 45°
+  const steps={triangle:30,rect:90,pentagon:72,hex:60,semicircle:45};
+  const deg=steps[SP.shape]||(360/Math.max(specShapeVerts(SP.shape).length,4));
   SP.prismAngle+=d*deg*Math.PI/180;
   buildSpecPrism();
   buildSpecBeams();
