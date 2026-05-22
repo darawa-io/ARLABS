@@ -69,6 +69,9 @@ body.ar-active #hud,
 body.ar-active #pip { display:none !important; }
 /* Hide controls that should not be changed once AR starts */
 body.ar-active .ctrl-ar-hide { display:none !important; }
+/* Hide challenge panel and camera controls in AR */
+body.ar-active #challenge-panel,
+body.ar-active #cam-controls { display:none !important; }
 /* Focal-length quiz — only shown in AR converging mode */
 #focal-quiz{display:none;align-items:center;flex-wrap:wrap;gap:6px;padding:3px 0;}
 body.ar-active #focal-quiz{display:flex;}
@@ -78,7 +81,40 @@ body.ar-active #focal-quiz{display:flex;}
 
 
 
-/* ── AR marker instructions panel ── */
+/* ── Camera control sliders ── */
+#cam-controls{position:absolute;bottom:70px;right:20px;background:rgba(8,18,35,.9);backdrop-filter:blur(20px);border:1px solid rgba(100,200,255,.2);border-radius:14px;padding:12px 14px;z-index:10;min-width:190px;}
+#cam-controls h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(100,200,255,.45);text-transform:uppercase;margin-bottom:10px;}
+.cs{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.cs label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,220,255,.6);width:46px;flex-shrink:0;}
+.cs input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(100,200,255,.2);outline:none;cursor:pointer;}
+.cs input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#64c8ff;cursor:pointer;}
+.cs .cv{font-family:'Space Mono',monospace;font-size:9px;color:#64c8ff;width:30px;text-align:right;}
+
+/* ── Challenge mode ── */
+#challenge-panel{position:absolute;top:20px;left:20px;background:rgba(8,18,35,.95);backdrop-filter:blur(20px);border:1px solid rgba(255,180,60,.35);border-radius:14px;padding:12px 14px;z-index:15;width:240px;display:none;}
+#challenge-panel.show{display:block;}
+#challenge-panel h2{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:#ffb43c;text-transform:uppercase;margin-bottom:9px;text-align:center;}
+.ch-type-sel{display:flex;gap:5px;margin-bottom:10px;}
+.ch-type-btn{flex:1;padding:5px 4px;border-radius:8px;border:1px solid rgba(255,180,60,.3);background:rgba(255,180,60,.06);color:rgba(255,180,60,.7);font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.5px;cursor:pointer;text-align:center;transition:all .2s;}
+.ch-type-btn.active{background:rgba(255,180,60,.22);border-color:#ffb43c;color:#fff;}
+#ch-focal-panel,#ch-image-panel{display:none;}
+#ch-focal-panel.show,#ch-image-panel.show{display:block;}
+.ch-desc{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(200,220,255,.6);line-height:1.7;margin-bottom:8px;border:1px solid rgba(100,200,255,.12);border-radius:6px;padding:6px 8px;background:rgba(100,200,255,.04);}
+.ch-input-row{display:flex;align-items:center;gap:5px;margin-top:7px;}
+.ch-input-row label{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,220,255,.7);flex-shrink:0;}
+.ch-input-row input[type=number]{flex:1;padding:4px 6px;border-radius:6px;border:1px solid rgba(100,200,255,.35);background:rgba(0,0,0,.5);color:#fff;font-family:'Space Mono',monospace;font-size:10px;text-align:center;outline:none;min-width:0;}
+.ch-input-row input[type=number]:focus{border-color:#64c8ff;}
+.ch-validate-btn{padding:5px 9px;border-radius:8px;border:1px solid rgba(100,200,255,.5);background:rgba(30,80,160,.4);color:#64c8ff;font-family:'Space Mono',monospace;font-size:8.5px;cursor:pointer;letter-spacing:.5px;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.ch-validate-btn:hover{background:rgba(30,80,160,.7);}
+#ch-focal-result,#ch-image-result{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;margin-top:6px;padding:5px 8px;border-radius:6px;min-height:24px;display:none;}
+#ch-focal-result.show,#ch-image-result.show{display:block;}
+#ch-focal-result.ok,#ch-image-result.ok{color:#7fffb2;background:rgba(127,255,178,.08);border:1px solid rgba(127,255,178,.25);}
+#ch-focal-result.fail,#ch-image-result.fail{color:#ff7070;background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.2);}
+.ch-again-btn{width:100%;margin-top:8px;padding:6px;border-radius:8px;border:1px solid rgba(255,180,60,.4);background:rgba(255,180,60,.08);color:#ffb43c;font-family:'Space Mono',monospace;font-size:8.5px;cursor:pointer;letter-spacing:.5px;transition:all .2s;}
+.ch-again-btn:hover{background:rgba(255,180,60,.2);}
+.ch-stat{font-family:'Space Mono',monospace;font-size:8px;color:rgba(180,220,255,.45);text-align:center;margin-top:6px;letter-spacing:1px;}
+#ch-screen-hint{font-family:'Space Mono',monospace;font-size:8px;color:rgba(127,255,178,.6);margin-top:5px;letter-spacing:.5px;line-height:1.6;}
+
 #ar-instructions{
   display:none;
   background:rgba(8,18,35,.95);backdrop-filter:blur(16px);
@@ -181,6 +217,7 @@ body.ar-active #focal-quiz{display:flex;}
   <button class="btn"       id="btn-rays">Show Rays</button>
   <button class="btn amber" id="btn-lock">🔓 Lock h</button>
   <button class="btn ctrl-ar-hide" id="btn-diverging">⬤ Converging</button>
+  <button class="btn amber" id="btn-challenge">🏆 Challenge</button>
   <div class="sep"></div>
   <button class="btn green" id="btn-ar">📷 AR Mode</button>
   <button class="btn ctrl-ar-show" id="btn-guide" style="display:none;" onclick="toggleARGuide()">📋 Guide</button>
@@ -192,6 +229,66 @@ body.ar-active #focal-quiz{display:flex;}
     <input id="focal-quiz-input" type="number" min="1" max="50" step="0.5" placeholder="e.g. 15">
     <button id="focal-quiz-btn">Validate</button>
     <div id="focal-quiz-result"></div>
+  </div>
+</div>
+
+<div id="cam-controls">
+  <h3>Camera</h3>
+  <div class="cs">
+    <label>Rotation</label>
+    <input type="range" id="cam-theta" min="-180" max="180" value="-30" step="1">
+    <span class="cv" id="cam-theta-val">-30°</span>
+  </div>
+  <div class="cs">
+    <label>Tilt</label>
+    <input type="range" id="cam-phi" min="-22" max="45" value="25" step="1">
+    <span class="cv" id="cam-phi-val">25°</span>
+  </div>
+  <div class="cs">
+    <label>Zoom</label>
+    <input type="range" id="cam-zoom" min="6" max="55" value="15" step="0.5">
+    <span class="cv" id="cam-zoom-val">15</span>
+  </div>
+  <button id="cam-reset-btn" style="width:100%;margin-top:4px;padding:5px;border-radius:8px;border:1px solid rgba(100,200,255,.3);background:rgba(100,200,255,.07);color:rgba(100,200,255,.8);font-family:'Space Mono',monospace;font-size:8.5px;cursor:pointer;letter-spacing:1px;transition:all .2s;" onmouseenter="this.style.background='rgba(100,200,255,.18)'" onmouseleave="this.style.background='rgba(100,200,255,.07)'">⟳ Reset Camera</button>
+</div>
+
+<!-- Challenge mode panel — left side, below title -->
+<div id="challenge-panel" style="top:168px;">
+  <h2>🏆 Challenge Mode</h2>
+  <div class="ch-type-sel">
+    <div class="ch-type-btn active" id="ch-btn-focal" onclick="selectChallengeType('focal')">Find Focal Length</div>
+    <div class="ch-type-btn" id="ch-btn-image" onclick="selectChallengeType('image')">Find Image Position</div>
+  </div>
+
+  <!-- Focal length challenge -->
+  <div id="ch-focal-panel" class="show">
+    <div class="ch-desc">
+      The focal length is <b>hidden</b>. Move the object and screen to find where the image is focused. Measure d_o and d_i, then calculate <b>1/f = 1/d_o + 1/d_i</b>.
+    </div>
+    <div class="ch-input-row">
+      <label>f (cm) =</label>
+      <input type="number" id="ch-focal-input" min="1" max="50" step="0.1" placeholder="your answer">
+      <button class="ch-validate-btn" onclick="validateFocal()">Check ✓</button>
+    </div>
+    <div id="ch-focal-result"></div>
+    <button class="ch-again-btn" onclick="newFocalChallenge()">🎲 Challenge me again</button>
+    <div class="ch-stat" id="ch-focal-stat"></div>
+  </div>
+
+  <!-- Image position challenge -->
+  <div id="ch-image-panel">
+    <div class="ch-desc">
+      The object is fixed at a random position. Move the screen to where you think the image will be focused. Enter the screen position and press Apply.
+    </div>
+    <div class="ch-input-row">
+      <label>Screen d_i (cm) =</label>
+      <input type="number" id="ch-image-input" min="1" max="150" step="0.5" placeholder="position">
+      <button class="ch-validate-btn" onclick="applyScreenPos()">Apply →</button>
+    </div>
+    <div id="ch-screen-hint"></div>
+    <div id="ch-image-result"></div>
+    <button class="ch-again-btn" onclick="newImageChallenge()">🎲 Challenge me again</button>
+    <div class="ch-stat" id="ch-image-stat"></div>
   </div>
 </div>
 
@@ -421,10 +518,19 @@ function refreshScreenTexture(){
 function updateHUD(){
   const f=effectiveF(),do_=S.objectDist,ho=S.objectHeight;
   const di=1/(1/f-1/do_),mag=-di/do_,hi=mag*ho,dlt=S.screenDist-di;
-  document.getElementById('val-f').textContent=f.toFixed(1)+' cm';
+  // Hide f in focal challenge; hide d_i in image challenge
+  if(challengeMode && challengeType==='focal'){
+    document.getElementById('val-f').textContent='?? cm';
+  } else {
+    document.getElementById('val-f').textContent=f.toFixed(1)+' cm';
+  }
   document.getElementById('val-ho').textContent=ho.toFixed(1)+' cm';
   document.getElementById('val-do').textContent=do_.toFixed(1)+' cm';
-  document.getElementById('val-di').textContent=isFinite(di)?di.toFixed(1)+' cm':'∞';
+  if(challengeMode && challengeType==='image'){
+    document.getElementById('val-di').textContent='?? cm';
+  } else {
+    document.getElementById('val-di').textContent=isFinite(di)?di.toFixed(1)+' cm':'∞';
+  }
   document.getElementById('val-hi').textContent=isFinite(hi)?hi.toFixed(1)+' cm':'—';
   document.getElementById('val-delta').textContent=isFinite(dlt)?(dlt>=0?'+':'')+dlt.toFixed(1)+' cm':'—';
   document.getElementById('val-mag').textContent=isFinite(mag)?mag.toFixed(2)+'×':'—';
@@ -484,7 +590,7 @@ const rim=new THREE.DirectionalLight(0x00ccff,0.8); rim.position.set(-10,4,-5); 
 const fill=new THREE.PointLight(0x4488ff,1.5,40); fill.position.set(0,8,5); scene3.add(fill);
 
 // Orbit cam
-const orb={theta:0,phi:0.18,radius:22,cx:0,cy:0.5,cz:0};
+const orb={theta:-30*Math.PI/180,phi:25*Math.PI/180,radius:15,cx:0,cy:0.5,cz:0};
 const PHI_MAX=Math.PI/4,PHI_MIN=-Math.PI/8;
 function applyOrbit(){
   orb.phi=Math.max(PHI_MIN,Math.min(PHI_MAX,orb.phi));
@@ -654,7 +760,13 @@ function updateRays(){
   const lx=lensD.position.x, ox=arrowD.position.x;
   const di=1/(1/f-1/do_); if(!isFinite(di)) return;
 
-  const tipY=ho, imgX=lx+di, imgY=-tipY*(di/do_), farX=lx+16;
+  // Arrow tip is at the top of the cone head
+  const total=Math.max(0.5,S.objectHeight*CM);
+  const headH=Math.min(0.9,total*0.32);
+  const shH=Math.max(0.1,total-headH);
+  const tipY=shH+headH; // top of cone = actual tip of arrow
+
+  const imgX=lx+di, imgY=-tipY*(di/do_), farX=lx+16;
   const isVirtual=(di<0);
 
   // Heights where each of the 3 principal rays exits the lens
@@ -668,7 +780,7 @@ function updateRays(){
   // Works for both real (imgX>lx) and virtual (imgX<lx)
   function fwdSlope(r_lY){ const dx=lx-imgX; return Math.abs(dx)<1e-6?0:(r_lY-imgY)/dx; }
 
-  // ── Rays before the lens ──
+  // ── Rays before the lens — all start from arrow tip ──
   addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,tipY,0)],0xffcc00,0.95);
   addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,0,0)],0x00ffcc,0.95);
   addRayLine([new THREE.Vector3(ox,tipY,0),new THREE.Vector3(lx,r3_lY,0)],0xff66ff,0.90);
@@ -734,7 +846,7 @@ function drawLabels(){
   const tipY=Math.max(0.5,S.objectHeight*CM)+1.1;
   function w2s(v){const c=v.clone().project(cam3);return{x:(c.x*.5+.5)*window.innerWidth,y:(-.5*c.y+.5)*window.innerHeight};}
   [{p:new THREE.Vector3(arrowD.position.x,tipY,0),t:`OBJECT  h=${S.objectHeight.toFixed(1)}cm`,c:'#ff8888'},
-   {p:new THREE.Vector3(0,3.2,0),t:`LENS  f=${S.focalLength}cm`,c:'#88ccff'},
+   {p:new THREE.Vector3(0,3.2,0),t:(challengeMode&&challengeType==='focal')?`LENS  f=?? cm`:`LENS  f=${S.focalLength}cm`,c:'#88ccff'},
    {p:new THREE.Vector3(screenD.position.x,3.5,0),t:'SCREEN',c:'#88ffcc'}
   ].forEach(({p,t,c})=>{
     const s=w2s(p); lctx.font='600 11px "Space Mono",monospace'; lctx.fillStyle=c; lctx.shadowColor=c; lctx.shadowBlur=8; lctx.fillText(t,s.x,s.y); lctx.shadowBlur=0;
@@ -771,8 +883,8 @@ canvas.addEventListener('mousedown',e=>{
 canvas.addEventListener('mousemove',e=>{
   if(arMode||!drag)return;
   const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;
-  if(drag.mode==='orbit'){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
-  else applyDrag(drag,dx,dy,0.22);
+  if(drag.mode==='orbit'){orb.theta-=dx*0.0012;orb.phi+=dy*0.0012;applyOrbit();if(window._syncCamSliders)window._syncCamSliders();}
+  else applyDragPatched(drag,dx,dy,0.22);
 });
 canvas.addEventListener('mouseup',()=>{drag=null;if(!arMode)canvas.style.cursor='default';});
 canvas.addEventListener('mouseleave',()=>{drag=null;});
@@ -797,8 +909,8 @@ canvas.addEventListener('touchmove',e=>{
     if(tArr.length>=2){const p0=touches[tArr[0].identifier]||{x:tArr[0].clientX,y:tArr[0].clientY},p1=touches[tArr[1].identifier]||{x:tArr[1].clientX,y:tArr[1].clientY};const oldD=Math.hypot(p0.x-p1.x,p0.y-p1.y),newD=Math.hypot(tArr[0].clientX-tArr[1].clientX,tArr[0].clientY-tArr[1].clientY);if(oldD>1){orb.radius=Math.max(6,Math.min(55,orb.radius*(oldD/newD)));applyOrbit();}}
   } else if(drag){
     const t=e.changedTouches[0];const dx=t.clientX-drag.lastX,dy=t.clientY-drag.lastY;
-    if(drag.mode==='orbit'&&!arMode){orb.theta-=dx*0.003;orb.phi+=dy*0.003;applyOrbit();}
-    else if(drag.mode!=='orbit')applyDrag(drag,dx,dy,0.22);
+    if(drag.mode==='orbit'&&!arMode){orb.theta-=dx*0.0012;orb.phi+=dy*0.0012;applyOrbit();if(window._syncCamSliders)window._syncCamSliders();}
+    else if(drag.mode!=='orbit')applyDragPatched(drag,dx,dy,0.22);
     drag.lastX=t.clientX;drag.lastY=t.clientY;drag.startD=drag.mode==='screen'?S.screenDist:S.objectDist;drag.startH=S.objectHeight;
   }
   [...e.changedTouches].forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
@@ -1366,8 +1478,249 @@ document.getElementById('focal-quiz-btn').addEventListener('click',()=>{
 });
 
 // ═══════════════════════════════════════════════════════
-//  CONTROLS (shared)
+//  CAMERA SLIDERS
 // ═══════════════════════════════════════════════════════
+(function(){
+  const thetaSlider=document.getElementById('cam-theta');
+  const phiSlider=document.getElementById('cam-phi');
+  const zoomSlider=document.getElementById('cam-zoom');
+  const thetaVal=document.getElementById('cam-theta-val');
+  const phiVal=document.getElementById('cam-phi-val');
+  const zoomVal=document.getElementById('cam-zoom-val');
+
+  // Sync sliders -> orbit on input
+  thetaSlider.addEventListener('input',function(){
+    orb.theta=parseFloat(this.value)*Math.PI/180;
+    thetaVal.textContent=this.value+'°';
+    applyOrbit();
+  });
+  phiSlider.addEventListener('input',function(){
+    orb.phi=parseFloat(this.value)*Math.PI/180;
+    phiVal.textContent=this.value+'°';
+    applyOrbit();
+  });
+  zoomSlider.addEventListener('input',function(){
+    orb.radius=parseFloat(this.value);
+    zoomVal.textContent=parseFloat(this.value).toFixed(1);
+    applyOrbit();
+  });
+
+  // Set initial slider values to match default orbit
+  thetaSlider.value=Math.round(orb.theta*180/Math.PI);
+  phiSlider.value=Math.round(orb.phi*180/Math.PI);
+  zoomSlider.value=orb.radius;
+  thetaVal.textContent=thetaSlider.value+'°';
+  phiVal.textContent=phiSlider.value+'°';
+  zoomVal.textContent=orb.radius;
+
+  // Sync orbit -> sliders when dragging
+  const _applyOrbit=applyOrbit;
+  window._syncCamSliders=function(){
+    thetaSlider.value=Math.round(orb.theta*180/Math.PI);
+    phiSlider.value=Math.round(orb.phi*180/Math.PI);
+    zoomSlider.value=orb.radius.toFixed(1);
+    thetaVal.textContent=thetaSlider.value+'°';
+    phiVal.textContent=phiSlider.value+'°';
+    zoomVal.textContent=parseFloat(orb.radius).toFixed(1);
+  };
+
+  // Reset button — restore initial orbit position
+  const defaultOrb={theta:0,phi:0.18,radius:22};
+  document.getElementById('cam-reset-btn').addEventListener('click',function(){
+    orb.theta=defaultOrb.theta; orb.phi=defaultOrb.phi; orb.radius=defaultOrb.radius;
+    applyOrbit();
+    window._syncCamSliders();
+  });
+})();
+
+// Patch orbit & zoom interactions to also update sliders
+const _origMouseMove=canvas.onmousemove;
+canvas.addEventListener('mousemove',()=>{ if(drag&&drag.mode==='orbit'&&window._syncCamSliders) window._syncCamSliders(); });
+canvas.addEventListener('wheel',()=>{ if(window._syncCamSliders) window._syncCamSliders(); },{passive:true});
+
+// ═══════════════════════════════════════════════════════
+//  CHALLENGE MODE
+// ═══════════════════════════════════════════════════════
+let challengeMode=false;
+let challengeType='focal'; // 'focal' | 'image'
+let chHiddenFocal=15;
+let chFixedObjectDist=30;
+let chAttemptsFocal=0, chCorrectFocal=0;
+let chAttemptsImage=0, chCorrectImage=0;
+let chImageScreenLocked=false; // during image challenge screen is locked to input
+
+function selectChallengeType(type){
+  challengeType=type;
+  document.getElementById('ch-btn-focal').classList.toggle('active',type==='focal');
+  document.getElementById('ch-btn-image').classList.toggle('active',type==='image');
+  document.getElementById('ch-focal-panel').classList.toggle('show',type==='focal');
+  document.getElementById('ch-image-panel').classList.toggle('show',type==='image');
+  if(type==='focal') newFocalChallenge();
+  else newImageChallenge();
+}
+
+function newFocalChallenge(){
+  // Random focal length 8–25 cm
+  chHiddenFocal=Math.round((8+Math.random()*17)*2)/2;
+  S.focalLength=chHiddenFocal;
+  document.getElementById('focal-slider').value=chHiddenFocal;
+  document.getElementById('focal-val').textContent='??cm';
+  document.getElementById('focal-slider').disabled=true;
+  // Hide focal value in HUD
+  document.getElementById('val-f').textContent='?? cm';
+  // Hide focal markers
+  [lensD,divergingLensGroup].forEach(grp=>{
+    grp.children.forEach(c=>{if(c.userData.isFocalMarker)c.visible=false;});
+  });
+  // Reset screen and object to neutral positions
+  S.objectDist=35; S.screenDist=25;
+  chImageScreenLocked=false;
+  layoutScene();
+  document.getElementById('ch-focal-input').value='';
+  const res=document.getElementById('ch-focal-result');
+  res.textContent=''; res.classList.remove('show','ok','fail');
+  document.getElementById('ch-focal-stat').textContent=
+    chAttemptsFocal>0?`Score: ${chCorrectFocal}/${chAttemptsFocal}`:'';
+}
+
+function validateFocal(){
+  const val=parseFloat(document.getElementById('ch-focal-input').value);
+  const res=document.getElementById('ch-focal-result');
+  res.classList.add('show');
+  chAttemptsFocal++;
+  if(isNaN(val)||val<=0){
+    res.classList.remove('ok'); res.classList.add('fail');
+    res.textContent='⚠ Enter a positive number.';
+    return;
+  }
+  const err=Math.abs(val-chHiddenFocal)/chHiddenFocal;
+  if(err<=0.05){
+    chCorrectFocal++;
+    res.classList.remove('fail'); res.classList.add('ok');
+    res.textContent=`✓ Correct! f = ${chHiddenFocal} cm`;
+    // Reveal focal markers
+    [lensD,divergingLensGroup].forEach(grp=>{
+      grp.children.forEach(c=>{if(c.userData.isFocalMarker)c.visible=true;});
+    });
+    document.getElementById('val-f').textContent=chHiddenFocal.toFixed(1)+' cm';
+    document.getElementById('focal-val').textContent=chHiddenFocal+'cm';
+    document.getElementById('focal-slider').disabled=false;
+  } else {
+    res.classList.remove('ok'); res.classList.add('fail');
+    const hint=val<chHiddenFocal?'too short':'too long';
+    res.textContent=`✗ Not quite. Your answer is ${hint}. Try again!`;
+  }
+  document.getElementById('ch-focal-stat').textContent=
+    `Score: ${chCorrectFocal}/${chAttemptsFocal}`;
+}
+
+function newImageChallenge(){
+  // Random object position 10–40 cm
+  chFixedObjectDist=Math.round((10+Math.random()*30)*2)/2;
+  S.objectDist=chFixedObjectDist;
+  S.focalLength=15; // fixed focal length, shown
+  document.getElementById('focal-slider').value=15;
+  document.getElementById('focal-val').textContent='15cm';
+  document.getElementById('val-f').textContent='15.0 cm';
+  // Show focal markers
+  [lensD,divergingLensGroup].forEach(grp=>{
+    grp.children.forEach(c=>{if(c.userData.isFocalMarker)c.visible=true;});
+  });
+  // Put screen somewhere neutral (not at correct position)
+  const f=effectiveF(), di=1/(1/f-1/S.objectDist);
+  S.screenDist=Math.max(5,Math.abs(di)*0.5+5); // start clearly away from correct pos
+  chImageScreenLocked=true;
+  layoutScene();
+  document.getElementById('ch-image-input').value='';
+  document.getElementById('ch-screen-hint').textContent=`Object fixed at d_o = ${chFixedObjectDist} cm. f = 15 cm shown.`;
+  const res=document.getElementById('ch-image-result');
+  res.textContent=''; res.classList.remove('show','ok','fail');
+  document.getElementById('ch-image-stat').textContent=
+    chAttemptsImage>0?`Score: ${chCorrectImage}/${chAttemptsImage}`:'';
+}
+
+function applyScreenPos(){
+  const val=parseFloat(document.getElementById('ch-image-input').value);
+  const res=document.getElementById('ch-image-result');
+  res.classList.add('show');
+  if(isNaN(val)||val<=0){
+    res.classList.remove('ok'); res.classList.add('fail');
+    res.textContent='⚠ Enter a positive number.';
+    return;
+  }
+  // Move screen to entered position
+  S.screenDist=val;
+  layoutScene();
+  // Check if focused
+  const f=effectiveF(), di=1/(1/f-1/S.objectDist);
+  const err=Math.abs(val-di);
+  chAttemptsImage++;
+  if(err<1.0){
+    chCorrectImage++;
+    res.classList.remove('fail'); res.classList.add('ok');
+    res.textContent=`✓ Correct! Image focused at d_i = ${di.toFixed(1)} cm`;
+  } else {
+    res.classList.remove('ok'); res.classList.add('fail');
+    const hint=val<di?'screen is too close to lens':'screen is too far from lens';
+    res.textContent=`✗ Not focused. The ${hint}. Try again!`;
+  }
+  document.getElementById('ch-image-stat').textContent=
+    `Score: ${chCorrectImage}/${chAttemptsImage}`;
+}
+
+// Toggle challenge panel
+document.getElementById('btn-challenge').addEventListener('click',()=>{
+  challengeMode=!challengeMode;
+  const panel=document.getElementById('challenge-panel');
+  const btn=document.getElementById('btn-challenge');
+  panel.classList.toggle('show',challengeMode);
+  btn.classList.toggle('on',challengeMode);
+  if(challengeMode){
+    // Disable Show Rays during challenge
+    S.showRays=false;
+    btnRays.classList.remove('on');
+    btnRays.disabled=true;
+    btnRays.style.opacity='0.38';
+    btnRays.title='Rays hidden during challenge';
+    updateRays();
+    // Start with focal type by default
+    selectChallengeType('focal');
+  } else {
+    // Re-enable Show Rays
+    btnRays.disabled=false;
+    btnRays.style.opacity='';
+    btnRays.title='';
+    // Restore normal mode
+    S.focalLength=15;
+    document.getElementById('focal-slider').value=15;
+    document.getElementById('focal-slider').disabled=false;
+    document.getElementById('focal-val').textContent='15cm';
+    document.getElementById('val-f').textContent='15.0 cm';
+    document.getElementById('val-di').textContent='—';
+    [lensD,divergingLensGroup].forEach(grp=>{
+      grp.children.forEach(c=>{if(c.userData.isFocalMarker)c.visible=true;});
+    });
+    chImageScreenLocked=false;
+    layoutScene();
+  }
+});
+
+// Override layoutScene to block object/screen dragging during image challenge
+const _origLayoutScene=layoutScene;
+// Patch applyDrag to block object movement in image challenge
+const _origApplyDrag=applyDrag;
+function applyDragPatched(drag,dx,dy,K){
+  if(challengeMode && challengeType==='image'){
+    // Block object/lens movement — only screen drag allowed if not screenLocked
+    if(drag.mode==='object'||drag.mode==='lens') return;
+    // Screen movement blocked — must use input box
+    if(drag.mode==='screen') return;
+  }
+  _origApplyDrag(drag,dx,dy,K);
+}
+// Replace mousemove / touchmove to use patched drag — done inline above
+
+
 const btnLock=document.getElementById('btn-lock');
 btnLock.addEventListener('click',()=>{S.lockHeight=!S.lockHeight;btnLock.textContent=S.lockHeight?'🔒 Locked h':'🔓 Lock h';btnLock.classList.toggle('on',S.lockHeight);});
 const btnDiverging=document.getElementById('btn-diverging');
