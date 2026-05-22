@@ -323,7 +323,6 @@
 </head>
 <body class="min-h-screen">
 
-    <!-- Navigation -->
     <nav class="container mx-auto px-8 py-8 flex justify-between items-center relative z-50">
         <div class="flex items-center gap-4">
             <div class="w-[60px] h-[60px]">
@@ -342,7 +341,6 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero-section container mx-auto px-8 mb-12">
         <div class="relative z-30 max-w-3xl">
             <h1 class="fluid-hero-title font-extrabold text-[#0A4A7F] mb-6">
@@ -359,14 +357,11 @@
         </div>
     </section>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-8 pb-32">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-10">
             
-            <!-- Sidebar Selection -->
             <div class="grid grid-cols-1 gap-0 h-fit">
                 
-                <!-- Optics Category -->
                 <div class="category-header" onclick="toggleCategory('optics-content')">
                     <span>Optics Simulations</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -388,13 +383,12 @@
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
                     </div>
 
-                    <div class="gallery-card" onclick="loadSimulation('Refraction', 'refraction_lab.html', ['Refraction_Lab_Report.pdf'])">
+                    <div class="gallery-card" onclick="loadSimulation('Refraction', 'refraction_lab.html', ['Lab1_SnellsLaw.pdf', 'Lab2_TIR.pdf'])">
                         <img src="assets/refraction.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Refraction'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Refraction</span>
                     </div>
                 </div>
 
-                <!-- Electricity Category -->
                 <div class="category-header collapsed-header" onclick="toggleCategory('elec-content')">
                     <span>Electricity & Magnetism</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -407,7 +401,6 @@
                     </div>
                 </div>
 
-                <!-- Nuclear Physics Category -->
                 <div class="category-header collapsed-header" onclick="toggleCategory('nuclear-content')">
                     <span>Nuclear Physics</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -420,7 +413,6 @@
                     </div>
                 </div>
                 
-                <!-- Assets Fixed Section -->
                 <div class="bg-[#0A4A7F]/5 border border-[#0A4A7F]/10 p-6 rounded-3xl mt-6">
                     <h4 class="text-[10px] font-black tracking-widest text-[#0A4A7F] uppercase mb-3">AR Assets</h4>
                     <button onclick="toggleMarkerModal(true)" class="w-full py-3 px-4 bg-white border border-[#C9A05D] text-[#C9A05D] text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#C9A05D] hover:text-white transition-all flex items-center justify-center gap-2">
@@ -430,7 +422,6 @@
                 </div>
             </div>
 
-            <!-- Simulation Workspace -->
             <div class="lg:col-span-3">
                 <div class="bg-white rounded-[50px] p-3 shadow-2xl">
                     <div id="simContainer">
@@ -453,19 +444,16 @@
                         </div>
                     </div>
 
-                    <!-- Footer Control Bar -->
                     <div class="px-8 md:px-12 py-10 bg-gray-50/50 rounded-b-[45px]">
                         <div class="flex flex-col lg:flex-row justify-between items-start gap-8">
                             <div class="flex-1">
                                 <h3 id="workspaceTitle" class="text-2xl font-black text-[#0A4A7F] tracking-tight">WORKSPACE</h3>
                                 <p id="workspaceStatus" class="text-[11px] font-bold text-[#C9A05D] tracking-widest uppercase mt-2">Status: Standby</p>
                                 
-                                <!-- Dynamic Resources Panel -->
                                 <div id="labResources" class="hidden mt-6">
                                     <h4 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3">Lab Reports & Resources</h4>
                                     <div id="reportLinks" class="flex flex-wrap gap-3">
-                                        <!-- Dynamic links populated by JS -->
-                                    </div>
+                                        </div>
                                 </div>
                             </div>
                             
@@ -486,7 +474,6 @@
         </div>
     </main>
 
-    <!-- AR Marker Modal -->
     <div id="markerModal">
         <div class="modal-content shadow-2xl">
             <button onclick="toggleMarkerModal(false)" class="absolute top-6 right-6 text-gray-400 hover:text-black">
@@ -503,7 +490,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-[#0A4A7F] py-24 text-white">
         <div class="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center">
             <div>
@@ -566,6 +552,7 @@
             if (reports.length > 0) {
                 labResources.classList.remove('hidden');
                 reports.forEach(reportName => {
+                    // Removes underscores and handles dots cleanly for presentation
                     const cleanName = reportName.replace(/_/g, ' ').replace('.pdf', '');
                     const link = document.createElement('a');
                     link.href = reportName.startsWith('http') ? reportName : `reports/${reportName}`;

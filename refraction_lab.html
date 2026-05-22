@@ -158,12 +158,11 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
   <!-- TIR Challenge mode content (hidden by default) -->
   <div id="hud-tir-challenge" style="display:none;">
     <div class="hdiv"></div>
-    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(120,180,255,.9);text-transform:uppercase;text-align:center;padding:4px 0;">🔮 Find the Mystery n</div>
+    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(120,180,255,.9);text-transform:uppercase;text-align:center;padding:4px 0;">🔮 Find the Critical Angle</div>
     <div style="font-family:'Syne',sans-serif;font-size:10px;color:rgba(200,230,255,.75);line-height:1.6;padding:4px 2px;">Rotate until the refracted ray disappears at the flat face of the semicircular prism. That angle is <span style="color:#ffcc44;">θc</span>.</div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(140,200,255,.8);text-align:center;padding:5px 0 4px;">n₁ = n₂ / sin θc</div>
-    <div style="font-family:'Syne',sans-serif;font-size:10px;color:rgba(200,230,255,.55);line-height:1.5;padding:2px 2px 4px;">n₂ (air) = 1.00. Find θc, then compute n₁ of the mystery prism.</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(140,200,255,.8);text-align:center;padding:5px 0 4px;">sin θc = n₂ / n₁</div>
+    <div style="font-family:'Syne',sans-serif;font-size:10px;color:rgba(200,230,255,.55);line-height:1.5;padding:2px 2px 4px;">n₁ (glass) = 1.500 · n₂ (air) = 1.000<br>Expected θc ≈ 41.8°</div>
     <div style="display:flex;flex-direction:column;gap:5px;margin-top:2px;">
-      <button class="btn" style="width:100%;background:rgba(120,180,255,.12);border-color:rgba(120,180,255,.4);color:#a0d0ff;" onclick="openTIRMaterialsList()">📋 Identify the Material</button>
       <button class="btn" style="width:100%;font-size:10px;background:rgba(255,80,80,.08);border-color:rgba(255,80,80,.3);color:rgba(255,130,130,.8);" onclick="exitTIRChallengeMode();">✕ Exit Challenge</button>
     </div>
   </div>
@@ -725,6 +724,18 @@ function drawCritDiagram(){
 }
 
 function showCritTooltip(e){
+  // Set incident medium to Glass (n=1.50) and refracted to Air (n=1.00)
+  if(!challengeMode && !tirChallengeMode){
+    S.m1='glass'; S.n1=1.50;
+    S.m2='vacuum'; S.n2=1.00;
+    document.getElementById('m1sel').value='glass';
+    document.getElementById('m2sel').value='vacuum';
+    document.getElementById('n1crow').style.display='none';
+    document.getElementById('n2crow').style.display='none';
+    document.getElementById('n1dsp').textContent='n₁ = 1.500';
+    document.getElementById('n2dsp').textContent='n₂ = 1.000';
+    buildPrisms(); updateLaserPose(); buildBeams(); updateHUD();
+  }
   const tip=document.getElementById('crit-tooltip');
   const hud=document.getElementById('hud');
   hud.style.display='none';
@@ -750,26 +761,22 @@ function enterTIRChallengeMode(){
   document.getElementById('crit-tooltip').style.display='none';
   tirChallengeMode=true;
 
-  // Pick mystery material for the semicircular prism (incident medium n1)
-  const mat=pickMysteryMaterial();
-  tirMysteryMat=mat;
-  mysteryN=mat.n;
-
-  // Semicircular prism (incident medium) = mystery
-  S.n1=mysteryN;
-  S.m1='mystery';
-  window._mysteryM1Mat=mat;
+  // Semicircular prism (incident medium) = Glass n=1.50 (known, denser)
+  S.n1=1.50;
+  S.m1='glass';
+  window._mysteryM1Mat=null;
+  tirMysteryMat=null; // not used in this mode
 
   // Rectangular prism (refracted medium) = Air/Vacuum
   S.n2=1.0;
   S.m2='vacuum';
 
   // Update dropboxes
-  document.getElementById('m1sel').value='mystery';
+  document.getElementById('m1sel').value='glass';
   document.getElementById('m2sel').value='vacuum';
 
-  // Hide n values
-  document.getElementById('n1dsp').textContent='n₁ = ???';
+  // Show n values
+  document.getElementById('n1dsp').textContent='n₁ = 1.500';
   document.getElementById('n2dsp').textContent='n₂ = 1.000'; // air is known
 
   // Show HUD with TIR challenge section
@@ -1445,26 +1452,20 @@ function buildBeams(){
       // N2in points toward incoming ray (into prism2 side = opposite of outward normal)
       const N2in = new THREE.Vector3(-enxOut, 0, -enzOut);
 
+      // Outside the rectangular prism is always air (n=1.0), regardless of n1
+      const n_outside = 1.0;
+
       const cosExit = Math.abs(refD1.dot(N2in));
       const sinExit = Math.sqrt(Math.max(0, 1 - cosExit*cosExit));
-      const sinOut = sinExit * S.n2 / S.n1;
+      const sinOut = sinExit * S.n2 / n_outside;
       const isTIR2 = sinOut >= 1;
-      const fc2 = fresnel(S.n2, S.n1,
+      const fc2 = fresnel(S.n2, n_outside,
         Math.asin(Math.min(sinExit,1))*180/Math.PI,
         isTIR2 ? null : Math.asin(Math.min(sinOut,1))*180/Math.PI);
 
-      // ── Internal reflection at exit face ──
-      if(S.showR || isTIR2){
-        const rfl2 = rflD(refD1, N2in);
-        const Pr2 = new THREE.Vector3().copy(exitPt).addScaledVector(rfl2, BL);
-        const ao2 = Math.max(0.06, (isTIR2?1:fc2.R)*0.85);
-        addBeam(exitPt, Pr2, col, ao2, false);
-        addBeam(exitPt, Pr2, col, ao2, true);
-      }
-
-      // ── Refracted ray exiting prism2 (into n1 beyond exit face) ──
+      // ── Refracted ray exiting prism2 (into air beyond exit face) ──
       if(!isTIR2){
-        const refD2 = refD(refD1, N2in, S.n2, S.n1);
+        const refD2 = refD(refD1, N2in, S.n2, n_outside);
         const Pout = new THREE.Vector3().copy(exitPt).addScaledVector(refD2, BL);
         const ao3 = Math.max(0.12, fc1.T * fc2.T * 0.92);
         addBeam(exitPt, Pout, col, ao3, false);
