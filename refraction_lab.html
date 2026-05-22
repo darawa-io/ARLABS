@@ -48,6 +48,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .asl::-webkit-slider-thumb{background:#ffcc44;}
 .asl{background:rgba(255,200,60,.2)!important;}
 input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
+/* QR button & modal */
+#qr-btn{position:fixed;bottom:18px;left:18px;z-index:12;width:34px;height:34px;border-radius:10px;border:1px solid rgba(140,200,255,.32);background:rgba(18,26,46,.92);backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:#78b4ff;padding:0;outline:none;-webkit-tap-highlight-color:transparent;}
+#qr-btn:hover{background:rgba(140,200,255,.18);border-color:rgba(140,200,255,.65);}
+#qr-btn svg{width:18px;height:18px;fill:currentColor;}
+#qr-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(8,14,30,.72);backdrop-filter:blur(10px);}
+#qr-overlay.open{display:flex;}
+#qr-card{background:rgba(18,26,46,.98);border:1px solid rgba(140,200,255,.32);border-radius:20px;padding:24px 26px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:280px;width:90vw;box-shadow:0 0 60px rgba(80,140,255,.18);}
+#qr-card h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(140,200,255,.55);text-transform:uppercase;}
+#qr-box{width:180px;height:180px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:10px;}
+#qr-box canvas,#qr-box img{width:160px!important;height:160px!important;}
+#qr-url{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);text-align:center;word-break:break-all;line-height:1.6;}
+#qr-close{padding:6px 22px;border-radius:30px;border:1px solid rgba(140,200,255,.28);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;}
+#qr-close:hover{background:rgba(140,200,255,.22);}
 #hint{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(140,200,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:9;white-space:nowrap;}
 #tirn{position:fixed;bottom:260px;left:50%;transform:translateX(-50%);background:rgba(255,80,30,.12);border:1px solid rgba(255,80,30,.55);border-radius:12px;padding:8px 20px;font-family:'Space Mono',monospace;font-size:11px;color:#ff7744;z-index:20;display:none;pointer-events:none;text-align:center;}
 #loupe{position:fixed;width:160px;height:160px;border-radius:50%;border:2.5px solid rgba(255,220,80,.85);background:#0c1526;overflow:hidden;pointer-events:none;z-index:60;display:none;box-shadow:0 0 32px rgba(255,220,80,.3),inset 0 0 20px rgba(0,0,0,.6);}
@@ -59,6 +72,23 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;}
 <canvas id="mainCanvas"></canvas>
 <canvas id="labelCanvas"></canvas>
 <div id="title"><h1>REFRACTION LAB</h1><p>Snell's Law · 3D Interactive</p></div>
+
+<!-- QR Code button -->
+<button id="qr-btn" onclick="openQR()" title="Open on mobile">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 3h7v7H3zm1 1v5h5V4zm1 1h3v3H5zm8-2h7v7h-7zm1 1v5h5V4zm1 1h3v3h-3zM3 13h7v7H3zm1 1v5h5v-5zm1 1h3v3H5zm8 0h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2zm-2 2h2v2h-2zm2-6h2v2h-2zm-4 2h2v2h-2z"/>
+  </svg>
+</button>
+
+<!-- QR Overlay -->
+<div id="qr-overlay" onclick="closeQR(event)">
+  <div id="qr-card">
+    <h3>📱 Open on Mobile</h3>
+    <div id="qr-box"></div>
+    <div id="qr-url">https://darawa-io.github.io/ARLABS/refraction_lab.html</div>
+    <button id="qr-close" onclick="closeQR()">Close</button>
+  </div>
+</div>
 
 <div id="mpanel">
   <div class="mblk">
@@ -2289,5 +2319,30 @@ buildTintMenus();
 updateTintDropUI();
 requestAnimationFrame(loop);
 </script>
-</body>
-</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const QR_URL = 'https://darawa-io.github.io/ARLABS/refraction_lab.html';
+let _qrGenerated = false;
+
+function openQR(){
+  const overlay = document.getElementById('qr-overlay');
+  overlay.classList.add('open');
+  if(!_qrGenerated){
+    const box = document.getElementById('qr-box');
+    box.innerHTML = '';
+    new QRCode(box, {
+      text: QR_URL,
+      width: 160, height: 160,
+      colorDark: '#0d1525',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    _qrGenerated = true;
+  }
+}
+
+function closeQR(e){
+  if(!e || e.target === document.getElementById('qr-overlay') || e.currentTarget === document.getElementById('qr-close'))
+    document.getElementById('qr-overlay').classList.remove('open');
+}
+</script>
