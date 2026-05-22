@@ -297,7 +297,7 @@
             color: var(--primary-gold);
         }
 
-        /* Modal Base styling (Shared between Marker and Feedback Modals) */
+        /* Modal Base styling */
         #markerModal, #feedbackModal {
             position: fixed;
             inset: 0;
@@ -548,10 +548,8 @@
             const content = document.getElementById(id);
             const header = content.previousElementSibling;
             
-            // Check if we are opening or closing
             const isCollapsing = !content.classList.contains('collapsed');
 
-            // Collapse all other sections first
             const allContents = document.querySelectorAll('.category-content');
             const allHeaders = document.querySelectorAll('.category-header');
             
@@ -562,7 +560,6 @@
                 h.classList.add('collapsed-header');
             });
 
-            // If it was already closed, open it now (Accordion behavior)
             if (!isCollapsing) {
                 content.classList.remove('collapsed');
                 header.classList.remove('collapsed-header');
@@ -591,7 +588,70 @@
             container.appendChild(frameWrapper);
             
             reportLinks.innerHTML = "";
-            if (reports.length > 0) {
+            if (reports && reports.length > 0) {
                 labResources.classList.remove('hidden');
                 reports.forEach(reportName => {
-                    const clean
+                    const cleanName = reportName.replace(/_/g, ' ').replace('.pdf', '');
+                    const link = document.createElement('a');
+                    link.href = reportName.startsWith('http') ? reportName : `reports/${reportName}`;
+                    link.className = 'report-link';
+                    link.target = "_blank";
+                    link.innerHTML = `
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                        ${cleanName}
+                    `;
+                    reportLinks.appendChild(link);
+                });
+            } else {
+                labResources.classList.add('hidden');
+            }
+
+            openTabBtn.classList.remove('hidden');
+        }
+
+        function openSimulationInTab() {
+            if (currentSimUrl) window.open(currentSimUrl, '_blank');
+        }
+
+        function toggleMarkerModal(show) {
+            document.getElementById('markerModal').style.display = show ? 'flex' : 'none';
+        }
+
+        function toggleFeedbackModal(show) {
+            const modal = document.getElementById('feedbackModal');
+            if (show) {
+                const subjectInput = document.getElementById('feedbackSubject');
+                if(currentSimTitle && currentSimTitle !== "WORKSPACE") {
+                    subjectInput.value = `Feedback for ${currentSimTitle.toUpperCase()}`;
+                } else {
+                    subjectInput.value = "General Feedback - Physics Lab UAE";
+                }
+                modal.style.display = 'flex';
+            } else {
+                modal.style.display = 'none';
+                document.getElementById('feedbackForm').reset();
+            }
+        }
+
+        function sendFeedback(event) {
+            event.preventDefault();
+            const subject = document.getElementById('feedbackSubject').value;
+            const name = document.getElementById('feedbackName').value;
+            const text = document.getElementById('feedbackMessage').value;
+            
+            const body = `Name: ${name}\n\nMessage:\n${text}`;
+            const mailtoUrl = `mailto:darawa@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            window.location.href = mailtoUrl;
+            toggleFeedbackModal(false);
+        }
+
+        window.onclick = function(event) {
+            const markerModal = document.getElementById('markerModal');
+            const feedbackModal = document.getElementById('feedbackModal');
+            if (event.target == markerModal) toggleMarkerModal(false);
+            if (event.target == feedbackModal) toggleFeedbackModal(false);
+        }
+    </script>
+</body>
+</html>
