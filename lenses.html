@@ -633,7 +633,7 @@ function applyOrbit(){
 applyOrbit();
 
 // Floor + Grid
-const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x060e18,roughness:1}));
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x010e18,roughness:1}));
 floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.6; floorM.receiveShadow=true; scene3.add(floorM);
 const gridM=new THREE.GridHelper(80,80,0x0c2840,0x0c2840); gridM.position.y=-2.58; scene3.add(gridM);
 
@@ -1556,12 +1556,30 @@ document.getElementById('focal-quiz-btn').addEventListener('click',()=>{
     zoomVal.textContent=parseFloat(orb.radius).toFixed(1);
   };
 
-  // Reset button — restore initial orbit position (Rotation:-30°, Tilt:25°, Zoom:15)
+  // Reset button — restore initial orbit position with smooth transition
   const defaultOrb={theta:-30*Math.PI/180, phi:25*Math.PI/180, radius:15};
-  document.getElementById('cam-reset-btn').addEventListener('click',function(){
-    orb.theta=defaultOrb.theta; orb.phi=defaultOrb.phi; orb.radius=defaultOrb.radius;
+  let camResetAnim=null;
+  function easeCamReset(){
+    if(!camResetAnim) return;
+    const now=performance.now();
+    const t=Math.min(1,(now-camResetAnim.start)/camResetAnim.dur);
+    const e=1-Math.pow(1-t,3); // cubic ease-out
+    orb.theta=camResetAnim.t0+(camResetAnim.t1-camResetAnim.t0)*e;
+    orb.phi  =camResetAnim.p0+(camResetAnim.p1-camResetAnim.p0)*e;
+    orb.radius=camResetAnim.r0+(camResetAnim.r1-camResetAnim.r0)*e;
     applyOrbit();
     window._syncCamSliders();
+    if(t<1) requestAnimationFrame(easeCamReset);
+    else camResetAnim=null;
+  }
+  document.getElementById('cam-reset-btn').addEventListener('click',function(){
+    camResetAnim={
+      start:performance.now(), dur:800,
+      t0:orb.theta, t1:defaultOrb.theta,
+      p0:orb.phi,   p1:defaultOrb.phi,
+      r0:orb.radius,r1:defaultOrb.radius
+    };
+    requestAnimationFrame(easeCamReset);
   });
 })();
 
