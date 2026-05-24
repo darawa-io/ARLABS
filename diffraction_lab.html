@@ -69,6 +69,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#06080f;font-family:
 /* Footer */
 .home-footer{margin-top:36px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(120,180,255,.2);letter-spacing:2px;text-transform:uppercase;}
 
+/* ── QR button (home screen, bottom-right) ── */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(120,180,255,.25);background:rgba(6,10,22,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;color:rgba(120,180,255,.55);}
+#qr-btn:hover{border-color:rgba(120,180,255,.55);background:rgba(120,180,255,.14);color:#78b4ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(120,180,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(120,180,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(160,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#78b4ff;}
+
 /* ── EXPERIMENT FRAME ────────────────────────────────── */
 #exp-wrap{position:fixed;inset:0;z-index:20;display:none;}
 #exp-wrap.show{display:block;}
@@ -142,6 +155,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#06080f;font-family:
     allow="camera;gyroscope;accelerometer;xr-spatial-tracking"></iframe>
 </div>
 <button id="back-btn" onclick="goHome()">← Back to Lab</button>
+
+<!-- QR code button — fixed bottom-right on home screen -->
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<!-- QR modal -->
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fdiffraction_lab.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fdiffraction_lab.html'" />
+    <p>darawa-io.github.io/ARLABS/diffraction_lab.html</p>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -499,6 +530,17 @@ function goHome(){
   const frame = document.getElementById('exp-frame');
   frame.src='about:blank';
 }
+
+// QR button
+document.getElementById('qr-btn').addEventListener('click',()=>{
+  document.getElementById('qr-modal').classList.add('show');
+});
+document.getElementById('qr-modal').addEventListener('click',function(e){
+  if(e.target===this) this.classList.remove('show');
+});
+document.getElementById('qr-modal-close').addEventListener('click',()=>{
+  document.getElementById('qr-modal').classList.remove('show');
+});
 </script>
 
 <!-- ═══════════════════════════════════════════════════
@@ -1703,6 +1745,10 @@ document.getElementById('btn-reset').addEventListener('click',()=>{
   document.getElementById('slit-slider').value=0.10; document.getElementById('slit-val').textContent='0.10mm';
   document.getElementById('dist-slider').value=1.00; document.getElementById('dist-val').textContent='1.00m';
   layoutScene();
+  // Animate camera back to default view
+  const def={theta:0.4,phi:0.22,radius:22};
+  const anim={start:performance.now(),dur:800,t0:orb.theta,t1:def.theta,p0:orb.phi,p1:def.phi,r0:orb.radius,r1:def.radius};
+  (function step(){ const t=Math.min(1,(performance.now()-anim.start)/anim.dur); const e=1-Math.pow(1-t,3); orb.theta=anim.t0+(anim.t1-anim.t0)*e; orb.phi=anim.p0+(anim.p1-anim.p0)*e; orb.radius=anim.r0+(anim.r1-anim.r0)*e; applyOrbit(); if(t<1)requestAnimationFrame(step); })();
 });
 
 // Background particles
@@ -2634,6 +2680,10 @@ document.getElementById('btn-reset').addEventListener('click',()=>{
   document.getElementById('sep-slider').value=0.25; document.getElementById('sep-val').textContent='0.25mm';
   document.getElementById('dist-slider').value=1.00; document.getElementById('dist-val').textContent='1.00m';
   layoutScene();
+  // Animate camera back to default view
+  const def={theta:0.4,phi:0.22,radius:22};
+  const anim={start:performance.now(),dur:800,t0:orb.theta,t1:def.theta,p0:orb.phi,p1:def.phi,r0:orb.radius,r1:def.radius};
+  (function step(){ const t=Math.min(1,(performance.now()-anim.start)/anim.dur); const e=1-Math.pow(1-t,3); orb.theta=anim.t0+(anim.t1-anim.t0)*e; orb.phi=anim.p0+(anim.p1-anim.p0)*e; orb.radius=anim.r0+(anim.r1-anim.r0)*e; applyOrbit(); if(t<1)requestAnimationFrame(step); })();
 });
 
 // Init
@@ -3355,6 +3405,10 @@ document.getElementById('btn-reset').addEventListener('click',()=>{
   document.getElementById('sl-N').value=300;     document.getElementById('lbl-N').textContent='300 l/mm';
   document.getElementById('sl-L').value=1.00;    document.getElementById('lbl-L').textContent='1.00m';
   screenD.position.x=6; updateGratingTexture(); fullUpdate(); updateBeam();
+  // Animate camera back to default view
+  const def={theta:0.0,phi:0.20,radius:20};
+  const anim={start:performance.now(),dur:800,t0:orb.theta,t1:def.theta,p0:orb.phi,p1:def.phi,r0:orb.radius,r1:def.radius};
+  (function step(){ const t=Math.min(1,(performance.now()-anim.start)/anim.dur); const e=1-Math.pow(1-t,3); orb.theta=anim.t0+(anim.t1-anim.t0)*e; orb.phi=anim.p0+(anim.p1-anim.p0)*e; orb.radius=anim.r0+(anim.r1-anim.r0)*e; applyOrbit(); if(t<1)requestAnimationFrame(step); })();
 });
 
 // ═══════════════════════════════════════════════════════
