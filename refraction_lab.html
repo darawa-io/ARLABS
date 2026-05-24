@@ -1711,9 +1711,47 @@ function rotateLaser(d){
 }
 function fullUpdate(){updateLaserPose();buildBeams();updateHUD();}
 
-function setTopView(){orb.phi=Math.PI/2-0.04;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=true;syncViewSliders();}
-function setFrontView(){orb.phi=0.08;orb.theta=0.001;orb.radius=16;orbit();normalLineVisible=false;syncViewSliders();}
-function resetView(){orb.theta=0.65;orb.phi=0.30;orb.radius=19;orbit();normalLineVisible=false;syncViewSliders();}
+// ── Smooth camera transition ────────────────────────────
+let _camAnimId=null;
+function animateCamTo(target, onComplete){
+  if(_camAnimId) cancelAnimationFrame(_camAnimId);
+  const start={theta:orb.theta, phi:orb.phi, radius:orb.radius, cx:orb.cx, cy:orb.cy, cz:orb.cz};
+  const end=Object.assign({theta:orb.theta,phi:orb.phi,radius:orb.radius,cx:orb.cx,cy:orb.cy,cz:orb.cz}, target);
+  const duration=700; // ms
+  const t0=performance.now();
+  // Shortest arc for theta
+  let dTheta=end.theta-start.theta;
+  while(dTheta>Math.PI) dTheta-=2*Math.PI;
+  while(dTheta<-Math.PI) dTheta+=2*Math.PI;
+  function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+  function tick(now){
+    const raw=Math.min((now-t0)/duration,1);
+    const k=ease(raw);
+    orb.theta=start.theta+dTheta*k;
+    orb.phi=start.phi+(end.phi-start.phi)*k;
+    orb.radius=start.radius+(end.radius-start.radius)*k;
+    orb.cx=start.cx+(end.cx-start.cx)*k;
+    orb.cy=start.cy+(end.cy-start.cy)*k;
+    orb.cz=start.cz+(end.cz-start.cz)*k;
+    orbit();
+    if(raw<1){ _camAnimId=requestAnimationFrame(tick); }
+    else{ _camAnimId=null; syncViewSliders(); if(onComplete) onComplete(); }
+  }
+  _camAnimId=requestAnimationFrame(tick);
+}
+
+function setTopView(){
+  animateCamTo({phi:Math.PI/2-0.04, theta:0.001, radius:16},
+    ()=>{ normalLineVisible=true; });
+}
+function setFrontView(){
+  animateCamTo({phi:0.08, theta:0.001, radius:16},
+    ()=>{ normalLineVisible=false; });
+}
+function resetView(){
+  animateCamTo({theta:0.65, phi:0.30, radius:19},
+    ()=>{ normalLineVisible=false; });
+}
 function zoomIn(){orb.radius=Math.max(5,orb.radius-2);orbit();}
 function zoomOut(){orb.radius=Math.min(40,orb.radius+2);orbit();}
 function rotateViewLeft(){orb.theta-=0.2;orbit();normalLineVisible=false;}
