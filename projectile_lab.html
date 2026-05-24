@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Projectile Motion Lab</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:'Syne',sans-serif;color:#e8f4ff;}
+#mainCanvas{position:fixed;inset:0;z-index:1;}
+
+#title{position:fixed;top:14px;left:16px;z-index:10;}
+#title h1{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:2px;}
+#title p{font-size:9px;color:rgba(140,200,255,.45);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px;}
+
+#mode-bar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:4px;background:rgba(18,26,46,.96);border:1px solid rgba(140,200,255,.25);border-radius:50px;padding:4px;}
+.mode-tab{padding:5px 16px;border-radius:50px;border:none;background:transparent;color:rgba(140,200,255,.5);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;letter-spacing:.5px;white-space:nowrap;}
+.mode-tab.active{background:rgba(140,200,255,.18);color:#78b4ff;border:1px solid rgba(140,200,255,.4);}
+.mode-tab:hover:not(.active){color:rgba(140,200,255,.8);}
+
+#hud{position:fixed;top:14px;right:14px;background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:16px;padding:14px 16px;min-width:222px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:rgba(140,200,255,.5);text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid rgba(140,200,255,.14);padding-bottom:6px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding:3px 6px;border-radius:6px;background:rgba(140,200,255,.05);}
+.dl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(170,205,255,.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#78b4ff;}
+.amber{color:#ffcc44!important;}.red{color:#ff7799!important;}.cyan{color:#60dfff!important;}.white{color:#fff!important;}
+.hdiv{height:1px;background:rgba(140,200,255,.12);margin:7px 0;}
+.formula-box{padding:7px 10px;border-radius:8px;background:rgba(80,160,255,.07);border:1px solid rgba(80,160,255,.22);font-size:10px;font-family:'Space Mono',monospace;color:rgba(160,220,255,.85);line-height:1.9;text-align:center;margin-bottom:6px;}
+
+#challenge-panel{display:none;position:fixed;top:60px;left:14px;background:rgba(18,26,46,.97);backdrop-filter:blur(18px);border:1px solid rgba(255,200,60,.28);border-radius:14px;padding:14px;z-index:10;min-width:240px;max-width:265px;}
+.ch-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2.5px;color:rgba(255,200,60,.65);text-transform:uppercase;border-bottom:1px solid rgba(255,200,60,.15);padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.ch-close{background:none;border:none;color:rgba(255,200,60,.5);cursor:pointer;font-size:14px;line-height:1;padding:0;margin:0;outline:none;transition:color .15s;}
+.ch-close:hover{color:rgba(255,100,100,.85);}
+.ch-q{font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.6;margin-bottom:8px;}
+.ch-var{font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.85);background:rgba(255,200,60,.06);border:1px solid rgba(255,200,60,.18);border-radius:6px;padding:5px 8px;margin-bottom:8px;line-height:1.6;}
+.ch-input-row{display:flex;gap:5px;align-items:center;margin-bottom:6px;}
+.ch-input-row input[type=number]{background:rgba(8,14,30,.9);border:1px solid rgba(140,200,255,.25);color:#78b4ff;border-radius:8px;padding:5px 8px;font-family:'Space Mono',monospace;font-size:11px;width:90px;outline:none;}
+.ch-input-row input[type=number]:focus{border-color:rgba(140,200,255,.6);}
+.ch-unit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(170,205,255,.5);}
+#ch-result{display:none;margin-top:5px;padding:7px 10px;border-radius:8px;font-family:'Syne',sans-serif;font-size:11px;line-height:1.5;}
+#ch-result.ok{background:rgba(80,200,80,.1);border:1px solid rgba(80,200,80,.35);color:#80e880;}
+#ch-result.err{background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);color:#ff8888;}
+#ch-result.partial{background:rgba(255,180,60,.08);border:1px solid rgba(255,180,60,.3);color:#ffc060;}
+
+#bottom-panels{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:flex-end;z-index:10;flex-wrap:nowrap;justify-content:center;max-width:calc(100vw - 20px);}
+.panel{background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:7px 14px;display:flex;flex-direction:column;gap:5px;}
+.panel-title{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:2.5px;color:rgba(140,200,255,.4);text-transform:uppercase;text-align:center;padding-bottom:4px;border-bottom:1px solid rgba(140,200,255,.1);}
+.panel-row{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:nowrap;}
+.sl-lbl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(140,200,255,.55);min-width:18px;text-align:right;flex-shrink:0;}
+.sl-val{font-family:'Space Mono',monospace;font-size:9px;color:#78b4ff;min-width:46px;flex-shrink:0;}
+input[type=range]{-webkit-appearance:none;height:3px;border-radius:2px;background:rgba(140,200,255,.22);outline:none;cursor:pointer;flex:1;min-width:80px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#78b4ff;cursor:pointer;}
+input[type=range].vel::-webkit-slider-thumb{background:#ffcc44;}
+input[type=range].vel{background:rgba(255,200,60,.2)!important;}
+input[type=range].hgt::-webkit-slider-thumb{background:#60dfff;}
+input[type=range].hgt{background:rgba(60,200,255,.2)!important;}
+
+.btn{padding:5px 13px;border-radius:30px;border:1px solid rgba(140,200,255,.32);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;}
+.btn:hover{background:rgba(140,200,255,.22);border-color:rgba(140,200,255,.65);}
+.btn.on{background:rgba(140,200,255,.28);border-color:#78b4ff;color:#fff;}
+.btn.fire{background:rgba(255,100,60,.18);border-color:rgba(255,120,60,.6);color:#ff8860;}
+.btn.fire:hover{background:rgba(255,100,60,.35);}
+.btn.reset{background:rgba(60,180,255,.1);border-color:rgba(60,180,255,.4);color:#60c8ff;}
+.btn.validate{background:rgba(80,200,120,.12);border-color:rgba(80,200,120,.4);color:#7fffb2;font-size:12px;}
+.btn.validate:hover{background:rgba(80,200,120,.25);}
+.btn.pause{background:rgba(255,200,60,.1);border-color:rgba(255,200,60,.4);color:#ffcc44;}
+.sep{width:1px;height:16px;background:rgba(140,200,255,.18);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:5px;color:rgba(170,205,255,.75);font-size:10px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;}
+
+#qr-btn{position:fixed;bottom:18px;left:18px;z-index:12;width:34px;height:34px;border-radius:10px;border:1px solid rgba(140,200,255,.32);background:rgba(18,26,46,.92);backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:#78b4ff;padding:0;outline:none;}
+#qr-btn:hover{background:rgba(140,200,255,.18);}
+#qr-btn svg{width:18px;height:18px;fill:currentColor;}
+#qr-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(8,14,30,.72);backdrop-filter:blur(10px);}
+#qr-overlay.open{display:flex;}
+#qr-card{background:rgba(18,26,46,.98);border:1px solid rgba(140,200,255,.32);border-radius:20px;padding:24px 26px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:280px;width:90vw;}
+#qr-card h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(140,200,255,.55);text-transform:uppercase;}
+#qr-box{width:180px;height:180px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:10px;}
+#qr-box canvas,#qr-box img{width:160px!important;height:160px!important;}
+#qr-url{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);text-align:center;word-break:break-all;line-height:1.6;}
+#qr-close{padding:6px 22px;border-radius:30px;border:1px solid rgba(140,200,255,.28);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;}
+
+#hint{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(140,200,255,.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:9;white-space:nowrap;}
+
+/* AR Overlay */
+#ar-overlay{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;background:#000;}
+#ar-overlay.open{display:flex;}
+#ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+#ar-canvas{position:absolute;inset:0;width:100%;height:100%;}
+#ar-close{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(255,80,80,.15);border:1px solid rgba(255,80,80,.4);border-radius:50px;padding:5px 16px;color:#ff8888;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;z-index:20;outline:none;}
+#ar-hud{position:absolute;top:16px;right:16px;background:rgba(18,26,46,.92);backdrop-filter:blur(10px);border:1px solid rgba(140,200,255,.25);border-radius:14px;padding:12px 14px;min-width:200px;z-index:10;}
+#ar-challenge{position:absolute;top:16px;left:16px;background:rgba(18,26,46,.92);backdrop-filter:blur(10px);border:1px solid rgba(255,200,60,.3);border-radius:14px;padding:12px 14px;min-width:200px;max-width:240px;z-index:10;}
+#ar-marker-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,26,46,.88);border:1px solid rgba(140,200,255,.3);border-radius:16px;padding:18px 22px;text-align:center;pointer-events:none;z-index:5;}
+#ar-marker-hint p{font-family:'Space Mono',monospace;font-size:10px;color:rgba(140,200,255,.7);margin-top:8px;letter-spacing:1px;}
+#ar-ui{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.9);backdrop-filter:blur(10px);border:1px solid rgba(140,200,255,.3);border-radius:50px;padding:8px 16px;display:flex;gap:10px;align-items:center;z-index:10;}
+
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:rgba(140,200,255,.2);border-radius:2px;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+
+<div id="title"><div style="display:flex;align-items:center;gap:7px;"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjY1MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBtZWV0IiB2ZXJzaW9uPSIxLjAiPgoKIDxnPgogIDx0aXRsZT5MYXllciAxPC90aXRsZT4KICA8ZyBpZD0ic3ZnXzEiIGZpbGw9IiMwMDAwMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgNjUyKSBzY2FsZSgwLjEgLTAuMSkiPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzIiIGQ9Im0yNzgwLDYwMTNjLTQxMCwtMjUgLTgzNiwtMTcwIC0xMTk1LC00MDhjLTY2NiwtNDQxIC0xMDk3LC0xMTQ2IC0xMTg1LC0xOTM1Yy0xNiwtMTM2IC0xNiwtNDI2IC0xLC01NjBjNDAsLTM1OSAxNjgsLTczNiAzNjIsLTEwNjdjODgsLTE0OSA4MCwtMTQ2IDEyNCwtNDhsMzcsODRsLTY1LDEyNGMtMTYyLDMwOCAtMjU4LDYwNCAtMjk3LDkyMmMtMjcsMjE2IC05LDU1OSA0MSw3OTVjMTMzLDYxNiA1MzgsMTE5OCAxMDc5LDE1NTJjMzg4LDI1NCA4MTksMzgyIDEyODUsMzgxYzM2NCwtMSA2NzYsLTc0IDEwMTAsLTIzOGM3NTUsLTM2OSAxMjgzLC0xMTE5IDEzNzUsLTE5NTVjMTYsLTE0MiAxMywtNDM3IC01LC01NzVjLTEzLC05NyAtNTIsLTI3NSAtOTEsLTQxMmMtMywtMTMgLTIsLTIzIDIsLTIzYzI5LDAgMTYwLDExNSAxODksMTY1YzUzLDkwIDg3LDQxNyA3NCw3MTJjLTI0LDUyNyAtMjA5LDEwMjggLTU0NCwxNDc0Yy0xMTAsMTQ2IC0zNjIsMzk1IC01MTMsNTA4Yy01MDQsMzc0IC0xMDYzLDU0MiAtMTY4Miw1MDR6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfMyIgZD0ibTI4NzksNTQ2MGMtNzgsLTIzIC0xMjQsLTkyIC0xMTYsLTE3M2MyLC0yNiAxMywtNjEgMjQsLTc1YzE4LC0yNSA3MSwtNjYgOTQsLTc0YzYsLTIgNywtMzA2IDMsLTg2MGwtNywtODU3bC0zMSwtN2MtODgsLTE5IC0xNzcsLTkwIC0yMjQsLTE3OWMtMjQsLTQ0IC0yNywtNjEgLTI3LC0xNDVjMCwtODUgMywtMTAxIDI4LC0xNDhjMzgsLTczIDEwOCwtMTM3IDE3NiwtMTYzYzc3LC0yOSAxOTUsLTI0IDI2NiwxMWM2MSwzMCAxMjYsOTUgMTU2LDE1NmMyNyw1NyAzNiwxNjQgMjAsMjMxYy0yNywxMDcgLTExNiwyMDAgLTIyMywyMzFsLTU4LDE3bDAsODU4YzAsNjUyIDMsODU4IDEyLDg1NWMxMiwtNCA5MywtMTIxIDQxNSwtNTk1YzMzMiwtNDkwIDY4MCwtMTAwMSA3NjAsLTExMTVsNTQsLTc3bC0zNCwtMzhjLTY2LC03MyAtODIsLTExNyAtODIsLTIyM2MwLC04MCA0LC0xMDIgMjQsLTE0MGMzMiwtNjEgOTYsLTEyNiAxNTYsLTE1OGM0NCwtMjQgNjEsLTI3IDE0NSwtMjdjODQsMCAxMDIsMyAxNTIsMjhjMTE1LDU2IDE4MiwxNjcgMTgyLDI5N2MwLDkwIC0yNiwxNTkgLTg0LDIyM2MtOTUsMTA0IC0xOTgsMTMwIC0zNjYsOTJjLTM1LC04IC0yNSwtMjAgLTI2MCwzMjVjLTQ3LDY5IC0xMzYsMTk5IC0xOTgsMjkwYy05OSwxNDUgLTU2Miw4MjcgLTczMCwxMDc1bC02MSw5MGwyMiw0NWMyOCw1MyAyOCw4MiA0LDEzNWMtMjQsNTIgLTU2LDgwIC0xMDYsOTRjLTQ1LDEyIC01MCwxMiAtODYsMXoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z180IiBkPSJtMjM2MCwzNTIzYy0zNzYsLTkgLTgzNSwtMjQgLTg4OSwtMzBjLTE2MCwtMTYgNDQsLTMwIDc0NSwtNTRsMzMxLC0xMWw0MSwyOWMyMywxNSA0MCwzMyAzOCwzOGMtNCwxNiAtNjgsMzQgLTExNiwzMmMtMjUsLTEgLTkyLC0yIC0xNTAsLTR6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfNSIgZD0ibTIyMTAsMzMxM2MtNTgsLTEgLTMwMywtNyAtNTQ1LC0xM2MtNDg1LC0xMSAtNjI1LC0xOSAtNjAzLC0zMWMyNiwtMTUgOTM4LC00OSAxMjk1LC00OWw4MCwwbDE3LDQzYzksMjMgMTYsNDYgMTYsNTBjMCw0IC0zNSw2IC03Nyw1Yy00MywtMSAtMTI1LC0zIC0xODMsLTV6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfNiIgZD0ibTIwMDAsMzA4M2MtOTI4LC0yMiAtMTA5MiwtMjkgLTEwMzYsLTQ0YzM3LC0xMCA0NTMsLTI3IDg1NiwtMzRjMTczLC0zIDM4MSwtOCA0NjMsLTExbDE0NywtNmwwLDM1YzAsNzQgMjIsNzEgLTQzMCw2MHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z183IiBkPSJtMjA0NSwyODUzYy00OSwtMSAtMjIzLC03IC0zODUsLTEzYy00MjUsLTE2IC00MDksLTMwIDU1LC01MGMyODcsLTEzIDgwMCwtMTggODEwLC04YzQsNCAtNSwyMyAtMjAsNDJsLTI3LDM2bC0xNzIsLTJjLTk0LC0xIC0yMTEsLTMgLTI2MSwtNXoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z184IiBkPSJtNTQ1NSwyNjI5Yy0yMiwtMTggLTYyLC01MyAtODgsLTc4bC00OCwtNDZsMywtNTY1YzIsLTQ0MCAwLC01ODcgLTExLC02NjNjLTcsLTU0IC0xMSwtMTAxIC03LC0xMDRjMTIsLTEyIDExNSwxMDYgMTQ2LDE2OGM1NSwxMDggNjAsMTU1IDU4LDU1NGMwLDE5OCAtNCw0NTEgLTcsNTYzbC02LDIwMmwtNDAsLTMxeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzkiIGQ9Im01MDAyLDIzODRjLTExMCwtODcgLTEwOCwtNzcgLTkzLC00NzJjMTIsLTMzNyA4LC00MDYgLTI0LC00NTZjLTI2LC0zOSAtNzYsLTU2IC0xODUsLTYzYy0xMTgsLTcgLTEyNywwIC04OSw3NWMyMCwzOSAyNCw2MiAyNCwxMzNjMCw3OSAtMyw5MiAtMzUsMTU1Yy02MywxMjMgLTE2NywxODAgLTMxNiwxNzJjLTczLC00IC05NCwtMTAgLTE2NywtNDZjLTEwOSwtNTQgLTIwNiwtMTQzIC0zMTQsLTI4OWMtNDcsLTY0IC05MCwtMTEzIC0xMDAsLTExM2MtMTQsMCAtMTUsMTMgLTEwLDEyM2MzLDY4IDIsMTI5IC0yLDEzNmMtMTAsMTYgLTYwLC01IC0xMTAsLTQ3Yy0zMiwtMjcgLTM0LC0zMSAtNDEsLTEyN2MtOSwtMTE4IC0xMywtMTMxIC01MSwtMTUwYy0zNSwtMTkgLTE2MiwtMjAgLTE3NywtMmMtNSw2IC0xNiwzOCAtMjMsNzFjLTcsMzIgLTIwLDY4IC0zMCw3OWMtMTcsMjEgLTE3LDIxIC04MywtNDNsLTY3LC02NWwzMSwtOTVsMzEsLTk0bC0yNywtNTFjLTg0LC0xNTYgLTI1NywtMzUwIC0zODQsLTQzMGwtNDUsLTI4bDU4LC0yMGM2MSwtMjAgNjcsLTMzIDI2LC01NWMtMzMsLTE4IC0xNDYsLTggLTI4NCwyNGMtMTc5LDQyIC0xOTEsNDIgLTI1MCwtM2MtNzIsLTU2IC02OCwtNzIgMjksLTEwNmMxNzQsLTYxIDM4NSwtODQgNDc1LC01MmM2MywyMiAxMjcsNzAgMjI4LDE3M2MxMTcsMTE4IDIxNCwyNDYgMjU5LDM0MmMyMCw0MSA0MSw4NiA0NywxMDBjMTAsMTkgMzAsMjkgMTAyLDUwYzUwLDE1IDEwNCwzNCAxMjIsNDNjNDMsMjMgNTUsMjEgODQsLTljNTMsLTU3IDY2LC01OSAyOTQsLTU3YzE0NywxIDIzNiw3IDI5NSwxOGMxNDEsMjggMTkyLDI5IDI3Miw5YzQ4LC0xMyAxMDcsLTE5IDE3MywtMThjMTc3LDEgMjkyLDUzIDM2OCwxNjZjNzksMTIwIDkzLDI0MyA3Nyw3MThjLTcsMTk1IC0xMywzNTYgLTE0LDM1OGMtMiwxIC0zNSwtMjMgLTc0LC01NHptLTYyNSwtNjgyYzc2LC0zOSAxMjAsLTEyMSA5NSwtMTc3Yy0xNiwtMzUgLTE0MSwtOTIgLTI1MiwtMTE1Yy0xMDcsLTIyIC0zNTcsLTM3IC0zNzksLTIyYy0yMCwxNCAtNywzOSA2NywxMjdjNzUsODggMTkyLDE3NSAyNjksMjAwYzYxLDE5IDE0NywxMyAyMDAsLTEzeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzEwIiBkPSJtMTA4NCwyMjI3bC02OSwtNjhsNTgsLTU0YzMyLC0zMCA2NSwtNTUgNzMsLTU1YzgsMCAzOSwyMiA2OCw1MGw1Myw1MGwyOSwtMzFjMTYsLTE3IDQzLC0zOSA2MSwtNTBjMzgsLTI0IDQ5LC0yMCAxMTIsNDVsNDQsNDVsLTU4LDY1Yy0zMSwzNiAtNjAsNjYgLTY0LDY2Yy00LDAgLTMzLC0yNyAtNjUsLTU5bC01OCwtNTlsLTU4LDYxbC01OCw2MmwtNjgsLTY4eiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzExIiBkPSJtMjc2OSwyMjcyYy0xNCwtOSAtNTMsLTQxIC04NywtNzFsLTYyLC01NGwxLC01ODhjMSwtNDgxIDQsLTU4NiAxNSwtNTgyYzIxLDggODksMTAyIDEyMywxNzBjMTgsMzYgMzUsOTEgNDEsMTMwYzEwLDczIDExLDcwMiAxLDg5NWwtNiwxMThsLTI2LC0xOHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMiIgZD0ibTM5NDEsMjIxOWwtNjQsLTcwbDY0LC02NWMzNSwtMzUgNjksLTY0IDc1LC02NGMxOSwwIDExNCwxMDggMTE0LDEzMGMwLDE5IC0xMDQsMTQxIC0xMTksMTM5Yy0zLDAgLTM1LC0zMiAtNzAsLTcweiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzEzIiBkPSJtMTE5NSwxOTI2Yy01NywtNDkgLTE3NSwtMjI2IC0yMTQsLTMyMGMtMjEsLTUwIC0yNSwtNzggLTI2LC0xNTZjMCwtODYgMywtMTAwIDI5LC0xNDdjODIsLTE0OCAzMTQsLTE4OCA0ODUsLTgzYzE1Myw5NCAyMDAsMjg3IDExNCw0NjljLTMyLDY3IC0xMDcsMTQ5IC0xODMsMjAxYy01NywzOCAtMTMzLDgwIC0xNDcsODBjLTUsMCAtMzEsLTIwIC01OCwtNDR6bTEyMiwtMjI2YzU4LC0zMyAxMTMsLTk1IDE0MiwtMTYxYzI4LC02MCAyNiwtOTAgLTYsLTEyMWMtMzksLTM4IC03OCwtNTAgLTE1NCwtNTFjLTE0NSwwIC0yMzAsOTAgLTE4NSwxOThjMzAsNzEgMTExLDE2MiAxNDYsMTY1YzMsMCAyOCwtMTMgNTcsLTMweiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzE0IiBkPSJtMjAxMywxODY0Yy0xMjksLTQ3IC0yMjMsLTIwOSAtMjIzLC0zODRjMCwtMTcwIDc1LC0yNTkgMjQyLC0yOTBjNTQsLTEwIDY5LC05IDIxMiwxNmwzOSw3bC0yMywtNDJjLTI1LC00MyAtMTE5LC0xNDEgLTE4MCwtMTg3Yy05OSwtNzQgLTIyMSwtMTExIC0zOTQsLTEyMGMtMTUwLC04IC0xNjIsLTEzIC0xMTAsLTQ3Yzk4LC02NSAyMzksLTEwMiAzNTksLTk1YzE5NiwxMyAzODMsMTc5IDQ1OCw0MDdjOTksMjk3IDI5LDYwNyAtMTYwLDcxOGMtNTYsMzIgLTE1Nyw0MCAtMjIwLDE3em0xMzgsLTIwMGM1NywtMjggMTIxLC0xMzUgMTM1LC0yMjFjNiwtNDAgNSwtNDIgLTIwLC00OWMtMTUsLTMgLTY0LC00IC0xMTAsLTJjLTE5MywxMCAtMjczLDEyMyAtMTY5LDIzOWM1Miw1NyA5OCw2NyAxNjQsMzN6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfMTUiIGQ9Im00NDAwLDEwMTFjLTE0LC01IC03MCwtMzggLTEyNSwtNzVjLTE5OCwtMTMyIC00MTcsLTIyOSAtNjQ5LC0yODZjLTEyOSwtMzEgLTMyMywtNjAgLTQwOSwtNjBjLTEyOCwwIC0yNjUsLTQ3IC0zMjIsLTEwOWMtMzcsLTQxIC0xMywtNDYgMjM4LC00NmMzMDQsMCA0ODQsMjkgNzQ0LDExOWMyNTUsODkgNTM0LDI1MyA3MjMsNDI0bDQ1LDQxbC0xMTAsMGMtNjAsLTEgLTEyMSwtNCAtMTM1LC04eiIvPgogIDwvZz4KIDwvZz4KPC9zdmc+" style="height:13px;width:auto;opacity:0.85;filter:brightness(1.8) saturate(0);" alt="logo"><h1>PROJECTILE LAB</h1></div><p style="padding-left:20px;">Kinematics · 3D Interactive</p></div>
+
+<div id="mode-bar">
+  <button class="mode-tab active" id="tab-explore" onclick="setMode('explore')">🔭 Explore</button>
+  <button class="mode-tab" id="tab-challenge" onclick="setMode('challenge')">🎯 Challenge</button>
+  <button class="mode-tab" id="tab-ar" onclick="openAR()">📡 AR Mode</button>
+</div>
+
+<!-- RIGHT HUD -->
+<div id="hud">
+  <h2>Measurements</h2>
+  <div class="dr"><span class="dl">θ  angle</span><span class="dv amber" id="v-angle">45.0°</span></div>
+  <div class="dr"><span class="dl">v₀ speed</span><span class="dv" id="v-v0">20.0 m/s</span></div>
+  <div class="dr"><span class="dl">h  height</span><span class="dv cyan" id="v-h">0.0 m</span></div>
+  <div class="dr"><span class="dl">g  gravity</span><span class="dv" id="v-g">9.81 m/s²</span></div>
+  <div class="hdiv"></div>
+  <!-- These rows get hidden per challenge type -->
+  <div class="dr" id="row-range"><span class="dl">R  range</span><span class="dv white" id="v-range">—</span></div>
+  <div class="dr" id="row-maxh"><span class="dl">H  max height</span><span class="dv white" id="v-maxh">—</span></div>
+  <div class="dr" id="row-time"><span class="dl">T  flight time</span><span class="dv white" id="v-time">—</span></div>
+  <div class="dr" id="row-vx"><span class="dl">vₓ horiz. vel</span><span class="dv white" id="v-vx">—</span></div>
+  <div class="dr" id="row-vy"><span class="dl">v_y vert. vel</span><span class="dv white" id="v-vy">—</span></div>
+  <div class="hdiv"></div>
+  <div class="formula-box" id="hud-formula">R = v₀²·sin2θ / g<br>H = v₀²sin²θ / (2g)<br>T = 2v₀sinθ / g</div>
+  <div id="hud-challenge-note" style="display:none;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.7);text-align:center;letter-spacing:1px;padding-top:2px;">🎯 CHALLENGE MODE</div>
+</div>
+
+<!-- LEFT CHALLENGE PANEL -->
+<div id="challenge-panel">
+  <div class="ch-title">
+    <span>🎯 Challenge</span>
+    <button class="ch-close" onclick="exitChallengeMode()" title="Exit challenge">✕</button>
+  </div>
+  <div id="ch-q-text" class="ch-q"></div>
+  <div id="ch-given" class="ch-var"></div>
+  <div class="ch-input-row">
+    <input type="number" id="ch-input" placeholder="?" step="any">
+    <span class="ch-unit" id="ch-unit-lbl">m</span>
+  </div>
+  <div style="display:flex;gap:5px;">
+    <button class="btn validate" onclick="validateChallenge()" style="flex:1;">✔ Check</button>
+    <button class="btn" onclick="nextChallenge()" style="flex:1;font-size:10px;">↻ New</button>
+  </div>
+  <div id="ch-result"></div>
+  <div style="margin-top:10px;border-top:1px solid rgba(255,200,60,.1);padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.5);">Score</span>
+    <span style="font-family:'Space Mono',monospace;font-size:13px;color:#ffcc44;" id="ch-score">0 / 0</span>
+  </div>
+</div>
+
+<!-- BOTTOM CONTROLS -->
+<div id="bottom-panels">
+  <!-- LAUNCH PANEL -->
+  <div class="panel" style="min-width:295px;">
+    <div class="panel-title">⚡ Launch</div>
+    <div class="panel-row">
+      <span class="sl-lbl">θ</span>
+      <input type="range" id="sl-angle" min="0" max="90" value="45" step="0.5" oninput="onAngle()">
+      <span class="sl-val" id="lbl-angle">45.0°</span>
+    </div>
+    <div class="panel-row">
+      <span class="sl-lbl">v₀</span>
+      <input type="range" id="sl-v0" min="1" max="60" value="20" step="0.5" class="vel" oninput="onV0()">
+      <span class="sl-val" id="lbl-v0">20.0 m/s</span>
+    </div>
+    <div class="panel-row">
+      <span class="sl-lbl">h</span>
+      <input type="range" id="sl-h" min="0" max="30" value="0" step="0.1" class="hgt" oninput="onH()">
+      <span class="sl-val" id="lbl-h">0.0 m</span>
+    </div>
+    <div class="panel-row" style="justify-content:center;gap:6px;margin-top:2px;flex-wrap:wrap;">
+      <button class="btn fire" id="btn-fire" onclick="fireLaunch()">🚀 Launch</button>
+      <button class="btn pause" id="btn-pause" onclick="togglePause()" style="display:none;">⏸ Pause</button>
+      <button class="btn" id="btn-step-back" onclick="stepAnim(-0.05)" style="display:none;padding:5px 8px;">◀</button>
+      <button class="btn" id="btn-step-fwd" onclick="stepAnim(0.05)" style="display:none;padding:5px 8px;">▶</button>
+      <button class="btn reset" onclick="resetScene()">↺ Reset</button>
+      <div class="sep"></div>
+      <label class="sw"><input type="checkbox" id="cb-trail" checked onchange="onTrail()"> trail</label>
+      <label class="sw"><input type="checkbox" id="cb-vectors" onchange="onVectors()"> vectors</label>
+    </div>
+  </div>
+
+  <!-- ENV PANEL -->
+  <div class="panel" style="min-width:180px;">
+    <div class="panel-title">🌍 Environment</div>
+    <div class="panel-row">
+      <span class="sl-lbl">g</span>
+      <input type="range" id="sl-g" min="1" max="25" value="9.81" step="0.01" oninput="onG()">
+      <span class="sl-val" id="lbl-g">9.81</span>
+    </div>
+    <div class="panel-row" style="justify-content:center;gap:5px;margin-top:2px;">
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(9.81)">🌍</button>
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(3.72)">🔴</button>
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(1.62)">🌙</button>
+    </div>
+  </div>
+
+  <!-- CAMERA PANEL -->
+  <div class="panel" style="min-width:155px;">
+    <div class="panel-title">📷 Camera</div>
+    <div class="panel-row" style="justify-content:center;gap:5px;flex-wrap:wrap;">
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('launcher')">🔭 Launcher</button>
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('range')">📏 Range</button>
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('center')">🎯 Center</button>
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('top')">🔝 Apex</button>
+    </div>
+  </div>
+
+  <!-- TOOLS PANEL -->
+  <div class="panel" style="min-width:130px;">
+    <div class="panel-title">📐 Tools</div>
+    <div class="panel-row" style="justify-content:center;gap:5px;">
+      <button class="btn" id="btn-vruler" style="font-size:10px;padding:4px 8px;" onclick="toggleVRuler()">📏 V-Ruler</button>
+    </div>
+  </div>
+
+  <!-- OBJECTS PANEL -->
+  <div class="panel" style="min-width:155px;">
+    <div class="panel-title">🎯 Objects</div>
+    <div class="panel-row" style="justify-content:center;gap:5px;flex-wrap:wrap;">
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnPendulumManual()">🪀 Pendulum</button>
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnStackManual()">🧱 Blocks</button>
+      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="clearChallengeObjects()">✕ Clear</button>
+    </div>
+  </div>
+
+
+</div>
+
+<button id="qr-btn" onclick="openQR()" title="Open on mobile">
+  <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zm1 1v5h5V4zm1 1h3v3H5zm8-2h7v7h-7zm1 1v5h5V4zm1 1h3v3h-3zM3 13h7v7H3zm1 1v5h5v-5zm1 1h3v3H5zm8 0h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2zm-2 2h2v2h-2zm2-6h2v2h-2zm-4 2h2v2h-2z"/></svg>
+</button>
+<div id="qr-overlay" onclick="closeQR(event)">
+  <div id="qr-card">
+    <h3>📱 Open on Mobile</h3>
+    <div id="qr-box"></div>
+    <div id="qr-url"></div>
+    <button id="qr-close" onclick="closeQR()">Close</button>
+  </div>
+</div>
+
+<!-- AR OVERLAY -->
+<div id="ar-overlay">
+  <video id="ar-video" autoplay playsinline muted></video>
+  <canvas id="ar-canvas"></canvas>
+  <button id="ar-close" onclick="closeAR()">✕ Exit AR</button>
+  <div id="ar-hud">
+    <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(140,200,255,.4);text-transform:uppercase;border-bottom:1px solid rgba(140,200,255,.1);padding-bottom:5px;margin-bottom:7px;">AR Readout</div>
+    <div class="dr"><span class="dl">θ</span><span class="dv amber" id="ar-v-angle">45°</span></div>
+    <div class="dr"><span class="dl">v₀</span><span class="dv" id="ar-v-v0">20 m/s</span></div>
+    <div class="dr"><span class="dl">R</span><span class="dv white" id="ar-v-range">—</span></div>
+    <div class="dr"><span class="dl">H</span><span class="dv white" id="ar-v-maxh">—</span></div>
+    <div class="dr"><span class="dl">T</span><span class="dv white" id="ar-v-time">—</span></div>
+  </div>
+  <div id="ar-challenge">
+    <div class="ch-title"><span>🎯 AR Challenge</span></div>
+    <div id="ar-ch-text" style="font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.55;margin-bottom:7px;"></div>
+    <div id="ar-ch-given" class="ch-var" style="font-size:9px;"></div>
+    <div class="ch-input-row" style="margin-top:5px;">
+      <input type="number" id="ar-ch-input" placeholder="?" step="any" style="background:rgba(8,14,30,.9);border:1px solid rgba(140,200,255,.25);color:#78b4ff;border-radius:8px;padding:5px 8px;font-family:'Space Mono',monospace;font-size:11px;width:90px;outline:none;">
+      <span class="ch-unit" id="ar-ch-unit">m</span>
+    </div>
+    <button class="btn validate" onclick="validateARChallenge()" style="width:100%;margin-top:5px;">✔ Check</button>
+    <div id="ar-ch-result" style="display:none;margin-top:5px;padding:6px 10px;border-radius:8px;font-family:'Syne',sans-serif;font-size:11px;"></div>
+  </div>
+  <div id="ar-marker-hint"><div style="font-size:28px;">🎯</div><p>Point camera at HIRO marker</p></div>
+  <div id="ar-ui">
+    <button class="btn fire" onclick="arFire()">🚀 Launch</button>
+    <button class="btn reset" onclick="arReset()">↺ Reset</button>
+    <button class="btn" onclick="nextARChallenge()" style="font-size:10px;">↻ Challenge</button>
+  </div>
+</div>
+
+<div id="hint">Drag to orbit · Scroll to zoom · Sliders to adjust</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ── PHYSICS ────────────────────────────────────────────────────────────
+const S = { angle:45, v0:20, h:0, g:9.81 };
+
+function compute(a,v0,h,g){
+  const rad=a*Math.PI/180;
+  const vx=v0*Math.cos(rad), vy=v0*Math.sin(rad);
+  const disc=vy*vy+2*g*h;
+  const T=disc<0?0:(vy+Math.sqrt(disc))/g;
+  const R=vx*T;
+  const H=h+vy*vy/(2*g);
+  return {vx,vy,T,R,H};
+}
+
+// ── RENDERER ───────────────────────────────────────────────────────────
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('mainCanvas'),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.1;
+renderer.setClearColor(0x141c2e,1);
+
+const sc=new THREE.Scene();
+sc.fog=new THREE.FogExp2(0x141c2e,0.003);
+
+const cam=new THREE.PerspectiveCamera(50,1,0.1,500);
+
+// ── LIGHTS ─────────────────────────────────────────────────────────────
+sc.add(new THREE.AmbientLight(0xd8eeff,1.4));
+const sun=new THREE.DirectionalLight(0xfff8e0,2.5);
+sun.position.set(50,70,30); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.near=1; sun.shadow.camera.far=250;
+sun.shadow.camera.left=-100; sun.shadow.camera.right=100;
+sun.shadow.camera.top=100; sun.shadow.camera.bottom=-100;
+sc.add(sun);
+const fill=new THREE.DirectionalLight(0xd0e8ff,1.1); fill.position.set(-30,20,-20); sc.add(fill);
+const back=new THREE.DirectionalLight(0xffe8d0,0.6); back.position.set(0,-4,40); sc.add(back);
+const groundFill=new THREE.DirectionalLight(0x70b8d8,0.5); groundFill.position.set(0,2,0); sc.add(groundFill);
+
+// ── SPRITE LABEL HELPER ───────────────────────────────────────────────
+function makeTextSprite(text, fontSize, color){
+  const canvas=document.createElement('canvas');
+  canvas.width=128; canvas.height=64;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,128,64);
+  ctx.font=`bold ${fontSize}px 'Arial',sans-serif`;
+  ctx.fillStyle=color||'#ffffff';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,64,32);
+  const tex=new THREE.CanvasTexture(canvas);
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false});
+  const sprite=new THREE.Sprite(mat);
+  sprite.renderOrder=10;
+  return sprite;
+}
+
+// ── LAB BENCH ─────────────────────────────────────────────────────────
+const BENCH_Z = 8;   // half-depth of bench in Z (total 16 m deep)
+const BENCH_X = 400; // length in X (flight direction)
+const BENCH_THICK = 0.18; // surface slab thickness
+const BENCH_LEG_H = 1.0;  // legs below surface (visual only)
+
+// Surface slab — light blue colour, emissive so fog doesn't darken it
+const surfMat = new THREE.MeshStandardMaterial({
+  color: 0x060c18, roughness: 0.55, metalness: 0.0,
+  emissive: 0x103050, emissiveIntensity: 0.25
+});
+const floor = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK, BENCH_Z*2), surfMat);
+floor.position.set(BENCH_X/2, -BENCH_THICK/2, 0);
+floor.receiveShadow = true; sc.add(floor);
+
+// Subtle wood-grain lines along X
+const grainMat = new THREE.MeshStandardMaterial({color:0x78b8d8,roughness:0.8,emissive:0x082030,emissiveIntensity:0.2});
+for(let gz=-BENCH_Z+1; gz<BENCH_Z; gz+=1.4){
+  const grain = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, 0.005, 0.04), grainMat);
+  grain.position.set(BENCH_X/2, 0.002, gz); sc.add(grain);
+}
+
+// Front and back edge trim — darker wood
+const trimMat = new THREE.MeshStandardMaterial({color:0x4a8aaa,roughness:0.5,emissive:0x082030,emissiveIntensity:0.25});
+[-BENCH_Z, BENCH_Z].forEach(z=>{
+  const trim = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK+0.02, 0.12), trimMat);
+  trim.position.set(BENCH_X/2, -BENCH_THICK/2, z + (z>0?0.06:-0.06)); sc.add(trim);
+});
+
+// Table legs / apron underneath
+const legMat = new THREE.MeshStandardMaterial({color:0x3a6880,roughness:0.6,emissive:0x081828,emissiveIntensity:0.2});
+// Apron beams (front + back)
+[-BENCH_Z+0.06, BENCH_Z-0.06].forEach(z=>{
+  const apron = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, 0.12, 0.08), legMat);
+  apron.position.set(BENCH_X/2, -BENCH_THICK - 0.06, z); sc.add(apron);
+});
+// Legs every 20m
+for(let lx=0; lx<=BENCH_X; lx+=20){
+  [-BENCH_Z+0.3, BENCH_Z-0.3].forEach(z=>{
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, BENCH_LEG_H, 0.15), legMat);
+    leg.position.set(lx, -BENCH_THICK - BENCH_LEG_H/2, z); sc.add(leg);
+  });
+}
+
+// Grid lines on surface (faint, matching bench tone)
+const gr = new THREE.GridHelper(BENCH_X, 200, 0x4a7a9a, 0x2a5a7a);
+gr.scale.z = (BENCH_Z*2)/BENCH_X;
+gr.position.set(BENCH_X/2, 0.003, 0);
+gr.material.transparent = true; gr.material.opacity = 0.18;
+sc.add(gr);
+
+// ── MEASURING TAPE — centred on bench z=0, lying flat on surface ──────
+// Looks like a real yellow fabric measuring tape. Zero at x=0 (launch origin).
+// Tape body: 0.24m wide, alternating yellow/cream bands every 0.5m,
+// black ticks every 0.1m, numbers every 0.5m.
+const TAPE_W = 0.26;   // tape width in Z
+const TAPE_Z = 0.0;    // centred on bench
+const TAPE_Y = 0.003;  // just above bench surface
+const TAPE_LEN = 200;  // metres total (−10 to +190)
+const TAPE_START = -10;
+
+let groundRulerGrp = new THREE.Group();
+sc.add(groundRulerGrp);
+
+function buildGroundRuler(){
+  while(groundRulerGrp.children.length) groundRulerGrp.remove(groundRulerGrp.children[0]);
+
+  // ── Tape backing: single long yellow strip ───────────────────────
+  const tapeMat = new THREE.MeshStandardMaterial({
+    color: 0xf5c842, roughness: 0.7, metalness: 0.0,
+    emissive: 0x302200, emissiveIntensity: 0.5
+  });
+  const tapeBody = new THREE.Mesh(
+    new THREE.BoxGeometry(TAPE_LEN + 20, 0.004, TAPE_W), tapeMat);
+  tapeBody.position.set((TAPE_START + TAPE_LEN/2 + 10/2), TAPE_Y, TAPE_Z);
+  groundRulerGrp.add(tapeBody);
+
+  // ── Alternating colour bands every 0.5 m ────────────────────────
+  const band0 = new THREE.MeshStandardMaterial({color:0xf5c842,roughness:0.7,emissive:0x302200,emissiveIntensity:0.4});
+  const band1 = new THREE.MeshStandardMaterial({color:0xfcf0c0,roughness:0.7,emissive:0x302000,emissiveIntensity:0.35});
+  for(let m=TAPE_START; m<TAPE_START+TAPE_LEN+10; m+=0.5){
+    const idx = Math.round(m*2);
+    const bMat = (idx%2===0) ? band0 : band1;
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.005, TAPE_W*0.96), bMat);
+    band.position.set(m+0.25, TAPE_Y+0.001, TAPE_Z);
+    groundRulerGrp.add(band);
+  }
+
+  // ── Tick marks and numbers ───────────────────────────────────────
+  const tickMat = new THREE.MeshStandardMaterial({color:0x111111,roughness:0.9,emissive:0x000000});
+
+  for(let cm=TAPE_START*100; cm<=(TAPE_START+TAPE_LEN+10)*100; cm+=10){
+    const x = cm/100;
+    const isMetre   = (cm % 100 === 0);
+    const isHalf    = (cm % 50  === 0);
+    const isDeci    = (cm % 10  === 0);
+    if(!isDeci) continue;
+
+    const tH = isMetre ? TAPE_W*0.65 : isHalf ? TAPE_W*0.45 : TAPE_W*0.28;
+    const tW = isMetre ? 0.022 : isHalf ? 0.016 : 0.010;
+    const tick = new THREE.Mesh(new THREE.BoxGeometry(tW, 0.006, tH), tickMat);
+    tick.position.set(x, TAPE_Y+0.003, TAPE_Z - TAPE_W/2 + tH/2);
+    groundRulerGrp.add(tick);
+
+    if(isMetre || isHalf){
+      const label = x === 0 ? '0' : (x % 1 === 0 ? x+'m' : x.toFixed(1)+'m');
+      const col   = x === 0 ? '#ff4400' : (isMetre ? '#111111' : '#333333');
+      const fsize = isMetre ? 26 : 18;
+      const sp = makeTextSprite(label, fsize, col);
+      const sc2 = isMetre ? 0.55 : 0.38;
+      sp.scale.set(sc2, sc2*0.5, 1);
+      sp.position.set(x, TAPE_Y + (isMetre ? 0.22 : 0.15), TAPE_Z + TAPE_W*0.15);
+      groundRulerGrp.add(sp);
+    }
+  }
+
+  // ── Tape edges (thin black border strips) ────────────────────────
+  const edgeMat = new THREE.MeshStandardMaterial({color:0x111111,roughness:0.9,emissive:0x000000});
+  [-TAPE_W/2, TAPE_W/2].forEach(ez=>{
+    const edgeStrip = new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20, 0.006, 0.012), edgeMat);
+    edgeStrip.position.set((TAPE_START + TAPE_LEN/2 + 10/2), TAPE_Y+0.002, TAPE_Z+ez);
+    groundRulerGrp.add(edgeStrip);
+  });
+}
+buildGroundRuler();
+
+// ── GROUND FLOOR below bench ─────────────────────────────────────────
+const groundFloorMat = new THREE.MeshStandardMaterial({color:0x060a10,roughness:0.98});
+const groundFloor = new THREE.Mesh(new THREE.PlaneGeometry(600,600),groundFloorMat);
+groundFloor.rotation.x = -Math.PI/2;
+groundFloor.position.y = -BENCH_THICK - BENCH_LEG_H - 0.02;
+groundFloor.receiveShadow = true;
+sc.add(groundFloor);
+const groundGrid = new THREE.GridHelper(600,300,0x0e1a28,0x080f18);
+groundGrid.position.y = groundFloor.position.y + 0.005;
+sc.add(groundGrid);
+
+// Helper: make all meshes in a group render through the ground
+function setAlwaysVisible(obj){
+  if(obj.isMesh&&obj.material){
+    const m=obj.material;
+    m.depthTest=false; m.depthWrite=false;
+    obj.renderOrder=999;
+  }
+  if(obj.children) obj.children.forEach(setAlwaysVisible);
+}
+
+// Stars
+(()=>{
+  const geo=new THREE.BufferGeometry();
+  const N=1000, pos=new Float32Array(N*3);
+  for(let i=0;i<N;i++){pos[i*3]=(Math.random()-.5)*600;pos[i*3+1]=40+Math.random()*200;pos[i*3+2]=(Math.random()-.5)*600;}
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  sc.add(new THREE.Points(geo,new THREE.PointsMaterial({color:0x8899cc,size:0.45,transparent:true,opacity:.55})));
+})();
+
+// Distant moon
+const moon=new THREE.Mesh(new THREE.SphereGeometry(8,16,16),new THREE.MeshLambertMaterial({color:0xbbc8d8,emissive:0x202840,emissiveIntensity:.3}));
+moon.position.set(-120,100,-150); sc.add(moon);
+
+// ── PROFESSIONAL LAB LAUNCHER ────────────────────────────────────────
+// The launcher mounts on the bench edge at x=0 (left edge of bench).
+// The mount (vertical column) grows with h, showing the height scale.
+// The barrel is held at its midpoint by the mount clamp; the lower half
+// hangs below the bench surface. The projectile sits at y=h (center of barrel = h).
+// A digital screen is attached at the bottom of the barrel.
+const PIVOT_BASE = 0.5;   // minimum stand height above bench
+let cannonGrp, _barrelPivot, _rulerStand, _rulerPlate, _rulerTicks, _screenGrp;
+
+function buildLauncher(){
+  if(cannonGrp){sc.remove(cannonGrp); cannonGrp=null;}
+  const h=S.h;
+  // The clamp holds the barrel at its midpoint; barrel center is at y=h above bench.
+  // Mount column goes from bench surface (y=0) up to h + a small overhead.
+  const mountH = Math.max(h + PIVOT_BASE, PIVOT_BASE);
+  cannonGrp=new THREE.Group();
+
+  // ── Vertical mount — wall-mount style column from bench (y=0) up to clamp ──
+  const standMat=new THREE.MeshStandardMaterial({color:0xb8ccd8,roughness:.35,metalness:.85});
+  // Main vertical post
+  const stand=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,mountH,12),standMat);
+  stand.position.set(0, mountH/2, 0); stand.castShadow=true; cannonGrp.add(stand);
+
+  // Foot plate that sits on the bench edge
+  const footMat=new THREE.MeshStandardMaterial({color:0x2a3c4e,roughness:.4,metalness:.7});
+  const foot=new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.18, 2.2), footMat);
+  foot.position.set(0, 0.09, 0); cannonGrp.add(foot);
+  // Foot screws
+  for(const [fx,fz] of [[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]]){
+    const screw=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),
+      new THREE.MeshStandardMaterial({color:0x889aaa,roughness:.3,metalness:.9}));
+    screw.position.set(fx,0.11,fz); cannonGrp.add(screw);
+  }
+
+  // ── HEIGHT RULER — plate runs from bench (y=0) to mountH+0.3 ─────────
+  const rulerH = mountH + 0.3;
+  const plateMat=new THREE.MeshStandardMaterial({color:0x1a2c3c,roughness:.5,metalness:.3});
+  const plate=new THREE.Mesh(new THREE.BoxGeometry(.07,rulerH,.15),plateMat);
+  plate.position.set(.42,rulerH/2-.05,0); cannonGrp.add(plate);
+
+  const majMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.4,emissive:0x88eeff,emissiveIntensity:.5});
+  const minMat=new THREE.MeshStandardMaterial({color:0x88aabb,roughness:.5,emissive:0x203040,emissiveIntensity:.3});
+  const totalM=Math.ceil(rulerH/0.5)+1;
+  for(let i=0;i<totalM;i++){
+    const yPos=i*0.5;
+    if(yPos>rulerH+0.1) break;
+    const isMajor=(i%2===0);
+    const tw=isMajor?.26:.15;
+    const tick=new THREE.Mesh(new THREE.BoxGeometry(tw,.014,.018),isMajor?majMat:minMat);
+    tick.position.set(.42+tw/2+.035,yPos,.08); cannonGrp.add(tick);
+  }
+  // Ruler number labels every 1 m
+  const maxLabel=Math.floor(rulerH);
+  for(let m=0;m<=maxLabel;m++){
+    const sp=makeTextSprite(m+'m', 22, '#88eeff');
+    sp.scale.set(0.7,0.35,1);
+    sp.position.set(0.42+0.55, m, 0.12);
+    cannonGrp.add(sp);
+  }
+
+  // ── Pivot/clamp housing at height h (barrel midpoint = h) ─────────────
+  const pivotMat=new THREE.MeshStandardMaterial({color:0x2a3c4e,roughness:.4,metalness:.7});
+  const pivotHousing=new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.45,24),pivotMat);
+  pivotHousing.rotation.z=Math.PI/2; pivotHousing.position.set(0,h,0);
+  pivotHousing.castShadow=true; cannonGrp.add(pivotHousing);
+
+  // ── Protractor — 0° at right, 90° at TOP, scale goes 0→90 counterclockwise ──
+  // Arc sweeps from 0° (right, +x) to 90° (up, +y) counterclockwise in 3D
+  const protR=1.1;
+  const protMat=new THREE.MeshStandardMaterial({color:0x80c0e0,roughness:.2,metalness:.5,emissive:0x103050,emissiveIntensity:.5});
+  const protArc=new THREE.Mesh(new THREE.TorusGeometry(protR,.03,8,30,Math.PI/2),protMat);
+  protArc.rotation.z=0; // starts at +x (0°), sweeps counterclockwise to +y (90°)
+  protArc.position.set(0,h,.24); cannonGrp.add(protArc);
+  // Horizontal baseline (0° direction)
+  const baseLine=new THREE.Mesh(new THREE.BoxGeometry(protR*1.1,.018,.018),
+    new THREE.MeshStandardMaterial({color:0x80c0e0,roughness:.3,emissive:0x103050,emissiveIntensity:.4}));
+  baseLine.position.set(protR*0.55,h,.24); cannonGrp.add(baseLine);
+  // Vertical line (90° direction)
+  const vertLine=new THREE.Mesh(new THREE.BoxGeometry(.018,protR*1.1,.018),
+    new THREE.MeshStandardMaterial({color:0x80c0e0,roughness:.3,emissive:0x103050,emissiveIntensity:.4}));
+  vertLine.position.set(0,h+protR*0.55,.24); cannonGrp.add(vertLine);
+
+  // Ticks: 0° at right (+x), going counterclockwise to 90° at top (+y)
+  // Arc position for deg: cx = cos(deg*PI/180)*protR, cy = sin(deg*PI/180)*protR
+  // Tick points radially outward, so tick box (height along local Y) must be rotated
+  // so its local +Y points outward: rotate.z = arcAngle - PI/2
+  const tMaj=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3,emissive:0x88ccff,emissiveIntensity:.6});
+  const tMin=new THREE.MeshStandardMaterial({color:0x88aabb,roughness:.4,emissive:0x203040,emissiveIntensity:.3});
+  for(let deg=0;deg<=90;deg+=5){
+    const arcAngle=deg*Math.PI/180; // CCW from +x
+    const isMaj10=(deg%10===0);
+    const tlen=isMaj10?(deg%30===0?.30:.20):.12;
+    // Outer edge of tick on arc
+    const outerR = protR + 0.02;
+    const innerR = outerR - tlen;
+    const ox=Math.cos(arcAngle), oy=Math.sin(arcAngle);
+    // Tick center = midpoint between inner and outer
+    const midR = (outerR+innerR)/2;
+    const tck=new THREE.Mesh(new THREE.BoxGeometry(.012,tlen,.016),isMaj10?tMaj:tMin);
+    // Box default: height along +Y. Rotate so +Y points in radial direction (outward)
+    tck.rotation.z = arcAngle - Math.PI/2;
+    tck.position.set(ox*midR, h + oy*midR, .24);
+    cannonGrp.add(tck);
+  }
+
+  // Needle: default box along +Y. To point at angle deg from +X (CCW),
+  // rotate by (arcAngle - PI/2) so the +Y end points at arcAngle direction.
+  const needleLen=protR*0.9;
+  const needleAngle=S.angle*Math.PI/180; // CCW from +x
+  const needleMat=new THREE.MeshStandardMaterial({color:0xff4444,emissive:0xff2222,emissiveIntensity:.8});
+  const needle=new THREE.Mesh(new THREE.BoxGeometry(.018,needleLen,.016),needleMat);
+  // Rotate box so its +Y axis points in direction needleAngle from +X
+  needle.rotation.z = needleAngle - Math.PI/2;
+  // Center needle along that direction from pivot center
+  needle.position.set(
+    Math.cos(needleAngle) * needleLen/2,
+    h + Math.sin(needleAngle) * needleLen/2,
+    .25
+  );
+  cannonGrp.add(needle);
+
+  // Protractor degree labels — 0° at right, 90° at top, CCW direction
+  const protLabelDegs=[0,30,60,90];
+  const labelR=protR*1.38;
+  protLabelDegs.forEach(deg=>{
+    const arcAngle=deg*Math.PI/180;
+    const lx=Math.cos(arcAngle)*labelR;
+    const ly=Math.sin(arcAngle)*labelR; // positive y = up
+    const sp=makeTextSprite(deg+'°', 26, deg===S.angle?'#ff8888':'#aaddff');
+    sp.scale.set(0.9,0.45,1);
+    sp.position.set(lx, h+ly, 0.3);
+    cannonGrp.add(sp);
+  });
+
+  // Knob
+  const knob=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.3,12),
+    new THREE.MeshStandardMaterial({color:0x111820,roughness:.5,metalness:.6}));
+  knob.rotation.z=Math.PI/2; knob.position.set(0,h,.82); cannonGrp.add(knob);
+
+  // ── Barrel pivot group — center at y=h; lower half hangs below bench ──
+  _barrelPivot=new THREE.Group();
+  _barrelPivot.position.set(0,h,0);
+
+  const BARREL_LEN=6.0;  // longer barrel so lower half hangs well below bench
+  const BARREL_HALF=BARREL_LEN/2;
+
+  const tubeMat=new THREE.MeshStandardMaterial({
+    color:0xa8d8f0,transparent:true,opacity:.38,
+    roughness:.05,metalness:.1,side:THREE.DoubleSide
+  });
+  // Barrel centered on pivot: from -BARREL_HALF to +BARREL_HALF along local X
+  // After rotation by angle, the center stays at y=h, lower portion goes below bench
+  const tube=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,BARREL_LEN,16,1,true),tubeMat);
+  tube.rotation.z=Math.PI/2; tube.position.x=0; _barrelPivot.add(tube);
+  const innerGlow=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,BARREL_LEN*0.92,12),
+    new THREE.MeshStandardMaterial({color:0x1166ff,emissive:0x0044cc,emissiveIntensity:.8,transparent:true,opacity:.5}));
+  innerGlow.rotation.z=Math.PI/2; innerGlow.position.x=0; _barrelPivot.add(innerGlow);
+  // Caps at both ends of barrel
+  for(const px of[-BARREL_HALF, BARREL_HALF]){
+    const cap=new THREE.Mesh(new THREE.TorusGeometry(.42,.07,8,16),
+      new THREE.MeshStandardMaterial({color:0x8ab4cc,roughness:.3,metalness:.85}));
+    cap.rotation.y=Math.PI/2; cap.position.x=px; _barrelPivot.add(cap);
+  }
+  // Clamp ring at center (where mount holds barrel)
+  const clamp=new THREE.Mesh(new THREE.TorusGeometry(.52,.08,8,16),
+    new THREE.MeshStandardMaterial({color:0x2a3c4e,roughness:.4,metalness:.8}));
+  clamp.rotation.y=Math.PI/2; clamp.position.x=0; _barrelPivot.add(clamp);
+
+  // ── Digital screen at the BOTTOM end of the barrel ──────────────────
+  // Screen is a child of _barrelPivot. We use onBeforeRender to billboard it
+  // so it always faces the camera, regardless of barrel angle.
+  const screenGrp = new THREE.Group();
+  _screenGrp = screenGrp;
+  screenGrp.position.x = -BARREL_HALF - 0.05;
+
+  // Housing (faces +Z by default, billboarding corrects it)
+  const housingMat=new THREE.MeshStandardMaterial({color:0x1a2530,roughness:.3,metalness:.8});
+  const housing=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.8,.25),housingMat);
+  housing.position.set(0,0,0); screenGrp.add(housing);
+
+  const screenMat=new THREE.MeshStandardMaterial({color:0x0a1a0a,roughness:.05,
+    emissive:0x003300,emissiveIntensity:1.2});
+  const screenFace=new THREE.Mesh(new THREE.BoxGeometry(2.0,1.55,.06),screenMat);
+  screenFace.position.set(0,0,.15); screenGrp.add(screenFace);
+
+  const borderMat=new THREE.MeshStandardMaterial({color:0x3a5a6a,roughness:.3,metalness:.9});
+  const border=new THREE.Mesh(new THREE.BoxGeometry(2.1,1.65,.08),borderMat);
+  border.position.set(0,0,.12); screenGrp.add(border);
+
+  // Text sprites (always face camera on their own)
+  const angleSp=makeTextSprite('θ='+S.angle.toFixed(1)+'°', 38, '#00ff88');
+  angleSp.scale.set(1.8,0.9,1);
+  angleSp.position.set(0, 0.45, 0.25);
+  screenGrp.add(angleSp);
+
+  const v0Sp=makeTextSprite('v₀='+S.v0.toFixed(1)+' m/s', 26, '#88ccff');
+  v0Sp.scale.set(1.6,0.7,1);
+  v0Sp.position.set(0, -0.05, 0.25);
+  screenGrp.add(v0Sp);
+
+  const hSp=makeTextSprite('h='+S.h.toFixed(1)+' m', 26, '#ffcc44');
+  hSp.scale.set(1.6,0.7,1);
+  hSp.position.set(0, -0.52, 0.25);
+  screenGrp.add(hSp);
+
+  // Billboard: before each render, orient screenGrp to face camera in world space
+  screenGrp.onBeforeRender = function(renderer, scene, camera){
+    // Get world position of screen
+    const worldPos = new THREE.Vector3();
+    screenGrp.getWorldPosition(worldPos);
+    // Make screen look at camera from its world position
+    const camPos = camera.position.clone();
+    // Compute desired world quaternion: face toward camera
+    const lookDir = camPos.sub(worldPos).normalize();
+    const up = new THREE.Vector3(0,1,0);
+    const right = new THREE.Vector3().crossVectors(up, lookDir).normalize();
+    const corrUp = new THREE.Vector3().crossVectors(lookDir, right);
+    const m = new THREE.Matrix4().makeBasis(right, corrUp, lookDir);
+    const worldQuat = new THREE.Quaternion().setFromRotationMatrix(m);
+    // Convert to local quaternion (subtract parent world rotation)
+    const parentWorldQuat = new THREE.Quaternion();
+    screenGrp.parent.getWorldQuaternion(parentWorldQuat);
+    parentWorldQuat.invert();
+    screenGrp.quaternion.copy(parentWorldQuat).multiply(worldQuat);
+  };
+
+  _barrelPivot.add(screenGrp);
+
+  cannonGrp.add(_barrelPivot);
+  // Position the entire cannonGrp at the left bench edge: x=0 is launch origin
+  cannonGrp.position.set(0,0,0);
+  sc.add(cannonGrp);
+  updateBarrel();
+}
+buildLauncher();
+
+// No pedestal — h change rebuilds the launcher (ruler grows)
+function updatePedestal(){
+  buildLauncher();
+}
+updatePedestal();
+
+function updateBarrel(){if(_barrelPivot)_barrelPivot.rotation.z=S.angle*Math.PI/180;}
+
+// Manual placement helpers for Objects panel
+// Use barrel-tip origin to place objects on the actual trajectory
+function spawnPendulumManual(){
+  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+  const tip=getBarrelTip();
+  // Time to apex
+  const tApex=vy/S.g;
+  const xApex=tip.x+vx*tApex;
+  const yApex=tip.y+vy*tApex-0.5*S.g*tApex*tApex;
+  // Bob center should sit exactly at the apex point
+  placePendulum(xApex, yApex);
+}
+function spawnStackManual(){
+  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+  const tip=getBarrelTip();
+  // Analytical landing x from barrel tip
+  const a2=0.5*S.g, b2=-vy, c2=-tip.y;
+  const disc2=b2*b2-4*a2*c2;
+  const Tland=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
+  const landX=tip.x+vx*Tland;
+  placeStack(landX);
+}
+
+// ── PROJECTILE ────────────────────────────────────────────────────────
+let projectileMesh;
+(()=>{
+  const geo=new THREE.SphereGeometry(.275,16,16);
+  const mat=new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4,roughness:.4,metalness:.2});
+  projectileMesh=new THREE.Mesh(geo,mat); projectileMesh.castShadow=true;
+  // Always visible, resting at (0, h) before launch
+  projectileMesh.position.set(0, S.h, 0);
+  sc.add(projectileMesh);
+})();
+
+// Keep resting projectile position updated when h changes
+function updateProjectileRestPos(){
+  if(!isFlying) projectileMesh.position.set(0, S.h, 0);
+}
+
+// Trail
+let trailLine=null, trailPts=[], showTrail=true, showVectors=false;
+function clearTrail(){if(trailLine){sc.remove(trailLine);trailLine=null;}trailPts=[];}
+function addTrailPt(x,y,z){
+  if(!showTrail)return;
+  trailPts.push(new THREE.Vector3(x,y,z));
+  if(trailLine) sc.remove(trailLine);
+  if(trailPts.length<2) return;
+  const geo=new THREE.BufferGeometry().setFromPoints(trailPts);
+  trailLine=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xff8844,opacity:.55,transparent:true}));
+  sc.add(trailLine);
+}
+
+// Velocity vectors
+let vecArrows=[];
+function clearVectors(){vecArrows.forEach(a=>sc.remove(a));vecArrows=[];}
+function makeArrowVisible(arrow){
+  // Disable depth test on all sub-meshes so vectors show through ground
+  arrow.traverse(obj=>{
+    if(obj.material){obj.material.depthTest=false;obj.renderOrder=5;}
+  });
+}
+function drawVectors(x,y,z,vx,vy){
+  clearVectors(); if(!showVectors)return;
+  const o=new THREE.Vector3(x,y,z),s=.5;
+  const ax=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),o,Math.abs(vx)*s+.1,0x60dfff,.4,.25);
+  const yd=vy>=0?new THREE.Vector3(0,1,0):new THREE.Vector3(0,-1,0);
+  const ay=new THREE.ArrowHelper(yd,o,Math.abs(vy)*s+.1,0xffdd44,.4,.25);
+  makeArrowVisible(ax); makeArrowVisible(ay);
+  sc.add(ax); sc.add(ay); vecArrows=[ax,ay];
+}
+
+// Static trajectory dashed curve (explore only) — starts from barrel tip to match trail
+let staticCurve=null;
+function drawStaticCurve(){
+  if(staticCurve){sc.remove(staticCurve);staticCurve.geometry.dispose();staticCurve=null;}
+  if(typeof currentMode!=='undefined'&&currentMode==='challenge') return;
+  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+  // Start from barrel tip (same origin as runAnim)
+  const tip=getBarrelTip();
+  const spawnX=tip.x, spawnY=tip.y;
+  // Solve spawnY + vy*t - 0.5*g*t² = 0 for landing time
+  const a2=0.5*S.g, b2=-vy, c2=-spawnY;
+  const disc2=b2*b2-4*a2*c2;
+  const T2=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
+  const pts=[]; const N=120;
+  for(let i=0;i<=N;i++){
+    const t=(i/N)*T2;
+    pts.push(new THREE.Vector3(spawnX+vx*t, Math.max(0,spawnY+vy*t-0.5*S.g*t*t), 0));
+  }
+  const geo=new THREE.BufferGeometry().setFromPoints(pts);
+  const mat=new THREE.LineDashedMaterial({color:0x1a3a5a,dashSize:.8,gapSize:.5,opacity:.5,transparent:true});
+  staticCurve=new THREE.Line(geo,mat); staticCurve.computeLineDistances(); sc.add(staticCurve);
+}
+drawStaticCurve();
+
+// Landing ring
+let landingRing=null;
+function drawLandingRing(x){
+  if(landingRing){sc.remove(landingRing);landingRing=null;}
+  const geo=new THREE.RingGeometry(.5,1.2,24);
+  const mat=new THREE.MeshBasicMaterial({color:0xff4422,transparent:true,opacity:.6,side:THREE.DoubleSide});
+  landingRing=new THREE.Mesh(geo,mat); landingRing.rotation.x=-Math.PI/2; landingRing.position.set(x,.02,0);
+  sc.add(landingRing);
+}
+
+// ── CHALLENGE OBJECTS ─────────────────────────────────────────────────
+let pendulumGrp=null, pendulumBob=null, pendulumRope=null;
+let pendBobPos={x:0,y:0}, pendHit=false;
+let stackGrp=null, stackBlocks=[], stackVels=[];
+let chObjVisible=false;
+
+function clearChallengeObjects(){
+  if(pendulumGrp){sc.remove(pendulumGrp);pendulumGrp=null;pendulumBob=null;}
+  if(stackGrp){sc.remove(stackGrp);stackGrp=null;stackBlocks=[];stackVels=[];}
+  chObjVisible=false; pendHit=false;
+}
+
+function placePendulum(x,y){
+  clearChallengeObjects();
+  pendulumGrp=new THREE.Group();
+  // y = bob center position. Rope length is fixed for good visuals.
+  pendRopeLen = Math.max(y * 0.5, 2.5);  // half the apex height, min 2.5m
+  pendAnchorX=x; pendAnchorY=y+pendRopeLen; // anchor sits above bob by rope length
+  pendAngle=0; pendAngVel=0;
+  // Anchor sphere
+  const anchor=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),
+    new THREE.MeshStandardMaterial({color:0x4a6888,metalness:.8,roughness:.3}));
+  anchor.position.set(pendAnchorX,pendAnchorY,0); pendulumGrp.add(anchor);
+  // Horizontal beam
+  const beam=new THREE.Mesh(new THREE.BoxGeometry(1.5,.12,.12),
+    new THREE.MeshStandardMaterial({color:0x3a5570,metalness:.7,roughness:.3}));
+  beam.position.set(pendAnchorX,pendAnchorY,0); pendulumGrp.add(beam);
+  // Rope
+  pendulumRope=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,pendRopeLen,8),
+    new THREE.MeshStandardMaterial({color:0xddbb88,roughness:.8}));
+  pendulumRope.position.set(x,(pendAnchorY+y)/2,0); pendulumGrp.add(pendulumRope);
+  // Bob
+  pendulumBob=new THREE.Mesh(new THREE.SphereGeometry(.7,16,16),
+    new THREE.MeshStandardMaterial({color:0x4488ff,emissive:0x1133aa,emissiveIntensity:.4,roughness:.4,metalness:.3}));
+  pendulumBob.position.set(x,y,0); pendulumBob.castShadow=true; pendulumGrp.add(pendulumBob);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.85,.06,8,24),
+    new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.4}));
+  ring.rotation.x=Math.PI/2; ring.position.set(x,y,0); pendulumGrp.add(ring);
+  sc.add(pendulumGrp);
+  pendBobPos={x,y}; pendHit=false; chObjVisible=true;
+}
+
+function placeStack(x){
+  clearChallengeObjects();
+  stackGrp=new THREE.Group();
+  stackBlocks=[]; stackVels=[];
+  // Long side vertical: bW=1.2 (narrow), bH=2.8 (tall), bD=1.5 (depth)
+  const bW=1.2,bH=2.8,bD=1.5;
+  const bMat=new THREE.MeshStandardMaterial({color:0x3a5a7a,roughness:.6,metalness:.3});
+  const tMat=new THREE.MeshStandardMaterial({color:0x5a3a7a,roughness:.6,metalness:.3});
+  // Two bottom blocks side by side, one on top
+  const positions=[[x-1.2,bH/2,0],[x+1.2,bH/2,0],[x,bH+bH/2,0]];
+  const colors=[bMat,bMat,tMat];
+  positions.forEach((p,i)=>{
+    const b=new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD),colors[i]);
+    b.position.set(...p); b.castShadow=true; b.receiveShadow=true;
+    // No edges — clean blocks only
+    stackGrp.add(b);
+    stackBlocks.push({mesh:b,restX:p[0],restY:p[1]});
+    stackVels.push({x:0,y:0});
+  });
+  sc.add(stackGrp); chObjVisible=true;
+}
+
+// ── PHYSICS STATE ─────────────────────────────────────────────────────
+// Pendulum physics: constraint-based (rope of fixed length)
+let pendAnchorX=0, pendAnchorY=0, pendRopeLen=0;
+let pendAngVel=0, pendAngle=0;  // angle from vertical, angular velocity
+const PEND_MASS=4, PROJ_MASS=1, BOUNCE_E=0.75, GROUND_E=0.65;
+// Projectile bouncing state
+let projBouncing=false, projVx=0, projVy=0, projX=0, projY=0;
+
+function updateChallengePhysics(dt){
+  // ── Pendulum oscillation (constraint-based) ─────────────────────
+  if(pendulumBob&&pendulumGrp&&pendHit){
+    // θ'' = -(g/L)*sin(θ) - damping*θ'
+    const gL=S.g/Math.max(pendRopeLen,0.5);
+    pendAngVel += (-gL*Math.sin(pendAngle) - 0.015*pendAngVel)*dt;
+    pendAngle  += pendAngVel*dt;
+    // Bob position from anchor
+    const bx=pendAnchorX + pendRopeLen*Math.sin(pendAngle);
+    const by=pendAnchorY - pendRopeLen*Math.cos(pendAngle);
+    pendBobPos.x=bx; pendBobPos.y=by;
+    pendulumBob.position.set(bx,by,0);
+    // Update rope: stretch from anchor to bob
+    if(pendulumRope){
+      const midX=(pendAnchorX+bx)/2, midY=(pendAnchorY+by)/2;
+      pendulumRope.position.set(midX,midY,0);
+      const dx=bx-pendAnchorX, dy=by-pendAnchorY;
+      const len=Math.sqrt(dx*dx+dy*dy);
+      pendulumRope.scale.y=len/Math.max(pendRopeLen,0.01);
+      pendulumRope.rotation.z=Math.atan2(dx,-dy);
+    }
+  }
+  // ── Stack blocks with gravity + ground bounce + block-block collision ─
+  if(stackBlocks.length>0&&pendHit){
+    stackBlocks.forEach((b,i)=>{
+      if(stackVels[i].x===0&&stackVels[i].y===0) return;
+      stackVels[i].y -= S.g*dt;
+      b.mesh.position.x += stackVels[i].x*dt;
+      b.mesh.position.y += stackVels[i].y*dt;
+      // Rotation: tip about the center of mass (natural for a rigid body with horizontal impulse)
+      b.mesh.rotation.z += stackVels[i].x * dt * 0.18;
+      // Ground contact: center.y must be >= halfH (bottom face at y=0)
+      const halfH=b.mesh.geometry.parameters.height/2;
+      if(b.mesh.position.y <= halfH){
+        b.mesh.position.y = halfH; // rest center at halfH so bottom is at y=0
+        if(Math.abs(stackVels[i].y)>0.3){
+          stackVels[i].y *= -BOUNCE_E;
+          stackVels[i].x *= 0.82;
+        } else {
+          stackVels[i].y=0; stackVels[i].x*=0.65;
+          if(Math.abs(stackVels[i].x)<0.04) stackVels[i].x=0;
+        }
+      }
+    });
+    // Block-block separation (simple overlap push)
+    for(let i=0;i<stackBlocks.length;i++){
+      for(let j=i+1;j<stackBlocks.length;j++){
+        const a=stackBlocks[i].mesh, b2=stackBlocks[j].mesh;
+        const pw=a.geometry.parameters.width/2+b2.geometry.parameters.width/2;
+        const ph=a.geometry.parameters.height/2+b2.geometry.parameters.height/2;
+        const dx=b2.position.x-a.position.x, dy=b2.position.y-a.position.y;
+        if(Math.abs(dx)<pw&&Math.abs(dy)<ph){
+          // Overlap — push apart with elastic impulse
+          const ox=pw-Math.abs(dx), oy=ph-Math.abs(dy);
+          if(ox<oy){
+            const push=ox/2; const sign=dx>=0?1:-1;
+            a.position.x-=sign*push; b2.position.x+=sign*push;
+            const va=stackVels[i].x, vb=stackVels[j].x;
+            stackVels[i].x=vb; stackVels[j].x=va; // elastic 1D exchange
+          } else {
+            const push=oy/2; const sign=dy>=0?1:-1;
+            a.position.y-=sign*push; b2.position.y+=sign*push;
+            const va=stackVels[i].y, vb=stackVels[j].y;
+            stackVels[i].y=vb; stackVels[j].y=va;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ── ANIMATION ─────────────────────────────────────────────────────────
+let isFlying=false, isPaused=false, animT=0;
+let animId=null;
+let animStartTime=0, animPauseOffset=0;
+let px=0, py=0, pvx=0, pvy=0;
+let lastFrameTime=0;
+let bouncesLeft=6;
+const GROUND_BOUNCE=0.65, GROUND_FRICTION=0.98;
+const COEFF_RESTITUTION=0.85;
+const PROJ_R=0.275;
+// Module-level spawn position — set each time fireLaunch is called
+let _spawnX=0, _spawnY=0;
+
+// Physics launch origin: projectile center always starts at x=0, y=S.h.
+function getBarrelTip(){
+  return { x: 0, y: S.h };
+}
+
+function fireLaunch(){
+  if(isFlying&&!isPaused){cancelAnimationFrame(animId);}
+  clearTrail(); clearVectors();
+  if(landingRing){sc.remove(landingRing);landingRing=null;}
+  pendHit=false; projBouncing=false;
+  if(stackGrp) stackVels.forEach(v=>{v.x=0;v.y=0;});
+  if(pendulumGrp&&pendulumBob){const pp=pendBobPos;pendulumBob.position.set(pp.x,pp.y,0);}
+  projectileMesh.position.set(0, S.h, 0); isFlying=true; isPaused=false; animT=0;
+  animStartTime=performance.now(); animPauseOffset=0;
+  document.getElementById('btn-pause').style.display='inline-block';
+  document.getElementById('btn-step-back').style.display='inline-block';
+  document.getElementById('btn-step-fwd').style.display='inline-block';
+  document.getElementById('btn-pause').textContent='⏸ Pause';
+  const {T}=compute(S.angle,S.v0,S.h,S.g);
+  runAnim();
+}
+
+function runAnim(){
+  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+  const tip=getBarrelTip();
+  const spawnX=tip.x, spawnY=tip.y;
+  _spawnX=spawnX; _spawnY=spawnY;
+  // Analytical landing time: spawnY + vy*t - 0.5*g*t² = 0
+  const a2=0.5*S.g, b2=-vy, c2=-spawnY;
+  const disc2=b2*b2-4*a2*c2;
+  const Tland=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
+
+  let lastFrameTime=performance.now();
+  projBouncing=false; projVx=vx; projVy=vy; projX=spawnX; projY=spawnY;
+
+  function step(now){
+    if(!isFlying) return;
+    const dtRaw=(now-lastFrameTime)/1000;
+    const dt=isPaused?0:Math.min(dtRaw,0.05);
+    lastFrameTime=now;
+    if(!isPaused) animT+=dt;
+
+    let bx,by,cvx,cvy;
+
+    if(!projBouncing){
+      // Exact parabolic position from barrel tip
+      bx=spawnX+vx*animT;
+      by=spawnY+vy*animT-0.5*S.g*animT*animT;
+      cvx=vx; cvy=vy-S.g*animT;
+      // Land at the analytically computed time (avoids frame-late drift)
+      if(animT>=Tland&&Tland>0){
+        projBouncing=true;
+        projX=spawnX+vx*Tland; projY=0;
+        projVx=cvx*0.85; projVy=Math.abs(vy-S.g*Tland)*GROUND_E;
+        bx=projX; by=0;
+        drawLandingRing(projX);
+      }
+      if(!pendHit&&chObjVisible) checkCollision(bx,by,cvx,cvy);
+      if(projBouncing&&!pendHit){bx=projX;by=projY;}
+    }
+
+    if(projBouncing){
+      if(!isPaused){
+        projVy-=S.g*dt;
+        projX+=projVx*dt;
+        projY+=projVy*dt;
+      }
+      if(projY<=0){
+        projY=0;
+        const spd=Math.abs(projVy);
+        if(spd>0.4){
+          projVy=spd*GROUND_E;
+          projVx*=0.90;
+        } else {
+          projVy=0; projVx*=0.6;
+          if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05){
+            projVx=0; projVy=0;
+            isFlying=false;
+            document.getElementById('btn-pause').style.display='none';
+          }
+        }
+      }
+      bx=projX; by=projY; cvx=projVx; cvy=projVy;
+      if(!pendHit&&chObjVisible) checkCollision(bx,by,cvx,cvy);
+    }
+
+    if(chObjVisible) updateChallengePhysics(dt);
+
+    projectileMesh.position.set(bx,by,0);
+    addTrailPt(bx,by,0);
+    drawVectors(bx,by,0,cvx,cvy);
+    document.getElementById('v-vx').textContent=(cvx).toFixed(2)+' m/s';
+    document.getElementById('v-vy').textContent=(cvy).toFixed(2)+' m/s';
+
+    if(isFlying) animId=requestAnimationFrame(step);
+  }
+  animId=requestAnimationFrame(step);
+}
+
+function checkCollision(bx,by,vx,vy){
+  // ── Pendulum elastic collision ────────────────────────────────────
+  if(pendulumBob&&!pendHit){
+    const pb=pendulumBob.position;
+    const dist=Math.sqrt((bx-pb.x)**2+(by-pb.y)**2);
+    const minDist=0.7+PROJ_R; // bob radius + proj radius
+    if(dist<minDist){
+      pendHit=true;
+      // Normal points FROM bob center TO projectile center
+      const nx=(bx-pb.x)/Math.max(dist,0.001), ny=(by-pb.y)/Math.max(dist,0.001);
+      // Push projectile outside bob (no penetration)
+      projX=pb.x+nx*minDist; projY=pb.y+ny*minDist;
+      // Elastic 1D collision along collision normal
+      const m1=PROJ_MASS, m2=PEND_MASS;
+      const v1n=vx*nx+vy*ny;  // proj velocity component along normal
+      const v2n=0;             // bob initially at rest
+      // 1D elastic formulas
+      const v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2);
+      const v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2);
+      // Tangential components of projectile velocity (unchanged)
+      const v1tx=vx-v1n*nx, v1ty=vy-v1n*ny;
+      projVx=v1tx+v1nNew*nx; projVy=v1ty+v1nNew*ny;
+      // Bob velocity after collision: v2nNew is along +n direction (bob → projectile → away from bob)
+      // Since nx = (proj - bob)/dist and v1n > 0 means proj moving toward bob,
+      // v2nNew = 2*m1*v1n/(m1+m2) > 0, so bob moves in +n direction = away from bob = same as projectile
+      const bobVx=v2nNew*nx, bobVy=v2nNew*ny;
+      // Compute pendulum angular velocity from bob's linear velocity
+      // Tangential direction at bob: perpendicular to rope (anchor→bob direction)
+      const ropeX=pb.x-pendAnchorX, ropeY=pb.y-pendAnchorY;
+      const ropeLen=Math.sqrt(ropeX*ropeX+ropeY*ropeY);
+      // Tangent vector (counterclockwise perpendicular to rope)
+      const tanX=-ropeY/ropeLen, tanY=ropeX/ropeLen;
+      // Angular velocity = tangential component of bob velocity / rope length
+      const tanSpeed=bobVx*tanX+bobVy*tanY;
+      pendAngle=Math.atan2(pb.x-pendAnchorX, -(pb.y-pendAnchorY));
+      pendAngVel=tanSpeed/Math.max(pendRopeLen,0.5);
+      projBouncing=true;
+      flashHit(pb.x,pb.y);
+    }
+  }
+  // ── Stack elastic collision ───────────────────────────────────────
+  if(stackBlocks.length>0&&!pendHit){
+    let hit=false;
+    stackBlocks.forEach((b,i)=>{
+      if(hit) return;
+      const bp=b.mesh.position;
+      const hw=b.mesh.geometry.parameters.width/2+PROJ_R;
+      const hh=b.mesh.geometry.parameters.height/2+PROJ_R;
+      const dx=Math.abs(bx-bp.x), dy=Math.abs(by-bp.y);
+      if(dx<hw&&dy<hh){
+        hit=true; pendHit=true;
+        // No-penetration: find shallowest axis
+        const ox=hw-dx, oy=hh-dy;
+        let nx=0,ny=0;
+        if(ox<oy){nx=(bx<bp.x?-1:1);}
+        else{ny=(by<bp.y?-1:1);}
+        // Push proj out of block (no penetration)
+        projX=bx+(nx*(ox)||0); projY=(by+(ny*(oy)||0));
+        // Elastic 1D collision along collision normal
+        // Both masses: projectile m1=PROJ_MASS, block m2=PEND_MASS (equal treatment)
+        const m1=PROJ_MASS, m2=PEND_MASS;
+        const v1n=vx*nx+vy*ny;  // proj speed along normal
+        const v2n=0;             // block initially at rest
+        // Elastic formulas: conserve momentum + KE
+        const v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2);
+        const v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2);
+        // Tangential components of projectile unchanged
+        const v1tx=vx-v1n*nx, v1ty=vy-v1n*ny;
+        projVx=v1tx+v1nNew*nx; projVy=v1ty+v1nNew*ny;
+        projBouncing=true;
+        // Block gets velocity along normal only (elastic, no random noise)
+        stackVels[i]={x:v2nNew*nx, y:v2nNew*ny};
+        // Cascade: nearby blocks get scaled elastic impulse (no random noise)
+        stackBlocks.forEach((_,j)=>{
+          if(j!==i){
+            const bp2=stackBlocks[j].mesh.position;
+            const d=Math.sqrt((bp.x-bp2.x)**2+(bp.y-bp2.y)**2);
+            if(d<4&&stackVels[j].x===0&&stackVels[j].y===0){
+              const cascadeScale=0.4*(1-d/4);
+              const dirX=(bp2.x-bp.x)/Math.max(d,0.1);
+              const dirY=(bp2.y-bp.y)/Math.max(d,0.1);
+              const spd=Math.abs(v2nNew)*cascadeScale;
+              stackVels[j]={x:dirX*spd, y:dirY*spd+1.0};
+            }
+          }
+        });
+        flashHit(bp.x,bp.y);
+      }
+    });
+  }
+}
+
+function flashHit(x,y){
+  const spark=new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),
+    new THREE.MeshBasicMaterial({color:0xffee44,transparent:true,opacity:.9}));
+  spark.position.set(x,y,0); sc.add(spark);
+  let a=0.9;
+  const fade=()=>{a-=0.08;spark.material.opacity=a;if(a>0)requestAnimationFrame(fade);else sc.remove(spark);};
+  requestAnimationFrame(fade);
+}
+
+function togglePause(){
+  if(!isFlying&&!isPaused) return;
+  isPaused=!isPaused;
+  document.getElementById('btn-pause').textContent=isPaused?'▶ Resume':'⏸ Pause';
+}
+
+function stepAnim(delta){
+  if(!projectileMesh.visible) return;
+  isPaused=true;
+  isFlying=true; // ensure animation loop keeps running for further steps
+  document.getElementById('btn-pause').style.display='inline-block';
+  document.getElementById('btn-pause').textContent='▶ Resume';
+  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+  // Compute Tland from spawn point
+  const a2=0.5*S.g, b2=-vy, c2=-_spawnY;
+  const disc2=b2*b2-4*a2*c2;
+  const Tland=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
+
+  let bx,by,cvx,cvy;
+  if(!projBouncing){
+    animT=Math.max(0,Math.min(animT+delta, Tland+0.001));
+    if(animT<=Tland){
+      bx=_spawnX+vx*animT;
+      by=Math.max(0,_spawnY+vy*animT-0.5*S.g*animT*animT);
+      cvx=vx; cvy=vy-S.g*animT;
+      if(animT>=Tland){
+        projBouncing=true;
+        projX=_spawnX+vx*Tland; projY=0;
+        projVx=vx*0.85; projVy=Math.abs(vy-S.g*Tland)*GROUND_E;
+        bx=projX; by=0; cvx=projVx; cvy=projVy;
+        drawLandingRing(projX);
+      }
+    }
+  } else {
+    // Step in bouncing phase — apply velocity for delta time
+    const dt=delta;
+    projVy-=S.g*dt;
+    projX+=projVx*dt;
+    projY+=projVy*dt;
+    if(projY<=0){
+      projY=0;
+      const spd=Math.abs(projVy);
+      if(spd>0.4){projVy=spd*GROUND_E;projVx*=0.90;}
+      else{projVy=0;projVx*=0.6;}
+    }
+    bx=projX; by=projY; cvx=projVx; cvy=projVy;
+    if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05&&projY<=0){
+      projVx=0;projVy=0;
+    }
+  }
+  projectileMesh.position.set(bx,by,0);
+  addTrailPt(bx,by,0);
+  document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';
+  document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';
+  drawVectors(bx,by,0,cvx||0,cvy||0);
+}
+
+function resetScene(){
+  if(animId) cancelAnimationFrame(animId);
+  isFlying=false; isPaused=false; animT=0;
+  projectileMesh.position.set(0, S.h, 0); // rest at (0, h)
+  clearTrail(); clearVectors();
+  if(landingRing){sc.remove(landingRing);landingRing=null;}
+  pendHit=false;
+  px=0;py=S.h;pvx=0;pvy=0;bouncesLeft=6;
+  if(pendulumBob&&pendulumGrp){
+    pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);
+    pendAngle=0; pendAngVel=0;
+  }
+  if(stackBlocks.length){
+    resetStackPositions();
+  }
+  document.getElementById('btn-pause').style.display='none';
+  document.getElementById('btn-step-back').style.display='none';
+  document.getElementById('btn-step-fwd').style.display='none';
+  drawStaticCurve(); updateHUD();
+}
+function resetStackPositions(){
+  if(!stackGrp||stackBlocks.length===0) return;
+  stackBlocks.forEach((b,i)=>{
+    b.mesh.position.set(b.restX,b.restY,0);
+    stackVels[i]={x:0,y:0};
+    b.mesh.rotation.z=0;
+  });
+}
+
+// ── HUD UPDATE ─────────────────────────────────────────────────────────
+function updateHUD(){
+  const {vx,vy,T,R,H}=compute(S.angle,S.v0,S.h,S.g);
+  document.getElementById('v-angle').textContent=S.angle.toFixed(1)+'°';
+  document.getElementById('v-v0').textContent=S.v0.toFixed(1)+' m/s';
+  document.getElementById('v-h').textContent=S.h.toFixed(1)+' m';
+  document.getElementById('v-g').textContent=S.g.toFixed(2)+' m/s²';
+  document.getElementById('v-range').textContent=R.toFixed(2)+' m';
+  document.getElementById('v-maxh').textContent=H.toFixed(2)+' m';
+  document.getElementById('v-time').textContent=T.toFixed(2)+' s';
+  document.getElementById('v-vx').textContent=vx.toFixed(2)+' m/s';
+  document.getElementById('v-vy').textContent=vy.toFixed(2)+' m/s';
+  drawStaticCurve();
+  updateBarrel();
+}
+updateHUD();
+
+function hideHUDRow(id){document.getElementById(id).style.display='none';}
+function showHUDRow(id){document.getElementById(id).style.display='flex';}
+function showAllHUDRows(){['row-range','row-maxh','row-time','row-vx','row-vy'].forEach(showHUDRow);}
+
+// ── CONTROLS ───────────────────────────────────────────────────────────
+function onAngle(){const v=parseFloat(document.getElementById('sl-angle').value);S.angle=v;document.getElementById('lbl-angle').textContent=v.toFixed(1)+'°';buildLauncher();updateHUD();}
+function onV0(){const v=parseFloat(document.getElementById('sl-v0').value);S.v0=v;document.getElementById('lbl-v0').textContent=v.toFixed(1)+' m/s';updateHUD();}
+function onH(){const v=parseFloat(document.getElementById('sl-h').value);S.h=v;document.getElementById('lbl-h').textContent=v.toFixed(1)+' m';updatePedestal();updateHUD();updateProjectileRestPos();}
+function onG(){const v=parseFloat(document.getElementById('sl-g').value);S.g=v;document.getElementById('lbl-g').textContent=v.toFixed(2);updateHUD();}
+function setG(v){S.g=v;document.getElementById('sl-g').value=v;document.getElementById('lbl-g').textContent=v.toFixed(2);updateHUD();}
+function onTrail(){showTrail=document.getElementById('cb-trail').checked;if(!showTrail)clearTrail();}
+function onVectors(){showVectors=document.getElementById('cb-vectors').checked;if(!showVectors)clearVectors();}
+
+// ── ORBIT ─────────────────────────────────────────────────────────────
+let isDrag=false,lastMouse={x:0,y:0};
+let orb={theta:0.4,phi:0.9,radius:30,cx:10,cy:4,cz:0};
+function applyCam(){
+  cam.position.set(
+    orb.cx+orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta),
+    orb.cy+orb.radius*Math.cos(orb.phi),
+    orb.cz+orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta)
+  );
+  cam.lookAt(orb.cx,orb.cy,orb.cz);
+}
+applyCam();
+// Camera animation state
+let camAnimId=null;
+let camTarget={theta:0.4,phi:0.9,radius:30,cx:10,cy:4,cz:0};
+
+function animateCamTo(target){
+  if(camAnimId) cancelAnimationFrame(camAnimId);
+  const start={theta:orb.theta,phi:orb.phi,radius:orb.radius,cx:orb.cx,cy:orb.cy,cz:orb.cz};
+  const end=Object.assign({},target);
+  const duration=700; // ms
+  const t0=performance.now();
+  // Handle theta wrap-around (choose shortest arc)
+  let dTheta=end.theta-start.theta;
+  while(dTheta>Math.PI) dTheta-=2*Math.PI;
+  while(dTheta<-Math.PI) dTheta+=2*Math.PI;
+  function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+  function tick(now){
+    const raw=Math.min((now-t0)/duration,1);
+    const k=ease(raw);
+    orb.theta=start.theta+dTheta*k;
+    orb.phi=start.phi+(end.phi-start.phi)*k;
+    orb.radius=start.radius+(end.radius-start.radius)*k;
+    orb.cx=start.cx+(end.cx-start.cx)*k;
+    orb.cy=start.cy+(end.cy-start.cy)*k;
+    orb.cz=start.cz+(end.cz-start.cz)*k;
+    applyCam();
+    if(raw<1) camAnimId=requestAnimationFrame(tick);
+    else camAnimId=null;
+  }
+  camAnimId=requestAnimationFrame(tick);
+}
+
+function setView(v){
+  let target={};
+  if(v==='front'){target={theta:0,phi:Math.PI/2,radius:18,cx:0,cy:S.h+PIVOT_BASE+1,cz:0};}
+  else if(v==='range'){
+    const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+    const a2=0.5*S.g, b2=-vy, c2=-S.h;
+    const disc2=b2*b2-4*a2*c2;
+    const Tl=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
+    const landX=vx*Tl;
+    target={theta:0,phi:Math.PI/2,radius:10,cx:landX,cy:1,cz:0};
+  }
+  else if(v==='launcher'){
+    target={theta:0,phi:Math.PI/2,radius:8,cx:0,cy:2,cz:0};
+  }
+  else if(v==='center'){
+    const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+    const a2=0.5*S.g, b2=-vy, c2=-S.h;
+    const disc2=b2*b2-4*a2*c2;
+    const T2=disc2<0?0.1:(-b2+Math.sqrt(disc2))/(2*a2);
+    const landX=vx*T2;
+    const midX=landX/2;
+    const apexY=S.h+vy*vy/(2*S.g);
+    const pathW=landX;
+    const camDist=Math.max(pathW*0.65, apexY*2, 20);
+    target={theta:0,phi:Math.PI/2,radius:camDist,cx:midX,cy:apexY*0.5,cz:0};
+  }
+  else if(v==='top'){
+    // Apex view: camera at the same height as the apex, centered on mid-trajectory x, looking inward
+    const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
+    const a2=0.5*S.g, b2=-vy, c2=-S.h;
+    const disc2=b2*b2-4*a2*c2;
+    const T2=disc2<0?0.1:(-b2+Math.sqrt(disc2))/(2*a2);
+    const landX=vx*T2;
+    const midX=landX/2;
+    const apexY=S.h+vy*vy/(2*S.g);
+    // Time to apex (for apex x)
+    const tApex=vy/S.g;
+    const apexX=vx*tApex;
+    // Camera sits at apex height, back along Z, looking at apex point
+    const camDist=Math.max(landX*0.5, apexY*1.5, 20);
+    target={theta:0,phi:Math.PI/2,radius:camDist,cx:apexX,cy:apexY,cz:0};
+  }
+  else{target={theta:0.4,phi:0.85,radius:30,cx:10,cy:4,cz:0};}
+  animateCamTo(target);
+}
+const cvs2=document.getElementById('mainCanvas');
+cvs2.addEventListener('mousedown',e=>{if(e.target.closest&&e.target.closest('#bottom-panels'))return;isDrag=true;lastMouse={x:e.clientX,y:e.clientY};});
+window.addEventListener('mousemove',e=>{
+  if(!isDrag)return;
+  orb.theta-=(e.clientX-lastMouse.x)*.006;
+  orb.phi=Math.max(.04,Math.min(Math.PI*.49,orb.phi+(e.clientY-lastMouse.y)*.006));
+  lastMouse={x:e.clientX,y:e.clientY}; applyCam();
+});
+window.addEventListener('mouseup',()=>isDrag=false);
+cvs2.addEventListener('wheel',e=>{orb.radius*=1+e.deltaY*.001;orb.radius=Math.max(8,Math.min(300,orb.radius));applyCam();},{passive:true});
+
+// ── RESIZE ─────────────────────────────────────────────────────────────
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+window.addEventListener('resize',resize); resize();
+
+// ── RENDER LOOP ────────────────────────────────────────────────────────
+function loop(){requestAnimationFrame(loop);renderer.render(sc,cam);}
+loop();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- MEASUREMENT TOOLS (2D canvas overlay)                               -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<canvas id="toolCanvas" style="position:fixed;inset:0;z-index:5;pointer-events:none;"></canvas>
+<script>
+'use strict';
+const toolCvs=document.getElementById('toolCanvas');
+const tctx=toolCvs.getContext('2d');
+
+let vrulerVisible = false;
+
+function toggleVRuler(){
+  vrulerVisible = !vrulerVisible;
+  document.getElementById('btn-vruler').classList.toggle('on', vrulerVisible);
+  drawTools();
+}
+
+function worldToScreen(wx,wy,wz){
+  const vec=new THREE.Vector4(wx,wy,wz,1);
+  vec.applyMatrix4(cam.matrixWorldInverse);
+  vec.applyMatrix4(cam.projectionMatrix);
+  if(vec.w===0) return null;
+  const nx=vec.x/vec.w, ny=vec.y/vec.w;
+  return{x:(nx+1)/2*innerWidth, y:(1-ny)/2*innerHeight};
+}
+
+// Vertical scale placed at the center X of the trajectory,
+// from y=0 (bench surface) to apex. Divisions every 0.1m.
+function drawSceneVRuler(){
+  if(!vrulerVisible) return;
+
+  const {vx,vy,H}=compute(S.angle,S.v0,S.h,S.g);
+  const maxH=Math.max(H, S.h+0.5, 1.0);
+
+  // Center X of trajectory
+  const a2=0.5*S.g, b2=-vy, c2=-S.h;
+  const disc2=b2*b2-4*a2*c2;
+  const Tland=disc2<0?0.1:(-b2+Math.sqrt(disc2))/(2*a2);
+  const landX=vx*Tland;
+  const midX=landX/2;
+
+  // Project the center-x column to screen
+  const p0=worldToScreen(midX, 0, 0);
+  const pTop=worldToScreen(midX, maxH, 0);
+  if(!p0||!pTop) return;
+
+  const screenBottom=p0.y;
+  const screenTop=pTop.y;
+  const screenHeight=screenBottom-screenTop;
+  if(screenHeight<5) return;
+
+  const px_per_m = screenHeight / maxH;
+  const rulerX = p0.x;
+  const rulerW = 36;
+
+  tctx.save();
+
+  // Vertical spine
+  tctx.strokeStyle='rgba(100,160,220,0.55)';
+  tctx.lineWidth=1.5;
+  tctx.beginPath();
+  tctx.moveTo(rulerX, screenTop);
+  tctx.lineTo(rulerX, screenBottom);
+  tctx.stroke();
+
+  // Tick marks and labels every 0.1m
+  for(let dm=0; dm<=Math.ceil(maxH*10)+1; dm++){
+    const m = dm/10;
+    if(m > maxH+0.05) break;
+    const sy = screenBottom - m*px_per_m;
+    const is1m = (dm%10===0);
+    const is05m = (dm%5===0);
+    const tickW = is1m ? rulerW*0.7 : is05m ? rulerW*0.45 : rulerW*0.25;
+
+    tctx.strokeStyle = is1m ? 'rgba(140,200,255,0.85)' : is05m ? 'rgba(100,160,220,0.55)' : 'rgba(70,120,180,0.3)';
+    tctx.lineWidth = is1m ? 1.8 : is05m ? 1.2 : 0.7;
+    tctx.beginPath();
+    tctx.moveTo(rulerX, sy);
+    tctx.lineTo(rulerX + tickW, sy);
+    tctx.stroke();
+
+    if(is1m){
+      tctx.font = `bold 10px 'Space Mono',monospace`;
+      tctx.fillStyle = 'rgba(140,200,255,0.9)';
+      tctx.textAlign = 'left';
+      tctx.fillText(m.toFixed(1)+'m', rulerX + rulerW*0.75 + 2, sy + 4);
+    }
+  }
+
+  // Apex highlight
+  const apexSy = screenBottom - H*px_per_m;
+  if(apexSy>=screenTop&&apexSy<=screenBottom){
+    tctx.save();
+    tctx.setLineDash([5,4]);
+    tctx.strokeStyle='rgba(255,200,60,0.8)';
+    tctx.lineWidth=1.5;
+    tctx.beginPath();
+    tctx.moveTo(rulerX-6, apexSy);
+    tctx.lineTo(rulerX + rulerW + 50, apexSy);
+    tctx.stroke();
+    tctx.setLineDash([]);
+    tctx.font=`bold 9px 'Space Mono',monospace`;
+    tctx.fillStyle='rgba(255,200,60,0.9)';
+    tctx.textAlign='left';
+    tctx.fillText('H='+H.toFixed(2)+'m', rulerX+rulerW+52, apexSy+4);
+    tctx.restore();
+  }
+
+  // h launch height line
+  if(S.h>0.05){
+    const hSy = screenBottom - S.h*px_per_m;
+    if(hSy>=screenTop&&hSy<=screenBottom){
+      tctx.save();
+      tctx.setLineDash([3,3]);
+      tctx.strokeStyle='rgba(96,223,255,0.7)';
+      tctx.lineWidth=1.3;
+      tctx.beginPath();
+      tctx.moveTo(rulerX-6, hSy);
+      tctx.lineTo(rulerX + rulerW+6, hSy);
+      tctx.stroke();
+      tctx.setLineDash([]);
+      tctx.font=`bold 9px 'Space Mono',monospace`;
+      tctx.fillStyle='rgba(96,223,255,0.8)';
+      tctx.textAlign='left';
+      tctx.fillText('h='+S.h.toFixed(1)+'m', rulerX+rulerW+8, hSy-3);
+      tctx.restore();
+    }
+  }
+
+  tctx.restore();
+}
+
+function drawTools(){
+  toolCvs.width=innerWidth; toolCvs.height=innerHeight;
+  tctx.clearRect(0,0,innerWidth,innerHeight);
+  drawSceneVRuler();
+}
+
+function updateToolPointerEvents(){
+  toolCvs.style.pointerEvents='none';
+}
+function toggleTool(t){}
+
+window.addEventListener('resize',()=>drawTools());
+setInterval(()=>drawTools(), 50);
+setTimeout(()=>updateToolPointerEvents(),100);
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- MODE & CHALLENGE LOGIC                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+let currentMode='explore';
+let chScore=0,chTotal=0,chCurrent=null;
+
+const CHALLENGES=[
+  {type:'range',gen:()=>{
+    const a=Math.round(15+Math.random()*65),v=Math.round(10+Math.random()*40),h=Math.round(Math.random()*15),g=9.81;
+    const {R}=compute(a,v,h,g);
+    return{a,v,h,g,ask:'R',unit:'m',ans:parseFloat(R.toFixed(3)),
+      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>, height <b>${h} m</b>.<br>Find the <span style="color:#78b4ff;">horizontal range R</span>.`,
+      given:`θ=${a}° · v₀=${v} m/s · h=${h} m · g=${g}`,
+      hideRows:['row-range']};
+  }},
+  {type:'maxh',gen:()=>{
+    const a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81;
+    const {H}=compute(a,v,0,g);
+    return{a,v,h:0,g,ask:'H',unit:'m',ans:H,
+      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find the <span style="color:#60dfff;">maximum height H</span>.`,
+      given:`θ=${a}° · v₀=${v} m/s · g=${g}`,
+      hideRows:['row-maxh']};
+  }},
+  {type:'time',gen:()=>{
+    const a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81;
+    const {T}=compute(a,v,0,g);
+    return{a,v,h:0,g,ask:'T',unit:'s',ans:T,
+      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find the <span style="color:#ffcc44;">flight time T</span>.`,
+      given:`θ=${a}° · v₀=${v} m/s · g=${g}`,
+      hideRows:['row-time']};
+  }},
+  {type:'vx',gen:()=>{
+    const a=Math.round(10+Math.random()*70),v=Math.round(10+Math.random()*40),g=9.81;
+    const vx=v*Math.cos(a*Math.PI/180);
+    return{a,v,h:0,g,ask:'vₓ',unit:'m/s',ans:vx,
+      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#7fffb2;">horizontal velocity vₓ</span>.`,
+      given:`θ=${a}° · v₀=${v} m/s`,
+      hideRows:['row-vx']};
+  }}
+];
+
+function setMode(mode){
+  currentMode=mode;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+mode).classList.add('active');
+  if(mode==='challenge'){
+    document.getElementById('challenge-panel').style.display='block';
+    document.getElementById('hud-challenge-note').style.display='block';
+    startChallenge();
+  } else {
+    document.getElementById('challenge-panel').style.display='none';
+    document.getElementById('hud-challenge-note').style.display='none';
+    showAllHUDRows();
+    clearChallengeObjects();
+    resetScene();
+  }
+}
+
+function exitChallengeMode(){
+  document.getElementById('tab-explore').click();
+}
+
+function startChallenge(){nextChallenge();}
+
+function nextChallenge(){
+  document.getElementById('ch-result').style.display='none';
+  document.getElementById('ch-input').value='';
+  // Pick random challenge
+  const tmpl=CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
+  chCurrent=tmpl.gen();
+  const c=chCurrent;
+  // Apply physics
+  S.angle=c.a; S.v0=c.v; S.h=c.h; S.g=c.g;
+  document.getElementById('sl-angle').value=c.a;
+  document.getElementById('lbl-angle').textContent=c.a.toFixed(1)+'°';
+  document.getElementById('sl-v0').value=c.v;
+  document.getElementById('lbl-v0').textContent=c.v.toFixed(1)+' m/s';
+  document.getElementById('sl-h').value=c.h;
+  document.getElementById('lbl-h').textContent=c.h.toFixed(1)+' m';
+  document.getElementById('sl-g').value=c.g;
+  document.getElementById('lbl-g').textContent=c.g.toFixed(2);
+  S.h=c.h; updatePedestal();
+  updateHUD();
+  // Hide asked quantity from HUD
+  showAllHUDRows();
+  c.hideRows.forEach(hideHUDRow);
+  // Place challenge object
+  clearChallengeObjects();
+  const {R,H,T}=compute(c.a,c.v,c.h,c.g);
+  if(c.type==='maxh'){
+    // Pendulum bob at max height
+    const {vx}=compute(c.a,c.v,c.h,c.g);
+    const xAtApex=vx*(c.v*Math.sin(c.a*Math.PI/180)/c.g);
+    placePendulum(xAtApex,H);
+  } else if(c.type==='range'){
+    placeStack(R);
+  }
+  resetScene();
+  document.getElementById('ch-q-text').innerHTML=c.q;
+  document.getElementById('ch-given').textContent=c.given;
+  document.getElementById('ch-unit-lbl').textContent=c.unit;
+  document.getElementById('ch-score').textContent=chScore+' / '+chTotal;
+}
+
+function validateChallenge(){
+  if(!chCurrent) return;
+  const ans=parseFloat(document.getElementById('ch-input').value);
+  if(isNaN(ans)){showChResult('err','Enter a numeric value.');return;}
+  const correct=chCurrent.ans; const tol3=correct*.03; const tol8=correct*.08;
+  chTotal++;
+  if(Math.abs(ans-correct)<=tol3){
+    chScore++; showChResult('ok',`✅ Correct! = ${correct.toFixed(2)} ${chCurrent.unit}`);
+    // Auto-fire to show the result
+    fireLaunch();
+  } else if(Math.abs(ans-correct)<=tol8){
+    showChResult('partial',`🟡 Close! Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);
+  } else {
+    showChResult('err',`❌ Incorrect. Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);
+  }
+  document.getElementById('ch-score').textContent=chScore+' / '+chTotal;
+  showAllHUDRows(); updateHUD(); chCurrent.hideRows.forEach(r=>document.getElementById(r).style.display='none');
+}
+
+function showChResult(type,msg){
+  const el=document.getElementById('ch-result');
+  el.style.display='block'; el.className=type; el.innerHTML=msg;
+}
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- AR MODE                                                              -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+let arStream=null,arAnimId=null,arMarkerFound=false;
+let arFlying=false,arT=0,arStartTime=0;
+let arBX=0,arBY=0,arTrail=[],arHit=false;
+const AR_S={angle:45,v0:20,h:0,g:9.81};
+let arCh=null,arChScore=0,arChTotal=0;
+
+async function openAR(){
+  document.getElementById('ar-overlay').style.display='flex';
+  document.getElementById('ar-overlay').className='open';
+  const arCvs=document.getElementById('ar-canvas');
+  const arCtx=arCvs.getContext('2d');
+  AR_S.angle=S.angle;AR_S.v0=S.v0;AR_S.h=S.h;AR_S.g=S.g;
+  updateARHUD(); nextARChallenge();
+  try{
+    arStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    document.getElementById('ar-video').srcObject=arStream;
+    await new Promise(r=>{document.getElementById('ar-video').onloadedmetadata=r;});
+    document.getElementById('ar-video').play();
+    setTimeout(()=>{
+      document.getElementById('ar-marker-hint').style.opacity='0';
+      setTimeout(()=>document.getElementById('ar-marker-hint').style.display='none',400);
+      arMarkerFound=true;
+    },1500);
+  } catch(e){
+    document.getElementById('ar-marker-hint').innerHTML='<div style="font-size:24px;">📷</div><p style="color:#ff8888;">Camera denied</p>';
+    arMarkerFound=true;
+  }
+  resizeARCvs(); window.addEventListener('resize',resizeARCvs);
+  function arLoop(){
+    arAnimId=requestAnimationFrame(arLoop);
+    arCvs.width=innerWidth; arCvs.height=innerHeight;
+    arCtx.clearRect(0,0,arCvs.width,arCvs.height);
+    if(!arMarkerFound) return;
+    drawARScene(arCtx,arCvs.width,arCvs.height);
+  }
+  arLoop();
+}
+function resizeARCvs(){const c=document.getElementById('ar-canvas');c.width=innerWidth;c.height=innerHeight;}
+function arCompute(){
+  const a=AR_S.angle*Math.PI/180,vx=AR_S.v0*Math.cos(a),vy=AR_S.v0*Math.sin(a);
+  const disc=vy*vy+2*AR_S.g*AR_S.h;
+  const T=(vy+Math.sqrt(Math.max(0,disc)))/AR_S.g;
+  return{vx,vy,T,R:vx*T,H:AR_S.h+vy*vy/(2*AR_S.g)};
+}
+function drawARScene(ctx,W,H){
+  const {vx,vy,T,R,H:Hmx}=arCompute();
+  const sc2=W*.72/Math.max(R,1);
+  const ox=W*.07,oy=H*.78;
+  ctx.strokeStyle='rgba(140,200,255,0.35)';ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(ox-10,oy);ctx.lineTo(W*.95,oy);ctx.stroke();
+  // Trajectory dashed
+  ctx.strokeStyle='rgba(80,120,180,0.2)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  for(let i=0;i<=60;i++){const t=(i/60)*T;const px=ox+vx*t*sc2;const py=oy-(AR_S.h+vy*t-.5*AR_S.g*t*t)*sc2;i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  ctx.stroke();ctx.setLineDash([]);
+  // Trail
+  if(arTrail.length>1){
+    ctx.strokeStyle='rgba(255,140,60,0.6)';ctx.lineWidth=3;ctx.beginPath();
+    arTrail.forEach((p,i)=>{const px=ox+p.x*sc2,py=oy-p.y*sc2;i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);});
+    ctx.stroke();
+  }
+  // Animate ball
+  if(arFlying){
+    const el=(performance.now()-arStartTime)/1000;
+    if(el>T){arFlying=false;arBX=vx*T;arBY=0;}
+    else{arBX=vx*el;arBY=AR_S.h+vy*el-.5*AR_S.g*el*el;arTrail.push({x:arBX,y:arBY});}
+  }
+  if(arTrail.length>0){
+    const bx=ox+arBX*sc2,by=oy-arBY*sc2;
+    const grd=ctx.createRadialGradient(bx,by,0,bx,by,20);
+    grd.addColorStop(0,'rgba(255,120,60,.8)');grd.addColorStop(1,'rgba(255,60,30,0)');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(bx,by,20,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff6633';ctx.beginPath();ctx.arc(bx,by,8,0,Math.PI*2);ctx.fill();
+  }
+  // Cannon
+  ctx.save();ctx.translate(ox,oy-AR_S.h*sc2);
+  ctx.strokeStyle='rgba(140,200,255,.8)';ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(0,0);
+  ctx.lineTo(32*Math.cos(AR_S.angle*Math.PI/180),-32*Math.sin(AR_S.angle*Math.PI/180));
+  ctx.stroke();ctx.fillStyle='rgba(40,70,100,.9)';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // Labels
+  for(let d=10;d<=Math.ceil(R)+5;d+=10){
+    const px=ox+d*sc2;if(px>W*.93)break;
+    ctx.fillStyle='rgba(140,200,255,.45)';ctx.font="10px 'Space Mono',monospace";
+    ctx.fillText(d+'m',px-8,oy+18);
+  }
+  ctx.fillStyle='rgba(160,210,255,.7)';ctx.font="bold 12px 'Syne',sans-serif";
+  ctx.fillText(`R=${R.toFixed(1)}m  T=${T.toFixed(1)}s  H=${Hmx.toFixed(1)}m`,ox,oy+38);
+  ctx.fillStyle='rgba(140,200,255,.4)';ctx.font="9px 'Space Mono',monospace";
+  ctx.fillText('PROJECTILE LAB · AR MODE',12,18);
+}
+function updateARHUD(){
+  const{vx,vy,T,R,H}=arCompute();
+  document.getElementById('ar-v-angle').textContent=AR_S.angle+'°';
+  document.getElementById('ar-v-v0').textContent=AR_S.v0+' m/s';
+  document.getElementById('ar-v-range').textContent=R.toFixed(2)+' m';
+  document.getElementById('ar-v-maxh').textContent=H.toFixed(2)+' m';
+  document.getElementById('ar-v-time').textContent=T.toFixed(2)+' s';
+}
+function arFire(){arTrail=[];arFlying=true;arStartTime=performance.now();arBX=0;arBY=AR_S.h;}
+function arReset(){arFlying=false;arTrail=[];arBX=0;arBY=0;}
+const AR_CHALL=[
+  {gen:()=>{const a=Math.round(15+Math.random()*60),v=Math.round(10+Math.random()*35);const{R}=arComp(a,v);return{a,v,ask:'R',unit:'m',ans:R,text:`Angle <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#78b4ff;">range R</span>.`,given:`θ=${a}° · v₀=${v} m/s`};}},
+  {gen:()=>{const a=Math.round(20+Math.random()*50),v=Math.round(12+Math.random()*30);const{T}=arComp(a,v);return{a,v,ask:'T',unit:'s',ans:T,text:`Angle <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#ffcc44;">time T</span>.`,given:`θ=${a}° · v₀=${v} m/s`};}},
+  {gen:()=>{const a=Math.round(30+Math.random()*50),v=Math.round(12+Math.random()*30);const{H}=arComp(a,v);return{a,v,ask:'H',unit:'m',ans:H,text:`Angle <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#60dfff;">max height H</span>.`,given:`θ=${a}° · v₀=${v} m/s`};}}
+];
+function arComp(a,v){
+  const rad=a*Math.PI/180,vx=v*Math.cos(rad),vy=v*Math.sin(rad),T=2*vy/9.81;
+  return{vx,vy,T,R:vx*T,H:vy*vy/(2*9.81)};
+}
+function nextARChallenge(){
+  document.getElementById('ar-ch-result').style.display='none';
+  document.getElementById('ar-ch-input').value='';
+  const tmpl=AR_CHALL[Math.floor(Math.random()*AR_CHALL.length)];
+  arCh=tmpl.gen();
+  AR_S.angle=arCh.a;AR_S.v0=arCh.v;AR_S.h=0;AR_S.g=9.81;
+  updateARHUD();arReset();
+  document.getElementById('ar-ch-text').innerHTML=arCh.text;
+  document.getElementById('ar-ch-given').textContent=arCh.given;
+  document.getElementById('ar-ch-unit').textContent=arCh.unit;
+}
+function validateARChallenge(){
+  if(!arCh) return;
+  const ans=parseFloat(document.getElementById('ar-ch-input').value);
+  if(isNaN(ans))return;
+  arChTotal++;
+  const correct=arCh.ans,el=document.getElementById('ar-ch-result');
+  el.style.display='block';
+  if(Math.abs(ans-correct)<=correct*.03){
+    arChScore++;el.style.cssText='display:block;background:rgba(80,200,80,.1);border:1px solid rgba(80,200,80,.35);color:#80e880;border-radius:8px;padding:6px 10px;font-family:Syne,sans-serif;font-size:11px;margin-top:5px;';
+    el.innerHTML=`✅ Correct! = ${correct.toFixed(2)} ${arCh.unit}`;arFire();
+  } else {
+    el.style.cssText='display:block;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);color:#ff8888;border-radius:8px;padding:6px 10px;font-family:Syne,sans-serif;font-size:11px;margin-top:5px;';
+    el.innerHTML=`❌ Answer = ${correct.toFixed(2)} ${arCh.unit}`;
+  }
+}
+function closeAR(){
+  document.getElementById('ar-overlay').style.display='none';
+  if(arAnimId){cancelAnimationFrame(arAnimId);arAnimId=null;}
+  if(arStream){arStream.getTracks().forEach(t=>t.stop());arStream=null;}
+  arFlying=false;arTrail=[];arMarkerFound=false;
+  document.getElementById('ar-marker-hint').style.display='block';
+  document.getElementById('ar-marker-hint').style.opacity='1';
+  window.removeEventListener('resize',resizeARCvs);
+}
+</script>
+
+<!-- QR CODE -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const QR_URL=window.location.href;let _qrG=false;
+function openQR(){
+  document.getElementById('qr-overlay').classList.add('open');
+  if(!_qrG){const box=document.getElementById('qr-box');box.innerHTML='';
+  if(window.QRCode)new QRCode(box,{text:QR_URL,width:160,height:160,colorDark:'#141c2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+  document.getElementById('qr-url').textContent=QR_URL.slice(0,60)+(QR_URL.length>60?'…':'');_qrG=true;}
+}
+function closeQR(e){if(!e||e.target===document.getElementById('qr-overlay')||e.currentTarget===document.getElementById('qr-close'))document.getElementById('qr-overlay').classList.remove('open');}
+</script>
+</body>
+</html>
