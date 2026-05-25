@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DARAWA | Physics Simulations UAE</title>
+    <title>DARAWA | Interactive Physics Simulations & AR Labs UAE</title>
+    
+    <meta name="google-site-verification" content="PASTE_YOUR_KEY_HERE" />
+
+    <meta name="description" content="Explore DARAWA, an advanced virtual laboratory offering high-precision, interactive physics simulations and AR-ready experiments across optics, kinematics, electricity, and nuclear physics.">
+    <meta name="keywords" content="physics simulations, virtual laboratory, interactive physics labs, AR physics, online physics experiments, optics lab, kinematics, UAE physics teacher, STEM education">
+    <meta name="author" content="DARAWA LAB">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://darawa-io.github.io/ARLABS/index.html">
+    <meta property="og:title" content="DARAWA | Interactive Physics Simulations & AR Labs">
+    <meta property="og:description" content="Step into a high-precision virtual physics laboratory. Run live interactive simulations for mechanics, optics, and electricity directly in your browser.">
+    <meta property="og:image" content="https://darawa-io.github.io/ARLABS/assets/logo1.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -356,11 +370,11 @@
                 OF EVERYDAY PHYSICS
             </h1>
             <p class="text-lg text-gray-600 max-w-lg font-medium leading-relaxed">
-                Experience physics like never before with high-precision simulations designed for the next generation of scientists.
+                Step into a high-precision virtual laboratory ecosystem. Run production-ready physics simulations built for exploring optics, kinematics, and nuclear science.
             </p>
         </div>
         <div class="hero-image-underlay">
-            <img src="assets/hero.png" alt="Physics" onerror="this.style.display='none'">
+            <img src="assets/hero.png" alt="Physics Laboratory Environment" onerror="this.style.display='none'">
         </div>
     </section>
 
@@ -373,21 +387,25 @@
                     <span>Optics Simulations</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
+                
                 <div id="optics-content" class="category-content">
                     <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html', ['Lenses_Lab_Report.pdf'])">
-                        <img src="assets/lenses.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses'">
+                        <img src="assets/lenses.png" alt="Lenses Virtual Lab Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses+Lab'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
                     </div>
+                    
                     <div class="gallery-card" onclick="loadSimulation('Diffraction Lab', 'https://darawa-io.github.io/ARLABS/diffraction_lab.html', ['Single_Slit_Report.pdf', 'Double_Slit_Report.pdf', 'Diffraction_Grating_Report.pdf'])">
-                        <img src="assets/grating.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction'">
+                        <img src="assets/grating.png" alt="Diffraction and Interference Lab" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Diffraction+Lab'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Diffraction Lab</span>
                     </div>
+                    
                     <div class="gallery-card" onclick="loadSimulation('Polarization', 'https://darawa-io.github.io/ARLABS/polarization_lab.html', ['Polarization_Lab_Report.pdf'])">
-                        <img src="assets/polarization.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization'">
+                        <img src="assets/polarization.png" alt="Light Waves Polarization Lab" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Polarization+Lab'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Polarization Lab</span>
                     </div>
+
                     <div class="gallery-card" onclick="loadSimulation('Refraction', 'refraction_lab.html', ['Lab1_SnellsLaw.pdf', 'Lab2_TIR.pdf'])">
-                        <img src="assets/refraction.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Refraction'">
+                        <img src="assets/refraction.png" alt="Snell's Law Refraction Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Refraction+Lab'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Refraction</span>
                     </div>
                 </div>
@@ -396,9 +414,10 @@
                     <span>Electricity & Magnetism</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
+                
                 <div id="elec-content" class="category-content collapsed">
                     <div class="gallery-card" onclick="loadSimulation('Circuits Lab', 'https://darawa-io.github.io/ARLABS/circuit_lab.html', [])">
-                        <img src="assets/Circuits.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits+Lab'">
+                        <img src="assets/Circuits.png" alt="Electric Circuit Schematics Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Circuits+Lab'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Circuits Lab</span>
                     </div>
                 </div>
@@ -407,21 +426,11 @@
                     <span>Nuclear Physics</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
+                
                 <div id="nuclear-content" class="category-content collapsed">
                     <div class="gallery-card" onclick="loadSimulation('Radioactive Decay', 'decay.html', ['Decay_Lab_Report.pdf'])">
-                        <img src="assets/decay.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Radioactive+Decay'">
+                        <img src="assets/decay.png" alt="Radioactive Isotopes Decay Half-Life Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Radioactive+Decay'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Radioactive Decay</span>
-                    </div>
-                </div>
-
-                <div class="category-header collapsed-header" onclick="toggleCategory('kinematics-content')">
-                    <span>Kinematics</span>
-                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </div>
-                <div id="kinematics-content" class="category-content collapsed">
-                    <div class="gallery-card" onclick="loadSimulation('Projectile Motion', 'https://darawa-io.github.io/ARLABS/projectile_lab.html', [])">
-                        <img src="assets/projectile.png" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Projectile+Motion'">
-                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Projectile Motion</span>
                     </div>
                 </div>
                 
@@ -432,7 +441,9 @@
                         Get Hiro Marker
                     </button>
                 </div>
-            </div> <div class="lg:col-span-3">
+            </div>
+
+            <div class="lg:col-span-3">
                 <div class="bg-white rounded-[50px] p-3 shadow-2xl">
                     <div id="simContainer">
                         <div class="scanning-overlay">
@@ -483,7 +494,8 @@
                         </div>
                     </div>
                 </div>
-            </div> </div>
+            </div>
+        </div>
     </main>
 
     <div id="markerModal">
@@ -493,7 +505,7 @@
             </button>
             <h3 class="text-[#0A4A7F] text-xl font-black uppercase mb-8">AR Hiro Marker</h3>
             <div class="bg-gray-100 p-6 rounded-3xl mb-8 flex justify-center">
-                <img src="assets/hiro_marker.png" class="w-48 h-48 border-8 border-white shadow-lg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png'">
+                <img src="assets/hiro_marker.png" alt="AR.js Hiro Marker Reference Target" class="w-48 h-48 border-8 border-white shadow-lg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/4/48/Hiro_marker_ARjs.png'">
             </div>
             <p class="text-[11px] text-gray-500 font-medium mb-8 leading-relaxed">Print this marker or display it on another device to use the AR features within the simulations.</p>
             <a href="assets/hiro_marker.png" target="_blank" download="hiro-marker.png" class="w-full py-4 bg-[#0A4A7F] text-white text-[11px] font-black uppercase tracking-widest rounded-2xl inline-block">
@@ -515,14 +527,17 @@
                     <label class="block text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">Subject</label>
                     <input id="feedbackSubject" type="text" readonly class="w-full bg-gray-100 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl px-4 py-3 outline-none cursor-not-allowed">
                 </div>
+                
                 <div>
                     <label for="feedbackName" class="block text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">Your Name</label>
                     <input id="feedbackName" type="text" required placeholder="Enter your full name" class="w-full border border-gray-200 text-xs font-medium rounded-xl px-4 py-3 outline-none focus:border-[#0A4A7F] transition-colors">
                 </div>
+
                 <div>
                     <label for="feedbackMessage" class="block text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">Message / Observations</label>
                     <textarea id="feedbackMessage" rows="5" required placeholder="Type your feedback or bugs discovered here..." class="w-full border border-gray-200 text-xs font-medium rounded-xl px-4 py-3 outline-none focus:border-[#0A4A7F] transition-colors resize-none"></textarea>
                 </div>
+
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleFeedbackModal(false)" class="flex-1 py-3 border border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-50 transition-all text-center">
                         Cancel
@@ -541,7 +556,7 @@
                 <p class="font-black text-3xl tracking-tighter">DARAWA</p>
                 <p class="arabic-text text-4xl text-[#C9A05D] mt-3">ربط اللغة والفيزياء</p>
             </div>
-            <p class="text-[11px] font-bold opacity-30 uppercase tracking-[0.3em] mt-12 md:mt-0">© 2024 DARWA LAB UAE</p>
+            <p class="text-[11px] font-bold opacity-30 uppercase tracking-[0.3em] mt-12 md:mt-0">© 2026 DARAWA LAB UAE</p>
         </div>
     </footer>
 
@@ -552,10 +567,14 @@
         function toggleCategory(id) {
             const content = document.getElementById(id);
             const header = content.previousElementSibling;
+            
             const isCollapsing = !content.classList.contains('collapsed');
 
-            document.querySelectorAll('.category-content').forEach(c => c.classList.add('collapsed'));
-            document.querySelectorAll('.category-header').forEach(h => h.classList.add('collapsed-header'));
+            const allContents = document.querySelectorAll('.category-content');
+            const allHeaders = document.querySelectorAll('.category-header');
+            
+            allContents.forEach(c => { c.classList.add('collapsed'); });
+            allHeaders.forEach(h => { h.classList.add('collapsed-header'); });
 
             if (!isCollapsing) {
                 content.classList.remove('collapsed');
@@ -632,26 +651,39 @@
 
         function sendFeedback(event) {
             event.preventDefault();
+            
             const submitBtn = document.getElementById('sendFeedbackSubmitBtn');
             const originalText = submitBtn.innerText;
             
             submitBtn.innerText = "SENDING...";
             submitBtn.disabled = true;
 
+            const subjectText = document.getElementById('feedbackSubject').value;
+            const nameText = document.getElementById('feedbackName').value;
+            const messageText = document.getElementById('feedbackMessage').value;
+
+            const formattedDateTime = new Date().toLocaleString([], {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
             const templateParams = {
-                subject: document.getElementById('feedbackSubject').value,
-                name: document.getElementById('feedbackName').value,
-                time: new Date().toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                message: document.getElementById('feedbackMessage').value
+                subject: subjectText,
+                name: nameText,
+                time: formattedDateTime,
+                message: messageText
             };
 
             emailjs.send('service_zn9n7s8', 'template_3kywsjt', templateParams)
-                .then(function() {
+                .then(function(response) {
                     alert('Thank you! Your feedback has been safely delivered.');
                     toggleFeedbackModal(false);
                 }, function(error) {
                     console.error('EmailJS failed...', error);
-                    alert('Submission failed.');
+                    alert('Submission failed. Check your API keys or setup options.');
                 })
                 .finally(function() {
                     submitBtn.innerText = originalText;
@@ -660,8 +692,10 @@
         }
 
         window.onclick = function(event) {
-            if (event.target == document.getElementById('markerModal')) toggleMarkerModal(false);
-            if (event.target == document.getElementById('feedbackModal')) toggleFeedbackModal(false);
+            const markerModal = document.getElementById('markerModal');
+            const feedbackModal = document.getElementById('feedbackModal');
+            if (event.target == markerModal) toggleMarkerModal(false);
+            if (event.target == feedbackModal) toggleFeedbackModal(false);
         }
     </script>
 </body>
