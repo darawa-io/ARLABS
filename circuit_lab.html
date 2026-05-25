@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Circuit Lab — Interactive Electronics Simulator</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Exo+2:wght@300;400;600;700&display=swap');
 
   /* ── DARK theme (default) ── */
   :root {
@@ -71,12 +71,14 @@
     z-index: 10;
     flex-shrink: 0;
   }
-  .logo { font-family: 'Share Tech Mono', monospace; font-size: 22px; color: var(--accent); letter-spacing: 3px; }
+  .logo { font-family: 'Roboto Mono', monospace; font-size: 22px; color: var(--accent); letter-spacing: 3px; }
   .logo span { color: var(--accent2); }
   .subtitle { font-size: 10px; letter-spacing: 4px; color: var(--dim); text-transform: uppercase; }
+  .header-brand { display: flex; align-items: center; gap: 11px; }
+  .header-brand-svg { width: 34px; height: 37px; flex-shrink: 0; opacity: 0.78; }
   .header-spacer { flex: 1; }
   .header-stat { display: flex; flex-direction: column; align-items: center; padding: 4px 16px; border-left: 1px solid var(--border); }
-  .header-stat-val { font-family: 'Share Tech Mono', monospace; font-size: 16px; color: var(--accent3); }
+  .header-stat-val { font-family: 'Roboto Mono', monospace; font-size: 16px; color: var(--accent3); }
   .header-stat-lbl { font-size: 9px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
   .power-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 2px; }
   #powerDot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); transition: background 0.3s; box-shadow: 0 0 0px var(--danger); }
@@ -159,7 +161,7 @@
     z-index: 5;
   }
   .panel-title {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 11px;
     letter-spacing: 3px;
     color: var(--dim);
@@ -177,7 +179,7 @@
   }
   .reading-label { font-size: 12px; color: var(--dim); }
   .reading-val {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 14px;
     display: flex;
     align-items: center;
@@ -202,7 +204,7 @@
     color: var(--dim);
     border-bottom: 1px solid rgba(30,45,69,0.3);
   }
-  .comp-count-val { font-family: 'Share Tech Mono', monospace; color: var(--text); }
+  .comp-count-val { font-family: 'Roboto Mono', monospace; color: var(--text); }
 
   .power-btn {
     margin-top: 16px;
@@ -211,7 +213,7 @@
     border: 1px solid #ff6b35;
     background: rgba(255,107,53,0.08);
     color: var(--accent2);
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 13px;
     letter-spacing: 2px;
     cursor: pointer;
@@ -273,7 +275,7 @@
     font-size: 13px;
     cursor: pointer;
     transition: all 0.18s;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     letter-spacing: 1px;
     display: flex;
     align-items: center;
@@ -295,7 +297,7 @@
     padding: 3px 8px;
     flex-shrink: 0;
     letter-spacing: 0.5px;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     white-space: nowrap;
   }
   @media (max-width: 900px) {
@@ -312,7 +314,7 @@
   .tool-btn {
     padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border);
     background: var(--panel2); color: var(--text); font-size: 12px; cursor: pointer;
-    transition: all 0.18s; font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;
+    transition: all 0.18s; font-family: 'Roboto Mono', monospace; letter-spacing: 1px;
     display: flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0;
     touch-action: manipulation;
   }
@@ -343,7 +345,7 @@
     pointer-events: all;
   }
   .modal h3 {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     color: var(--accent);
     margin-bottom: 10px;
     font-size: 11px;
@@ -358,7 +360,7 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 12px;
   }
   .modal-field input:focus { outline: none; border-color: var(--accent); }
@@ -368,20 +370,20 @@
   }
   .modal-slider-row { display: flex; align-items: center; gap: 6px; }
   .modal-slider-val {
-    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    font-family: 'Roboto Mono', monospace; font-size: 11px;
     color: var(--accent); min-width: 52px; text-align: right;
   }
   .modal-actions { display: flex; gap: 8px; margin-top: 10px; }
   .modal-ok {
     flex: 1; padding: 6px; border-radius: 5px;
     background: var(--accent); border: none; color: #000;
-    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    font-family: 'Roboto Mono', monospace; font-size: 11px;
     cursor: pointer; letter-spacing: 1px; font-weight: bold;
   }
   .modal-cancel {
     flex: 1; padding: 6px; border-radius: 5px;
     background: transparent; border: 1px solid var(--border); color: var(--dim);
-    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    font-family: 'Roboto Mono', monospace; font-size: 11px;
     cursor: pointer; letter-spacing: 1px;
   }
   .modal-cancel:hover { border-color: var(--danger); color: var(--danger); }
@@ -409,12 +411,12 @@
     width: 960px; max-width: 97vw;
   }
   #student-test-header-bar h2 {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 18px; font-weight: 700;
     color: var(--accent); letter-spacing: 1px; margin-top: 6px;
   }
   .st-badge {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
     color: var(--accent); border: 1px solid var(--accent);
     border-radius: 20px; padding: 4px 12px; opacity: 0.6;
@@ -423,7 +425,7 @@
   .st-type-btn {
     padding: 7px 16px; border-radius: 20px;
     border: 1px solid var(--border); background: var(--panel2);
-    color: var(--text); font-family: 'Share Tech Mono', monospace;
+    color: var(--text); font-family: 'Roboto Mono', monospace;
     font-size: 12px; cursor: pointer; transition: all 0.18s; letter-spacing: 1px;
   }
   .st-type-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -439,7 +441,7 @@
     border-radius: 8px; background: rgba(0,0,0,0.3);
   }
   .st-panel-label {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
     color: var(--dim); margin-bottom: 10px;
   }
@@ -447,19 +449,19 @@
     margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   }
   .st-resistor-ctrl label {
-    font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
     color: var(--dim); text-transform: uppercase; letter-spacing: 1px;
   }
   .st-resistor-ctrl input[type=number] {
     background: var(--panel2); border: 1px solid var(--accent);
     border-radius: 6px; color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-size: 15px; font-weight: 700; padding: 6px 10px;
     outline: none; width: 110px; text-align: center;
   }
   .st-resistor-ctrl input[type=number]:focus { border-color: var(--accent2); }
   .st-resistor-ctrl .st-unit {
-    font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--dim);
+    font-family: 'Roboto Mono', monospace; font-size: 13px; color: var(--dim);
   }
   .st-resistor-ctrl input[type=range] {
     width: 160px; -webkit-appearance: none; height: 4px;
@@ -472,12 +474,12 @@
     box-shadow:0 0 8px rgba(0,212,255,0.6);
   }
   .st-circuit-info {
-    margin-top: 10px; font-family: 'Share Tech Mono', monospace;
+    margin-top: 10px; font-family: 'Roboto Mono', monospace;
     font-size: 13px; color: var(--dim); line-height: 1.9;
   }
   #st-feedback-bar {
     width: 960px; max-width: 97vw; padding: 12px 20px;
-    border-radius: 10px; font-family: 'Share Tech Mono', monospace;
+    border-radius: 10px; font-family: 'Roboto Mono', monospace;
     font-size: 12px; text-align: center; line-height: 1.6;
     display: none; letter-spacing: 0.5px;
   }
@@ -487,7 +489,7 @@
   .st-btn {
     padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border);
     background: var(--panel2); color: var(--text);
-    font-family: 'Share Tech Mono', monospace; font-size: 13px;
+    font-family: 'Roboto Mono', monospace; font-size: 13px;
     cursor: pointer; transition: all 0.18s; letter-spacing: 1px;
   }
   .st-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -500,9 +502,12 @@
 <body>
 
 <header>
-  <div>
-    <div class="logo">CIRCUIT<span>LAB</span></div>
-    <div class="subtitle">Interactive Electronics Simulator</div>
+  <div class="header-brand">
+    <svg class="header-brand-svg" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+    <div>
+      <div class="logo">CIRCUIT<span>LAB</span></div>
+      <div class="subtitle">Interactive Electronics Simulator</div>
+    </div>
   </div>
   <div class="header-spacer"></div>
   <div class="header-stat">
@@ -1610,41 +1615,41 @@ function drawComponent(c) {
   // Label (component name)
   ctx.save();
   ctx.fillStyle = '#6a88aa';
-  ctx.font = '13px "Share Tech Mono"';
+  ctx.font = '13px "Roboto Mono"';
   ctx.textAlign = 'center';
   ctx.fillText(c.label || '', c.x, c.y + labelOffset);
 
   // Value label
   if (c.type === 'battery' || c.type === 'dcpsu') {
     ctx.fillStyle = c.color || '#00d4ff';
-    ctx.font = 'bold 14px "Share Tech Mono"';
+    ctx.font = 'bold 14px "Roboto Mono"';
     ctx.fillText(c.voltage + 'V', c.x, c.y - valueOffset);
   } else if (c.type === 'resistor' || c.type === 'varresistor') {
     ctx.fillStyle = c.color || '#ffe066';
-    ctx.font = 'bold 14px "Share Tech Mono"';
+    ctx.font = 'bold 14px "Roboto Mono"';
     ctx.fillText(c.resistance + 'Ω', c.x, c.y - valueOffset);
   } else if (c.type === 'hiresistor') {
     ctx.fillStyle = c.color || '#ff9900';
-    ctx.font = 'bold 13px "Share Tech Mono"';
+    ctx.font = 'bold 13px "Roboto Mono"';
     ctx.fillText(c.resistance >= 1000 ? (c.resistance/1000).toFixed(1)+'kΩ' : c.resistance+'Ω', c.x, c.y - valueOffset);
   }
 
   // Live current reading (non-meter components only)
   if (powerOn && I > 0.0001 && c.type !== 'ammeter' && c.type !== 'voltmeter') {
     ctx.fillStyle = 'rgba(0,220,255,0.95)';
-    ctx.font = 'bold 13px "Share Tech Mono"';
+    ctx.font = 'bold 13px "Roboto Mono"';
     ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 15);
   }
 
   // Meter live readings (ammeter current / voltmeter voltage)
   if (powerOn && c.type === 'ammeter' && I > 0.0001) {
     ctx.fillStyle = c.color || '#00d4ff';
-    ctx.font = 'bold 12px "Share Tech Mono"';
+    ctx.font = 'bold 12px "Roboto Mono"';
     ctx.fillText(I.toFixed(3) + 'A', c.x, c.y + labelOffset + 15);
   } else if (powerOn && c.type === 'voltmeter') {
     const vReading = c._voltage || 0;
     ctx.fillStyle = c.color || '#ffe066';
-    ctx.font = 'bold 12px "Share Tech Mono"';
+    ctx.font = 'bold 12px "Roboto Mono"';
     // Show reading whenever powered — so user can see meter is active even at 0V
     ctx.fillText(vReading.toFixed(2) + 'V', c.x, c.y + labelOffset + 15);
   }
@@ -1715,7 +1720,7 @@ function drawCapacitor(hw, hh, col, cap) {
     ctx.fillRect(-4, -(hh - 4) * charge, 8, (hh - 4) * 2 * charge);
     // Voltage label
     ctx.fillStyle = `rgba(220,180,255,${0.5 + charge * 0.5})`;
-    ctx.font = '9px "Share Tech Mono"';
+    ctx.font = '9px "Roboto Mono"';
     ctx.textAlign = 'center';
     const vLabel = cap._capVoltage ? cap._capVoltage.toFixed(1) + 'V' : '';
     if (vLabel) ctx.fillText(vLabel, 0, -hh - 5);
@@ -1796,7 +1801,7 @@ function drawMeter(c, hw, hh, col, I) {
   ctx.beginPath(); ctx.moveTo(-hw, 0); ctx.lineTo(-hw + 12, 0); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(hw - 12, 0); ctx.lineTo(hw, 0); ctx.stroke();
   ctx.beginPath(); ctx.arc(0, 0, hw - 12, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = col; ctx.font = 'bold 14px "Share Tech Mono"'; ctx.textAlign = 'center';
+  ctx.fillStyle = col; ctx.font = 'bold 14px "Roboto Mono"'; ctx.textAlign = 'center';
   ctx.fillText(c.type === 'ammeter' ? 'A' : 'V', 0, 5);
   // readings are drawn post-restore (unrotated) in drawComponent
 }
@@ -3283,11 +3288,11 @@ function _stResistorH(cx,rx,cy,R,label,editable) {
   if(cx.roundRect) cx.roundRect(x,y,rw,rh,5); else cx.rect(x,y,rw,rh);
   cx.fill(); cx.stroke(); cx.shadowBlur=0;
   cx.fillStyle=editable?'#00d4ff':'#ffe066';
-  cx.font='bold 15px "Share Tech Mono"'; cx.textAlign='center';
+  cx.font='bold 15px "Roboto Mono"'; cx.textAlign='center';
   cx.fillText(parseFloat(R).toFixed(1)+'Ω',rx,cy+5);
   cx.fillStyle=editable?'rgba(0,212,255,0.8)':'rgba(255,224,102,0.7)';
-  cx.font='12px "Share Tech Mono"'; cx.fillText(label,rx,y-8);
-  if(editable){cx.fillStyle='rgba(0,212,255,0.4)';cx.font='9px "Share Tech Mono"';cx.fillText('▲ editable',rx,y+rh+14);}
+  cx.font='12px "Roboto Mono"'; cx.fillText(label,rx,y-8);
+  if(editable){cx.fillStyle='rgba(0,212,255,0.4)';cx.font='9px "Roboto Mono"';cx.fillText('▲ editable',rx,y+rh+14);}
   cx.restore();
 }
 function _stBatteryH(cx,bx,cy,V) {
@@ -3304,11 +3309,11 @@ function _stBatteryH(cx,bx,cy,V) {
   cx.strokeStyle='#ff3355'; cx.lineWidth=4;
   cx.beginPath(); cx.moveTo(bx+gap*2,cy-9); cx.lineTo(bx+gap*2,cy+9); cx.stroke();
   cx.restore(); cx.save();
-  cx.font='bold 12px "Share Tech Mono"'; cx.textAlign='center';
+  cx.font='bold 12px "Roboto Mono"'; cx.textAlign='center';
   cx.fillStyle='rgba(57,255,20,0.9)'; cx.fillText('+',bx-gap*2-10,cy+4);
   cx.fillStyle='rgba(255,51,85,0.9)';  cx.fillText('−',bx+gap*2+10,cy+4);
-  cx.fillStyle='#00d4ff'; cx.font='bold 14px "Share Tech Mono"'; cx.fillText(V+'V',bx,cy-24);
-  cx.fillStyle='rgba(100,160,200,0.55)'; cx.font='11px "Share Tech Mono"'; cx.fillText('Battery',bx,cy+28);
+  cx.fillStyle='#00d4ff'; cx.font='bold 14px "Roboto Mono"'; cx.fillText(V+'V',bx,cy-24);
+  cx.fillStyle='rgba(100,160,200,0.55)'; cx.font='11px "Roboto Mono"'; cx.fillText('Battery',bx,cy+28);
   cx.restore();
 }
 function _stBatteryV(cx, bx, cy, V) {
@@ -3326,11 +3331,11 @@ function _stBatteryV(cx, bx, cy, V) {
   cx.strokeStyle='#ff3355'; cx.lineWidth=4;
   cx.beginPath(); cx.moveTo(bx-9,cy+gap*2); cx.lineTo(bx+9,cy+gap*2); cx.stroke();
   cx.restore(); cx.save();
-  cx.font='bold 12px "Share Tech Mono"'; cx.textAlign='center';
+  cx.font='bold 12px "Roboto Mono"'; cx.textAlign='center';
   cx.fillStyle='rgba(57,255,20,0.9)'; cx.fillText('+',bx-24,cy-gap*2+5);
   cx.fillStyle='rgba(255,51,85,0.9)';  cx.fillText('−',bx-24,cy+gap*2+5);
-  cx.fillStyle='#00d4ff'; cx.font='bold 14px "Share Tech Mono"'; cx.fillText(V+'V',bx+30,cy+5);
-  cx.fillStyle='rgba(100,160,200,0.55)'; cx.font='11px "Share Tech Mono"'; cx.fillText('Battery',bx,cy+40);
+  cx.fillStyle='#00d4ff'; cx.font='bold 14px "Roboto Mono"'; cx.fillText(V+'V',bx+30,cy+5);
+  cx.fillStyle='rgba(100,160,200,0.55)'; cx.font='11px "Roboto Mono"'; cx.fillText('Battery',bx,cy+40);
   cx.restore();
 }
 function _stResistorV(cx, cx2, cy, R, label) {
@@ -3350,10 +3355,10 @@ function _stResistorV(cx, cx2, cy, R, label) {
   if(cx.roundRect) cx.roundRect(x,y,rw,rh,5); else cx.rect(x,y,rw,rh);
   cx.fill(); cx.stroke(); cx.shadowBlur=0;
   cx.fillStyle='#ffe066';
-  cx.font='bold 13px "Share Tech Mono"'; cx.textAlign='center';
+  cx.font='bold 13px "Roboto Mono"'; cx.textAlign='center';
   cx.fillText(parseFloat(R).toFixed(0)+'Ω',cx2,cy+5);
   cx.fillStyle='rgba(255,224,102,0.7)';
-  cx.font='11px "Share Tech Mono"'; cx.fillText(label,cx2+rw/2+18,cy+5);
+  cx.font='11px "Roboto Mono"'; cx.fillText(label,cx2+rw/2+18,cy+5);
   cx.restore();
 }
 function drawStudentLeftCircuit() {
@@ -3453,7 +3458,7 @@ function drawStudentLeftCircuit() {
       _stNode(cx, r2X, botY); _stNode(cx, r3X2, botY);
     }
   }
-  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Share Tech Mono"'; cx.textAlign='left';
+  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Roboto Mono"'; cx.textAlign='left';
   cx.fillText('I = '+(stCurrentLeft()*1000).toFixed(2)+' mA',6,H-6);
 }
 function drawStudentRightCircuit(req) {
@@ -3467,7 +3472,7 @@ function drawStudentRightCircuit(req) {
   _stResistorH(cx,midX,topY,req,'Rᵉq',true);
   _stNode(cx,leftX,topY);_stNode(cx,leftX,botY);_stNode(cx,rightX,topY);_stNode(cx,rightX,botY);
   _stNode(cx,rL,topY);_stNode(cx,rR,topY);_stNode(cx,batL,botY);_stNode(cx,batR,botY);
-  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Share Tech Mono"'; cx.textAlign='left';
+  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Roboto Mono"'; cx.textAlign='left';
   cx.fillText('I = '+(stCurrentRight(req)*1000).toFixed(2)+' mA',6,H-6);
 }
 </script>
