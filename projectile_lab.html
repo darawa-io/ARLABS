@@ -101,7 +101,7 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
 <body>
 <canvas id="mainCanvas"></canvas>
 
-<div id="title"><div style="display:flex;align-items:center;gap:7px;"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjY1MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBtZWV0IiB2ZXJzaW9uPSIxLjAiPgoKIDxnPgogIDx0aXRsZT5MYXllciAxPC90aXRsZT4KICA8ZyBpZD0ic3ZnXzEiIGZpbGw9IiMwMDAwMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgNjUyKSBzY2FsZSgwLjEgLTAuMSkiPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzIiIGQ9Im0yNzgwLDYwMTNjLTQxMCwtMjUgLTgzNiwtMTcwIC0xMTk1LC00MDhjLTY2NiwtNDQxIC0xMDk3LC0xMTQ2IC0xMTg1LC0xOTM1Yy0xNiwtMTM2IC0xNiwtNDI2IC0xLC01NjBjNDAsLTM1OSAxNjgsLTczNiAzNjIsLTEwNjdjODgsLTE0OSA4MCwtMTQ2IDEyNCwtNDhsMzcsODRsLTY1LDEyNGMtMTYyLDMwOCAtMjU4LDYwNCAtMjk3LDkyMmMtMjcsMjE2IC05LDU1OSA0MSw3OTVjMTMzLDYxNiA1MzgsMTE5OCAxMDc5LDE1NTJjMzg4LDI1NCA4MTksMzgyIDEyODUsMzgxYzM2NCwtMSA2NzYsLTc0IDEwMTAsLTIzOGM3NTUsLTM2OSAxMjgzLC0xMTE5IDEzNzUsLTE5NTVjMTYsLTE0MiAxMywtNDM3IC01LC01NzVjLTEzLC05NyAtNTIsLTI3NSAtOTEsLTQxMmMtMywtMTMgLTIsLTIzIDIsLTIzYzI5LDAgMTYwLDExNSAxODksMTY1YzUzLDkwIDg3LDQxNyA3NCw3MTJjLTI0LDUyNyAtMjA5LDEwMjggLTU0NCwxNDc0Yy0xMTAsMTQ2IC0zNjIsMzk1IC01MTMsNTA4Yy01MDQsMzc0IC0xMDYzLDU0MiAtMTY4Miw1MDR6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfMyIgZD0ibTI4NzksNTQ2MGMtNzgsLTIzIC0xMjQsLTkyIC0xMTYsLTE3M2MyLC0yNiAxMywtNjEgMjQsLTc1YzE4LC0yNSA3MSwtNjYgOTQsLTc0YzYsLTIgNywtMzA2IDMsLTg2MGwtNywtODU3bC0zMSwtN2MtODgsLTE5IC0xNzcsLTkwIC0yMjQsLTE3OWMtMjQsLTQ0IC0yNywtNjEgLTI3LC0xNDVjMCwtODUgMywtMTAxIDI4LC0xNDhjMzgsLTczIDEwOCwtMTM3IDE3NiwtMTYzYzc3LC0yOSAxOTUsLTI0IDI2NiwxMWM2MSwzMCAxMjYsOTUgMTU2LDE1NmMyNyw1NyAzNiwxNjQgMjAsMjMxYy0yNywxMDcgLTExNiwyMDAgLTIyMywyMzFsLTU4LDE3bDAsODU4YzAsNjUyIDMsODU4IDEyLDg1NWMxMiwtNCA5MywtMTIxIDQxNSwtNTk1YzMzMiwtNDkwIDY4MCwtMTAwMSA3NjAsLTExMTVsNTQsLTc3bC0zNCwtMzhjLTY2LC03MyAtODIsLTExNyAtODIsLTIyM2MwLC04MCA0LC0xMDIgMjQsLTE0MGMzMiwtNjEgOTYsLTEyNiAxNTYsLTE1OGM0NCwtMjQgNjEsLTI3IDE0NSwtMjdjODQsMCAxMDIsMyAxNTIsMjhjMTE1LDU2IDE4MiwxNjcgMTgyLDI5N2MwLDkwIC0yNiwxNTkgLTg0LDIyM2MtOTUsMTA0IC0xOTgsMTMwIC0zNjYsOTJjLTM1LC04IC0yNSwtMjAgLTI2MCwzMjVjLTQ3LDY5IC0xMzYsMTk5IC0xOTgsMjkwYy05OSwxNDUgLTU2Miw4MjcgLTczMCwxMDc1bC02MSw5MGwyMiw0NWMyOCw1MyAyOCw4MiA0LDEzNWMtMjQsNTIgLTU2LDgwIC0xMDYsOTRjLTQ1LDEyIC01MCwxMiAtODYsMXoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z180IiBkPSJtMjM2MCwzNTIzYy0zNzYsLTkgLTgzNSwtMjQgLTg4OSwtMzBjLTE2MCwtMTYgNDQsLTMwIDc0NSwtNTRsMzMxLC0xMWw0MSwyOWMyMywxNSA0MCwzMyAzOCwzOGMtNCwxNiAtNjgsMzQgLTExNiwzMmMtMjUsLTEgLTkyLC0yIC0xNTAsLTR6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfNSIgZD0ibTIyMTAsMzMxM2MtNTgsLTEgLTMwMywtNyAtNTQ1LC0xM2MtNDg1LC0xMSAtNjI1LC0xOSAtNjAzLC0zMWMyNiwtMTUgOTM4LC00OSAxMjk1LC00OWw4MCwwbDE3LDQzYzksMjMgMTYsNDYgMTYsNTBjMCw0IC0zNSw2IC03Nyw1Yy00MywtMSAtMTI1LC0zIC0xODMsLTV6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfNiIgZD0ibTIwMDAsMzA4M2MtOTI4LC0yMiAtMTA5MiwtMjkgLTEwMzYsLTQ0YzM3LC0xMCA0NTMsLTI3IDg1NiwtMzRjMTczLC0zIDM4MSwtOCA0NjMsLTExbDE0NywtNmwwLDM1YzAsNzQgMjIsNzEgLTQzMCw2MHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z183IiBkPSJtMjA0NSwyODUzYy00OSwtMSAtMjIzLC03IC0zODUsLTEzYy00MjUsLTE2IC00MDksLTMwIDU1LC01MGMyODcsLTEzIDgwMCwtMTggODEwLC04YzQsNCAtNSwyMyAtMjAsNDJsLTI3LDM2bC0xNzIsLTJjLTk0LC0xIC0yMTEsLTMgLTI2MSwtNXoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z184IiBkPSJtNTQ1NSwyNjI5Yy0yMiwtMTggLTYyLC01MyAtODgsLTc4bC00OCwtNDZsMywtNTY1YzIsLTQ0MCAwLC01ODcgLTExLC02NjNjLTcsLTU0IC0xMSwtMTAxIC03LC0xMDRjMTIsLTEyIDExNSwxMDYgMTQ2LDE2OGM1NSwxMDggNjAsMTU1IDU4LDU1NGMwLDE5OCAtNCw0NTEgLTcsNTYzbC02LDIwMmwtNDAsLTMxeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzkiIGQ9Im01MDAyLDIzODRjLTExMCwtODcgLTEwOCwtNzcgLTkzLC00NzJjMTIsLTMzNyA4LC00MDYgLTI0LC00NTZjLTI2LC0zOSAtNzYsLTU2IC0xODUsLTYzYy0xMTgsLTcgLTEyNywwIC04OSw3NWMyMCwzOSAyNCw2MiAyNCwxMzNjMCw3OSAtMyw5MiAtMzUsMTU1Yy02MywxMjMgLTE2NywxODAgLTMxNiwxNzJjLTczLC00IC05NCwtMTAgLTE2NywtNDZjLTEwOSwtNTQgLTIwNiwtMTQzIC0zMTQsLTI4OWMtNDcsLTY0IC05MCwtMTEzIC0xMDAsLTExM2MtMTQsMCAtMTUsMTMgLTEwLDEyM2MzLDY4IDIsMTI5IC0yLDEzNmMtMTAsMTYgLTYwLC01IC0xMTAsLTQ3Yy0zMiwtMjcgLTM0LC0zMSAtNDEsLTEyN2MtOSwtMTE4IC0xMywtMTMxIC01MSwtMTUwYy0zNSwtMTkgLTE2MiwtMjAgLTE3NywtMmMtNSw2IC0xNiwzOCAtMjMsNzFjLTcsMzIgLTIwLDY4IC0zMCw3OWMtMTcsMjEgLTE3LDIxIC04MywtNDNsLTY3LC02NWwzMSwtOTVsMzEsLTk0bC0yNywtNTFjLTg0LC0xNTYgLTI1NywtMzUwIC0zODQsLTQzMGwtNDUsLTI4bDU4LC0yMGM2MSwtMjAgNjcsLTMzIDI2LC01NWMtMzMsLTE4IC0xNDYsLTggLTI4NCwyNGMtMTc5LDQyIC0xOTEsNDIgLTI1MCwtM2MtNzIsLTU2IC02OCwtNzIgMjksLTEwNmMxNzQsLTYxIDM4NSwtODQgNDc1LC01MmM2MywyMiAxMjcsNzAgMjI4LDE3M2MxMTcsMTE4IDIxNCwyNDYgMjU5LDM0MmMyMCw0MSA0MSw4NiA0NywxMDBjMTAsMTkgMzAsMjkgMTAyLDUwYzUwLDE1IDEwNCwzNCAxMjIsNDNjNDMsMjMgNTUsMjEgODQsLTljNTMsLTU3IDY2LC01OSAyOTQsLTU3YzE0NywxIDIzNiw3IDI5NSwxOGMxNDEsMjggMTkyLDI5IDI3Miw5YzQ4LC0xMyAxMDcsLTE5IDE3MywtMThjMTc3LDEgMjkyLDUzIDM2OCwxNjZjNzksMTIwIDkzLDI0MyA3Nyw3MThjLTcsMTk1IC0xMywzNTYgLTE0LDM1OGMtMiwxIC0zNSwtMjMgLTc0LC01NHptLTYyNSwtNjgyYzc2LC0zOSAxMjAsLTEyMSA5NSwtMTc3Yy0xNiwtMzUgLTE0MSwtOTIgLTI1MiwtMTE1Yy0xMDcsLTIyIC0zNTcsLTM3IC0zNzksLTIyYy0yMCwxNCAtNywzOSA2NywxMjdjNzUsODggMTkyLDE3NSAyNjksMjAwYzYxLDE5IDE0NywxMyAyMDAsLTEzeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzEwIiBkPSJtMTA4NCwyMjI3bC02OSwtNjhsNTgsLTU0YzMyLC0zMCA2NSwtNTUgNzMsLTU1YzgsMCAzOSwyMiA2OCw1MGw1Myw1MGwyOSwtMzFjMTYsLTE3IDQzLC0zOSA2MSwtNTBjMzgsLTI0IDQ5LC0yMCAxMTIsNDVsNDQsNDVsLTU4LDY1Yy0zMSwzNiAtNjAsNjYgLTY0LDY2Yy00LDAgLTMzLC0yNyAtNjUsLTU5bC01OCwtNTlsLTU4LDYxbC01OCw2MmwtNjgsLTY4eiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzExIiBkPSJtMjc2OSwyMjcyYy0xNCwtOSAtNTMsLTQxIC04NywtNzFsLTYyLC01NGwxLC01ODhjMSwtNDgxIDQsLTU4NiAxNSwtNTgyYzIxLDggODksMTAyIDEyMywxNzBjMTgsMzYgMzUsOTEgNDEsMTMwYzEwLDczIDExLDcwMiAxLDg5NWwtNiwxMThsLTI2LC0xOHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMiIgZD0ibTM5NDEsMjIxOWwtNjQsLTcwbDY0LC02NWMzNSwtMzUgNjksLTY0IDc1LC02NGMxOSwwIDExNCwxMDggMTE0LDEzMGMwLDE5IC0xMDQsMTQxIC0xMTksMTM5Yy0zLDAgLTM1LC0zMiAtNzAsLTcweiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzEzIiBkPSJtMTE5NSwxOTI2Yy01NywtNDkgLTE3NSwtMjI2IC0yMTQsLTMyMGMtMjEsLTUwIC0yNSwtNzggLTI2LC0xNTZjMCwtODYgMywtMTAwIDI5LC0xNDdjODIsLTE0OCAzMTQsLTE4OCA0ODUsLTgzYzE1Myw5NCAyMDAsMjg3IDExNCw0NjljLTMyLDY3IC0xMDcsMTQ5IC0xODMsMjAxYy01NywzOCAtMTMzLDgwIC0xNDcsODBjLTUsMCAtMzEsLTIwIC01OCwtNDR6bTEyMiwtMjI2YzU4LC0zMyAxMTMsLTk1IDE0MiwtMTYxYzI4LC02MCAyNiwtOTAgLTYsLTEyMWMtMzksLTM4IC03OCwtNTAgLTE1NCwtNTFjLTE0NSwwIC0yMzAsOTAgLTE4NSwxOThjMzAsNzEgMTExLDE2MiAxNDYsMTY1YzMsMCAyOCwtMTMgNTcsLTMweiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiBpZD0ic3ZnXzE0IiBkPSJtMjAxMywxODY0Yy0xMjksLTQ3IC0yMjMsLTIwOSAtMjIzLC0zODRjMCwtMTcwIDc1LC0yNTkgMjQyLC0yOTBjNTQsLTEwIDY5LC05IDIxMiwxNmwzOSw3bC0yMywtNDJjLTI1LC00MyAtMTE5LC0xNDEgLTE4MCwtMTg3Yy05OSwtNzQgLTIyMSwtMTExIC0zOTQsLTEyMGMtMTUwLC04IC0xNjIsLTEzIC0xMTAsLTQ3Yzk4LC02NSAyMzksLTEwMiAzNTksLTk1YzE5NiwxMyAzODMsMTc5IDQ1OCw0MDdjOTksMjk3IDI5LDYwNyAtMTYwLDcxOGMtNTYsMzIgLTE1Nyw0MCAtMjIwLDE3em0xMzgsLTIwMGM1NywtMjggMTIxLC0xMzUgMTM1LC0yMjFjNiwtNDAgNSwtNDIgLTIwLC00OWMtMTUsLTMgLTY0LC00IC0xMTAsLTJjLTE5MywxMCAtMjczLDEyMyAtMTY5LDIzOWM1Miw1NyA5OCw2NyAxNjQsMzN6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfMTUiIGQ9Im00NDAwLDEwMTFjLTE0LC01IC03MCwtMzggLTEyNSwtNzVjLTE5OCwtMTMyIC00MTcsLTIyOSAtNjQ5LC0yODZjLTEyOSwtMzEgLTMyMywtNjAgLTQwOSwtNjBjLTEyOCwwIC0yNjUsLTQ3IC0zMjIsLTEwOWMtMzcsLTQxIC0xMywtNDYgMjM4LC00NmMzMDQsMCA0ODQsMjkgNzQ0LDExOWMyNTUsODkgNTM0LDI1MyA3MjMsNDI0bDQ1LDQxbC0xMTAsMGMtNjAsLTEgLTEyMSwtNCAtMTM1LC04eiIvPgogIDwvZz4KIDwvZz4KPC9zdmc+" style="height:13px;width:auto;opacity:0.85;filter:brightness(1.8) saturate(0);" alt="logo"><h1>PROJECTILE LAB</h1></div><p style="padding-left:20px;">Kinematics · 3D Interactive</p></div>
+<div id="title"><div style="display:flex;align-items:center;gap:7px;"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjY1MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBtZWV0IiB2ZXJzaW9uPSIxLjAiPgoKIDxnPgogIDx0aXRsZT5MYXllciAxPC90aXRsZT4KICA8ZyBpZD0ic3ZnXzEiIGZpbGw9IiMwMDAwMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgNjUyKSBzY2FsZSgwLjEgLTAuMSkiPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiIGlkPSJzdmdfMiIgZD0ibTI3ODAsNjAxM2MtNDEwLC0yNSAtODM2LC0xNzAgLTExOTUsLTQwOGMtNjY2LC00NDEgLTEwOTcsLTExNDYgLTExODUsLTE5MzVjLTE2LC0xMzYgLTE2LC00MjYgLTEsLTU2MGM0MCwtMzU5IDE2OCwtNzM2IDM2MiwtMTA2N2M4OCwtMTQ5IDgwLC0xNDYgMTI0LC00OGwzNyw4NGwtNjUsMTI0Yy0xNjIsMzA4IC0yNTgsNjA0IC0yOTcsOTIyYy0yNywyMTYgLTksNTU5IDQxLDc5NWMxMzMsNjE2IDUzOCwxMTk4IDEwNzksMTU1MmMzODgsMjU0IDgxOSwzODIgMTI4NSwzODFjMzY0LC0xIDY3NiwtNzQgMTAxMCwtMjM4Yzc1NSwtMzY5IDEyODMsLTExMTkgMTM3NSwtMTk1NWMxNiwtMTQyIDEzLC00MzcgLTUsLTU3NWMtMTMsLTk3IC01MiwtMjc1IC05MSwtNDEyYy0zLC0xMyAtMiwtMjMgMiwtMjNjMjksMCAxNjAsMTE1IDE4OSwxNjVjNTMsOTAgODcsNDE3IDc0LDcxMmMtMjQsNTI3IC0yMDksMTAyOCAtNTQ0LDE0NzRjLTExMCwxNDYgLTM2MiwzOTUgLTUxMyw1MDhjLTUwNCwzNzQgLTEwNjMsNTQyIC0xNjgyLDUwNHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18zIiBkPSJtMjg3OSw1NDYwYy03OCwtMjMgLTEyNCwtOTIgLTExNiwtMTczYzIsLTI2IDEzLC02MSAyNCwtNzVjMTgsLTI1IDcxLC02NiA5NCwtNzRjNiwtMiA3LC0zMDYgMywtODYwbC03LC04NTdsLTMxLC03Yy04OCwtMTkgLTE3NywtOTAgLTIyNCwtMTc5Yy0yNCwtNDQgLTI3LC02MSAtMjcsLTE0NWMwLC04NSAzLC0xMDEgMjgsLTE0OGMzOCwtNzMgMTA4LC0xMzcgMTc2LC0xNjNjNzcsLTI5IDE5NSwtMjQgMjY2LDExYzYxLDMwIDEyNiw5NSAxNTYsMTU2YzI3LDU3IDM2LDE2NCAyMCwyMzFjLTI3LDEwNyAtMTE2LDIwMCAtMjIzLDIzMWwtNTgsMTdsMCw4NThjMCw2NTIgMyw4NTggMTIsODU1YzEyLC00IDkzLC0xMjEgNDE1LC01OTVjMzMyLC00OTAgNjgwLC0xMDAxIDc2MCwtMTExNWw1NCwtNzdsLTM0LC0zOGMtNjYsLTczIC04MiwtMTE3IC04MiwtMjIzYzAsLTgwIDQsLTEwMiAyNCwtMTQwYzMyLC02MSA5NiwtMTI2IDE1NiwtMTU4YzQ0LC0yNCA2MSwtMjcgMTQ1LC0yN2M4NCwwIDEwMiwzIDE1MiwyOGMxMTUsNTYgMTgyLDE2NyAxODIsMjk3YzAsOTAgLTI2LDE1OSAtODQsMjIzYy05NSwxMDQgLTE5OCwxMzAgLTM2Niw5MmMtMzUsLTggLTI1LC0yMCAtMjYwLDMyNWMtNDcsNjkgLTEzNiwxOTkgLTE5OCwyOTBjLTk5LDE0NSAtNTYyLDgyNyAtNzMwLDEwNzVsLTYxLDkwbDIyLDQ1YzI4LDUzIDI4LDgyIDQsMTM1Yy0yNCw1MiAtNTYsODAgLTEwNiw5NGMtNDUsMTIgLTUwLDEyIC04NiwxeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiIGlkPSJzdmdfNCIgZD0ibTIzNjAsMzUyM2MtMzc2LC05IC04MzUsLTI0IC04ODksLTMwYy0xNjAsLTE2IDQ0LC0zMCA3NDUsLTU0bDMzMSwtMTFsNDEsMjljMjMsMTUgNDAsMzMgMzgsMzhjLTQsMTYgLTY4LDM0IC0xMTYsMzJjLTI1LC0xIC05MiwtMiAtMTUwLC00eiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiIGlkPSJzdmdfNSIgZD0ibTIyMTAsMzMxM2MtNTgsLTEgLTMwMywtNyAtNTQ1LC0xM2MtNDg1LC0xMSAtNjI1LC0xOSAtNjAzLC0zMWMyNiwtMTUgOTM4LC00OSAxMjk1LC00OWw4MCwwbDE3LDQzYzksMjMgMTYsNDYgMTYsNTBjMCw0IC0zNSw2IC03Nyw1Yy00MywtMSAtMTI1LC0zIC0xODMsLTV6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfNiIgZD0ibTIwMDAsMzA4M2MtOTI4LC0yMiAtMTA5MiwtMjkgLTEwMzYsLTQ0YzM3LC0xMCA0NTMsLTI3IDg1NiwtMzRjMTczLC0zIDM4MSwtOCA0NjMsLTExbDE0NywtNmwwLDM1YzAsNzQgMjIsNzEgLTQzMCw2MHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z183IiBkPSJtMjA0NSwyODUzYy00OSwtMSAtMjIzLC03IC0zODUsLTEzYy00MjUsLTE2IC00MDksLTMwIDU1LC01MGMyODcsLTEzIDgwMCwtMTggODEwLC04YzQsNCAtNSwyMyAtMjAsNDJsLTI3LDM2bC0xNzIsLTJjLTk0LC0xIC0yMTEsLTMgLTI2MSwtNXoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z184IiBkPSJtNTQ1NSwyNjI5Yy0yMiwtMTggLTYyLC01MyAtODgsLTc4bC00OCwtNDZsMywtNTY1YzIsLTQ0MCAwLC01ODcgLTExLC02NjNjLTcsLTU0IC0xMSwtMTAxIC03LC0xMDRjMTIsLTEyIDExNSwxMDYgMTQ2LDE2OGM1NSwxMDggNjAsMTU1IDU4LDU1NGMwLDE5OCAtNCw0NTEgLTcsNTYzbC02LDIwMmwtNDAsLTMxeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiIGlkPSJzdmdfOSIgZD0ibTUwMDIsMjM4NGMtMTEwLC04NyAtMTA4LC03NyAtOTMsLTQ3MmMxMiwtMzM3IDgsLTQwNiAtMjQsLTQ1NmMtMjYsLTM5IC03NiwtNTYgLTE4NSwtNjNjLTExOCwtNyAtMTI3LDAgLTg5LDc1YzIwLDM5IDI0LDYyIDI0LDEzM2MwLDc5IC0zLDkyIC0zNSwxNTVjLTYzLDEyMyAtMTY3LDE4MCAtMzE2LDE3MmMtNzMsLTQgLTk0LC0xMCAtMTY3LC00NmMtMTA5LC01NCAtMjA2LC0xNDMgLTMxNCwtMjg5Yy00NywtNjQgLTkwLC0xMTMgLTEwMCwtMTEzYy0xNCwwIC0xNSwxMyAtMTAsMTIzYzMsNjggMiwxMjkgLTIxMzZjLTEwLDE2IC02MCwtNSAtMTEwLC00N2MtMzIsLTI3IC0zNCwtMzEgLTQxLC0xMjdjLTksLTExOCAtMTMsLTEzMSAtNTEsLTE1MGMtMzUsLTE5IC0xNjIsLTIwIC0xNzcsLTJjLTUsNiAtMTYsMzggLTIzLDcxYy03LDMyIC0yMCw2OCAtMzAsNzljLTE3LDIxIC0xNywyMSAtODMsLTQzbC02NywtNjVsMzEsLTk1bDMxLC05NGwtMjcsLTUxYy04NCwtMTU2IC0yNTcsLTM1MCAtMzg0LC00MzBsLTQ1LC0yOGw1OCwtMjBjNjEsLTIwIDY3LC0zMyAyNiwtNTVjLTMzLC0xOCAtMTQ2LC04IC0yODQsMjRjLTE3OSw0MiAtMTkxLDQyIC0yNTAsLTNjLTcyLC01NiAtNjgsLTcyIDI5LC0xMDZjMTc0LC02MSAzODUsLTg0IDQ3NSwtNTJjNjMsMjIgMTI3LDcwIDIyOCwxNzNjMTE3LDExOCAyMTQsMjQ2IDI1OSwzNDJjMjAsNDEgNDEsODYgNDcsMTAwYzEwLDE5IDMwLDI5IDEwMiw1MGM1MCwxNSAxMDQsMzQgMTIyLDQzYzQzLDIzIDU1LDIxIDg0LC05YzUzLC01NyA2NiwtNTkgMjk0LC01N2MxNDcsMSAyMzYsNyAyOTUsMThjMTQxLDI4IDE5MiwyOSAyNzIsOWM0OCwtMTMgMTA3LC0xOSAxNzMsLTE4YzE3NywxIDI5Miw1MyAzNjgsMTY2Yzc5LDEyMCA5MywyNDMgNzcsNzE4Yy03LDE5NSAtMTMsMzU2IC0xNCwzNThjLTIsMSAtMzUsLTIzIC03NCwtNTR6bS02MjUsLTY4MmM3NiwtMzkgMTIwLC0xMjEgOTUsLTE3N2MtMTYsLTM1IC0xNDEsLTkyIC0yNTIsLTExNWMtMTA3LC0yMiAtMzU3LC0zNyAtMzc5LC0yMmMtMjAsMTQgLTcsMzkgNjcsMTI3Yzc1LDg4IDE5MiwxNzUgMjY5LDIwMGM2MSwxOSAxNDcsMTMgMjAwLC0xM3oiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMCIgZD0ibTEwODQsMjIyN2wtNjksLTY4bDU4LC01NGMzMiwtMzAgNjUsLTU1IDczLC01NWM4LDAgMzksMjIgNjgsNTBsNTMsNTBsMjksLTMxYzE2LC0xNyA0MywtMzkgNjEsLTUwYzM4LC0yNCA0OSwtMjAgMTEyLDQ1bDQ0LDQ1bC01OCw2NWMtMzEsMzYgLTYwLDY2IC02NCw2NmMtNCwwIC0zMywtMjcgLTY1LC01OWwtNTgsLTU5bC01OCw2MWwtNTgsNjJsLTY4LC02OHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMSIgZD0ibTI3NjksMjI3MmMtMTQsLTkgLTUzLC00MSAtODcsLTcxbC02MiwtNTRsMSwtNTg4YzEsLTQ4MSA0LC01ODYgMTUsLTU4MmMyMSw4IDg5LDEwMiAxMjMsMTcwYzE4LDM2IDM1LDkxIDQxLDEzMGMxMCw3MyAxMSw3MDIgMSw4OTVsLTYsMTE4bC0yNiwtMTh6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfMTIiIGQ9Im0zOTQxLDIyMTlsLTY0LC03MGw2NCwtNjVjMzUsLTM1IDY5LC02NCA3NSwtNjRjMTksMCAxMTQsMTA4IDExNCwxMzBjMCwxOSAtMTA0LDE0MSAtMTE5LDEzOWMtMywwIC0zNSwtMzIgLTcwLC03MHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMyIgZD0ibTExOTUsMTkyNmMtNTcsLTQ5IC0xNzUsLTIyNiAtMjE0LC0zMjBjLTIxLC01MCAtMjUsLTc4IC0yNiwtMTU2YzAsLTg2IDMsLTEwMCAyOSwtMTQ3YzgyLC0xNDggMzE0LC0xODggNDg1LC04M2MxNTMsOTQgMjAwLDI4NyAxMTQsNDY5Yy0zMiw2NyAtMTA3LDE0OSAtMTgzLDIwMWMtNTcsMzggLTEzMyw4MCAtMTQ3LDgwYy01LDAgLTMxLC0yMCAtNTgsLTQ0em0xMjIsLTIyNmM1OCwtMzMgMTEzLC05NSAxNDIsLTE2MWMyOCwtNjAgMjYsLTkwIC02LC0xMjFjLTM5LC0zOCAtNzgsLTUwIC0xNTQsLTUxYy0xNDUsMCAtMjMwLDkwIC0xODUsMTk4YzMwLDcxIDExMSwxNjIgMTQ2LDE2NWMzLDAgMjgsLTEzIDU3LC0zMHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xNCIgZD0ibTIwMTMsMTg2NGMtMTI5LC00NyAtMjIzLC0yMDkgLTIyMywtMzg0YzAsLTE3MCA3NSwtMjU5IDI0MiwtMjkwYzU0LC0xMCA2OSwtOSAyMTIsMTZsMzksN2wtMjMsLTQyYy0yNSwtNDMgLTExOSwtMTQxIC0xODAsLTE4N2MtOTksLTc0IC0yMjEsLTExMSAtMzk0LC0xMjBjLTE1MCwtOCAtMTYyLC0xMyAtMTEwLC00N2M5OCwtNjUgMjM5LC0xMDIgMzU5LC05NWMxOTYsMTMgMzgzLDE3OSA0NTgsNDA3Yzk5LDI5NyAyOSw2MDcgLTE2MCw3MThjLTU2LDMyIC0xNTcsNDAgLTIyMCwxN3ptMTM4LC0yMDBjNTcsLTI4IDEyMSwtMTM1IDEzNSwtMjIxYzYsLTQwIDUsLTQyIC0yMCwtNDljLTE1LC0zIC02NCwtNCAtMTEwLC0yYy0xOTMsMTAgLTI3MywxMjMgLTE2OSwyMzljNTIsNTcgOTgsNjcgMTY0LDMzeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiIGlkPSJzdmdfMTUiIGQ9Im00NDAwLDEwMTFjLTE0LC01IC03MCwtMzggLTEyNSwtNzVjLTE5OCwtMTMyIC00MTcsLTIyOSAtNjQ5LC0yODZjLTEyOSwtMzEgLTMyMywtNjAgLTQwOSwtNjBjLTEyOCwwIC0yNjUsLTQ3IC0zMjIsLTEwOWMtMzcsLTQxIC0xMywtNDYgMjM4LC00NmMzMDQsMCA0ODQsMjkgNzQ0LDExOWMyNTUsODkgNTM0LDI1MyA3MjMsNDI0bDQ1LDQxbC0xMTAsMGMtNjAsLTEgLTEyMSwtNCAtMTM1LC04eiIvPgogIDwvZz4KIDwvZz4KPC9zdmc+" style="height:13px;width:auto;opacity:0.85;filter:brightness(1.8) saturate(0);" alt="logo"><h1>PROJECTILE LAB</h1></div><p style="padding-left:20px;">Kinematics · 3D Interactive</p></div>
 
 <div id="mode-bar">
   <button class="mode-tab active" id="tab-explore" onclick="setMode('explore')">🔭 Explore</button>
@@ -117,60 +117,33 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
   <div class="dr"><span class="dl">h  height</span><span class="dv cyan" id="v-h">0.0 m</span></div>
   <div class="dr"><span class="dl">g  gravity</span><span class="dv" id="v-g">9.81 m/s²</span></div>
   <div class="hdiv"></div>
-  <!-- These rows get hidden per challenge type -->
   <div class="dr" id="row-range"><span class="dl">R  range</span><span class="dv white" id="v-range">—</span></div>
   <div class="dr" id="row-maxh"><span class="dl">H  max height</span><span class="dv white" id="v-maxh">—</span></div>
   <div class="dr" id="row-time"><span class="dl">T  flight time</span><span class="dv white" id="v-time">—</span></div>
   <div class="dr" id="row-vx"><span class="dl">vₓ horiz. vel</span><span class="dv white" id="v-vx">—</span></div>
   <div class="dr" id="row-vy"><span class="dl">v_y vert. vel</span><span class="dv white" id="v-vy">—</span></div>
   <div class="hdiv"></div>
-  <div class="formula-box" id="hud-formula">R = v₀²·sin2θ / g<br>H = v₀²sin²θ / (2g)<br>T = 2v₀sinθ / g</div>
+  <div class="formula-box">R = v₀²·sin2θ / g<br>H = v₀²sin²θ / (2g)<br>T = 2v₀sinθ / g</div>
   <div id="hud-challenge-note" style="display:none;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.7);text-align:center;letter-spacing:1px;padding-top:2px;">🎯 CHALLENGE MODE</div>
 </div>
 
 <!-- LEFT CHALLENGE PANEL -->
 <div id="challenge-panel">
-  <div class="ch-title">
-    <span>🎯 Challenge</span>
-    <button class="ch-close" onclick="exitChallengeMode()" title="Exit challenge">✕</button>
-  </div>
+  <div class="ch-title"><span>🎯 Challenge</span><button class="ch-close" onclick="exitChallengeMode()">✕</button></div>
   <div id="ch-q-text" class="ch-q"></div>
   <div id="ch-given" class="ch-var"></div>
-  <div class="ch-input-row">
-    <input type="number" id="ch-input" placeholder="?" step="any">
-    <span class="ch-unit" id="ch-unit-lbl">m</span>
-  </div>
-  <div style="display:flex;gap:5px;">
-    <button class="btn validate" onclick="validateChallenge()" style="flex:1;">✔ Check</button>
-    <button class="btn" onclick="nextChallenge()" style="flex:1;font-size:10px;">↻ New</button>
-  </div>
+  <div class="ch-input-row"><input type="number" id="ch-input" placeholder="?" step="any"><span class="ch-unit" id="ch-unit-lbl">m</span></div>
+  <div style="display:flex;gap:5px;"><button class="btn validate" onclick="validateChallenge()" style="flex:1;">✔ Check</button><button class="btn" onclick="nextChallenge()" style="flex:1;font-size:10px;">↻ New</button></div>
   <div id="ch-result"></div>
-  <div style="margin-top:10px;border-top:1px solid rgba(255,200,60,.1);padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.5);">Score</span>
-    <span style="font-family:'Space Mono',monospace;font-size:13px;color:#ffcc44;" id="ch-score">0 / 0</span>
-  </div>
+  <div style="margin-top:10px;border-top:1px solid rgba(255,200,60,.1);padding-top:8px;display:flex;justify-content:space-between;"><span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.5);">Score</span><span style="font-family:'Space Mono',monospace;font-size:13px;color:#ffcc44;" id="ch-score">0 / 0</span></div>
 </div>
 
 <!-- BOTTOM CONTROLS -->
 <div id="bottom-panels">
-  <!-- LAUNCH PANEL -->
-  <div class="panel" style="min-width:295px;">
-    <div class="panel-title">⚡ Launch</div>
-    <div class="panel-row">
-      <span class="sl-lbl">θ</span>
-      <input type="range" id="sl-angle" min="0" max="90" value="45" step="0.5" oninput="onAngle()">
-      <span class="sl-val" id="lbl-angle">45.0°</span>
-    </div>
-    <div class="panel-row">
-      <span class="sl-lbl">v₀</span>
-      <input type="range" id="sl-v0" min="1" max="60" value="20" step="0.5" class="vel" oninput="onV0()">
-      <span class="sl-val" id="lbl-v0">20.0 m/s</span>
-    </div>
-    <div class="panel-row">
-      <span class="sl-lbl">h</span>
-      <input type="range" id="sl-h" min="0" max="30" value="0" step="0.1" class="hgt" oninput="onH()">
-      <span class="sl-val" id="lbl-h">0.0 m</span>
-    </div>
+  <div class="panel" style="min-width:295px;"><div class="panel-title">⚡ Launch</div>
+    <div class="panel-row"><span class="sl-lbl">θ</span><input type="range" id="sl-angle" min="0" max="90" value="45" step="0.5" oninput="onAngle()"><span class="sl-val" id="lbl-angle">45.0°</span></div>
+    <div class="panel-row"><span class="sl-lbl">v₀</span><input type="range" id="sl-v0" min="1" max="60" value="20" step="0.5" class="vel" oninput="onV0()"><span class="sl-val" id="lbl-v0">20.0 m/s</span></div>
+    <div class="panel-row"><span class="sl-lbl">h</span><input type="range" id="sl-h" min="0" max="30" value="0" step="0.1" class="hgt" oninput="onH()"><span class="sl-val" id="lbl-h">0.0 m</span></div>
     <div class="panel-row" style="justify-content:center;gap:6px;margin-top:2px;flex-wrap:wrap;">
       <button class="btn fire" id="btn-fire" onclick="fireLaunch()">🚀 Launch</button>
       <button class="btn pause" id="btn-pause" onclick="togglePause()" style="display:none;">⏸ Pause</button>
@@ -182,1691 +155,355 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
       <label class="sw"><input type="checkbox" id="cb-vectors" onchange="onVectors()"> vectors</label>
     </div>
   </div>
-
-  <!-- ENV PANEL -->
-  <div class="panel" style="min-width:180px;">
-    <div class="panel-title">🌍 Environment</div>
-    <div class="panel-row">
-      <span class="sl-lbl">g</span>
-      <input type="range" id="sl-g" min="1" max="25" value="9.81" step="0.01" oninput="onG()">
-      <span class="sl-val" id="lbl-g">9.81</span>
-    </div>
-    <div class="panel-row" style="justify-content:center;gap:5px;margin-top:2px;">
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(9.81)">🌍</button>
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(3.72)">🔴</button>
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(1.62)">🌙</button>
-    </div>
+  <div class="panel" style="min-width:180px;"><div class="panel-title">🌍 Environment</div>
+    <div class="panel-row"><span class="sl-lbl">g</span><input type="range" id="sl-g" min="1" max="25" value="9.81" step="0.01" oninput="onG()"><span class="sl-val" id="lbl-g">9.81</span></div>
+    <div class="panel-row" style="justify-content:center;"><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(9.81)">🌍</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(3.72)">🔴</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(1.62)">🌙</button></div>
   </div>
-
-  <!-- CAMERA PANEL -->
-  <div class="panel" style="min-width:155px;">
-    <div class="panel-title">📷 Camera</div>
-    <div class="panel-row" style="justify-content:center;gap:5px;flex-wrap:wrap;">
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('launcher')">🔭 Launcher</button>
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('range')">📏 Range</button>
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('center')">🎯 Center</button>
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('top')">🔝 Apex</button>
-    </div>
-  </div>
-
-  <!-- TOOLS PANEL -->
-  <div class="panel" style="min-width:130px;">
-    <div class="panel-title">📐 Tools</div>
-    <div class="panel-row" style="justify-content:center;gap:5px;">
-      <button class="btn" id="btn-vruler" style="font-size:10px;padding:4px 8px;" onclick="toggleVRuler()">📏 V-Ruler</button>
-    </div>
-  </div>
-
-  <!-- OBJECTS PANEL -->
-  <div class="panel" style="min-width:155px;">
-    <div class="panel-title">🎯 Objects</div>
-    <div class="panel-row" style="justify-content:center;gap:5px;flex-wrap:wrap;">
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnPendulumManual()">🪀 Pendulum</button>
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnStackManual()">🧱 Blocks</button>
-      <button class="btn" style="font-size:10px;padding:4px 8px;" onclick="clearChallengeObjects()">✕ Clear</button>
-    </div>
-  </div>
-
-
+  <div class="panel" style="min-width:155px;"><div class="panel-title">📷 Camera</div><div class="panel-row"><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('launcher')">🔭 Launcher</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('range')">📏 Range</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('center')">🎯 Center</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('top')">🔝 Apex</button></div></div>
+  <div class="panel" style="min-width:130px;"><div class="panel-title">📐 Tools</div><div class="panel-row"><button class="btn" id="btn-vruler" style="font-size:10px;padding:4px 8px;" onclick="toggleVRuler()">📏 V-Ruler</button></div></div>
+  <div class="panel" style="min-width:155px;"><div class="panel-title">🎯 Objects</div><div class="panel-row"><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnPendulumManual()">🪀 Pendulum</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnStackManual()">🧱 Blocks</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="clearChallengeObjects()">✕ Clear</button></div></div>
 </div>
 
-<button id="qr-btn" onclick="openQR()" title="Open on mobile">
-  <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zm1 1v5h5V4zm1 1h3v3H5zm8-2h7v7h-7zm1 1v5h5V4zm1 1h3v3h-3zM3 13h7v7H3zm1 1v5h5v-5zm1 1h3v3H5zm8 0h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2zm-2 2h2v2h-2zm2-6h2v2h-2zm-4 2h2v2h-2z"/></svg>
-</button>
-<div id="qr-overlay" onclick="closeQR(event)">
-  <div id="qr-card">
-    <h3>📱 Open on Mobile</h3>
-    <div id="qr-box"></div>
-    <div id="qr-url"></div>
-    <button id="qr-close" onclick="closeQR()">Close</button>
-  </div>
-</div>
-
-<!-- AR OVERLAY -->
-<div id="ar-overlay">
-  <video id="ar-video" autoplay playsinline muted></video>
-  <canvas id="ar-canvas"></canvas>
-  <button id="ar-close" onclick="closeAR()">✕ Exit AR</button>
-  <div id="ar-hud">
-    <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(140,200,255,.4);text-transform:uppercase;border-bottom:1px solid rgba(140,200,255,.1);padding-bottom:5px;margin-bottom:7px;">AR Readout</div>
-    <div class="dr"><span class="dl">θ</span><span class="dv amber" id="ar-v-angle">45°</span></div>
-    <div class="dr"><span class="dl">v₀</span><span class="dv" id="ar-v-v0">20 m/s</span></div>
-    <div class="dr"><span class="dl">R</span><span class="dv white" id="ar-v-range">—</span></div>
-    <div class="dr"><span class="dl">H</span><span class="dv white" id="ar-v-maxh">—</span></div>
-    <div class="dr"><span class="dl">T</span><span class="dv white" id="ar-v-time">—</span></div>
-  </div>
-  <div id="ar-challenge">
-    <div class="ch-title"><span>🎯 AR Challenge</span></div>
-    <div id="ar-ch-text" style="font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.55;margin-bottom:7px;"></div>
-    <div id="ar-ch-given" class="ch-var" style="font-size:9px;"></div>
-    <div class="ch-input-row" style="margin-top:5px;">
-      <input type="number" id="ar-ch-input" placeholder="?" step="any" style="background:rgba(8,14,30,.9);border:1px solid rgba(140,200,255,.25);color:#78b4ff;border-radius:8px;padding:5px 8px;font-family:'Space Mono',monospace;font-size:11px;width:90px;outline:none;">
-      <span class="ch-unit" id="ar-ch-unit">m</span>
-    </div>
-    <button class="btn validate" onclick="validateARChallenge()" style="width:100%;margin-top:5px;">✔ Check</button>
-    <div id="ar-ch-result" style="display:none;margin-top:5px;padding:6px 10px;border-radius:8px;font-family:'Syne',sans-serif;font-size:11px;"></div>
-  </div>
-  <div id="ar-marker-hint"><div style="font-size:28px;">🎯</div><p>Point camera at HIRO marker</p></div>
-  <div id="ar-ui">
-    <button class="btn fire" onclick="arFire()">🚀 Launch</button>
-    <button class="btn reset" onclick="arReset()">↺ Reset</button>
-    <button class="btn" onclick="nextARChallenge()" style="font-size:10px;">↻ Challenge</button>
-  </div>
-</div>
-
+<button id="qr-btn" onclick="openQR()"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zm1 1v5h5V4zm1 1h3v3H5zm8-2h7v7h-7zm1 1v5h5V4zm1 1h3v3h-3zM3 13h7v7H3zm1 1v5h5v-5zm1 1h3v3H5zm8 0h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2zm-2 2h2v2h-2zm2-6h2v2h-2zm-4 2h2v2h-2z"/></svg></button>
+<div id="qr-overlay" onclick="closeQR(event)"><div id="qr-card"><h3>📱 Open on Mobile</h3><div id="qr-box"></div><div id="qr-url"></div><button id="qr-close" onclick="closeQR()">Close</button></div></div>
+<div id="ar-overlay"><video id="ar-video" autoplay playsinline muted></video><canvas id="ar-canvas"></canvas><button id="ar-close" onclick="closeAR()">✕ Exit AR</button><div id="ar-hud"><div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(140,200,255,.4);text-transform:uppercase;border-bottom:1px solid rgba(140,200,255,.1);padding-bottom:5px;margin-bottom:7px;">AR Readout</div><div class="dr"><span class="dl">θ</span><span class="dv amber" id="ar-v-angle">45°</span></div><div class="dr"><span class="dl">v₀</span><span class="dv" id="ar-v-v0">20 m/s</span></div><div class="dr"><span class="dl">R</span><span class="dv white" id="ar-v-range">—</span></div><div class="dr"><span class="dl">H</span><span class="dv white" id="ar-v-maxh">—</span></div><div class="dr"><span class="dl">T</span><span class="dv white" id="ar-v-time">—</span></div></div><div id="ar-challenge"><div class="ch-title"><span>🎯 AR Challenge</span></div><div id="ar-ch-text" style="font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.55;margin-bottom:7px;"></div><div id="ar-ch-given" class="ch-var" style="font-size:9px;"></div><div class="ch-input-row"><input type="number" id="ar-ch-input" placeholder="?" step="any"><span class="ch-unit" id="ar-ch-unit">m</span></div><button class="btn validate" onclick="validateARChallenge()" style="width:100%;margin-top:5px;">✔ Check</button><div id="ar-ch-result" style="display:none;"></div></div><div id="ar-marker-hint"><div style="font-size:28px;">🎯</div><p>Point camera at HIRO marker</p></div><div id="ar-ui"><button class="btn fire" onclick="arFire()">🚀 Launch</button><button class="btn reset" onclick="arReset()">↺ Reset</button><button class="btn" onclick="nextARChallenge()" style="font-size:10px;">↻ Challenge</button></div></div>
 <div id="hint">Drag to orbit · Scroll to zoom · Sliders to adjust</div>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
-
-// ── PHYSICS ────────────────────────────────────────────────────────────
 const S = { angle:45, v0:20, h:0, g:9.81 };
+function compute(a,v0,h,g){ let rad=a*Math.PI/180, vx=v0*Math.cos(rad), vy=v0*Math.sin(rad), disc=vy*vy+2*g*h, T=disc<0?0:(vy+Math.sqrt(disc))/g; return {vx,vy,T,R:vx*T,H:h+vy*vy/(2*g)}; }
 
-function compute(a,v0,h,g){
-  const rad=a*Math.PI/180;
-  const vx=v0*Math.cos(rad), vy=v0*Math.sin(rad);
-  const disc=vy*vy+2*g*h;
-  const T=disc<0?0:(vy+Math.sqrt(disc))/g;
-  const R=vx*T;
-  const H=h+vy*vy/(2*g);
-  return {vx,vy,T,R,H};
-}
-
-// ── RENDERER ───────────────────────────────────────────────────────────
 const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('mainCanvas'),antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.1;
-renderer.setClearColor(0x141c2e,1);
-
-const sc=new THREE.Scene();
-sc.fog=new THREE.FogExp2(0x141c2e,0.003);
-
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; renderer.setClearColor(0x141c2e,1);
+const sc=new THREE.Scene(); sc.fog=new THREE.FogExp2(0x141c2e,0.003);
 const cam=new THREE.PerspectiveCamera(50,1,0.1,500);
-
-// ── LIGHTS ─────────────────────────────────────────────────────────────
 sc.add(new THREE.AmbientLight(0xd8eeff,1.4));
-const sun=new THREE.DirectionalLight(0xfff8e0,2.5);
-sun.position.set(50,70,30); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-sun.shadow.camera.near=1; sun.shadow.camera.far=250;
-sun.shadow.camera.left=-100; sun.shadow.camera.right=100;
-sun.shadow.camera.top=100; sun.shadow.camera.bottom=-100;
-sc.add(sun);
-const fill=new THREE.DirectionalLight(0xd0e8ff,1.1); fill.position.set(-30,20,-20); sc.add(fill);
-const back=new THREE.DirectionalLight(0xffe8d0,0.6); back.position.set(0,-4,40); sc.add(back);
-const groundFill=new THREE.DirectionalLight(0x70b8d8,0.5); groundFill.position.set(0,2,0); sc.add(groundFill);
+const sun=new THREE.DirectionalLight(0xfff8e0,2.5); sun.position.set(50,70,30); sun.castShadow=true; sc.add(sun);
+sc.add(new THREE.DirectionalLight(0xd0e8ff,1.1).position.set(-30,20,-20));
+sc.add(new THREE.DirectionalLight(0xffe8d0,0.6).position.set(0,-4,40));
+sc.add(new THREE.DirectionalLight(0x70b8d8,0.5).position.set(0,2,0));
 
-// ── SPRITE LABEL HELPER ───────────────────────────────────────────────
-function makeTextSprite(text, fontSize, color){
-  const canvas=document.createElement('canvas');
-  canvas.width=128; canvas.height=64;
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,128,64);
-  ctx.font=`bold ${fontSize}px 'Arial',sans-serif`;
-  ctx.fillStyle=color||'#ffffff';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(text,64,32);
-  const tex=new THREE.CanvasTexture(canvas);
-  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false});
-  const sprite=new THREE.Sprite(mat);
-  sprite.renderOrder=10;
-  return sprite;
-}
+function makeTextSprite(txt,sz,col){let c=document.createElement('canvas');c.width=128;c.height=64;let ctx=c.getContext('2d');ctx.fillStyle=col||'#fff';ctx.font=`bold ${sz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,64,32);let s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));s.renderOrder=10;return s;}
 
-// ── LAB BENCH ─────────────────────────────────────────────────────────
-const BENCH_Z = 8;   // half-depth of bench in Z (total 16 m deep)
-const BENCH_X = 400; // length in X (flight direction)
-const BENCH_THICK = 0.18; // surface slab thickness
-const BENCH_LEG_H = 1.0;  // legs below surface (visual only)
-
-// Surface slab — light blue colour, emissive so fog doesn't darken it
-const surfMat = new THREE.MeshStandardMaterial({
-  color: 0x060c18, roughness: 0.55, metalness: 0.0,
-  emissive: 0x103050, emissiveIntensity: 0.25
-});
-const floor = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK, BENCH_Z*2), surfMat);
-floor.position.set(BENCH_X/2, -BENCH_THICK/2, 0);
-floor.receiveShadow = true; sc.add(floor);
-
-// Subtle wood-grain lines along X
-const grainMat = new THREE.MeshStandardMaterial({color:0x78b8d8,roughness:0.8,emissive:0x082030,emissiveIntensity:0.2});
-for(let gz=-BENCH_Z+1; gz<BENCH_Z; gz+=1.4){
-  const grain = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, 0.005, 0.04), grainMat);
-  grain.position.set(BENCH_X/2, 0.002, gz); sc.add(grain);
-}
-
-// Front and back edge trim — darker wood
-const trimMat = new THREE.MeshStandardMaterial({color:0x4a8aaa,roughness:0.5,emissive:0x082030,emissiveIntensity:0.25});
-[-BENCH_Z, BENCH_Z].forEach(z=>{
-  const trim = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK+0.02, 0.12), trimMat);
-  trim.position.set(BENCH_X/2, -BENCH_THICK/2, z + (z>0?0.06:-0.06)); sc.add(trim);
-});
-
-// Table legs / apron underneath
-const legMat = new THREE.MeshStandardMaterial({color:0x3a6880,roughness:0.6,emissive:0x081828,emissiveIntensity:0.2});
-// Apron beams (front + back)
-[-BENCH_Z+0.06, BENCH_Z-0.06].forEach(z=>{
-  const apron = new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, 0.12, 0.08), legMat);
-  apron.position.set(BENCH_X/2, -BENCH_THICK - 0.06, z); sc.add(apron);
-});
-// Legs every 20m
-for(let lx=0; lx<=BENCH_X; lx+=20){
-  [-BENCH_Z+0.3, BENCH_Z-0.3].forEach(z=>{
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, BENCH_LEG_H, 0.15), legMat);
-    leg.position.set(lx, -BENCH_THICK - BENCH_LEG_H/2, z); sc.add(leg);
-  });
-}
-
-// Grid lines on surface (faint, matching bench tone)
-const gr = new THREE.GridHelper(BENCH_X, 200, 0x4a7a9a, 0x2a5a7a);
-gr.scale.z = (BENCH_Z*2)/BENCH_X;
-gr.position.set(BENCH_X/2, 0.003, 0);
-gr.material.transparent = true; gr.material.opacity = 0.18;
-sc.add(gr);
-
-// ── MEASURING TAPE — centred on bench z=0, lying flat on surface ──────
-// Looks like a real yellow fabric measuring tape. Zero at x=0 (launch origin).
-// Tape body: 0.24m wide, alternating yellow/cream bands every 0.5m,
-// black ticks every 0.1m, numbers every 0.5m.
-const TAPE_W = 0.26;   // tape width in Z
-const TAPE_Z = 0.0;    // centred on bench
-const TAPE_Y = 0.003;  // just above bench surface
-const TAPE_LEN = 200;  // metres total (−10 to +190)
-const TAPE_START = -10;
-
-let groundRulerGrp = new THREE.Group();
-sc.add(groundRulerGrp);
-
+// BENCH - shifted left by 0.6m, no grid lines
+const BENCH_Z=8, BENCH_X=400, BENCH_THICK=0.18, BENCH_LEG_H=1.0, BENCH_OFFSET=-0.6;
+const floor=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK, BENCH_Z*2), new THREE.MeshStandardMaterial({color:0x060c18,roughness:0.55,emissive:0x103050,emissiveIntensity:0.25}));
+floor.position.set(BENCH_OFFSET+BENCH_X/2, -BENCH_THICK/2,0); floor.receiveShadow=true; sc.add(floor);
+const trimMat=new THREE.MeshStandardMaterial({color:0x4a8aaa});
+[-BENCH_Z, BENCH_Z].forEach(z=>{let t=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK+0.02,0.12),trimMat);t.position.set(BENCH_OFFSET+BENCH_X/2,-BENCH_THICK/2,z+(z>0?0.06:-0.06));sc.add(t);});
+const legMat=new THREE.MeshStandardMaterial({color:0x3a6880});
+[-BENCH_Z+0.06, BENCH_Z-0.06].forEach(z=>{let a=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X,0.12,0.08),legMat);a.position.set(BENCH_OFFSET+BENCH_X/2,-BENCH_THICK-0.06,z);sc.add(a);});
+for(let lx=BENCH_OFFSET;lx<=BENCH_OFFSET+BENCH_X;lx+=20){[-BENCH_Z+0.3,BENCH_Z-0.3].forEach(z=>{let leg=new THREE.Mesh(new THREE.BoxGeometry(0.15,BENCH_LEG_H,0.15),legMat);leg.position.set(lx,-BENCH_THICK-BENCH_LEG_H/2,z);sc.add(leg);});}
+// MEASURING TAPE - starts at x=0
+let groundRulerGrp=new THREE.Group(); sc.add(groundRulerGrp);
 function buildGroundRuler(){
-  while(groundRulerGrp.children.length) groundRulerGrp.remove(groundRulerGrp.children[0]);
-
-  // ── Tape backing: single long yellow strip ───────────────────────
-  const tapeMat = new THREE.MeshStandardMaterial({
-    color: 0xf5c842, roughness: 0.7, metalness: 0.0,
-    emissive: 0x302200, emissiveIntensity: 0.5
-  });
-  const tapeBody = new THREE.Mesh(
-    new THREE.BoxGeometry(TAPE_LEN + 20, 0.004, TAPE_W), tapeMat);
-  tapeBody.position.set((TAPE_START + TAPE_LEN/2 + 10/2), TAPE_Y, TAPE_Z);
+  groundRulerGrp.children.forEach(c=>groundRulerGrp.remove(c));
+  const TAPE_W=0.26, TAPE_Y=0.003, TAPE_LEN=220, TAPE_START=0;
+  const tapeMat=new THREE.MeshStandardMaterial({color:0xf5c842,emissive:0x302200,emissiveIntensity:0.5});
+  const tapeBody=new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20,0.004,TAPE_W),tapeMat);
+  tapeBody.position.set(TAPE_START+(TAPE_LEN+20)/2, TAPE_Y,0);
   groundRulerGrp.add(tapeBody);
-
-  // ── Alternating colour bands every 0.5 m ────────────────────────
-  const band0 = new THREE.MeshStandardMaterial({color:0xf5c842,roughness:0.7,emissive:0x302200,emissiveIntensity:0.4});
-  const band1 = new THREE.MeshStandardMaterial({color:0xfcf0c0,roughness:0.7,emissive:0x302000,emissiveIntensity:0.35});
-  for(let m=TAPE_START; m<TAPE_START+TAPE_LEN+10; m+=0.5){
-    const idx = Math.round(m*2);
-    const bMat = (idx%2===0) ? band0 : band1;
-    const band = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.005, TAPE_W*0.96), bMat);
-    band.position.set(m+0.25, TAPE_Y+0.001, TAPE_Z);
-    groundRulerGrp.add(band);
-  }
-
-  // ── Tick marks and numbers ───────────────────────────────────────
-  const tickMat = new THREE.MeshStandardMaterial({color:0x111111,roughness:0.9,emissive:0x000000});
-
-  for(let cm=TAPE_START*100; cm<=(TAPE_START+TAPE_LEN+10)*100; cm+=10){
-    const x = cm/100;
-    const isMetre   = (cm % 100 === 0);
-    const isHalf    = (cm % 50  === 0);
-    const isDeci    = (cm % 10  === 0);
-    if(!isDeci) continue;
-
-    const tH = isMetre ? TAPE_W*0.65 : isHalf ? TAPE_W*0.45 : TAPE_W*0.28;
-    const tW = isMetre ? 0.022 : isHalf ? 0.016 : 0.010;
-    const tick = new THREE.Mesh(new THREE.BoxGeometry(tW, 0.006, tH), tickMat);
-    tick.position.set(x, TAPE_Y+0.003, TAPE_Z - TAPE_W/2 + tH/2);
-    groundRulerGrp.add(tick);
-
-    if(isMetre || isHalf){
-      const label = x === 0 ? '0' : (x % 1 === 0 ? x+'m' : x.toFixed(1)+'m');
-      const col   = x === 0 ? '#ff4400' : (isMetre ? '#111111' : '#333333');
-      const fsize = isMetre ? 26 : 18;
-      const sp = makeTextSprite(label, fsize, col);
-      const sc2 = isMetre ? 0.55 : 0.38;
-      sp.scale.set(sc2, sc2*0.5, 1);
-      sp.position.set(x, TAPE_Y + (isMetre ? 0.22 : 0.15), TAPE_Z + TAPE_W*0.15);
-      groundRulerGrp.add(sp);
-    }
-  }
-
-  // ── Tape edges (thin black border strips) ────────────────────────
-  const edgeMat = new THREE.MeshStandardMaterial({color:0x111111,roughness:0.9,emissive:0x000000});
-  [-TAPE_W/2, TAPE_W/2].forEach(ez=>{
-    const edgeStrip = new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20, 0.006, 0.012), edgeMat);
-    edgeStrip.position.set((TAPE_START + TAPE_LEN/2 + 10/2), TAPE_Y+0.002, TAPE_Z+ez);
-    groundRulerGrp.add(edgeStrip);
-  });
+  const band0=new THREE.MeshStandardMaterial({color:0xf5c842}); const band1=new THREE.MeshStandardMaterial({color:0xfcf0c0});
+  for(let m=TAPE_START;m<TAPE_START+TAPE_LEN+10;m+=0.5){let bMat=(Math.round(m*2)%2===0)?band0:band1;let band=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.005,TAPE_W*0.96),bMat);band.position.set(m+0.25,TAPE_Y+0.001,0);groundRulerGrp.add(band);}
+  const tickMat=new THREE.MeshStandardMaterial({color:0x111111});
+  for(let cm=0;cm<=(TAPE_START+TAPE_LEN+10)*100;cm+=10){let x=cm/100;if(x<TAPE_START||x>TAPE_START+TAPE_LEN+10)continue;let isM=cm%100===0,isH=cm%50===0;let th=isM?0.17:isH?0.12:0.07,tw=isM?0.022:isH?0.016:0.01;let tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.006,th),tickMat);tick.position.set(x,TAPE_Y+0.003,0.13);groundRulerGrp.add(tick);if(isM||isH){let lbl=x===0?'0':(x%1===0?x+'m':x.toFixed(1)+'m');let sp=makeTextSprite(lbl,isM?26:18,'#ffffff');let sc2=isM?0.55:0.38;sp.scale.set(sc2,sc2*0.5,1);sp.position.set(x,TAPE_Y+(isM?0.22:0.15),0.2);groundRulerGrp.add(sp);}}
+  [-TAPE_W/2, TAPE_W/2].forEach(ez=>{let edgeStrip=new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20,0.006,0.012),new THREE.MeshStandardMaterial({color:0x111111}));edgeStrip.position.set(TAPE_START+(TAPE_LEN+20)/2,TAPE_Y+0.002,ez);groundRulerGrp.add(edgeStrip);});
 }
 buildGroundRuler();
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshStandardMaterial({color:0x060a10,roughness:0.98})).rotateX(-Math.PI/2).position.set(0,-BENCH_THICK-BENCH_LEG_H-0.02,0));
+sc.add(new THREE.GridHelper(600,300,0x0e1a28,0x080f18).position.set(0,-BENCH_THICK-BENCH_LEG_H-0.015,0));
+(()=>{let g=new THREE.BufferGeometry(),p=new Float32Array(3000);for(let i=0;i<1000;i++){p[i*3]=(Math.random()-.5)*600;p[i*3+1]=40+Math.random()*200;p[i*3+2]=(Math.random()-.5)*600;}g.setAttribute('position',new THREE.BufferAttribute(p,3));sc.add(new THREE.Points(g,new THREE.PointsMaterial({color:0x8899cc,size:0.45,transparent:true,opacity:.55})));})();
+sc.add(new THREE.Mesh(new THREE.SphereGeometry(8,16,16),new THREE.MeshLambertMaterial({color:0xbbc8d8,emissive:0x202840,emissiveIntensity:.3})).position.set(-120,100,-150));
 
-// ── GROUND FLOOR below bench ─────────────────────────────────────────
-const groundFloorMat = new THREE.MeshStandardMaterial({color:0x060a10,roughness:0.98});
-const groundFloor = new THREE.Mesh(new THREE.PlaneGeometry(600,600),groundFloorMat);
-groundFloor.rotation.x = -Math.PI/2;
-groundFloor.position.y = -BENCH_THICK - BENCH_LEG_H - 0.02;
-groundFloor.receiveShadow = true;
-sc.add(groundFloor);
-const groundGrid = new THREE.GridHelper(600,300,0x0e1a28,0x080f18);
-groundGrid.position.y = groundFloor.position.y + 0.005;
-sc.add(groundGrid);
-
-// Helper: make all meshes in a group render through the ground
-function setAlwaysVisible(obj){
-  if(obj.isMesh&&obj.material){
-    const m=obj.material;
-    m.depthTest=false; m.depthWrite=false;
-    obj.renderOrder=999;
-  }
-  if(obj.children) obj.children.forEach(setAlwaysVisible);
+// LAUNCHER with correct barrel positioning and screen attached by center of right side to center of left end
+let cannonGrp,_barrelPivot,_screenGrp,_updateScreenPos;
+function buildLauncher(){if(cannonGrp)sc.remove(cannonGrp);let h=S.h,mountH=Math.max(h+0.5,0.5);cannonGrp=new THREE.Group();let stand=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,mountH,12),new THREE.MeshStandardMaterial({color:0xb8ccd8,roughness:.35,metalness:.85}));stand.position.set(0,mountH/2,0);cannonGrp.add(stand);let foot=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.18,2.2),new THREE.MeshStandardMaterial({color:0x2a3c4e}));foot.position.set(0,0.09,0);cannonGrp.add(foot);[[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]].forEach(([fx,fz])=>{let s=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),new THREE.MeshStandardMaterial({color:0x889aaa}));s.position.set(fx,0.11,fz);cannonGrp.add(s);});let rulerH=mountH+0.3;let plate=new THREE.Mesh(new THREE.BoxGeometry(.07,rulerH,.15),new THREE.MeshStandardMaterial({color:0x1a2c3c}));plate.position.set(.42,rulerH/2-.05,0);cannonGrp.add(plate);for(let i=0;i<Math.ceil(rulerH/0.5)+1;i++){let y=i*0.5;if(y>rulerH+0.1)break;let isMajor=i%2===0;let tw=isMajor?0.26:0.15;let tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.014,0.018),new THREE.MeshStandardMaterial({color:isMajor?0xffffff:0x88aabb,emissive:isMajor?0x88eeff:0x203040,emissiveIntensity:.5}));tick.position.set(.42+tw/2+0.035,y,0.08);cannonGrp.add(tick);}for(let m=0;m<=Math.floor(rulerH);m++){let sp=makeTextSprite(m+'m',22,'#88eeff');sp.scale.set(0.7,0.35,1);sp.position.set(0.42+0.55,m,0.12);cannonGrp.add(sp);}
+let pivotHousing=new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.45,24),new THREE.MeshStandardMaterial({color:0x2a3c4e}));pivotHousing.rotation.z=Math.PI/2;pivotHousing.position.set(0,h,0);cannonGrp.add(pivotHousing);
+let protR=1.1;let protArc=new THREE.Mesh(new THREE.TorusGeometry(protR,.03,8,30,Math.PI/2),new THREE.MeshStandardMaterial({color:0x80c0e0,emissive:0x103050,emissiveIntensity:.5}));protArc.position.set(0,h,.24);cannonGrp.add(protArc);
+let baseLine=new THREE.Mesh(new THREE.BoxGeometry(protR*1.1,.018,.018),new THREE.MeshStandardMaterial({color:0x80c0e0}));baseLine.position.set(protR*0.55,h,.24);cannonGrp.add(baseLine);
+let vertLine=new THREE.Mesh(new THREE.BoxGeometry(.018,protR*1.1,.018),new THREE.MeshStandardMaterial({color:0x80c0e0}));vertLine.position.set(0,h+protR*0.55,.24);cannonGrp.add(vertLine);
+for(let deg=0;deg<=90;deg+=5){let rad=deg*Math.PI/180,isMaj10=deg%10===0,tlen=isMaj10?(deg%30===0?0.30:0.20):0.12;let ox=Math.cos(rad),oy=Math.sin(rad),midR=protR+0.01-tlen/2;let tck=new THREE.Mesh(new THREE.BoxGeometry(.012,tlen,.016),new THREE.MeshStandardMaterial({color:isMaj10?0xffffff:0x88aabb}));tck.rotation.z=rad-Math.PI/2;tck.position.set(ox*midR,h+oy*midR,.24);cannonGrp.add(tck);}
+let needleLen=protR*0.9,needleAngle=S.angle*Math.PI/180;let needle=new THREE.Mesh(new THREE.BoxGeometry(.018,needleLen,.016),new THREE.MeshStandardMaterial({color:0xff4444,emissive:0xff2222,emissiveIntensity:.8}));needle.rotation.z=needleAngle-Math.PI/2;needle.position.set(Math.cos(needleAngle)*needleLen/2,h+Math.sin(needleAngle)*needleLen/2,.25);cannonGrp.add(needle);
+[0,30,60,90].forEach(deg=>{let rad=deg*Math.PI/180,lx=Math.cos(rad)*protR*1.38,ly=Math.sin(rad)*protR*1.38;let sp=makeTextSprite(deg+'°',26,deg===S.angle?'#ff8888':'#aaddff');sp.scale.set(0.9,0.45,1);sp.position.set(lx,h+ly,0.3);cannonGrp.add(sp);});
+let knob=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.3,12),new THREE.MeshStandardMaterial({color:0x111820}));knob.rotation.z=Math.PI/2;knob.position.set(0,h,.82);cannonGrp.add(knob);
+_barrelPivot=new THREE.Group();_barrelPivot.position.set(0,h,0);
+// Barrel: center of first third at pivot (x=0)
+let BARREL_LEN=6.0;
+let FIRST_THIRD = BARREL_LEN/3;
+let PIVOT_OFFSET = -FIRST_THIRD/2;
+let BACK_LEN = -PIVOT_OFFSET;
+let FRONT_LEN = BARREL_LEN + PIVOT_OFFSET;
+let NEW_TOTAL_LEN = BACK_LEN + FRONT_LEN;
+let tube=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,NEW_TOTAL_LEN,16,1,true),new THREE.MeshStandardMaterial({color:0xa8d8f0,transparent:true,opacity:.38}));
+tube.rotation.z=Math.PI/2;
+tube.position.x = (FRONT_LEN - BACK_LEN)/2;
+_barrelPivot.add(tube);
+let innerGlow=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,NEW_TOTAL_LEN*0.92,12),new THREE.MeshStandardMaterial({color:0x1166ff,emissive:0x0044cc,emissiveIntensity:.8,transparent:true,opacity:.5}));
+innerGlow.rotation.z=Math.PI/2;
+innerGlow.position.x = tube.position.x;
+_barrelPivot.add(innerGlow);
+let frontCap=new THREE.Mesh(new THREE.TorusGeometry(.42,.07,8,16),new THREE.MeshStandardMaterial({color:0x8ab4cc}));frontCap.rotation.y=Math.PI/2;frontCap.position.x=FRONT_LEN;_barrelPivot.add(frontCap);
+let clamp=new THREE.Mesh(new THREE.TorusGeometry(.52,.08,8,16),new THREE.MeshStandardMaterial({color:0x2a3c4e}));clamp.rotation.y=Math.PI/2;clamp.position.x=0;_barrelPivot.add(clamp);
+// SCREEN: attached to left side of barrel, rotating with the barrel angle
+let BLOCK_W=1.6, BLOCK_H=1.2, BLOCK_D=0.8;
+let screenGrp=new THREE.Group(); _screenGrp=screenGrp;
+let outerBlock=new THREE.Mesh(new THREE.BoxGeometry(BLOCK_W, BLOCK_H, BLOCK_D),new THREE.MeshStandardMaterial({color:0x1a2a3a,roughness:0.5,metalness:0.5}));
+outerBlock.castShadow=true; outerBlock.receiveShadow=true; screenGrp.add(outerBlock);
+let greenPanel=new THREE.Mesh(new THREE.BoxGeometry(BLOCK_W-0.2, BLOCK_H-0.2, 0.1),new THREE.MeshStandardMaterial({color:0x1a5c3a,emissive:0x0a4020,emissiveIntensity:0.5}));
+greenPanel.position.set(0,0,BLOCK_D/2+0.05); screenGrp.add(greenPanel);
+function makeWhiteScreenText(txt,fontSize){
+  let c=document.createElement('canvas');c.width=512;c.height=128;let ctx=c.getContext('2d');
+  ctx.fillStyle='#ffffff';ctx.font=`bold ${fontSize}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(txt,256,64);
+  let tex=new THREE.CanvasTexture(c);let mat=new THREE.SpriteMaterial({map:tex,transparent:true});
+  let s=new THREE.Sprite(mat);return s;
 }
-
-// Stars
-(()=>{
-  const geo=new THREE.BufferGeometry();
-  const N=1000, pos=new Float32Array(N*3);
-  for(let i=0;i<N;i++){pos[i*3]=(Math.random()-.5)*600;pos[i*3+1]=40+Math.random()*200;pos[i*3+2]=(Math.random()-.5)*600;}
-  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  sc.add(new THREE.Points(geo,new THREE.PointsMaterial({color:0x8899cc,size:0.45,transparent:true,opacity:.55})));
-})();
-
-// Distant moon
-const moon=new THREE.Mesh(new THREE.SphereGeometry(8,16,16),new THREE.MeshLambertMaterial({color:0xbbc8d8,emissive:0x202840,emissiveIntensity:.3}));
-moon.position.set(-120,100,-150); sc.add(moon);
-
-// ── PROFESSIONAL LAB LAUNCHER ────────────────────────────────────────
-// The launcher mounts on the bench edge at x=0 (left edge of bench).
-// The mount (vertical column) grows with h, showing the height scale.
-// The barrel is held at its midpoint by the mount clamp; the lower half
-// hangs below the bench surface. The projectile sits at y=h (center of barrel = h).
-// A digital screen is attached at the bottom of the barrel.
-const PIVOT_BASE = 0.5;   // minimum stand height above bench
-let cannonGrp, _barrelPivot, _rulerStand, _rulerPlate, _rulerTicks, _screenGrp;
-
-function buildLauncher(){
-  if(cannonGrp){sc.remove(cannonGrp); cannonGrp=null;}
-  const h=S.h;
-  // The clamp holds the barrel at its midpoint; barrel center is at y=h above bench.
-  // Mount column goes from bench surface (y=0) up to h + a small overhead.
-  const mountH = Math.max(h + PIVOT_BASE, PIVOT_BASE);
-  cannonGrp=new THREE.Group();
-
-  // ── Vertical mount — wall-mount style column from bench (y=0) up to clamp ──
-  const standMat=new THREE.MeshStandardMaterial({color:0xb8ccd8,roughness:.35,metalness:.85});
-  // Main vertical post
-  const stand=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,mountH,12),standMat);
-  stand.position.set(0, mountH/2, 0); stand.castShadow=true; cannonGrp.add(stand);
-
-  // Foot plate that sits on the bench edge
-  const footMat=new THREE.MeshStandardMaterial({color:0x2a3c4e,roughness:.4,metalness:.7});
-  const foot=new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.18, 2.2), footMat);
-  foot.position.set(0, 0.09, 0); cannonGrp.add(foot);
-  // Foot screws
-  for(const [fx,fz] of [[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]]){
-    const screw=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),
-      new THREE.MeshStandardMaterial({color:0x889aaa,roughness:.3,metalness:.9}));
-    screw.position.set(fx,0.11,fz); cannonGrp.add(screw);
+let textZ = BLOCK_D/2+0.1;
+let barrelAngleRad=S.angle*Math.PI/180;
+let angleSp=makeWhiteScreenText('θ='+S.angle.toFixed(1)+'°',64);angleSp.scale.set(1.5,0.45,1);angleSp.position.set(0,0.35,textZ);angleSp.material.rotation=barrelAngleRad;screenGrp.add(angleSp);
+let v0Sp=makeWhiteScreenText('v₀='+S.v0.toFixed(1)+' m/s',56);v0Sp.scale.set(1.4,0.4,1);v0Sp.position.set(0,-0.02,textZ);v0Sp.material.rotation=barrelAngleRad;screenGrp.add(v0Sp);
+let hSp=makeWhiteScreenText('h='+S.h.toFixed(1)+' m',56);hSp.scale.set(1.2,0.4,1);hSp.position.set(0,-0.38,textZ);hSp.material.rotation=barrelAngleRad;screenGrp.add(hSp);
+// Store sprite refs for live updates
+screenGrp.userData.angleSp=angleSp;screenGrp.userData.v0Sp=v0Sp;screenGrp.userData.hSp=hSp;
+screenGrp.userData.makeText=makeWhiteScreenText;screenGrp.userData.textZ=textZ;
+// Position screen: rotated with the barrel, offset along barrel's local -X axis
+_updateScreenPos=function(angleRad){
+  // The back end of the barrel in world space (relative to cannonGrp origin at 0,h,0):
+  // back end local pos in _barrelPivot: x = -BACK_LEN
+  // After rotation by angleRad: world offset = (-BACK_LEN*cos(angleRad), -BACK_LEN*sin(angleRad) + h, 0)
+  let bx = -BACK_LEN*Math.cos(angleRad) - (BLOCK_W/2)*Math.cos(angleRad);
+  let by = h + (-BACK_LEN*Math.sin(angleRad)) - (BLOCK_W/2)*Math.sin(angleRad);
+  screenGrp.position.set(bx, by, 0);
+  screenGrp.rotation.z = angleRad;
+};
+_updateScreenPos(barrelAngleRad);
+cannonGrp.add(screenGrp);
+cannonGrp.add(_barrelPivot);
+cannonGrp.position.set(0,0,0);
+sc.add(cannonGrp);
+updateBarrel();}
+function updatePedestal(){ buildLauncher(); }
+function updateBarrel(){ if(_barrelPivot) _barrelPivot.rotation.z=S.angle*Math.PI/180; if(_screenGrp && typeof _updateScreenPos==='function'){ let rad=S.angle*Math.PI/180; _updateScreenPos(rad); _screenGrp.children.forEach(c=>{ if(c.isSprite && c.material) c.material.rotation=rad; }); // Refresh screen text sprites
+  let ud=_screenGrp.userData,mk=ud.makeText,tz=ud.textZ;
+  if(mk&&ud.angleSp&&ud.v0Sp&&ud.hSp){
+    function refreshSprite(sp,txt,fs){let c=document.createElement('canvas');c.width=512;c.height=128;let ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.font=`bold ${fs}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,256,64);sp.material.map.dispose();sp.material.map=new THREE.CanvasTexture(c);sp.material.map.needsUpdate=true;}
+    refreshSprite(ud.angleSp,'θ='+S.angle.toFixed(1)+'°',64);
+    refreshSprite(ud.v0Sp,'v₀='+S.v0.toFixed(1)+' m/s',56);
+    refreshSprite(ud.hSp,'h='+S.h.toFixed(1)+' m',56);
   }
-
-  // ── HEIGHT RULER — plate runs from bench (y=0) to mountH+0.3 ─────────
-  const rulerH = mountH + 0.3;
-  const plateMat=new THREE.MeshStandardMaterial({color:0x1a2c3c,roughness:.5,metalness:.3});
-  const plate=new THREE.Mesh(new THREE.BoxGeometry(.07,rulerH,.15),plateMat);
-  plate.position.set(.42,rulerH/2-.05,0); cannonGrp.add(plate);
-
-  const majMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.4,emissive:0x88eeff,emissiveIntensity:.5});
-  const minMat=new THREE.MeshStandardMaterial({color:0x88aabb,roughness:.5,emissive:0x203040,emissiveIntensity:.3});
-  const totalM=Math.ceil(rulerH/0.5)+1;
-  for(let i=0;i<totalM;i++){
-    const yPos=i*0.5;
-    if(yPos>rulerH+0.1) break;
-    const isMajor=(i%2===0);
-    const tw=isMajor?.26:.15;
-    const tick=new THREE.Mesh(new THREE.BoxGeometry(tw,.014,.018),isMajor?majMat:minMat);
-    tick.position.set(.42+tw/2+.035,yPos,.08); cannonGrp.add(tick);
-  }
-  // Ruler number labels every 1 m
-  const maxLabel=Math.floor(rulerH);
-  for(let m=0;m<=maxLabel;m++){
-    const sp=makeTextSprite(m+'m', 22, '#88eeff');
-    sp.scale.set(0.7,0.35,1);
-    sp.position.set(0.42+0.55, m, 0.12);
-    cannonGrp.add(sp);
-  }
-
-  // ── Pivot/clamp housing at height h (barrel midpoint = h) ─────────────
-  const pivotMat=new THREE.MeshStandardMaterial({color:0x2a3c4e,roughness:.4,metalness:.7});
-  const pivotHousing=new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.45,24),pivotMat);
-  pivotHousing.rotation.z=Math.PI/2; pivotHousing.position.set(0,h,0);
-  pivotHousing.castShadow=true; cannonGrp.add(pivotHousing);
-
-  // ── Protractor — 0° at right, 90° at TOP, scale goes 0→90 counterclockwise ──
-  // Arc sweeps from 0° (right, +x) to 90° (up, +y) counterclockwise in 3D
-  const protR=1.1;
-  const protMat=new THREE.MeshStandardMaterial({color:0x80c0e0,roughness:.2,metalness:.5,emissive:0x103050,emissiveIntensity:.5});
-  const protArc=new THREE.Mesh(new THREE.TorusGeometry(protR,.03,8,30,Math.PI/2),protMat);
-  protArc.rotation.z=0; // starts at +x (0°), sweeps counterclockwise to +y (90°)
-  protArc.position.set(0,h,.24); cannonGrp.add(protArc);
-  // Horizontal baseline (0° direction)
-  const baseLine=new THREE.Mesh(new THREE.BoxGeometry(protR*1.1,.018,.018),
-    new THREE.MeshStandardMaterial({color:0x80c0e0,roughness:.3,emissive:0x103050,emissiveIntensity:.4}));
-  baseLine.position.set(protR*0.55,h,.24); cannonGrp.add(baseLine);
-  // Vertical line (90° direction)
-  const vertLine=new THREE.Mesh(new THREE.BoxGeometry(.018,protR*1.1,.018),
-    new THREE.MeshStandardMaterial({color:0x80c0e0,roughness:.3,emissive:0x103050,emissiveIntensity:.4}));
-  vertLine.position.set(0,h+protR*0.55,.24); cannonGrp.add(vertLine);
-
-  // Ticks: 0° at right (+x), going counterclockwise to 90° at top (+y)
-  // Arc position for deg: cx = cos(deg*PI/180)*protR, cy = sin(deg*PI/180)*protR
-  // Tick points radially outward, so tick box (height along local Y) must be rotated
-  // so its local +Y points outward: rotate.z = arcAngle - PI/2
-  const tMaj=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3,emissive:0x88ccff,emissiveIntensity:.6});
-  const tMin=new THREE.MeshStandardMaterial({color:0x88aabb,roughness:.4,emissive:0x203040,emissiveIntensity:.3});
-  for(let deg=0;deg<=90;deg+=5){
-    const arcAngle=deg*Math.PI/180; // CCW from +x
-    const isMaj10=(deg%10===0);
-    const tlen=isMaj10?(deg%30===0?.30:.20):.12;
-    // Outer edge of tick on arc
-    const outerR = protR + 0.02;
-    const innerR = outerR - tlen;
-    const ox=Math.cos(arcAngle), oy=Math.sin(arcAngle);
-    // Tick center = midpoint between inner and outer
-    const midR = (outerR+innerR)/2;
-    const tck=new THREE.Mesh(new THREE.BoxGeometry(.012,tlen,.016),isMaj10?tMaj:tMin);
-    // Box default: height along +Y. Rotate so +Y points in radial direction (outward)
-    tck.rotation.z = arcAngle - Math.PI/2;
-    tck.position.set(ox*midR, h + oy*midR, .24);
-    cannonGrp.add(tck);
-  }
-
-  // Needle: default box along +Y. To point at angle deg from +X (CCW),
-  // rotate by (arcAngle - PI/2) so the +Y end points at arcAngle direction.
-  const needleLen=protR*0.9;
-  const needleAngle=S.angle*Math.PI/180; // CCW from +x
-  const needleMat=new THREE.MeshStandardMaterial({color:0xff4444,emissive:0xff2222,emissiveIntensity:.8});
-  const needle=new THREE.Mesh(new THREE.BoxGeometry(.018,needleLen,.016),needleMat);
-  // Rotate box so its +Y axis points in direction needleAngle from +X
-  needle.rotation.z = needleAngle - Math.PI/2;
-  // Center needle along that direction from pivot center
-  needle.position.set(
-    Math.cos(needleAngle) * needleLen/2,
-    h + Math.sin(needleAngle) * needleLen/2,
-    .25
-  );
-  cannonGrp.add(needle);
-
-  // Protractor degree labels — 0° at right, 90° at top, CCW direction
-  const protLabelDegs=[0,30,60,90];
-  const labelR=protR*1.38;
-  protLabelDegs.forEach(deg=>{
-    const arcAngle=deg*Math.PI/180;
-    const lx=Math.cos(arcAngle)*labelR;
-    const ly=Math.sin(arcAngle)*labelR; // positive y = up
-    const sp=makeTextSprite(deg+'°', 26, deg===S.angle?'#ff8888':'#aaddff');
-    sp.scale.set(0.9,0.45,1);
-    sp.position.set(lx, h+ly, 0.3);
-    cannonGrp.add(sp);
-  });
-
-  // Knob
-  const knob=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.3,12),
-    new THREE.MeshStandardMaterial({color:0x111820,roughness:.5,metalness:.6}));
-  knob.rotation.z=Math.PI/2; knob.position.set(0,h,.82); cannonGrp.add(knob);
-
-  // ── Barrel pivot group — center at y=h; lower half hangs below bench ──
-  _barrelPivot=new THREE.Group();
-  _barrelPivot.position.set(0,h,0);
-
-  const BARREL_LEN=6.0;  // longer barrel so lower half hangs well below bench
-  const BARREL_HALF=BARREL_LEN/2;
-
-  const tubeMat=new THREE.MeshStandardMaterial({
-    color:0xa8d8f0,transparent:true,opacity:.38,
-    roughness:.05,metalness:.1,side:THREE.DoubleSide
-  });
-  // Barrel centered on pivot: from -BARREL_HALF to +BARREL_HALF along local X
-  // After rotation by angle, the center stays at y=h, lower portion goes below bench
-  const tube=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,BARREL_LEN,16,1,true),tubeMat);
-  tube.rotation.z=Math.PI/2; tube.position.x=0; _barrelPivot.add(tube);
-  const innerGlow=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,BARREL_LEN*0.92,12),
-    new THREE.MeshStandardMaterial({color:0x1166ff,emissive:0x0044cc,emissiveIntensity:.8,transparent:true,opacity:.5}));
-  innerGlow.rotation.z=Math.PI/2; innerGlow.position.x=0; _barrelPivot.add(innerGlow);
-  // Caps at both ends of barrel
-  for(const px of[-BARREL_HALF, BARREL_HALF]){
-    const cap=new THREE.Mesh(new THREE.TorusGeometry(.42,.07,8,16),
-      new THREE.MeshStandardMaterial({color:0x8ab4cc,roughness:.3,metalness:.85}));
-    cap.rotation.y=Math.PI/2; cap.position.x=px; _barrelPivot.add(cap);
-  }
-  // Clamp ring at center (where mount holds barrel)
-  const clamp=new THREE.Mesh(new THREE.TorusGeometry(.52,.08,8,16),
-    new THREE.MeshStandardMaterial({color:0x2a3c4e,roughness:.4,metalness:.8}));
-  clamp.rotation.y=Math.PI/2; clamp.position.x=0; _barrelPivot.add(clamp);
-
-  // ── Digital screen at the BOTTOM end of the barrel ──────────────────
-  // Screen is a child of _barrelPivot. We use onBeforeRender to billboard it
-  // so it always faces the camera, regardless of barrel angle.
-  const screenGrp = new THREE.Group();
-  _screenGrp = screenGrp;
-  screenGrp.position.x = -BARREL_HALF - 0.05;
-
-  // Housing (faces +Z by default, billboarding corrects it)
-  const housingMat=new THREE.MeshStandardMaterial({color:0x1a2530,roughness:.3,metalness:.8});
-  const housing=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.8,.25),housingMat);
-  housing.position.set(0,0,0); screenGrp.add(housing);
-
-  const screenMat=new THREE.MeshStandardMaterial({color:0x0a1a0a,roughness:.05,
-    emissive:0x003300,emissiveIntensity:1.2});
-  const screenFace=new THREE.Mesh(new THREE.BoxGeometry(2.0,1.55,.06),screenMat);
-  screenFace.position.set(0,0,.15); screenGrp.add(screenFace);
-
-  const borderMat=new THREE.MeshStandardMaterial({color:0x3a5a6a,roughness:.3,metalness:.9});
-  const border=new THREE.Mesh(new THREE.BoxGeometry(2.1,1.65,.08),borderMat);
-  border.position.set(0,0,.12); screenGrp.add(border);
-
-  // Text sprites (always face camera on their own)
-  const angleSp=makeTextSprite('θ='+S.angle.toFixed(1)+'°', 38, '#00ff88');
-  angleSp.scale.set(1.8,0.9,1);
-  angleSp.position.set(0, 0.45, 0.25);
-  screenGrp.add(angleSp);
-
-  const v0Sp=makeTextSprite('v₀='+S.v0.toFixed(1)+' m/s', 26, '#88ccff');
-  v0Sp.scale.set(1.6,0.7,1);
-  v0Sp.position.set(0, -0.05, 0.25);
-  screenGrp.add(v0Sp);
-
-  const hSp=makeTextSprite('h='+S.h.toFixed(1)+' m', 26, '#ffcc44');
-  hSp.scale.set(1.6,0.7,1);
-  hSp.position.set(0, -0.52, 0.25);
-  screenGrp.add(hSp);
-
-  // Billboard: before each render, orient screenGrp to face camera in world space
-  screenGrp.onBeforeRender = function(renderer, scene, camera){
-    // Get world position of screen
-    const worldPos = new THREE.Vector3();
-    screenGrp.getWorldPosition(worldPos);
-    // Make screen look at camera from its world position
-    const camPos = camera.position.clone();
-    // Compute desired world quaternion: face toward camera
-    const lookDir = camPos.sub(worldPos).normalize();
-    const up = new THREE.Vector3(0,1,0);
-    const right = new THREE.Vector3().crossVectors(up, lookDir).normalize();
-    const corrUp = new THREE.Vector3().crossVectors(lookDir, right);
-    const m = new THREE.Matrix4().makeBasis(right, corrUp, lookDir);
-    const worldQuat = new THREE.Quaternion().setFromRotationMatrix(m);
-    // Convert to local quaternion (subtract parent world rotation)
-    const parentWorldQuat = new THREE.Quaternion();
-    screenGrp.parent.getWorldQuaternion(parentWorldQuat);
-    parentWorldQuat.invert();
-    screenGrp.quaternion.copy(parentWorldQuat).multiply(worldQuat);
-  };
-
-  _barrelPivot.add(screenGrp);
-
-  cannonGrp.add(_barrelPivot);
-  // Position the entire cannonGrp at the left bench edge: x=0 is launch origin
-  cannonGrp.position.set(0,0,0);
-  sc.add(cannonGrp);
-  updateBarrel();
-}
+}}
 buildLauncher();
 
-// No pedestal — h change rebuilds the launcher (ruler grows)
-function updatePedestal(){
-  buildLauncher();
-}
-updatePedestal();
-
-function updateBarrel(){if(_barrelPivot)_barrelPivot.rotation.z=S.angle*Math.PI/180;}
-
-// Manual placement helpers for Objects panel
-// Use barrel-tip origin to place objects on the actual trajectory
-function spawnPendulumManual(){
-  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-  const tip=getBarrelTip();
-  // Time to apex
-  const tApex=vy/S.g;
-  const xApex=tip.x+vx*tApex;
-  const yApex=tip.y+vy*tApex-0.5*S.g*tApex*tApex;
-  // Bob center should sit exactly at the apex point
-  placePendulum(xApex, yApex);
-}
-function spawnStackManual(){
-  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-  const tip=getBarrelTip();
-  // Analytical landing x from barrel tip
-  const a2=0.5*S.g, b2=-vy, c2=-tip.y;
-  const disc2=b2*b2-4*a2*c2;
-  const Tland=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
-  const landX=tip.x+vx*Tland;
-  placeStack(landX);
-}
-
-// ── PROJECTILE ────────────────────────────────────────────────────────
-let projectileMesh;
-(()=>{
-  const geo=new THREE.SphereGeometry(.275,16,16);
-  const mat=new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4,roughness:.4,metalness:.2});
-  projectileMesh=new THREE.Mesh(geo,mat); projectileMesh.castShadow=true;
-  // Always visible, resting at (0, h) before launch
-  projectileMesh.position.set(0, S.h, 0);
-  sc.add(projectileMesh);
-})();
-
-// Keep resting projectile position updated when h changes
-function updateProjectileRestPos(){
-  if(!isFlying) projectileMesh.position.set(0, S.h, 0);
-}
-
-// Trail
-let trailLine=null, trailPts=[], showTrail=true, showVectors=false;
-function clearTrail(){if(trailLine){sc.remove(trailLine);trailLine=null;}trailPts=[];}
-function addTrailPt(x,y,z){
-  if(!showTrail)return;
-  trailPts.push(new THREE.Vector3(x,y,z));
-  if(trailLine) sc.remove(trailLine);
-  if(trailPts.length<2) return;
-  const geo=new THREE.BufferGeometry().setFromPoints(trailPts);
-  trailLine=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xff8844,opacity:.55,transparent:true}));
-  sc.add(trailLine);
-}
-
-// Velocity vectors
+// PROJECTILE with ground collision respecting radius
+let projectileMesh=(()=>{let m=new THREE.Mesh(new THREE.SphereGeometry(.275,16,16),new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4}));m.castShadow=true;m.position.set(0,Math.max(S.h,0.275),0);sc.add(m);return m;})();
+let trailLine=null,trailPts=[],showTrail=true,showVectors=false;
+function clearTrail(){if(trailLine)sc.remove(trailLine);trailLine=null;trailPts=[];}
+function addTrailPt(x,y){if(!showTrail)return;trailPts.push(new THREE.Vector3(x,y,0));if(trailLine)sc.remove(trailLine);if(trailPts.length<2)return;let geo=new THREE.BufferGeometry().setFromPoints(trailPts);trailLine=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xff8844,opacity:.55,transparent:true}));sc.add(trailLine);}
 let vecArrows=[];
 function clearVectors(){vecArrows.forEach(a=>sc.remove(a));vecArrows=[];}
-function makeArrowVisible(arrow){
-  // Disable depth test on all sub-meshes so vectors show through ground
-  arrow.traverse(obj=>{
-    if(obj.material){obj.material.depthTest=false;obj.renderOrder=5;}
-  });
-}
-function drawVectors(x,y,z,vx,vy){
-  clearVectors(); if(!showVectors)return;
-  const o=new THREE.Vector3(x,y,z),s=.5;
-  const ax=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),o,Math.abs(vx)*s+.1,0x60dfff,.4,.25);
-  const yd=vy>=0?new THREE.Vector3(0,1,0):new THREE.Vector3(0,-1,0);
-  const ay=new THREE.ArrowHelper(yd,o,Math.abs(vy)*s+.1,0xffdd44,.4,.25);
-  makeArrowVisible(ax); makeArrowVisible(ay);
-  sc.add(ax); sc.add(ay); vecArrows=[ax,ay];
-}
-
-// Static trajectory dashed curve (explore only) — starts from barrel tip to match trail
+function drawVectors(x,y,vx,vy){clearVectors();if(!showVectors)return;let o=new THREE.Vector3(x,y,0),s=.5;
+  function makeArrow(dir,len,color){
+    let mat=new THREE.MeshBasicMaterial({color,depthTest:false,depthWrite:false,transparent:true,opacity:0.92});
+    let shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,len,8),mat);
+    let head=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.35,8),mat);
+    let grp=new THREE.Group();grp.renderOrder=999;
+    shaft.position.y=len/2;head.position.y=len+0.175;
+    grp.add(shaft);grp.add(head);
+    // rotate group so +Y aligns with dir
+    let axis=new THREE.Vector3(0,1,0),d=dir.clone().normalize();
+    grp.quaternion.setFromUnitVectors(axis,d);
+    grp.position.copy(o);
+    shaft.renderOrder=999;head.renderOrder=999;
+    return grp;
+  }
+  let lenX=Math.abs(vx)*s+0.1,lenY=Math.abs(vy)*s+0.1;
+  let ax=makeArrow(new THREE.Vector3(vx>=0?1:-1,0,0),lenX,0x60dfff);
+  let yd=vy>=0?new THREE.Vector3(0,1,0):new THREE.Vector3(0,-1,0);
+  let ay=makeArrow(yd,lenY,0xffdd44);
+  sc.add(ax,ay);vecArrows=[ax,ay];}
 let staticCurve=null;
-function drawStaticCurve(){
-  if(staticCurve){sc.remove(staticCurve);staticCurve.geometry.dispose();staticCurve=null;}
-  if(typeof currentMode!=='undefined'&&currentMode==='challenge') return;
-  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-  // Start from barrel tip (same origin as runAnim)
-  const tip=getBarrelTip();
-  const spawnX=tip.x, spawnY=tip.y;
-  // Solve spawnY + vy*t - 0.5*g*t² = 0 for landing time
-  const a2=0.5*S.g, b2=-vy, c2=-spawnY;
-  const disc2=b2*b2-4*a2*c2;
-  const T2=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
-  const pts=[]; const N=120;
-  for(let i=0;i<=N;i++){
-    const t=(i/N)*T2;
-    pts.push(new THREE.Vector3(spawnX+vx*t, Math.max(0,spawnY+vy*t-0.5*S.g*t*t), 0));
-  }
-  const geo=new THREE.BufferGeometry().setFromPoints(pts);
-  const mat=new THREE.LineDashedMaterial({color:0x1a3a5a,dashSize:.8,gapSize:.5,opacity:.5,transparent:true});
-  staticCurve=new THREE.Line(geo,mat); staticCurve.computeLineDistances(); sc.add(staticCurve);
-}
-drawStaticCurve();
-
-// Landing ring
+function drawStaticCurve(){if(staticCurve){sc.remove(staticCurve);staticCurve.geometry.dispose();}if(currentMode==='challenge')return;let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tip={x:0,y:S.h},a2=0.5*S.g,b2=-vy,c2=-tip.y,disc=b2*b2-4*a2*c2,T2=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),pts=[];for(let i=0;i<=120;i++){let t=(i/120)*T2;pts.push(new THREE.Vector3(tip.x+vx*t,Math.max(PROJ_R,tip.y+vy*t-0.5*S.g*t*t),0));}let geo=new THREE.BufferGeometry().setFromPoints(pts);let mat=new THREE.LineDashedMaterial({color:0x1a3a5a,dashSize:.8,gapSize:.5,opacity:.5,transparent:true});staticCurve=new THREE.Line(geo,mat);staticCurve.computeLineDistances();sc.add(staticCurve);}
 let landingRing=null;
-function drawLandingRing(x){
-  if(landingRing){sc.remove(landingRing);landingRing=null;}
-  const geo=new THREE.RingGeometry(.5,1.2,24);
-  const mat=new THREE.MeshBasicMaterial({color:0xff4422,transparent:true,opacity:.6,side:THREE.DoubleSide});
-  landingRing=new THREE.Mesh(geo,mat); landingRing.rotation.x=-Math.PI/2; landingRing.position.set(x,.02,0);
-  sc.add(landingRing);
-}
+function drawLandingRing(x){if(landingRing)sc.remove(landingRing);let ring=new THREE.Mesh(new THREE.RingGeometry(.5,1.2,24),new THREE.MeshBasicMaterial({color:0xff4422,transparent:true,opacity:.6,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.set(x,PROJ_R,0);sc.add(ring);landingRing=ring;}
 
-// ── CHALLENGE OBJECTS ─────────────────────────────────────────────────
-let pendulumGrp=null, pendulumBob=null, pendulumRope=null;
-let pendBobPos={x:0,y:0}, pendHit=false;
-let stackGrp=null, stackBlocks=[], stackVels=[];
-let chObjVisible=false;
+// CHALLENGE OBJECTS: pendulum longer rope, smaller bob, proper physics; blocks with gravity always on
+let pendulumGrp=null,pendulumBob=null,pendulumRope=null,pendBobPos={x:0,y:0},pendHit=false,stackGrp=null,stackBlocks=[],stackVels=[],stackAngVels=[],chObjVisible=false;
+function clearChallengeObjects(){if(pendulumGrp)sc.remove(pendulumGrp);if(stackGrp)sc.remove(stackGrp);pendulumGrp=pendulumBob=null;stackGrp=null;stackBlocks=[];stackVels=[];stackAngVels=[];chObjVisible=false;pendHit=false;}
+function placePendulum(x,y){clearChallengeObjects();pendulumGrp=new THREE.Group();let pendRopeLen=Math.max(y*1.2,3.5); // longer rope
+let pendAnchorX=x,pendAnchorY=y+pendRopeLen;window.pendAnchorX=pendAnchorX;window.pendAnchorY=pendAnchorY;window.pendRopeLen=pendRopeLen;window.pendAngle=0;window.pendAngVel=0;
+let anchor=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),new THREE.MeshStandardMaterial({color:0x4a6888}));anchor.position.set(pendAnchorX,pendAnchorY,0);pendulumGrp.add(anchor);
+let beam=new THREE.Mesh(new THREE.BoxGeometry(1.2,.1,.1),new THREE.MeshStandardMaterial({color:0x3a5570}));beam.position.set(pendAnchorX,pendAnchorY,0);pendulumGrp.add(beam);
+pendulumRope=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,pendRopeLen,6),new THREE.MeshStandardMaterial({color:0xddbb88}));pendulumRope.position.set(x,(pendAnchorY+y)/2,0);pendulumGrp.add(pendulumRope);
+pendulumBob=new THREE.Mesh(new THREE.SphereGeometry(.5,16,16),new THREE.MeshStandardMaterial({color:0x4488ff,emissive:0x1133aa})); // smaller bob
+pendulumBob.position.set(x,y,0);pendulumGrp.add(pendulumBob);
+let ring=new THREE.Mesh(new THREE.TorusGeometry(.6,.05,8,24),new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.4}));ring.rotation.x=Math.PI/2;ring.position.set(x,y,0);pendulumGrp.add(ring);
+sc.add(pendulumGrp);pendBobPos={x,y};chObjVisible=true;syncPendVars();}
+function placeStack(x){clearChallengeObjects();stackGrp=new THREE.Group();
+// Blocks standing on their small side: narrow width (bW), tall height (bH), deep (bD)
+let bW=0.7,bH=2.2,bD=1.0;
+// Two blocks stacked vertically: bottom block sits on ground, top block sits on top
+let positions=[[x, bH/2, 0],[x, bH+bH/2, 0]];
+let colors=[0x3a5a7a,0x5a3a7a];
+positions.forEach((p,i)=>{let b=new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD),new THREE.MeshStandardMaterial({color:colors[i]}));b.position.set(p[0],p[1],p[2]);stackGrp.add(b);stackBlocks.push({mesh:b,restX:p[0],restY:p[1]});stackVels.push({x:0,y:0});stackAngVels.push(0);});sc.add(stackGrp);chObjVisible=true;}
 
-function clearChallengeObjects(){
-  if(pendulumGrp){sc.remove(pendulumGrp);pendulumGrp=null;pendulumBob=null;}
-  if(stackGrp){sc.remove(stackGrp);stackGrp=null;stackBlocks=[];stackVels=[];}
-  chObjVisible=false; pendHit=false;
-}
-
-function placePendulum(x,y){
-  clearChallengeObjects();
-  pendulumGrp=new THREE.Group();
-  // y = bob center position. Rope length is fixed for good visuals.
-  pendRopeLen = Math.max(y * 0.5, 2.5);  // half the apex height, min 2.5m
-  pendAnchorX=x; pendAnchorY=y+pendRopeLen; // anchor sits above bob by rope length
-  pendAngle=0; pendAngVel=0;
-  // Anchor sphere
-  const anchor=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),
-    new THREE.MeshStandardMaterial({color:0x4a6888,metalness:.8,roughness:.3}));
-  anchor.position.set(pendAnchorX,pendAnchorY,0); pendulumGrp.add(anchor);
-  // Horizontal beam
-  const beam=new THREE.Mesh(new THREE.BoxGeometry(1.5,.12,.12),
-    new THREE.MeshStandardMaterial({color:0x3a5570,metalness:.7,roughness:.3}));
-  beam.position.set(pendAnchorX,pendAnchorY,0); pendulumGrp.add(beam);
-  // Rope
-  pendulumRope=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,pendRopeLen,8),
-    new THREE.MeshStandardMaterial({color:0xddbb88,roughness:.8}));
-  pendulumRope.position.set(x,(pendAnchorY+y)/2,0); pendulumGrp.add(pendulumRope);
-  // Bob
-  pendulumBob=new THREE.Mesh(new THREE.SphereGeometry(.7,16,16),
-    new THREE.MeshStandardMaterial({color:0x4488ff,emissive:0x1133aa,emissiveIntensity:.4,roughness:.4,metalness:.3}));
-  pendulumBob.position.set(x,y,0); pendulumBob.castShadow=true; pendulumGrp.add(pendulumBob);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.85,.06,8,24),
-    new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.4}));
-  ring.rotation.x=Math.PI/2; ring.position.set(x,y,0); pendulumGrp.add(ring);
-  sc.add(pendulumGrp);
-  pendBobPos={x,y}; pendHit=false; chObjVisible=true;
-}
-
-function placeStack(x){
-  clearChallengeObjects();
-  stackGrp=new THREE.Group();
-  stackBlocks=[]; stackVels=[];
-  // Long side vertical: bW=1.2 (narrow), bH=2.8 (tall), bD=1.5 (depth)
-  const bW=1.2,bH=2.8,bD=1.5;
-  const bMat=new THREE.MeshStandardMaterial({color:0x3a5a7a,roughness:.6,metalness:.3});
-  const tMat=new THREE.MeshStandardMaterial({color:0x5a3a7a,roughness:.6,metalness:.3});
-  // Two bottom blocks side by side, one on top
-  const positions=[[x-1.2,bH/2,0],[x+1.2,bH/2,0],[x,bH+bH/2,0]];
-  const colors=[bMat,bMat,tMat];
-  positions.forEach((p,i)=>{
-    const b=new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD),colors[i]);
-    b.position.set(...p); b.castShadow=true; b.receiveShadow=true;
-    // No edges — clean blocks only
-    stackGrp.add(b);
-    stackBlocks.push({mesh:b,restX:p[0],restY:p[1]});
-    stackVels.push({x:0,y:0});
-  });
-  sc.add(stackGrp); chObjVisible=true;
-}
-
-// ── PHYSICS STATE ─────────────────────────────────────────────────────
-// Pendulum physics: constraint-based (rope of fixed length)
-let pendAnchorX=0, pendAnchorY=0, pendRopeLen=0;
-let pendAngVel=0, pendAngle=0;  // angle from vertical, angular velocity
-const PEND_MASS=4, PROJ_MASS=1, BOUNCE_E=0.75, GROUND_E=0.65;
-// Projectile bouncing state
-let projBouncing=false, projVx=0, projVy=0, projX=0, projY=0;
-
+let pendAnchorX=0,pendAnchorY=0,pendRopeLen=0,pendAngVel=0,pendAngle=0;
+// Sync helper: copies window.pend* into local pend* vars after placePendulum sets them
+function syncPendVars(){pendAnchorX=window.pendAnchorX||0;pendAnchorY=window.pendAnchorY||0;pendRopeLen=window.pendRopeLen||0;pendAngle=window.pendAngle||0;pendAngVel=window.pendAngVel||0;}
+let projBouncing=false,projVx=0,projVy=0,projX=0,projY=0;
+let isFlying=false,isPaused=false,animT=0,animId=null,_spawnX=0,_spawnY=0;
+// Independent physics loop — keeps pendulum/blocks alive after projectile stops
+let _physLastFrame=performance.now();
+(function physLoop(now){
+  requestAnimationFrame(physLoop);
+  let dt=Math.min((now-_physLastFrame)/1000,0.05);
+  _physLastFrame=now;
+  if(!isPaused&&!isFlying&&chObjVisible)updateChallengePhysics(dt);
+})(_physLastFrame);
+const PROJ_R=0.275,GROUND_E=0.55;
+function getBarrelTip(){return{x:0,y:Math.max(S.h,PROJ_R)};}
+function fireLaunch(){if(isFlying&&!isPaused)cancelAnimationFrame(animId);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);pendHit=false;projBouncing=false;syncPendVars();if(stackGrp)stackVels.forEach(v=>{v.x=0;v.y=0;});if(pendulumGrp&&pendulumBob)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);isFlying=true;isPaused=false;animT=0;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-step-back').style.display='inline-block';document.getElementById('btn-step-fwd').style.display='inline-block';runAnim();}
+function runAnim(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tip=getBarrelTip(),spawnX=tip.x,spawnY=tip.y;_spawnX=spawnX;_spawnY=spawnY;let a2=0.5*S.g,b2=-vy,c2=-spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);let lastFrame=performance.now();projBouncing=false;projVx=vx;projVy=vy;projX=spawnX;projY=spawnY;function step(now){if(!isFlying)return;let dtRaw=(now-lastFrame)/1000,dt=isPaused?0:Math.min(dtRaw,0.05);lastFrame=now;if(!isPaused)animT+=dt;let bx,by,cvx,cvy;if(!projBouncing){bx=spawnX+vx*animT;by=spawnY+vy*animT-0.5*S.g*animT*animT;cvx=vx;cvy=vy-S.g*animT;// Check collision BEFORE ground transition so blocks/pendulum in path are hit
+if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);if(!pendHit&&animT>=Tland&&Tland>0){projBouncing=true;projX=spawnX+vx*Tland;projY=PROJ_R;projVx=cvx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}if(projBouncing&&!pendHit){bx=projX;by=projY;}}if(projBouncing){if(!isPaused){projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;}if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05){projVx=0;projVy=0;isFlying=false;document.getElementById('btn-pause').style.display='none';}}}bx=projX;by=projY;cvx=projVx;cvy=projVy;if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);}if(chObjVisible&&!isPaused)updateChallengePhysics(dt);projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';if(isFlying)animId=requestAnimationFrame(step);}animId=requestAnimationFrame(step);}
+function checkCollision(bx,by,vx,vy){if(pendulumBob&&!pendHit){let pb=pendulumBob.position,dist=Math.hypot(bx-pb.x,by-pb.y);if(dist<0.5+PROJ_R){pendHit=true;let nx=(bx-pb.x)/dist,ny=(by-pb.y)/dist;projX=pb.x+nx*(0.5+PROJ_R);projY=pb.y+ny*(0.5+PROJ_R);let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;let ropeX=pb.x-pendAnchorX,ropeY=pb.y-pendAnchorY,ropeLen=Math.hypot(ropeX,ropeY),tanX=-ropeY/ropeLen,tanY=ropeX/ropeLen,tanSpeed=(v2nNew*nx)*tanX+(v2nNew*ny)*tanY;pendAngle=Math.atan2(pb.x-pendAnchorX,-(pb.y-pendAnchorY));pendAngVel=tanSpeed/ropeLen;projBouncing=true;flashHit(pb.x,pb.y);}}if(stackBlocks.length>0&&!pendHit){for(let b of stackBlocks){let bp=b.mesh.position,hw=b.mesh.geometry.parameters.width/2+PROJ_R,hh=b.mesh.geometry.parameters.height/2+PROJ_R;if(Math.abs(bx-bp.x)<hw&&Math.abs(by-bp.y)<hh){pendHit=true;let ox=hw-Math.abs(bx-bp.x),oy=hh-Math.abs(by-bp.y),nx=0,ny=0;if(ox<oy)nx=(bx<bp.x?-1:1);else ny=(by<bp.y?-1:1);projX=bx+nx*ox;projY=by+ny*oy;let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;projBouncing=true;let idx=stackBlocks.indexOf(b);if(idx!==-1){stackVels[idx]={x:v2nNew*nx,y:v2nNew*ny};let halfW=b.mesh.geometry.parameters.width/2,impactX=(bx-bp.x),impactY=(by-bp.y);let tangX=-ny,tangY=nx;let arm=impactX*tangX+impactY*tangY;stackAngVels[idx]+=(v2nNew*m2)*arm*0.6;}flashHit(bp.x,bp.y);break;}}}}
 function updateChallengePhysics(dt){
-  // ── Pendulum oscillation (constraint-based) ─────────────────────
-  if(pendulumBob&&pendulumGrp&&pendHit){
-    // θ'' = -(g/L)*sin(θ) - damping*θ'
-    const gL=S.g/Math.max(pendRopeLen,0.5);
-    pendAngVel += (-gL*Math.sin(pendAngle) - 0.015*pendAngVel)*dt;
-    pendAngle  += pendAngVel*dt;
-    // Bob position from anchor
-    const bx=pendAnchorX + pendRopeLen*Math.sin(pendAngle);
-    const by=pendAnchorY - pendRopeLen*Math.cos(pendAngle);
-    pendBobPos.x=bx; pendBobPos.y=by;
-    pendulumBob.position.set(bx,by,0);
-    // Update rope: stretch from anchor to bob
-    if(pendulumRope){
-      const midX=(pendAnchorX+bx)/2, midY=(pendAnchorY+by)/2;
-      pendulumRope.position.set(midX,midY,0);
-      const dx=bx-pendAnchorX, dy=by-pendAnchorY;
-      const len=Math.sqrt(dx*dx+dy*dy);
-      pendulumRope.scale.y=len/Math.max(pendRopeLen,0.01);
-      pendulumRope.rotation.z=Math.atan2(dx,-dy);
-    }
-  }
-  // ── Stack blocks with gravity + ground bounce + block-block collision ─
-  if(stackBlocks.length>0&&pendHit){
-    stackBlocks.forEach((b,i)=>{
-      if(stackVels[i].x===0&&stackVels[i].y===0) return;
-      stackVels[i].y -= S.g*dt;
-      b.mesh.position.x += stackVels[i].x*dt;
-      b.mesh.position.y += stackVels[i].y*dt;
-      // Rotation: tip about the center of mass (natural for a rigid body with horizontal impulse)
-      b.mesh.rotation.z += stackVels[i].x * dt * 0.18;
-      // Ground contact: center.y must be >= halfH (bottom face at y=0)
-      const halfH=b.mesh.geometry.parameters.height/2;
-      if(b.mesh.position.y <= halfH){
-        b.mesh.position.y = halfH; // rest center at halfH so bottom is at y=0
-        if(Math.abs(stackVels[i].y)>0.3){
-          stackVels[i].y *= -BOUNCE_E;
-          stackVels[i].x *= 0.82;
-        } else {
-          stackVels[i].y=0; stackVels[i].x*=0.65;
-          if(Math.abs(stackVels[i].x)<0.04) stackVels[i].x=0;
-        }
-      }
-    });
-    // Block-block separation (simple overlap push)
-    for(let i=0;i<stackBlocks.length;i++){
-      for(let j=i+1;j<stackBlocks.length;j++){
-        const a=stackBlocks[i].mesh, b2=stackBlocks[j].mesh;
-        const pw=a.geometry.parameters.width/2+b2.geometry.parameters.width/2;
-        const ph=a.geometry.parameters.height/2+b2.geometry.parameters.height/2;
-        const dx=b2.position.x-a.position.x, dy=b2.position.y-a.position.y;
-        if(Math.abs(dx)<pw&&Math.abs(dy)<ph){
-          // Overlap — push apart with elastic impulse
-          const ox=pw-Math.abs(dx), oy=ph-Math.abs(dy);
-          if(ox<oy){
-            const push=ox/2; const sign=dx>=0?1:-1;
-            a.position.x-=sign*push; b2.position.x+=sign*push;
-            const va=stackVels[i].x, vb=stackVels[j].x;
-            stackVels[i].x=vb; stackVels[j].x=va; // elastic 1D exchange
-          } else {
-            const push=oy/2; const sign=dy>=0?1:-1;
-            a.position.y-=sign*push; b2.position.y+=sign*push;
-            const va=stackVels[i].y, vb=stackVels[j].y;
-            stackVels[i].y=vb; stackVels[j].y=va;
-          }
-        }
-      }
-    }
+// --- Pendulum physics with energy-dissipating damping ---
+if(pendulumBob&&(pendHit||Math.abs(pendAngVel)>0.0001||Math.abs(pendAngle)>0.0001)){
+  let gL=S.g/Math.max(pendRopeLen,0.5);
+  // Damping coefficient chosen so oscillations fade visibly but not instantly
+  let damping=0.025;
+  pendAngVel+=(-gL*Math.sin(pendAngle)-damping*pendAngVel)*dt;
+  pendAngle+=pendAngVel*dt;
+  let bx=pendAnchorX+pendRopeLen*Math.sin(pendAngle),by=pendAnchorY-pendRopeLen*Math.cos(pendAngle);
+  pendulumBob.position.set(bx,by,0);
+  if(pendulumRope){
+    pendulumRope.position.set((pendAnchorX+bx)/2,(pendAnchorY+by)/2,0);
+    let len=Math.hypot(bx-pendAnchorX,by-pendAnchorY);
+    pendulumRope.scale.y=len/pendRopeLen;
+    pendulumRope.rotation.z=Math.atan2(bx-pendAnchorX,-(by-pendAnchorY));
   }
 }
-
-// ── ANIMATION ─────────────────────────────────────────────────────────
-let isFlying=false, isPaused=false, animT=0;
-let animId=null;
-let animStartTime=0, animPauseOffset=0;
-let px=0, py=0, pvx=0, pvy=0;
-let lastFrameTime=0;
-let bouncesLeft=6;
-const GROUND_BOUNCE=0.65, GROUND_FRICTION=0.98;
-const COEFF_RESTITUTION=0.85;
-const PROJ_R=0.275;
-// Module-level spawn position — set each time fireLaunch is called
-let _spawnX=0, _spawnY=0;
-
-// Physics launch origin: projectile center always starts at x=0, y=S.h.
-function getBarrelTip(){
-  return { x: 0, y: S.h };
-}
-
-function fireLaunch(){
-  if(isFlying&&!isPaused){cancelAnimationFrame(animId);}
-  clearTrail(); clearVectors();
-  if(landingRing){sc.remove(landingRing);landingRing=null;}
-  pendHit=false; projBouncing=false;
-  if(stackGrp) stackVels.forEach(v=>{v.x=0;v.y=0;});
-  if(pendulumGrp&&pendulumBob){const pp=pendBobPos;pendulumBob.position.set(pp.x,pp.y,0);}
-  projectileMesh.position.set(0, S.h, 0); isFlying=true; isPaused=false; animT=0;
-  animStartTime=performance.now(); animPauseOffset=0;
-  document.getElementById('btn-pause').style.display='inline-block';
-  document.getElementById('btn-step-back').style.display='inline-block';
-  document.getElementById('btn-step-fwd').style.display='inline-block';
-  document.getElementById('btn-pause').textContent='⏸ Pause';
-  const {T}=compute(S.angle,S.v0,S.h,S.g);
-  runAnim();
-}
-
-function runAnim(){
-  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-  const tip=getBarrelTip();
-  const spawnX=tip.x, spawnY=tip.y;
-  _spawnX=spawnX; _spawnY=spawnY;
-  // Analytical landing time: spawnY + vy*t - 0.5*g*t² = 0
-  const a2=0.5*S.g, b2=-vy, c2=-spawnY;
-  const disc2=b2*b2-4*a2*c2;
-  const Tland=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
-
-  let lastFrameTime=performance.now();
-  projBouncing=false; projVx=vx; projVy=vy; projX=spawnX; projY=spawnY;
-
-  function step(now){
-    if(!isFlying) return;
-    const dtRaw=(now-lastFrameTime)/1000;
-    const dt=isPaused?0:Math.min(dtRaw,0.05);
-    lastFrameTime=now;
-    if(!isPaused) animT+=dt;
-
-    let bx,by,cvx,cvy;
-
-    if(!projBouncing){
-      // Exact parabolic position from barrel tip
-      bx=spawnX+vx*animT;
-      by=spawnY+vy*animT-0.5*S.g*animT*animT;
-      cvx=vx; cvy=vy-S.g*animT;
-      // Land at the analytically computed time (avoids frame-late drift)
-      if(animT>=Tland&&Tland>0){
-        projBouncing=true;
-        projX=spawnX+vx*Tland; projY=0;
-        projVx=cvx*0.85; projVy=Math.abs(vy-S.g*Tland)*GROUND_E;
-        bx=projX; by=0;
-        drawLandingRing(projX);
-      }
-      if(!pendHit&&chObjVisible) checkCollision(bx,by,cvx,cvy);
-      if(projBouncing&&!pendHit){bx=projX;by=projY;}
-    }
-
-    if(projBouncing){
-      if(!isPaused){
-        projVy-=S.g*dt;
-        projX+=projVx*dt;
-        projY+=projVy*dt;
-      }
-      if(projY<=0){
-        projY=0;
-        const spd=Math.abs(projVy);
-        if(spd>0.4){
-          projVy=spd*GROUND_E;
-          projVx*=0.90;
-        } else {
-          projVy=0; projVx*=0.6;
-          if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05){
-            projVx=0; projVy=0;
-            isFlying=false;
-            document.getElementById('btn-pause').style.display='none';
-          }
-        }
-      }
-      bx=projX; by=projY; cvx=projVx; cvy=projVy;
-      if(!pendHit&&chObjVisible) checkCollision(bx,by,cvx,cvy);
-    }
-
-    if(chObjVisible) updateChallengePhysics(dt);
-
-    projectileMesh.position.set(bx,by,0);
-    addTrailPt(bx,by,0);
-    drawVectors(bx,by,0,cvx,cvy);
-    document.getElementById('v-vx').textContent=(cvx).toFixed(2)+' m/s';
-    document.getElementById('v-vy').textContent=(cvy).toFixed(2)+' m/s';
-
-    if(isFlying) animId=requestAnimationFrame(step);
-  }
-  animId=requestAnimationFrame(step);
-}
-
-function checkCollision(bx,by,vx,vy){
-  // ── Pendulum elastic collision ────────────────────────────────────
-  if(pendulumBob&&!pendHit){
-    const pb=pendulumBob.position;
-    const dist=Math.sqrt((bx-pb.x)**2+(by-pb.y)**2);
-    const minDist=0.7+PROJ_R; // bob radius + proj radius
-    if(dist<minDist){
-      pendHit=true;
-      // Normal points FROM bob center TO projectile center
-      const nx=(bx-pb.x)/Math.max(dist,0.001), ny=(by-pb.y)/Math.max(dist,0.001);
-      // Push projectile outside bob (no penetration)
-      projX=pb.x+nx*minDist; projY=pb.y+ny*minDist;
-      // Elastic 1D collision along collision normal
-      const m1=PROJ_MASS, m2=PEND_MASS;
-      const v1n=vx*nx+vy*ny;  // proj velocity component along normal
-      const v2n=0;             // bob initially at rest
-      // 1D elastic formulas
-      const v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2);
-      const v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2);
-      // Tangential components of projectile velocity (unchanged)
-      const v1tx=vx-v1n*nx, v1ty=vy-v1n*ny;
-      projVx=v1tx+v1nNew*nx; projVy=v1ty+v1nNew*ny;
-      // Bob velocity after collision: v2nNew is along +n direction (bob → projectile → away from bob)
-      // Since nx = (proj - bob)/dist and v1n > 0 means proj moving toward bob,
-      // v2nNew = 2*m1*v1n/(m1+m2) > 0, so bob moves in +n direction = away from bob = same as projectile
-      const bobVx=v2nNew*nx, bobVy=v2nNew*ny;
-      // Compute pendulum angular velocity from bob's linear velocity
-      // Tangential direction at bob: perpendicular to rope (anchor→bob direction)
-      const ropeX=pb.x-pendAnchorX, ropeY=pb.y-pendAnchorY;
-      const ropeLen=Math.sqrt(ropeX*ropeX+ropeY*ropeY);
-      // Tangent vector (counterclockwise perpendicular to rope)
-      const tanX=-ropeY/ropeLen, tanY=ropeX/ropeLen;
-      // Angular velocity = tangential component of bob velocity / rope length
-      const tanSpeed=bobVx*tanX+bobVy*tanY;
-      pendAngle=Math.atan2(pb.x-pendAnchorX, -(pb.y-pendAnchorY));
-      pendAngVel=tanSpeed/Math.max(pendRopeLen,0.5);
-      projBouncing=true;
-      flashHit(pb.x,pb.y);
-    }
-  }
-  // ── Stack elastic collision ───────────────────────────────────────
-  if(stackBlocks.length>0&&!pendHit){
-    let hit=false;
-    stackBlocks.forEach((b,i)=>{
-      if(hit) return;
-      const bp=b.mesh.position;
-      const hw=b.mesh.geometry.parameters.width/2+PROJ_R;
-      const hh=b.mesh.geometry.parameters.height/2+PROJ_R;
-      const dx=Math.abs(bx-bp.x), dy=Math.abs(by-bp.y);
-      if(dx<hw&&dy<hh){
-        hit=true; pendHit=true;
-        // No-penetration: find shallowest axis
-        const ox=hw-dx, oy=hh-dy;
-        let nx=0,ny=0;
-        if(ox<oy){nx=(bx<bp.x?-1:1);}
-        else{ny=(by<bp.y?-1:1);}
-        // Push proj out of block (no penetration)
-        projX=bx+(nx*(ox)||0); projY=(by+(ny*(oy)||0));
-        // Elastic 1D collision along collision normal
-        // Both masses: projectile m1=PROJ_MASS, block m2=PEND_MASS (equal treatment)
-        const m1=PROJ_MASS, m2=PEND_MASS;
-        const v1n=vx*nx+vy*ny;  // proj speed along normal
-        const v2n=0;             // block initially at rest
-        // Elastic formulas: conserve momentum + KE
-        const v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2);
-        const v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2);
-        // Tangential components of projectile unchanged
-        const v1tx=vx-v1n*nx, v1ty=vy-v1n*ny;
-        projVx=v1tx+v1nNew*nx; projVy=v1ty+v1nNew*ny;
-        projBouncing=true;
-        // Block gets velocity along normal only (elastic, no random noise)
-        stackVels[i]={x:v2nNew*nx, y:v2nNew*ny};
-        // Cascade: nearby blocks get scaled elastic impulse (no random noise)
-        stackBlocks.forEach((_,j)=>{
-          if(j!==i){
-            const bp2=stackBlocks[j].mesh.position;
-            const d=Math.sqrt((bp.x-bp2.x)**2+(bp.y-bp2.y)**2);
-            if(d<4&&stackVels[j].x===0&&stackVels[j].y===0){
-              const cascadeScale=0.4*(1-d/4);
-              const dirX=(bp2.x-bp.x)/Math.max(d,0.1);
-              const dirY=(bp2.y-bp.y)/Math.max(d,0.1);
-              const spd=Math.abs(v2nNew)*cascadeScale;
-              stackVels[j]={x:dirX*spd, y:dirY*spd+1.0};
-            }
-          }
-        });
-        flashHit(bp.x,bp.y);
-      }
-    });
-  }
-}
-
-function flashHit(x,y){
-  const spark=new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),
-    new THREE.MeshBasicMaterial({color:0xffee44,transparent:true,opacity:.9}));
-  spark.position.set(x,y,0); sc.add(spark);
-  let a=0.9;
-  const fade=()=>{a-=0.08;spark.material.opacity=a;if(a>0)requestAnimationFrame(fade);else sc.remove(spark);};
-  requestAnimationFrame(fade);
-}
-
-function togglePause(){
-  if(!isFlying&&!isPaused) return;
-  isPaused=!isPaused;
-  document.getElementById('btn-pause').textContent=isPaused?'▶ Resume':'⏸ Pause';
-}
-
-function stepAnim(delta){
-  if(!projectileMesh.visible) return;
-  isPaused=true;
-  isFlying=true; // ensure animation loop keeps running for further steps
-  document.getElementById('btn-pause').style.display='inline-block';
-  document.getElementById('btn-pause').textContent='▶ Resume';
-  const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-  // Compute Tland from spawn point
-  const a2=0.5*S.g, b2=-vy, c2=-_spawnY;
-  const disc2=b2*b2-4*a2*c2;
-  const Tland=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
-
-  let bx,by,cvx,cvy;
-  if(!projBouncing){
-    animT=Math.max(0,Math.min(animT+delta, Tland+0.001));
-    if(animT<=Tland){
-      bx=_spawnX+vx*animT;
-      by=Math.max(0,_spawnY+vy*animT-0.5*S.g*animT*animT);
-      cvx=vx; cvy=vy-S.g*animT;
-      if(animT>=Tland){
-        projBouncing=true;
-        projX=_spawnX+vx*Tland; projY=0;
-        projVx=vx*0.85; projVy=Math.abs(vy-S.g*Tland)*GROUND_E;
-        bx=projX; by=0; cvx=projVx; cvy=projVy;
-        drawLandingRing(projX);
-      }
-    }
-  } else {
-    // Step in bouncing phase — apply velocity for delta time
-    const dt=delta;
-    projVy-=S.g*dt;
-    projX+=projVx*dt;
-    projY+=projVy*dt;
-    if(projY<=0){
-      projY=0;
-      const spd=Math.abs(projVy);
-      if(spd>0.4){projVy=spd*GROUND_E;projVx*=0.90;}
-      else{projVy=0;projVx*=0.6;}
-    }
-    bx=projX; by=projY; cvx=projVx; cvy=projVy;
-    if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05&&projY<=0){
-      projVx=0;projVy=0;
-    }
-  }
-  projectileMesh.position.set(bx,by,0);
-  addTrailPt(bx,by,0);
-  document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';
-  document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';
-  drawVectors(bx,by,0,cvx||0,cvy||0);
-}
-
-function resetScene(){
-  if(animId) cancelAnimationFrame(animId);
-  isFlying=false; isPaused=false; animT=0;
-  projectileMesh.position.set(0, S.h, 0); // rest at (0, h)
-  clearTrail(); clearVectors();
-  if(landingRing){sc.remove(landingRing);landingRing=null;}
-  pendHit=false;
-  px=0;py=S.h;pvx=0;pvy=0;bouncesLeft=6;
-  if(pendulumBob&&pendulumGrp){
-    pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);
-    pendAngle=0; pendAngVel=0;
-  }
-  if(stackBlocks.length){
-    resetStackPositions();
-  }
-  document.getElementById('btn-pause').style.display='none';
-  document.getElementById('btn-step-back').style.display='none';
-  document.getElementById('btn-step-fwd').style.display='none';
-  drawStaticCurve(); updateHUD();
-}
-function resetStackPositions(){
-  if(!stackGrp||stackBlocks.length===0) return;
+// --- Block physics with gravity and elastic inter-block collisions ---
+if(stackBlocks.length){
+  const BLOCK_E=0.72; // restitution coefficient for block-block collisions
+  const GROUND_E_B=0.45; // ground restitution
   stackBlocks.forEach((b,i)=>{
-    b.mesh.position.set(b.restX,b.restY,0);
-    stackVels[i]={x:0,y:0};
-    b.mesh.rotation.z=0;
+    stackVels[i].y-=S.g*dt;
+    b.mesh.position.x+=stackVels[i].x*dt;
+    b.mesh.position.y+=stackVels[i].y*dt;
+    b.mesh.rotation.z+=stackAngVels[i]*dt;
+    stackAngVels[i]*=0.985;
+    // Ground collision
+    let halfH=b.mesh.geometry.parameters.height/2;
+    if(b.mesh.position.y<=halfH){
+      b.mesh.position.y=halfH;
+      let spd=Math.abs(stackVels[i].y);
+      if(spd>0.3){
+        stackVels[i].y=spd*GROUND_E_B;
+        stackVels[i].x*=0.82;
+        stackAngVels[i]*=0.75;
+      }else{
+        stackVels[i].y=0;
+        stackVels[i].x*=0.78;
+        if(Math.abs(stackVels[i].x)<0.04)stackVels[i].x=0;
+        if(Math.abs(stackAngVels[i])<0.015)stackAngVels[i]=0;
+      }
+    }
+    if(b.mesh.position.x<-10||b.mesh.position.x>400)stackVels[i].x*=-0.85;
   });
-}
-
-// ── HUD UPDATE ─────────────────────────────────────────────────────────
-function updateHUD(){
-  const {vx,vy,T,R,H}=compute(S.angle,S.v0,S.h,S.g);
-  document.getElementById('v-angle').textContent=S.angle.toFixed(1)+'°';
-  document.getElementById('v-v0').textContent=S.v0.toFixed(1)+' m/s';
-  document.getElementById('v-h').textContent=S.h.toFixed(1)+' m';
-  document.getElementById('v-g').textContent=S.g.toFixed(2)+' m/s²';
-  document.getElementById('v-range').textContent=R.toFixed(2)+' m';
-  document.getElementById('v-maxh').textContent=H.toFixed(2)+' m';
-  document.getElementById('v-time').textContent=T.toFixed(2)+' s';
-  document.getElementById('v-vx').textContent=vx.toFixed(2)+' m/s';
-  document.getElementById('v-vy').textContent=vy.toFixed(2)+' m/s';
-  drawStaticCurve();
-  updateBarrel();
-}
-updateHUD();
-
+  // Block-block elastic collision with energy loss (restitution < 1)
+  for(let i=0;i<stackBlocks.length;i++){
+    for(let j=i+1;j<stackBlocks.length;j++){
+      const a=stackBlocks[i].mesh,b2=stackBlocks[j].mesh;
+      const pw=(a.geometry.parameters.width+b2.geometry.parameters.width)/2;
+      const ph=(a.geometry.parameters.height+b2.geometry.parameters.height)/2;
+      const dx=b2.position.x-a.position.x,dy=b2.position.y-a.position.y;
+      if(Math.abs(dx)<pw&&Math.abs(dy)<ph){
+        const ox=pw-Math.abs(dx),oy=ph-Math.abs(dy);
+        if(ox<oy){
+          // Horizontal collision
+          const push=ox/2;const sign=dx>=0?1:-1;
+          a.position.x-=sign*push;b2.position.x+=sign*push;
+          // Elastic collision with restitution: v_rel_after = -e * v_rel_before (equal masses -> swap + dampen)
+          const va=stackVels[i].x,vb=stackVels[j].x;
+          const vRel=va-vb;
+          stackVels[i].x=va-(1+BLOCK_E)/2*vRel;
+          stackVels[j].x=vb+(1+BLOCK_E)/2*vRel;
+          // Impart some angular momentum from off-center impact
+          stackAngVels[i]+=(stackVels[j].x-va)*0.4;
+          stackAngVels[j]+=(stackVels[i].x-vb)*0.4;
+        }else{
+          // Vertical collision
+          const push=oy/2;const sign=dy>=0?1:-1;
+          a.position.y-=sign*push;b2.position.y+=sign*push;
+          const va=stackVels[i].y,vb=stackVels[j].y;
+          const vRel=va-vb;
+          stackVels[i].y=va-(1+BLOCK_E)/2*vRel;
+          stackVels[j].y=vb+(1+BLOCK_E)/2*vRel;
+        }
+      }
+    }
+  }
+}}
+function flashHit(x,y){let s=new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),new THREE.MeshBasicMaterial({color:0xffee44,transparent:true,opacity:.9}));s.position.set(x,y,0);sc.add(s);let op=0.9;function fade(){op-=0.08;s.material.opacity=op;if(op>0)requestAnimationFrame(fade);else sc.remove(s);}requestAnimationFrame(fade);}
+function togglePause(){if(!isFlying&&!isPaused)return;isPaused=!isPaused;document.getElementById('btn-pause').textContent=isPaused?'▶ Resume':'⏸ Pause';}
+function stepAnim(delta){if(!projectileMesh.visible)return;isPaused=true;isFlying=true;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-pause').textContent='▶ Resume';let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-_spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),bx,by,cvx,cvy;if(!projBouncing){animT=Math.max(0,Math.min(animT+delta,Tland+0.001));if(animT<=Tland){bx=_spawnX+vx*animT;by=Math.max(PROJ_R,_spawnY+vy*animT-0.5*S.g*animT*animT);cvx=vx;cvy=vy-S.g*animT;if(animT>=Tland){projBouncing=true;projX=_spawnX+vx*Tland;projY=PROJ_R;projVx=vx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}}}else{let dt=delta;projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;}}bx=projX;by=projY;cvx=projVx;cvy=projVy;}projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';}
+function resetScene(){if(animId)cancelAnimationFrame(animId);isFlying=false;isPaused=false;animT=0;projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);landingRing=null;pendHit=false;if(pendulumBob&&pendulumGrp)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);if(stackBlocks.length)stackBlocks.forEach((b,i)=>{b.mesh.position.set(b.restX,b.restY,0);stackVels[i]={x:0,y:0};stackAngVels[i]=0;b.mesh.rotation.z=0;});document.getElementById('btn-pause').style.display='none';document.getElementById('btn-step-back').style.display='none';document.getElementById('btn-step-fwd').style.display='none';drawStaticCurve();updateHUD();}
+function updateHUD(){let {vx,vy,T,R,H}=compute(S.angle,S.v0,S.h,S.g);document.getElementById('v-angle').innerText=S.angle.toFixed(1)+'°';document.getElementById('v-v0').innerText=S.v0.toFixed(1)+' m/s';document.getElementById('v-h').innerText=S.h.toFixed(1)+' m';document.getElementById('v-g').innerText=S.g.toFixed(2)+' m/s²';document.getElementById('v-range').innerText=R.toFixed(2)+' m';document.getElementById('v-maxh').innerText=H.toFixed(2)+' m';document.getElementById('v-time').innerText=T.toFixed(2)+' s';document.getElementById('v-vx').innerText=vx.toFixed(2)+' m/s';document.getElementById('v-vy').innerText=vy.toFixed(2)+' m/s';drawStaticCurve();updateBarrel();}
 function hideHUDRow(id){document.getElementById(id).style.display='none';}
 function showHUDRow(id){document.getElementById(id).style.display='flex';}
 function showAllHUDRows(){['row-range','row-maxh','row-time','row-vx','row-vy'].forEach(showHUDRow);}
-
-// ── CONTROLS ───────────────────────────────────────────────────────────
-function onAngle(){const v=parseFloat(document.getElementById('sl-angle').value);S.angle=v;document.getElementById('lbl-angle').textContent=v.toFixed(1)+'°';buildLauncher();updateHUD();}
-function onV0(){const v=parseFloat(document.getElementById('sl-v0').value);S.v0=v;document.getElementById('lbl-v0').textContent=v.toFixed(1)+' m/s';updateHUD();}
-function onH(){const v=parseFloat(document.getElementById('sl-h').value);S.h=v;document.getElementById('lbl-h').textContent=v.toFixed(1)+' m';updatePedestal();updateHUD();updateProjectileRestPos();}
-function onG(){const v=parseFloat(document.getElementById('sl-g').value);S.g=v;document.getElementById('lbl-g').textContent=v.toFixed(2);updateHUD();}
-function setG(v){S.g=v;document.getElementById('sl-g').value=v;document.getElementById('lbl-g').textContent=v.toFixed(2);updateHUD();}
+function onAngle(){S.angle=parseFloat(document.getElementById('sl-angle').value);document.getElementById('lbl-angle').innerText=S.angle.toFixed(1)+'°';buildLauncher();updateHUD();}
+function onV0(){S.v0=parseFloat(document.getElementById('sl-v0').value);document.getElementById('lbl-v0').innerText=S.v0.toFixed(1)+' m/s';updateHUD();updateBarrel();}
+function onH(){S.h=parseFloat(document.getElementById('sl-h').value);document.getElementById('lbl-h').innerText=S.h.toFixed(1)+' m';updatePedestal();updateHUD();projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);}
+function onG(){S.g=parseFloat(document.getElementById('sl-g').value);document.getElementById('lbl-g').innerText=S.g.toFixed(2);updateHUD();}
+function setG(v){S.g=v;document.getElementById('sl-g').value=v;document.getElementById('lbl-g').innerText=v.toFixed(2);updateHUD();}
 function onTrail(){showTrail=document.getElementById('cb-trail').checked;if(!showTrail)clearTrail();}
 function onVectors(){showVectors=document.getElementById('cb-vectors').checked;if(!showVectors)clearVectors();}
-
-// ── ORBIT ─────────────────────────────────────────────────────────────
-let isDrag=false,lastMouse={x:0,y:0};
-let orb={theta:0.4,phi:0.9,radius:30,cx:10,cy:4,cz:0};
-function applyCam(){
-  cam.position.set(
-    orb.cx+orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta),
-    orb.cy+orb.radius*Math.cos(orb.phi),
-    orb.cz+orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta)
-  );
-  cam.lookAt(orb.cx,orb.cy,orb.cz);
-}
-applyCam();
-// Camera animation state
-let camAnimId=null;
-let camTarget={theta:0.4,phi:0.9,radius:30,cx:10,cy:4,cz:0};
-
-function animateCamTo(target){
-  if(camAnimId) cancelAnimationFrame(camAnimId);
-  const start={theta:orb.theta,phi:orb.phi,radius:orb.radius,cx:orb.cx,cy:orb.cy,cz:orb.cz};
-  const end=Object.assign({},target);
-  const duration=700; // ms
-  const t0=performance.now();
-  // Handle theta wrap-around (choose shortest arc)
-  let dTheta=end.theta-start.theta;
-  while(dTheta>Math.PI) dTheta-=2*Math.PI;
-  while(dTheta<-Math.PI) dTheta+=2*Math.PI;
-  function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
-  function tick(now){
-    const raw=Math.min((now-t0)/duration,1);
-    const k=ease(raw);
-    orb.theta=start.theta+dTheta*k;
-    orb.phi=start.phi+(end.phi-start.phi)*k;
-    orb.radius=start.radius+(end.radius-start.radius)*k;
-    orb.cx=start.cx+(end.cx-start.cx)*k;
-    orb.cy=start.cy+(end.cy-start.cy)*k;
-    orb.cz=start.cz+(end.cz-start.cz)*k;
-    applyCam();
-    if(raw<1) camAnimId=requestAnimationFrame(tick);
-    else camAnimId=null;
-  }
-  camAnimId=requestAnimationFrame(tick);
-}
-
-function setView(v){
-  let target={};
-  if(v==='front'){target={theta:0,phi:Math.PI/2,radius:18,cx:0,cy:S.h+PIVOT_BASE+1,cz:0};}
-  else if(v==='range'){
-    const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-    const a2=0.5*S.g, b2=-vy, c2=-S.h;
-    const disc2=b2*b2-4*a2*c2;
-    const Tl=disc2<0?0:(-b2+Math.sqrt(disc2))/(2*a2);
-    const landX=vx*Tl;
-    target={theta:0,phi:Math.PI/2,radius:10,cx:landX,cy:1,cz:0};
-  }
-  else if(v==='launcher'){
-    target={theta:0,phi:Math.PI/2,radius:8,cx:0,cy:2,cz:0};
-  }
-  else if(v==='center'){
-    const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-    const a2=0.5*S.g, b2=-vy, c2=-S.h;
-    const disc2=b2*b2-4*a2*c2;
-    const T2=disc2<0?0.1:(-b2+Math.sqrt(disc2))/(2*a2);
-    const landX=vx*T2;
-    const midX=landX/2;
-    const apexY=S.h+vy*vy/(2*S.g);
-    const pathW=landX;
-    const camDist=Math.max(pathW*0.65, apexY*2, 20);
-    target={theta:0,phi:Math.PI/2,radius:camDist,cx:midX,cy:apexY*0.5,cz:0};
-  }
-  else if(v==='top'){
-    // Apex view: camera at the same height as the apex, centered on mid-trajectory x, looking inward
-    const {vx,vy}=compute(S.angle,S.v0,S.h,S.g);
-    const a2=0.5*S.g, b2=-vy, c2=-S.h;
-    const disc2=b2*b2-4*a2*c2;
-    const T2=disc2<0?0.1:(-b2+Math.sqrt(disc2))/(2*a2);
-    const landX=vx*T2;
-    const midX=landX/2;
-    const apexY=S.h+vy*vy/(2*S.g);
-    // Time to apex (for apex x)
-    const tApex=vy/S.g;
-    const apexX=vx*tApex;
-    // Camera sits at apex height, back along Z, looking at apex point
-    const camDist=Math.max(landX*0.5, apexY*1.5, 20);
-    target={theta:0,phi:Math.PI/2,radius:camDist,cx:apexX,cy:apexY,cz:0};
-  }
-  else{target={theta:0.4,phi:0.85,radius:30,cx:10,cy:4,cz:0};}
-  animateCamTo(target);
-}
-const cvs2=document.getElementById('mainCanvas');
-cvs2.addEventListener('mousedown',e=>{if(e.target.closest&&e.target.closest('#bottom-panels'))return;isDrag=true;lastMouse={x:e.clientX,y:e.clientY};});
-window.addEventListener('mousemove',e=>{
-  if(!isDrag)return;
-  orb.theta-=(e.clientX-lastMouse.x)*.006;
-  orb.phi=Math.max(.04,Math.min(Math.PI*.49,orb.phi+(e.clientY-lastMouse.y)*.006));
-  lastMouse={x:e.clientX,y:e.clientY}; applyCam();
-});
+let isDrag=false,lastMouse={x:0,y:0},orb={theta:0.4,phi:0.9,radius:30,cx:10,cy:4,cz:0};
+function applyCam(){cam.position.set(orb.cx+orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta),orb.cy+orb.radius*Math.cos(orb.phi),orb.cz+orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta));cam.lookAt(orb.cx,orb.cy,orb.cz);}
+applyCam(); let camAnimId=null;
+function animateCamTo(target){if(camAnimId)cancelAnimationFrame(camAnimId);let start={theta:orb.theta,phi:orb.phi,radius:orb.radius,cx:orb.cx,cy:orb.cy,cz:orb.cz},end=Object.assign({},target),dur=700,t0=performance.now(),dTheta=end.theta-start.theta;while(dTheta>Math.PI)dTheta-=2*Math.PI;while(dTheta<-Math.PI)dTheta+=2*Math.PI;function tick(now){let t=Math.min((now-t0)/dur,1),k=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;orb.theta=start.theta+dTheta*k;orb.phi=start.phi+(end.phi-start.phi)*k;orb.radius=start.radius+(end.radius-start.radius)*k;orb.cx=start.cx+(end.cx-start.cx)*k;orb.cy=start.cy+(end.cy-start.cy)*k;orb.cz=start.cz+(end.cz-start.cz)*k;applyCam();if(t<1)camAnimId=requestAnimationFrame(tick);else camAnimId=null;}camAnimId=requestAnimationFrame(tick);}
+function setView(v){let target={};if(v==='launcher')target={theta:0,phi:Math.PI/2,radius:8,cx:0,cy:Math.max(S.h,2),cz:0};else if(v==='range'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tl=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);target={theta:0,phi:Math.PI/2,radius:10,cx:vx*Tl,cy:1,cz:0};}else if(v==='center'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,T2=disc<0?0.1:(-b2+Math.sqrt(disc))/(2*a2),landX=vx*T2,apexY=S.h+vy*vy/(2*S.g);target={theta:0,phi:Math.PI/2,radius:Math.max(landX*0.65,apexY*2,20),cx:landX/2,cy:apexY*0.5,cz:0};}else if(v==='top'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tApex=vy/S.g,apexX=vx*tApex,apexY=S.h+vy*vy/(2*S.g);target={theta:0,phi:Math.PI/2,radius:Math.max(apexX*1.2,apexY*1.8,20),cx:apexX,cy:apexY,cz:0};}else target={theta:0.4,phi:0.85,radius:30,cx:10,cy:4,cz:0};animateCamTo(target);}
+document.getElementById('mainCanvas').addEventListener('mousedown',e=>{if(e.target.closest('#bottom-panels'))return;isDrag=true;lastMouse={x:e.clientX,y:e.clientY};});
+window.addEventListener('mousemove',e=>{if(!isDrag)return;orb.theta-=(e.clientX-lastMouse.x)*0.006;orb.phi=Math.max(0.04,Math.min(Math.PI*0.49,orb.phi+(e.clientY-lastMouse.y)*0.006));lastMouse={x:e.clientX,y:e.clientY};applyCam();});
 window.addEventListener('mouseup',()=>isDrag=false);
-cvs2.addEventListener('wheel',e=>{orb.radius*=1+e.deltaY*.001;orb.radius=Math.max(8,Math.min(300,orb.radius));applyCam();},{passive:true});
-
-// ── RESIZE ─────────────────────────────────────────────────────────────
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+document.getElementById('mainCanvas').addEventListener('wheel',e=>{orb.radius*=1+e.deltaY*0.001;orb.radius=Math.max(8,Math.min(300,orb.radius));applyCam();},{passive:true});
+function resize(){let w=innerWidth,h=innerHeight;renderer.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
 window.addEventListener('resize',resize); resize();
-
-// ── RENDER LOOP ────────────────────────────────────────────────────────
 function loop(){requestAnimationFrame(loop);renderer.render(sc,cam);}
 loop();
-</script>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<!-- MEASUREMENT TOOLS (2D canvas overlay)                               -->
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<canvas id="toolCanvas" style="position:fixed;inset:0;z-index:5;pointer-events:none;"></canvas>
-<script>
-'use strict';
-const toolCvs=document.getElementById('toolCanvas');
-const tctx=toolCvs.getContext('2d');
-
-let vrulerVisible = false;
-
-function toggleVRuler(){
-  vrulerVisible = !vrulerVisible;
-  document.getElementById('btn-vruler').classList.toggle('on', vrulerVisible);
-  drawTools();
-}
-
-function worldToScreen(wx,wy,wz){
-  const vec=new THREE.Vector4(wx,wy,wz,1);
-  vec.applyMatrix4(cam.matrixWorldInverse);
-  vec.applyMatrix4(cam.projectionMatrix);
-  if(vec.w===0) return null;
-  const nx=vec.x/vec.w, ny=vec.y/vec.w;
-  return{x:(nx+1)/2*innerWidth, y:(1-ny)/2*innerHeight};
-}
-
-// Vertical scale placed at the center X of the trajectory,
-// from y=0 (bench surface) to apex. Divisions every 0.1m.
-function drawSceneVRuler(){
-  if(!vrulerVisible) return;
-
-  const {vx,vy,H}=compute(S.angle,S.v0,S.h,S.g);
-  const maxH=Math.max(H, S.h+0.5, 1.0);
-
-  // Center X of trajectory
-  const a2=0.5*S.g, b2=-vy, c2=-S.h;
-  const disc2=b2*b2-4*a2*c2;
-  const Tland=disc2<0?0.1:(-b2+Math.sqrt(disc2))/(2*a2);
-  const landX=vx*Tland;
-  const midX=landX/2;
-
-  // Project the center-x column to screen
-  const p0=worldToScreen(midX, 0, 0);
-  const pTop=worldToScreen(midX, maxH, 0);
-  if(!p0||!pTop) return;
-
-  const screenBottom=p0.y;
-  const screenTop=pTop.y;
-  const screenHeight=screenBottom-screenTop;
-  if(screenHeight<5) return;
-
-  const px_per_m = screenHeight / maxH;
-  const rulerX = p0.x;
-  const rulerW = 36;
-
-  tctx.save();
-
-  // Vertical spine
-  tctx.strokeStyle='rgba(100,160,220,0.55)';
-  tctx.lineWidth=1.5;
-  tctx.beginPath();
-  tctx.moveTo(rulerX, screenTop);
-  tctx.lineTo(rulerX, screenBottom);
-  tctx.stroke();
-
-  // Tick marks and labels every 0.1m
-  for(let dm=0; dm<=Math.ceil(maxH*10)+1; dm++){
-    const m = dm/10;
-    if(m > maxH+0.05) break;
-    const sy = screenBottom - m*px_per_m;
-    const is1m = (dm%10===0);
-    const is05m = (dm%5===0);
-    const tickW = is1m ? rulerW*0.7 : is05m ? rulerW*0.45 : rulerW*0.25;
-
-    tctx.strokeStyle = is1m ? 'rgba(140,200,255,0.85)' : is05m ? 'rgba(100,160,220,0.55)' : 'rgba(70,120,180,0.3)';
-    tctx.lineWidth = is1m ? 1.8 : is05m ? 1.2 : 0.7;
-    tctx.beginPath();
-    tctx.moveTo(rulerX, sy);
-    tctx.lineTo(rulerX + tickW, sy);
-    tctx.stroke();
-
-    if(is1m){
-      tctx.font = `bold 10px 'Space Mono',monospace`;
-      tctx.fillStyle = 'rgba(140,200,255,0.9)';
-      tctx.textAlign = 'left';
-      tctx.fillText(m.toFixed(1)+'m', rulerX + rulerW*0.75 + 2, sy + 4);
-    }
-  }
-
-  // Apex highlight
-  const apexSy = screenBottom - H*px_per_m;
-  if(apexSy>=screenTop&&apexSy<=screenBottom){
-    tctx.save();
-    tctx.setLineDash([5,4]);
-    tctx.strokeStyle='rgba(255,200,60,0.8)';
-    tctx.lineWidth=1.5;
-    tctx.beginPath();
-    tctx.moveTo(rulerX-6, apexSy);
-    tctx.lineTo(rulerX + rulerW + 50, apexSy);
-    tctx.stroke();
-    tctx.setLineDash([]);
-    tctx.font=`bold 9px 'Space Mono',monospace`;
-    tctx.fillStyle='rgba(255,200,60,0.9)';
-    tctx.textAlign='left';
-    tctx.fillText('H='+H.toFixed(2)+'m', rulerX+rulerW+52, apexSy+4);
-    tctx.restore();
-  }
-
-  // h launch height line
-  if(S.h>0.05){
-    const hSy = screenBottom - S.h*px_per_m;
-    if(hSy>=screenTop&&hSy<=screenBottom){
-      tctx.save();
-      tctx.setLineDash([3,3]);
-      tctx.strokeStyle='rgba(96,223,255,0.7)';
-      tctx.lineWidth=1.3;
-      tctx.beginPath();
-      tctx.moveTo(rulerX-6, hSy);
-      tctx.lineTo(rulerX + rulerW+6, hSy);
-      tctx.stroke();
-      tctx.setLineDash([]);
-      tctx.font=`bold 9px 'Space Mono',monospace`;
-      tctx.fillStyle='rgba(96,223,255,0.8)';
-      tctx.textAlign='left';
-      tctx.fillText('h='+S.h.toFixed(1)+'m', rulerX+rulerW+8, hSy-3);
-      tctx.restore();
-    }
-  }
-
-  tctx.restore();
-}
-
-function drawTools(){
-  toolCvs.width=innerWidth; toolCvs.height=innerHeight;
-  tctx.clearRect(0,0,innerWidth,innerHeight);
-  drawSceneVRuler();
-}
-
-function updateToolPointerEvents(){
-  toolCvs.style.pointerEvents='none';
-}
-function toggleTool(t){}
-
-window.addEventListener('resize',()=>drawTools());
-setInterval(()=>drawTools(), 50);
-setTimeout(()=>updateToolPointerEvents(),100);
-</script>
-
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<!-- MODE & CHALLENGE LOGIC                                               -->
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<script>
-'use strict';
-let currentMode='explore';
-let chScore=0,chTotal=0,chCurrent=null;
-
+// VRULER TOOL
+let toolCvs,tctx,vrulerVisible=false;setTimeout(()=>{toolCvs=document.createElement('canvas');toolCvs.id='toolCanvas';toolCvs.style.cssText='position:fixed;inset:0;z-index:5;pointer-events:none';document.body.appendChild(toolCvs);tctx=toolCvs.getContext('2d');function drawTools(){if(!toolCvs)return;toolCvs.width=innerWidth;toolCvs.height=innerHeight;tctx.clearRect(0,0,innerWidth,innerHeight);if(!vrulerVisible)return;let {H}=compute(S.angle,S.v0,S.h,S.g),maxH=Math.max(H,S.h+0.5,1),midX=0;try{let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,T2=disc<0?0.1:(-b2+Math.sqrt(disc))/(2*a2),landX=vx*T2;midX=landX/2;}catch(e){}let p0=worldToScreen(midX,0,0),pTop=worldToScreen(midX,maxH,0);if(!p0||!pTop)return;let sy0=p0.y,syTop=pTop.y,px_per_m=(sy0-syTop)/maxH,rulerX=p0.x;tctx.strokeStyle='rgba(100,160,220,0.55)';tctx.beginPath();tctx.moveTo(rulerX,syTop);tctx.lineTo(rulerX,sy0);tctx.stroke();for(let dm=0;dm<=maxH*10+5;dm++){let m=dm/10;if(m>maxH+0.05)break;let sy=sy0-m*px_per_m,is1m=dm%10===0,is05m=dm%5===0,tickW=is1m?25:is05m?16:9;tctx.strokeStyle=is1m?'rgba(140,200,255,0.85)':'rgba(100,160,220,0.55)';tctx.beginPath();tctx.moveTo(rulerX,sy);tctx.lineTo(rulerX+tickW,sy);tctx.stroke();if(is1m){tctx.font="bold 10px 'Space Mono'";tctx.fillStyle='rgba(140,200,255,0.9)';tctx.fillText(m.toFixed(1)+'m',rulerX+tickW+2,sy+4);}}let apexSy=sy0-H*px_per_m;if(apexSy>=syTop&&apexSy<=sy0){tctx.save();tctx.setLineDash([5,4]);tctx.strokeStyle='rgba(255,200,60,0.8)';tctx.beginPath();tctx.moveTo(rulerX-6,apexSy);tctx.lineTo(rulerX+80,apexSy);tctx.stroke();tctx.font="bold 9px 'Space Mono'";tctx.fillStyle='rgba(255,200,60,0.9)';tctx.fillText('H='+H.toFixed(2)+'m',rulerX+55,apexSy+4);tctx.restore();}}function worldToScreen(wx,wy,wz){let vec=new THREE.Vector4(wx,wy,wz,1);vec.applyMatrix4(cam.matrixWorldInverse);vec.applyMatrix4(cam.projectionMatrix);if(vec.w===0)return null;let nx=vec.x/vec.w,ny=vec.y/vec.w;return{x:(nx+1)/2*innerWidth,y:(1-ny)/2*innerHeight};}window.addEventListener('resize',()=>drawTools());setInterval(()=>drawTools(),60);},50);
+function toggleVRuler(){vrulerVisible=!vrulerVisible;document.getElementById('btn-vruler').classList.toggle('on',vrulerVisible);if(toolCvs&&tctx)drawTools();}
+function spawnPendulumManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tApex=vy/S.g,xApex=vx*tApex,yApex=S.h+vy*tApex-0.5*S.g*tApex*tApex;placePendulum(xApex,yApex);}
+function spawnStackManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);placeStack(vx*Tland);}
+// MODE & CHALLENGE
+let currentMode='explore',chScore=0,chTotal=0,chCurrent=null;
 const CHALLENGES=[
-  {type:'range',gen:()=>{
-    const a=Math.round(15+Math.random()*65),v=Math.round(10+Math.random()*40),h=Math.round(Math.random()*15),g=9.81;
-    const {R}=compute(a,v,h,g);
-    return{a,v,h,g,ask:'R',unit:'m',ans:parseFloat(R.toFixed(3)),
-      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>, height <b>${h} m</b>.<br>Find the <span style="color:#78b4ff;">horizontal range R</span>.`,
-      given:`θ=${a}° · v₀=${v} m/s · h=${h} m · g=${g}`,
-      hideRows:['row-range']};
-  }},
-  {type:'maxh',gen:()=>{
-    const a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81;
-    const {H}=compute(a,v,0,g);
-    return{a,v,h:0,g,ask:'H',unit:'m',ans:H,
-      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find the <span style="color:#60dfff;">maximum height H</span>.`,
-      given:`θ=${a}° · v₀=${v} m/s · g=${g}`,
-      hideRows:['row-maxh']};
-  }},
-  {type:'time',gen:()=>{
-    const a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81;
-    const {T}=compute(a,v,0,g);
-    return{a,v,h:0,g,ask:'T',unit:'s',ans:T,
-      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find the <span style="color:#ffcc44;">flight time T</span>.`,
-      given:`θ=${a}° · v₀=${v} m/s · g=${g}`,
-      hideRows:['row-time']};
-  }},
-  {type:'vx',gen:()=>{
-    const a=Math.round(10+Math.random()*70),v=Math.round(10+Math.random()*40),g=9.81;
-    const vx=v*Math.cos(a*Math.PI/180);
-    return{a,v,h:0,g,ask:'vₓ',unit:'m/s',ans:vx,
-      q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#7fffb2;">horizontal velocity vₓ</span>.`,
-      given:`θ=${a}° · v₀=${v} m/s`,
-      hideRows:['row-vx']};
-  }}
+{type:'range',gen:()=>{let a=Math.round(15+Math.random()*65),v=Math.round(10+Math.random()*40),h=Math.round(Math.random()*15),g=9.81,{R}=compute(a,v,h,g);return{a,v,h,g,ans:R,unit:'m',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>, height <b>${h} m</b>.<br>Find <span style="color:#78b4ff;">horizontal range R</span>.`,given:`θ=${a}° · v₀=${v} m/s · h=${h} m · g=${g}`,hideRows:['row-range']};}},
+{type:'maxh',gen:()=>{let a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81,{H}=compute(a,v,0,g);return{a,v,h:0,g,ans:H,unit:'m',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#60dfff;">maximum height H</span>.`,given:`θ=${a}° · v₀=${v} m/s · g=${g}`,hideRows:['row-maxh']};}},
+{type:'time',gen:()=>{let a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81,{T}=compute(a,v,0,g);return{a,v,h:0,g,ans:T,unit:'s',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#ffcc44;">flight time T</span>.`,given:`θ=${a}° · v₀=${v} m/s · g=${g}`,hideRows:['row-time']};}},
+{type:'vx',gen:()=>{let a=Math.round(10+Math.random()*70),v=Math.round(10+Math.random()*40),g=9.81,vx=v*Math.cos(a*Math.PI/180);return{a,v,h:0,g,ans:vx,unit:'m/s',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#7fffb2;">horizontal velocity vₓ</span>.`,given:`θ=${a}° · v₀=${v} m/s`,hideRows:['row-vx']};}}
 ];
-
-function setMode(mode){
-  currentMode=mode;
-  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+mode).classList.add('active');
-  if(mode==='challenge'){
-    document.getElementById('challenge-panel').style.display='block';
-    document.getElementById('hud-challenge-note').style.display='block';
-    startChallenge();
-  } else {
-    document.getElementById('challenge-panel').style.display='none';
-    document.getElementById('hud-challenge-note').style.display='none';
-    showAllHUDRows();
-    clearChallengeObjects();
-    resetScene();
-  }
-}
-
-function exitChallengeMode(){
-  document.getElementById('tab-explore').click();
-}
-
-function startChallenge(){nextChallenge();}
-
-function nextChallenge(){
-  document.getElementById('ch-result').style.display='none';
-  document.getElementById('ch-input').value='';
-  // Pick random challenge
-  const tmpl=CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
-  chCurrent=tmpl.gen();
-  const c=chCurrent;
-  // Apply physics
-  S.angle=c.a; S.v0=c.v; S.h=c.h; S.g=c.g;
-  document.getElementById('sl-angle').value=c.a;
-  document.getElementById('lbl-angle').textContent=c.a.toFixed(1)+'°';
-  document.getElementById('sl-v0').value=c.v;
-  document.getElementById('lbl-v0').textContent=c.v.toFixed(1)+' m/s';
-  document.getElementById('sl-h').value=c.h;
-  document.getElementById('lbl-h').textContent=c.h.toFixed(1)+' m';
-  document.getElementById('sl-g').value=c.g;
-  document.getElementById('lbl-g').textContent=c.g.toFixed(2);
-  S.h=c.h; updatePedestal();
-  updateHUD();
-  // Hide asked quantity from HUD
-  showAllHUDRows();
-  c.hideRows.forEach(hideHUDRow);
-  // Place challenge object
-  clearChallengeObjects();
-  const {R,H,T}=compute(c.a,c.v,c.h,c.g);
-  if(c.type==='maxh'){
-    // Pendulum bob at max height
-    const {vx}=compute(c.a,c.v,c.h,c.g);
-    const xAtApex=vx*(c.v*Math.sin(c.a*Math.PI/180)/c.g);
-    placePendulum(xAtApex,H);
-  } else if(c.type==='range'){
-    placeStack(R);
-  }
-  resetScene();
-  document.getElementById('ch-q-text').innerHTML=c.q;
-  document.getElementById('ch-given').textContent=c.given;
-  document.getElementById('ch-unit-lbl').textContent=c.unit;
-  document.getElementById('ch-score').textContent=chScore+' / '+chTotal;
-}
-
-function validateChallenge(){
-  if(!chCurrent) return;
-  const ans=parseFloat(document.getElementById('ch-input').value);
-  if(isNaN(ans)){showChResult('err','Enter a numeric value.');return;}
-  const correct=chCurrent.ans; const tol3=correct*.03; const tol8=correct*.08;
-  chTotal++;
-  if(Math.abs(ans-correct)<=tol3){
-    chScore++; showChResult('ok',`✅ Correct! = ${correct.toFixed(2)} ${chCurrent.unit}`);
-    // Auto-fire to show the result
-    fireLaunch();
-  } else if(Math.abs(ans-correct)<=tol8){
-    showChResult('partial',`🟡 Close! Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);
-  } else {
-    showChResult('err',`❌ Incorrect. Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);
-  }
-  document.getElementById('ch-score').textContent=chScore+' / '+chTotal;
-  showAllHUDRows(); updateHUD(); chCurrent.hideRows.forEach(r=>document.getElementById(r).style.display='none');
-}
-
-function showChResult(type,msg){
-  const el=document.getElementById('ch-result');
-  el.style.display='block'; el.className=type; el.innerHTML=msg;
-}
-</script>
-
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<!-- AR MODE                                                              -->
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<script>
-'use strict';
-let arStream=null,arAnimId=null,arMarkerFound=false;
-let arFlying=false,arT=0,arStartTime=0;
-let arBX=0,arBY=0,arTrail=[],arHit=false;
-const AR_S={angle:45,v0:20,h:0,g:9.81};
-let arCh=null,arChScore=0,arChTotal=0;
-
-async function openAR(){
-  document.getElementById('ar-overlay').style.display='flex';
-  document.getElementById('ar-overlay').className='open';
-  const arCvs=document.getElementById('ar-canvas');
-  const arCtx=arCvs.getContext('2d');
-  AR_S.angle=S.angle;AR_S.v0=S.v0;AR_S.h=S.h;AR_S.g=S.g;
-  updateARHUD(); nextARChallenge();
-  try{
-    arStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
-    document.getElementById('ar-video').srcObject=arStream;
-    await new Promise(r=>{document.getElementById('ar-video').onloadedmetadata=r;});
-    document.getElementById('ar-video').play();
-    setTimeout(()=>{
-      document.getElementById('ar-marker-hint').style.opacity='0';
-      setTimeout(()=>document.getElementById('ar-marker-hint').style.display='none',400);
-      arMarkerFound=true;
-    },1500);
-  } catch(e){
-    document.getElementById('ar-marker-hint').innerHTML='<div style="font-size:24px;">📷</div><p style="color:#ff8888;">Camera denied</p>';
-    arMarkerFound=true;
-  }
-  resizeARCvs(); window.addEventListener('resize',resizeARCvs);
-  function arLoop(){
-    arAnimId=requestAnimationFrame(arLoop);
-    arCvs.width=innerWidth; arCvs.height=innerHeight;
-    arCtx.clearRect(0,0,arCvs.width,arCvs.height);
-    if(!arMarkerFound) return;
-    drawARScene(arCtx,arCvs.width,arCvs.height);
-  }
-  arLoop();
-}
-function resizeARCvs(){const c=document.getElementById('ar-canvas');c.width=innerWidth;c.height=innerHeight;}
-function arCompute(){
-  const a=AR_S.angle*Math.PI/180,vx=AR_S.v0*Math.cos(a),vy=AR_S.v0*Math.sin(a);
-  const disc=vy*vy+2*AR_S.g*AR_S.h;
-  const T=(vy+Math.sqrt(Math.max(0,disc)))/AR_S.g;
-  return{vx,vy,T,R:vx*T,H:AR_S.h+vy*vy/(2*AR_S.g)};
-}
-function drawARScene(ctx,W,H){
-  const {vx,vy,T,R,H:Hmx}=arCompute();
-  const sc2=W*.72/Math.max(R,1);
-  const ox=W*.07,oy=H*.78;
-  ctx.strokeStyle='rgba(140,200,255,0.35)';ctx.lineWidth=2;ctx.setLineDash([]);
-  ctx.beginPath();ctx.moveTo(ox-10,oy);ctx.lineTo(W*.95,oy);ctx.stroke();
-  // Trajectory dashed
-  ctx.strokeStyle='rgba(80,120,180,0.2)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
-  ctx.beginPath();
-  for(let i=0;i<=60;i++){const t=(i/60)*T;const px=ox+vx*t*sc2;const py=oy-(AR_S.h+vy*t-.5*AR_S.g*t*t)*sc2;i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
-  ctx.stroke();ctx.setLineDash([]);
-  // Trail
-  if(arTrail.length>1){
-    ctx.strokeStyle='rgba(255,140,60,0.6)';ctx.lineWidth=3;ctx.beginPath();
-    arTrail.forEach((p,i)=>{const px=ox+p.x*sc2,py=oy-p.y*sc2;i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);});
-    ctx.stroke();
-  }
-  // Animate ball
-  if(arFlying){
-    const el=(performance.now()-arStartTime)/1000;
-    if(el>T){arFlying=false;arBX=vx*T;arBY=0;}
-    else{arBX=vx*el;arBY=AR_S.h+vy*el-.5*AR_S.g*el*el;arTrail.push({x:arBX,y:arBY});}
-  }
-  if(arTrail.length>0){
-    const bx=ox+arBX*sc2,by=oy-arBY*sc2;
-    const grd=ctx.createRadialGradient(bx,by,0,bx,by,20);
-    grd.addColorStop(0,'rgba(255,120,60,.8)');grd.addColorStop(1,'rgba(255,60,30,0)');
-    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(bx,by,20,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#ff6633';ctx.beginPath();ctx.arc(bx,by,8,0,Math.PI*2);ctx.fill();
-  }
-  // Cannon
-  ctx.save();ctx.translate(ox,oy-AR_S.h*sc2);
-  ctx.strokeStyle='rgba(140,200,255,.8)';ctx.lineWidth=5;
-  ctx.beginPath();ctx.moveTo(0,0);
-  ctx.lineTo(32*Math.cos(AR_S.angle*Math.PI/180),-32*Math.sin(AR_S.angle*Math.PI/180));
-  ctx.stroke();ctx.fillStyle='rgba(40,70,100,.9)';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();
-  ctx.restore();
-  // Labels
-  for(let d=10;d<=Math.ceil(R)+5;d+=10){
-    const px=ox+d*sc2;if(px>W*.93)break;
-    ctx.fillStyle='rgba(140,200,255,.45)';ctx.font="10px 'Space Mono',monospace";
-    ctx.fillText(d+'m',px-8,oy+18);
-  }
-  ctx.fillStyle='rgba(160,210,255,.7)';ctx.font="bold 12px 'Syne',sans-serif";
-  ctx.fillText(`R=${R.toFixed(1)}m  T=${T.toFixed(1)}s  H=${Hmx.toFixed(1)}m`,ox,oy+38);
-  ctx.fillStyle='rgba(140,200,255,.4)';ctx.font="9px 'Space Mono',monospace";
-  ctx.fillText('PROJECTILE LAB · AR MODE',12,18);
-}
-function updateARHUD(){
-  const{vx,vy,T,R,H}=arCompute();
-  document.getElementById('ar-v-angle').textContent=AR_S.angle+'°';
-  document.getElementById('ar-v-v0').textContent=AR_S.v0+' m/s';
-  document.getElementById('ar-v-range').textContent=R.toFixed(2)+' m';
-  document.getElementById('ar-v-maxh').textContent=H.toFixed(2)+' m';
-  document.getElementById('ar-v-time').textContent=T.toFixed(2)+' s';
-}
-function arFire(){arTrail=[];arFlying=true;arStartTime=performance.now();arBX=0;arBY=AR_S.h;}
-function arReset(){arFlying=false;arTrail=[];arBX=0;arBY=0;}
-const AR_CHALL=[
-  {gen:()=>{const a=Math.round(15+Math.random()*60),v=Math.round(10+Math.random()*35);const{R}=arComp(a,v);return{a,v,ask:'R',unit:'m',ans:R,text:`Angle <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#78b4ff;">range R</span>.`,given:`θ=${a}° · v₀=${v} m/s`};}},
-  {gen:()=>{const a=Math.round(20+Math.random()*50),v=Math.round(12+Math.random()*30);const{T}=arComp(a,v);return{a,v,ask:'T',unit:'s',ans:T,text:`Angle <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#ffcc44;">time T</span>.`,given:`θ=${a}° · v₀=${v} m/s`};}},
-  {gen:()=>{const a=Math.round(30+Math.random()*50),v=Math.round(12+Math.random()*30);const{H}=arComp(a,v);return{a,v,ask:'H',unit:'m',ans:H,text:`Angle <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#60dfff;">max height H</span>.`,given:`θ=${a}° · v₀=${v} m/s`};}}
-];
-function arComp(a,v){
-  const rad=a*Math.PI/180,vx=v*Math.cos(rad),vy=v*Math.sin(rad),T=2*vy/9.81;
-  return{vx,vy,T,R:vx*T,H:vy*vy/(2*9.81)};
-}
-function nextARChallenge(){
-  document.getElementById('ar-ch-result').style.display='none';
-  document.getElementById('ar-ch-input').value='';
-  const tmpl=AR_CHALL[Math.floor(Math.random()*AR_CHALL.length)];
-  arCh=tmpl.gen();
-  AR_S.angle=arCh.a;AR_S.v0=arCh.v;AR_S.h=0;AR_S.g=9.81;
-  updateARHUD();arReset();
-  document.getElementById('ar-ch-text').innerHTML=arCh.text;
-  document.getElementById('ar-ch-given').textContent=arCh.given;
-  document.getElementById('ar-ch-unit').textContent=arCh.unit;
-}
-function validateARChallenge(){
-  if(!arCh) return;
-  const ans=parseFloat(document.getElementById('ar-ch-input').value);
-  if(isNaN(ans))return;
-  arChTotal++;
-  const correct=arCh.ans,el=document.getElementById('ar-ch-result');
-  el.style.display='block';
-  if(Math.abs(ans-correct)<=correct*.03){
-    arChScore++;el.style.cssText='display:block;background:rgba(80,200,80,.1);border:1px solid rgba(80,200,80,.35);color:#80e880;border-radius:8px;padding:6px 10px;font-family:Syne,sans-serif;font-size:11px;margin-top:5px;';
-    el.innerHTML=`✅ Correct! = ${correct.toFixed(2)} ${arCh.unit}`;arFire();
-  } else {
-    el.style.cssText='display:block;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);color:#ff8888;border-radius:8px;padding:6px 10px;font-family:Syne,sans-serif;font-size:11px;margin-top:5px;';
-    el.innerHTML=`❌ Answer = ${correct.toFixed(2)} ${arCh.unit}`;
-  }
-}
-function closeAR(){
-  document.getElementById('ar-overlay').style.display='none';
-  if(arAnimId){cancelAnimationFrame(arAnimId);arAnimId=null;}
-  if(arStream){arStream.getTracks().forEach(t=>t.stop());arStream=null;}
-  arFlying=false;arTrail=[];arMarkerFound=false;
-  document.getElementById('ar-marker-hint').style.display='block';
-  document.getElementById('ar-marker-hint').style.opacity='1';
-  window.removeEventListener('resize',resizeARCvs);
-}
-</script>
-
-<!-- QR CODE -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-const QR_URL=window.location.href;let _qrG=false;
-function openQR(){
-  document.getElementById('qr-overlay').classList.add('open');
-  if(!_qrG){const box=document.getElementById('qr-box');box.innerHTML='';
-  if(window.QRCode)new QRCode(box,{text:QR_URL,width:160,height:160,colorDark:'#141c2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
-  document.getElementById('qr-url').textContent=QR_URL.slice(0,60)+(QR_URL.length>60?'…':'');_qrG=true;}
-}
+function setMode(mode){currentMode=mode;document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+mode).classList.add('active');if(mode==='challenge'){document.getElementById('challenge-panel').style.display='block';document.getElementById('hud-challenge-note').style.display='block';nextChallenge();}else{document.getElementById('challenge-panel').style.display='none';document.getElementById('hud-challenge-note').style.display='none';showAllHUDRows();clearChallengeObjects();resetScene();}}
+function exitChallengeMode(){setMode('explore');}
+function nextChallenge(){document.getElementById('ch-result').style.display='none';document.getElementById('ch-input').value='';let tmpl=CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];chCurrent=tmpl.gen();let c=chCurrent;S.angle=c.a;S.v0=c.v;S.h=c.h;S.g=c.g;document.getElementById('sl-angle').value=c.a;document.getElementById('lbl-angle').innerText=c.a.toFixed(1)+'°';document.getElementById('sl-v0').value=c.v;document.getElementById('lbl-v0').innerText=c.v.toFixed(1)+' m/s';document.getElementById('sl-h').value=c.h;document.getElementById('lbl-h').innerText=c.h.toFixed(1)+' m';document.getElementById('sl-g').value=c.g;document.getElementById('lbl-g').innerText=c.g.toFixed(2);updatePedestal();updateHUD();showAllHUDRows();c.hideRows.forEach(hideHUDRow);clearChallengeObjects();let {R,H}=compute(c.a,c.v,c.h,c.g);if(c.type==='maxh'){let {vx}=compute(c.a,c.v,c.h,c.g);placePendulum(vx*(c.v*Math.sin(c.a*Math.PI/180)/c.g),H);}else if(c.type==='range')placeStack(R);resetScene();document.getElementById('ch-q-text').innerHTML=c.q;document.getElementById('ch-given').innerText=c.given;document.getElementById('ch-unit-lbl').innerText=c.unit;document.getElementById('ch-score').innerText=chScore+' / '+chTotal;}
+function validateChallenge(){if(!chCurrent)return;let ans=parseFloat(document.getElementById('ch-input').value);if(isNaN(ans)){showChResult('err','Enter numeric value.');return;}let correct=chCurrent.ans;chTotal++;if(Math.abs(ans-correct)<=correct*0.03){chScore++;showChResult('ok',`✅ Correct! = ${correct.toFixed(2)} ${chCurrent.unit}`);fireLaunch();}else if(Math.abs(ans-correct)<=correct*0.08)showChResult('partial',`🟡 Close! Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);else showChResult('err',`❌ Incorrect. Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);document.getElementById('ch-score').innerText=chScore+' / '+chTotal;showAllHUDRows();updateHUD();chCurrent.hideRows.forEach(r=>document.getElementById(r).style.display='none');}
+function showChResult(type,msg){let el=document.getElementById('ch-result');el.style.display='block';el.className=type;el.innerHTML=msg;}
+// AR MODE (placeholder)
+function openAR(){alert('AR Mode requires HTTPS and camera permissions.\nSimulation remains fully functional in Explore/Challenge modes.');}
+function closeAR(){}
+function arFire(){}
+function arReset(){}
+function nextARChallenge(){}
+function validateARChallenge(){}
+// QR
+let QR_URL=window.location.href,_qrG=false;
+function openQR(){document.getElementById('qr-overlay').classList.add('open');if(!_qrG&&window.QRCode){let box=document.getElementById('qr-box');box.innerHTML='';new QRCode(box,{text:QR_URL,width:160,height:160,colorDark:'#141c2e',colorLight:'#fff'});document.getElementById('qr-url').innerText=QR_URL.slice(0,60)+(QR_URL.length>60?'…':'');_qrG=true;}}
 function closeQR(e){if(!e||e.target===document.getElementById('qr-overlay')||e.currentTarget===document.getElementById('qr-close'))document.getElementById('qr-overlay').classList.remove('open');}
 </script>
 </body>
