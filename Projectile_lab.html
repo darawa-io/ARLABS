@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Projectile Motion Lab</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:'Syne',sans-serif;color:#e8f4ff;}
+#mainCanvas{position:fixed;inset:0;z-index:1;}
+
+#title{position:fixed;top:14px;left:16px;z-index:10;}
+#title h1{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:2px;}
+#title p{font-size:9px;color:rgba(140,200,255,.45);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px;}
+
+#mode-bar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:4px;background:rgba(18,26,46,.96);border:1px solid rgba(140,200,255,.25);border-radius:50px;padding:4px;}
+.mode-tab{padding:5px 16px;border-radius:50px;border:none;background:transparent;color:rgba(140,200,255,.5);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;letter-spacing:.5px;white-space:nowrap;}
+.mode-tab.active{background:rgba(140,200,255,.18);color:#78b4ff;border:1px solid rgba(140,200,255,.4);}
+.mode-tab:hover:not(.active){color:rgba(140,200,255,.8);}
+
+#hud{position:fixed;top:14px;right:14px;background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:16px;padding:14px 16px;min-width:222px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:rgba(140,200,255,.5);text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid rgba(140,200,255,.14);padding-bottom:6px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding:3px 6px;border-radius:6px;background:rgba(140,200,255,.05);}
+.dl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(170,205,255,.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#78b4ff;}
+.amber{color:#ffcc44!important;}.red{color:#ff7799!important;}.cyan{color:#60dfff!important;}.white{color:#fff!important;}
+.hdiv{height:1px;background:rgba(140,200,255,.12);margin:7px 0;}
+.formula-box{padding:7px 10px;border-radius:8px;background:rgba(80,160,255,.07);border:1px solid rgba(80,160,255,.22);font-size:10px;font-family:'Space Mono',monospace;color:rgba(160,220,255,.85);line-height:1.9;text-align:center;margin-bottom:6px;}
+
+#challenge-panel{display:none;position:fixed;top:60px;left:14px;background:rgba(18,26,46,.97);backdrop-filter:blur(18px);border:1px solid rgba(255,200,60,.28);border-radius:14px;padding:14px;z-index:10;min-width:240px;max-width:265px;}
+.ch-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2.5px;color:rgba(255,200,60,.65);text-transform:uppercase;border-bottom:1px solid rgba(255,200,60,.15);padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.ch-close{background:none;border:none;color:rgba(255,200,60,.5);cursor:pointer;font-size:14px;line-height:1;padding:0;margin:0;outline:none;transition:color .15s;}
+.ch-close:hover{color:rgba(255,100,100,.85);}
+.ch-q{font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.6;margin-bottom:8px;}
+.ch-var{font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.85);background:rgba(255,200,60,.06);border:1px solid rgba(255,200,60,.18);border-radius:6px;padding:5px 8px;margin-bottom:8px;line-height:1.6;}
+.ch-input-row{display:flex;gap:5px;align-items:center;margin-bottom:6px;}
+.ch-input-row input[type=number]{background:rgba(8,14,30,.9);border:1px solid rgba(140,200,255,.25);color:#78b4ff;border-radius:8px;padding:5px 8px;font-family:'Space Mono',monospace;font-size:11px;width:90px;outline:none;}
+.ch-input-row input[type=number]:focus{border-color:rgba(140,200,255,.6);}
+.ch-unit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(170,205,255,.5);}
+#ch-result{display:none;margin-top:5px;padding:7px 10px;border-radius:8px;font-family:'Syne',sans-serif;font-size:11px;line-height:1.5;}
+#ch-result.ok{background:rgba(80,200,80,.1);border:1px solid rgba(80,200,80,.35);color:#80e880;}
+#ch-result.err{background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);color:#ff8888;}
+#ch-result.partial{background:rgba(255,180,60,.08);border:1px solid rgba(255,180,60,.3);color:#ffc060;}
+
+#bottom-panels{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:flex-end;z-index:10;flex-wrap:nowrap;justify-content:center;max-width:calc(100vw - 20px);}
+.panel{background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:7px 14px;display:flex;flex-direction:column;gap:5px;}
+.panel-title{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:2.5px;color:rgba(140,200,255,.4);text-transform:uppercase;text-align:center;padding-bottom:4px;border-bottom:1px solid rgba(140,200,255,.1);}
+.panel-row{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:nowrap;}
+.sl-lbl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(140,200,255,.55);min-width:18px;text-align:right;flex-shrink:0;}
+.sl-val{font-family:'Space Mono',monospace;font-size:9px;color:#78b4ff;min-width:46px;flex-shrink:0;}
+input[type=range]{-webkit-appearance:none;height:3px;border-radius:2px;background:rgba(140,200,255,.22);outline:none;cursor:pointer;flex:1;min-width:80px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#78b4ff;cursor:pointer;}
+input[type=range].vel::-webkit-slider-thumb{background:#ffcc44;}
+input[type=range].vel{background:rgba(255,200,60,.2)!important;}
+input[type=range].hgt::-webkit-slider-thumb{background:#60dfff;}
+input[type=range].hgt{background:rgba(60,200,255,.2)!important;}
+
+.btn{padding:5px 13px;border-radius:30px;border:1px solid rgba(140,200,255,.32);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;}
+.btn:hover{background:rgba(140,200,255,.22);border-color:rgba(140,200,255,.65);}
+.btn.on{background:rgba(140,200,255,.28);border-color:#78b4ff;color:#fff;}
+.btn.fire{background:rgba(255,100,60,.18);border-color:rgba(255,120,60,.6);color:#ff8860;}
+.btn.fire:hover{background:rgba(255,100,60,.35);}
+.btn.reset{background:rgba(60,180,255,.1);border-color:rgba(60,180,255,.4);color:#60c8ff;}
+.btn.validate{background:rgba(80,200,120,.12);border-color:rgba(80,200,120,.4);color:#7fffb2;font-size:12px;}
+.btn.validate:hover{background:rgba(80,200,120,.25);}
+.btn.pause{background:rgba(255,200,60,.1);border-color:rgba(255,200,60,.4);color:#ffcc44;}
+.sep{width:1px;height:16px;background:rgba(140,200,255,.18);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:5px;color:rgba(170,205,255,.75);font-size:10px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;}
+
+#qr-btn{position:fixed;bottom:18px;left:18px;z-index:12;width:34px;height:34px;border-radius:10px;border:1px solid rgba(140,200,255,.32);background:rgba(18,26,46,.92);backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:#78b4ff;padding:0;outline:none;}
+#qr-btn:hover{background:rgba(140,200,255,.18);}
+#qr-btn svg{width:18px;height:18px;fill:currentColor;}
+#qr-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(8,14,30,.72);backdrop-filter:blur(10px);}
+#qr-overlay.open{display:flex;}
+#qr-card{background:rgba(18,26,46,.98);border:1px solid rgba(140,200,255,.32);border-radius:20px;padding:24px 26px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:280px;width:90vw;}
+#qr-card h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(140,200,255,.55);text-transform:uppercase;}
+#qr-box{width:180px;height:180px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:10px;}
+#qr-box canvas,#qr-box img{width:160px!important;height:160px!important;}
+#qr-url{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);text-align:center;word-break:break-all;line-height:1.6;}
+#qr-close{padding:6px 22px;border-radius:30px;border:1px solid rgba(140,200,255,.28);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;}
+
+#hint{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(140,200,255,.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:9;white-space:nowrap;}
+
+/* AR Overlay */
+#ar-overlay{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;background:#000;}
+#ar-overlay.open{display:flex;}
+#ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+#ar-canvas{position:absolute;inset:0;width:100%;height:100%;}
+#ar-close{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(255,80,80,.15);border:1px solid rgba(255,80,80,.4);border-radius:50px;padding:5px 16px;color:#ff8888;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;z-index:20;outline:none;}
+#ar-hud{position:absolute;top:16px;right:16px;background:rgba(18,26,46,.92);backdrop-filter:blur(10px);border:1px solid rgba(140,200,255,.25);border-radius:14px;padding:12px 14px;min-width:200px;z-index:10;}
+#ar-challenge{position:absolute;top:16px;left:16px;background:rgba(18,26,46,.92);backdrop-filter:blur(10px);border:1px solid rgba(255,200,60,.3);border-radius:14px;padding:12px 14px;min-width:200px;max-width:240px;z-index:10;}
+#ar-marker-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,26,46,.88);border:1px solid rgba(140,200,255,.3);border-radius:16px;padding:18px 22px;text-align:center;pointer-events:none;z-index:5;}
+#ar-marker-hint p{font-family:'Space Mono',monospace;font-size:10px;color:rgba(140,200,255,.7);margin-top:8px;letter-spacing:1px;}
+#ar-ui{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.9);backdrop-filter:blur(10px);border:1px solid rgba(140,200,255,.3);border-radius:50px;padding:8px 16px;display:flex;gap:10px;align-items:center;z-index:10;}
+
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:rgba(140,200,255,.2);border-radius:2px;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+
+<div id="title"><div style="display:flex;align-items:center;gap:7px;"><img src="data:image/svg+xml;base64,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LTQgLTk0LC0xMCAtMTY3LC00NmMtMTA5LC01NCAtMjA2LC0xNDMgLTMxNCwtMjg5Yy00NywtNjQgLTkwLC0xMTMgLTEwMCwtMTEzYy0xNCwwIC0xNSwxMyAtMTAsMTIzYzMsNjggMiwxMjkgLTIxMzZjLTEwLDE2IC02MCwtNSAtMTEwLC00N2MtMzIsLTI3IC0zNCwtMzEgLTQxLC0xMjdjLTksLTExOCAtMTMsLTEzMSAtNTEsLTE1MGMtMzUsLTE5IC0xNjIsLTIwIC0xNzcsLTJjLTUsNiAtMTYsMzggLTIzLDcxYy03LDMyIC0yMCw2OCAtMzAsNzljLTE3LDIxIC0xNywyMSAtODMsLTQzbC02NywtNjVsMzEsLTk1bDMxLC05NGwtMjcsLTUxYy04NCwtMTU2IC0yNTcsLTM1MCAtMzg0LC00MzBsLTQ1LC0yOGw1OCwtMjBjNjEsLTIwIDY3LC0zMyAyNiwtNTVjLTMzLC0xOCAtMTQ2LC04IC0yODQsMjRjLTE3OSw0MiAtMTkxLDQyIC0yNTAsLTNjLTcyLC01NiAtNjgsLTcyIDI5LC0xMDZjMTc0LC02MSAzODUsLTg0IDQ3NSwtNTJjNjMsMjIgMTI3LDcwIDIyOCwxNzNjMTE3LDExOCAyMTQsMjQ2IDI1OSwzNDJjMjAsNDEgNDEsODYgNDcsMTAwYzEwLDE5IDMwLDI5IDEwMiw1MGM1MCwxNSAxMDQsMzQgMTIyLDQzYzQzLDIzIDU1LDIxIDg0LC05YzUzLC01NyA2NiwtNTkgMjk0LC01N2MxNDcsMSAyMzYsNyAyOTUsMThjMTQxLDI4IDE5MiwyOSAyNzIsOWM0OCwtMTMgMTA3LC0xOSAxNzMsLTE4YzE3NywxIDI5Miw1MyAzNjgsMTY2Yzc5LDEyMCA5MywyNDMgNzcsNzE4Yy03LDE5NSAtMTMsMzU2IC0xNCwzNThjLTIsMSAtMzUsLTIzIC03NCwtNTR6bS02MjUsLTY4MmM3NiwtMzkgMTIwLC0xMjEgOTUsLTE3N2MtMTYsLTM1IC0xNDEsLTkyIC0yNTIsLTExNWMtMTA3LC0yMiAtMzU3LC0zNyAtMzc5LC0yMmMtMjAsMTQgLTcsMzkgNjcsMTI3Yzc1LDg4IDE5MiwxNzUgMjY5LDIwMGM2MSwxOSAxNDcsMTMgMjAwLC0xM3oiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMCIgZD0ibTEwODQsMjIyN2wtNjksLTY4bDU4LC01NGMzMiwtMzAgNjUsLTU1IDczLC01NWM4LDAgMzksMjIgNjgsNTBsNTMsNTBsMjksLTMxYzE2LC0xNyA0MywtMzkgNjEsLTUwYzM4LC0yNCA0OSwtMjAgMTEyLDQ1bDQ0LDQ1bC01OCw2NWMtMzEsMzYgLTYwLDY2IC02NCw2NmMtNCwwIC0zMywtMjcgLTY1LC01OWwtNTgsLTU5bC01OCw2MWwtNTgsNjJsLTY4LC02OHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMSIgZD0ibTI3NjksMjI3MmMtMTQsLTkgLTUzLC00MSAtODcsLTcxbC02MiwtNTRsMSwtNTg4YzEsLTQ4MSA0LC01ODYgMTUsLTU4MmMyMSw4IDg5LDEwMiAxMjMsMTcwYzE4LDM2IDM1LDkxIDQxLDEzMGMxMCw3MyAxMSw3MDIgMSw4OTVsLTYsMTE4bC0yNiwtMTh6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfMTIiIGQ9Im0zOTQxLDIyMTlsLTY0LC03MGw2NCwtNjVjMzUsLTM1IDY5LC02NCA3NSwtNjRjMTksMCAxMTQsMTA4IDExNCwxMzBjMCwxOSAtMTA0LDE0MSAtMTE5LDEzOWMtMywwIC0zNSwtMzIgLTcwLC03MHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMyIgZD0ibTExOTUsMTkyNmMtNTcsLTQ5IC0xNzUsLTIyNiAtMjE0LC0zMjBjLTIxLC01MCAtMjUsLTc4IC0yNiwtMTU2YzAsLTg2IDMsLTEwMCAyOSwtMTQ3YzgyLC0xNDggMzE0LC0xODggNDg1LC04M2MxNTMsOTQgMjAwLDI4NyAxMTQsNDY5Yy0zMiw2NyAtMTA3LDE0OSAtMTgzLDIwMWMtNTcsMzggLTEzMyw4MCAtMTQ3LDgwYy01LDAgLTMxLC0yMCAtNTgsLTQ0em0xMjIsLTIyNmM1OCwtMzMgMTEzLC05NSAxNDIsLTE2MWMyOCwtNjAgMjYsLTkwIC02LC0xMjFjLTM5LC0zOCAtNzgsLTUwIC0xNTQsLTUxYy0xNDUsMCAtMjMwLDkwIC0xODUsMTk4YzMwLDcxIDExMSwxNjIgMTQ2LDE2NWMzLDAgMjgsLTEzIDU3LC0zMHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xNCIgZD0ibTIwMTMsMTg2NGMtMTI5LC00NyAtMjIzLC0yMDkgLTIyMywtMzg0YzAsLTE3MCA3NSwtMjU5IDI0MiwtMjkwYzU0LC0xMCA2OSwtOSAyMTIsMTZsMzksN2wtMjMsLTQyYy0yNSwtNDMgLTExOSwtMTQxIC0xODAsLTE4N2MtOTksLTc0IC0yMjEsLTExMSAtMzk0LC0xMjBjLTE1MCwtOCAtMTYyLC0xMyAtMTEwLC00N2M5OCwtNjUgMjM5LC0xMDIgMzU5LC05NWMxOTYsMTMgMzgzLDE3OSA0NTgsNDA3Yzk5LDI5NyAyOSw2MDcgLTE2MCw3MThjLTU2LDMyIC0xNTcsNDAgLTIyMCwxN3ptMTM4LC0yMDBjNTcsLTI4IDEyMSwtMTM1IDEzNSwtMjIxYzYsLTQwIDUsLTQyIC0yMCwtNDljLTE1LC0zIC02NCwtNCAtMTEwLC0yYy0xOTMsMTAgLTI3MywxMjMgLTE2OSwyMzljNTIsNTcgOTgsNjcgMTY0LDMzeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiIGlkPSJzdmdfMTUiIGQ9Im00NDAwLDEwMTFjLTE0LC01IC03MCwtMzggLTEyNSwtNzVjLTE5OCwtMTMyIC00MTcsLTIyOSAtNjQ5LC0yODZjLTEyOSwtMzEgLTMyMywtNjAgLTQwOSwtNjBjLTEyOCwwIC0yNjUsLTQ3IC0zMjIsLTEwOWMtMzcsLTQxIC0xMywtNDYgMjM4LC00NmMzMDQsMCA0ODQsMjkgNzQ0LDExOWMyNTUsODkgNTM0LDI1MyA3MjMsNDI0bDQ1LDQxbC0xMTAsMGMtNjAsLTEgLTEyMSwtNCAtMTM1LC04eiIvPgogIDwvZz4KIDwvZz4KPC9zdmc+" style="height:13px;width:auto;opacity:0.85;filter:brightness(1.8) saturate(0);" alt="logo"><h1>PROJECTILE LAB</h1></div><p style="padding-left:20px;">Kinematics · 3D Interactive</p></div>
+
+<div id="mode-bar">
+  <button class="mode-tab active" id="tab-explore" onclick="setMode('explore')">🔭 Explore</button>
+  <button class="mode-tab" id="tab-challenge" onclick="setMode('challenge')">🎯 Challenge</button>
+  <button class="mode-tab" id="tab-ar" onclick="openAR()">📡 AR Mode</button>
+</div>
+
+<!-- RIGHT HUD -->
+<div id="hud">
+  <h2>Measurements</h2>
+  <div class="dr"><span class="dl">θ  angle</span><span class="dv amber" id="v-angle">45.0°</span></div>
+  <div class="dr"><span class="dl">v₀ speed</span><span class="dv" id="v-v0">20.0 m/s</span></div>
+  <div class="dr"><span class="dl">h  height</span><span class="dv cyan" id="v-h">0.0 m</span></div>
+  <div class="dr"><span class="dl">g  gravity</span><span class="dv" id="v-g">9.81 m/s²</span></div>
+  <div class="hdiv"></div>
+  <div class="dr" id="row-range"><span class="dl">R  range</span><span class="dv white" id="v-range">—</span></div>
+  <div class="dr" id="row-maxh"><span class="dl">H  max height</span><span class="dv white" id="v-maxh">—</span></div>
+  <div class="dr" id="row-time"><span class="dl">T  flight time</span><span class="dv white" id="v-time">—</span></div>
+  <div class="dr" id="row-vx"><span class="dl">vₓ horiz. vel</span><span class="dv white" id="v-vx">—</span></div>
+  <div class="dr" id="row-vy"><span class="dl">v_y vert. vel</span><span class="dv white" id="v-vy">—</span></div>
+  <div class="hdiv"></div>
+  <div class="formula-box">R = v₀²·sin2θ / g<br>H = v₀²sin²θ / (2g)<br>T = 2v₀sinθ / g</div>
+  <div id="hud-challenge-note" style="display:none;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.7);text-align:center;letter-spacing:1px;padding-top:2px;">🎯 CHALLENGE MODE</div>
+</div>
+
+<!-- LEFT CHALLENGE PANEL -->
+<div id="challenge-panel">
+  <div class="ch-title"><span>🎯 Challenge</span><button class="ch-close" onclick="exitChallengeMode()">✕</button></div>
+  <div id="ch-q-text" class="ch-q"></div>
+  <div id="ch-given" class="ch-var"></div>
+  <div class="ch-input-row"><input type="number" id="ch-input" placeholder="?" step="any"><span class="ch-unit" id="ch-unit-lbl">m</span></div>
+  <div style="display:flex;gap:5px;"><button class="btn validate" onclick="validateChallenge()" style="flex:1;">✔ Check</button><button class="btn" onclick="nextChallenge()" style="flex:1;font-size:10px;">↻ New</button></div>
+  <div id="ch-result"></div>
+  <div style="margin-top:10px;border-top:1px solid rgba(255,200,60,.1);padding-top:8px;display:flex;justify-content:space-between;"><span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.5);">Score</span><span style="font-family:'Space Mono',monospace;font-size:13px;color:#ffcc44;" id="ch-score">0 / 0</span></div>
+</div>
+
+<!-- BOTTOM CONTROLS -->
+<div id="bottom-panels">
+  <div class="panel" style="min-width:295px;"><div class="panel-title">⚡ Launch</div>
+    <div class="panel-row"><span class="sl-lbl">θ</span><input type="range" id="sl-angle" min="0" max="90" value="45" step="0.5" oninput="onAngle()"><span class="sl-val" id="lbl-angle">45.0°</span></div>
+    <div class="panel-row"><span class="sl-lbl">v₀</span><input type="range" id="sl-v0" min="1" max="60" value="20" step="0.5" class="vel" oninput="onV0()"><span class="sl-val" id="lbl-v0">20.0 m/s</span></div>
+    <div class="panel-row"><span class="sl-lbl">h</span><input type="range" id="sl-h" min="0" max="30" value="0" step="0.1" class="hgt" oninput="onH()"><span class="sl-val" id="lbl-h">0.0 m</span></div>
+    <div class="panel-row" style="justify-content:center;gap:6px;margin-top:2px;flex-wrap:wrap;">
+      <button class="btn fire" id="btn-fire" onclick="fireLaunch()">🚀 Launch</button>
+      <button class="btn pause" id="btn-pause" onclick="togglePause()" style="display:none;">⏸ Pause</button>
+      <button class="btn" id="btn-step-back" onclick="stepAnim(-0.05)" style="display:none;padding:5px 8px;">◀</button>
+      <button class="btn" id="btn-step-fwd" onclick="stepAnim(0.05)" style="display:none;padding:5px 8px;">▶</button>
+      <button class="btn reset" onclick="resetScene()">↺ Reset</button>
+      <div class="sep"></div>
+      <label class="sw"><input type="checkbox" id="cb-trail" checked onchange="onTrail()"> trail</label>
+      <label class="sw"><input type="checkbox" id="cb-vectors" onchange="onVectors()"> vectors</label>
+    </div>
+  </div>
+  <div class="panel" style="min-width:180px;"><div class="panel-title">🌍 Environment</div>
+    <div class="panel-row"><span class="sl-lbl">g</span><input type="range" id="sl-g" min="1" max="25" value="9.81" step="0.01" oninput="onG()"><span class="sl-val" id="lbl-g">9.81</span></div>
+    <div class="panel-row" style="justify-content:center;"><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(9.81)">🌍</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(3.72)">🔴</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(1.62)">🌙</button></div>
+  </div>
+  <div class="panel" style="min-width:155px;"><div class="panel-title">📷 Camera</div><div class="panel-row"><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('launcher')">🔭 Launcher</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('range')">📏 Range</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('center')">🎯 Center</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setView('top')">🔝 Apex</button></div></div>
+  <div class="panel" style="min-width:130px;"><div class="panel-title">📐 Tools</div><div class="panel-row"><button class="btn" id="btn-vruler" style="font-size:10px;padding:4px 8px;" onclick="toggleVRuler()">📏 V-Ruler</button></div></div>
+  <div class="panel" style="min-width:155px;"><div class="panel-title">🎯 Objects</div><div class="panel-row"><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnPendulumManual()">🪀 Pendulum</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="spawnStackManual()">🧱 Blocks</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="clearChallengeObjects()">✕ Clear</button></div></div>
+</div>
+
+<button id="qr-btn" onclick="openQR()"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zm1 1v5h5V4zm1 1h3v3H5zm8-2h7v7h-7zm1 1v5h5V4zm1 1h3v3h-3zM3 13h7v7H3zm1 1v5h5v-5zm1 1h3v3H5zm8 0h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2zm-2 2h2v2h-2zm2-6h2v2h-2zm-4 2h2v2h-2z"/></svg></button>
+<div id="qr-overlay" onclick="closeQR(event)"><div id="qr-card"><h3>📱 Open on Mobile</h3><div id="qr-box"></div><div id="qr-url"></div><button id="qr-close" onclick="closeQR()">Close</button></div></div>
+<div id="ar-overlay"><video id="ar-video" autoplay playsinline muted></video><canvas id="ar-canvas"></canvas><button id="ar-close" onclick="closeAR()">✕ Exit AR</button><div id="ar-hud"><div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(140,200,255,.4);text-transform:uppercase;border-bottom:1px solid rgba(140,200,255,.1);padding-bottom:5px;margin-bottom:7px;">AR Readout</div><div class="dr"><span class="dl">θ</span><span class="dv amber" id="ar-v-angle">45°</span></div><div class="dr"><span class="dl">v₀</span><span class="dv" id="ar-v-v0">20 m/s</span></div><div class="dr"><span class="dl">R</span><span class="dv white" id="ar-v-range">—</span></div><div class="dr"><span class="dl">H</span><span class="dv white" id="ar-v-maxh">—</span></div><div class="dr"><span class="dl">T</span><span class="dv white" id="ar-v-time">—</span></div></div><div id="ar-challenge"><div class="ch-title"><span>🎯 AR Challenge</span></div><div id="ar-ch-text" style="font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.55;margin-bottom:7px;"></div><div id="ar-ch-given" class="ch-var" style="font-size:9px;"></div><div class="ch-input-row"><input type="number" id="ar-ch-input" placeholder="?" step="any"><span class="ch-unit" id="ar-ch-unit">m</span></div><button class="btn validate" onclick="validateARChallenge()" style="width:100%;margin-top:5px;">✔ Check</button><div id="ar-ch-result" style="display:none;"></div></div><div id="ar-marker-hint"><div style="font-size:28px;">🎯</div><p>Point camera at HIRO marker</p></div><div id="ar-ui"><button class="btn fire" onclick="arFire()">🚀 Launch</button><button class="btn reset" onclick="arReset()">↺ Reset</button><button class="btn" onclick="nextARChallenge()" style="font-size:10px;">↻ Challenge</button></div></div>
+<div id="hint">Drag to orbit · Scroll to zoom · Sliders to adjust</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+'use strict';
+const S = { angle:45, v0:20, h:0, g:9.81 };
+function compute(a,v0,h,g){ let rad=a*Math.PI/180, vx=v0*Math.cos(rad), vy=v0*Math.sin(rad), disc=vy*vy+2*g*h, T=disc<0?0:(vy+Math.sqrt(disc))/g; return {vx,vy,T,R:vx*T,H:h+vy*vy/(2*g)}; }
+
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('mainCanvas'),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; renderer.setClearColor(0x141c2e,1);
+const sc=new THREE.Scene(); sc.fog=new THREE.FogExp2(0x141c2e,0.003);
+const cam=new THREE.PerspectiveCamera(50,1,0.1,500);
+sc.add(new THREE.AmbientLight(0xd8eeff,1.4));
+const sun=new THREE.DirectionalLight(0xfff8e0,2.5); sun.position.set(50,70,30); sun.castShadow=true; sc.add(sun);
+sc.add(new THREE.DirectionalLight(0xd0e8ff,1.1).position.set(-30,20,-20));
+sc.add(new THREE.DirectionalLight(0xffe8d0,0.6).position.set(0,-4,40));
+sc.add(new THREE.DirectionalLight(0x70b8d8,0.5).position.set(0,2,0));
+
+function makeTextSprite(txt,sz,col){let c=document.createElement('canvas');c.width=128;c.height=64;let ctx=c.getContext('2d');ctx.fillStyle=col||'#fff';ctx.font=`bold ${sz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,64,32);let s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));s.renderOrder=10;return s;}
+
+// BENCH - shifted left by 0.6m, no grid lines
+const BENCH_Z=8, BENCH_X=400, BENCH_THICK=0.18, BENCH_LEG_H=1.0, BENCH_OFFSET=-0.6;
+const floor=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK, BENCH_Z*2), new THREE.MeshStandardMaterial({color:0x060c18,roughness:0.55,emissive:0x103050,emissiveIntensity:0.25}));
+floor.position.set(BENCH_OFFSET+BENCH_X/2, -BENCH_THICK/2,0); floor.receiveShadow=true; sc.add(floor);
+const trimMat=new THREE.MeshStandardMaterial({color:0x4a8aaa});
+[-BENCH_Z, BENCH_Z].forEach(z=>{let t=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK+0.02,0.12),trimMat);t.position.set(BENCH_OFFSET+BENCH_X/2,-BENCH_THICK/2,z+(z>0?0.06:-0.06));sc.add(t);});
+const legMat=new THREE.MeshStandardMaterial({color:0x3a6880});
+[-BENCH_Z+0.06, BENCH_Z-0.06].forEach(z=>{let a=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X,0.12,0.08),legMat);a.position.set(BENCH_OFFSET+BENCH_X/2,-BENCH_THICK-0.06,z);sc.add(a);});
+for(let lx=BENCH_OFFSET;lx<=BENCH_OFFSET+BENCH_X;lx+=20){[-BENCH_Z+0.3,BENCH_Z-0.3].forEach(z=>{let leg=new THREE.Mesh(new THREE.BoxGeometry(0.15,BENCH_LEG_H,0.15),legMat);leg.position.set(lx,-BENCH_THICK-BENCH_LEG_H/2,z);sc.add(leg);});}
+// MEASURING TAPE - starts at x=0
+let groundRulerGrp=new THREE.Group(); sc.add(groundRulerGrp);
+function buildGroundRuler(){
+  groundRulerGrp.children.forEach(c=>groundRulerGrp.remove(c));
+  const TAPE_W=0.26, TAPE_Y=0.003, TAPE_LEN=220, TAPE_START=0;
+  const tapeMat=new THREE.MeshStandardMaterial({color:0xf5c842,emissive:0x302200,emissiveIntensity:0.5});
+  const tapeBody=new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20,0.004,TAPE_W),tapeMat);
+  tapeBody.position.set(TAPE_START+(TAPE_LEN+20)/2, TAPE_Y,0);
+  groundRulerGrp.add(tapeBody);
+  const band0=new THREE.MeshStandardMaterial({color:0xf5c842}); const band1=new THREE.MeshStandardMaterial({color:0xfcf0c0});
+  for(let m=TAPE_START;m<TAPE_START+TAPE_LEN+10;m+=0.5){let bMat=(Math.round(m*2)%2===0)?band0:band1;let band=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.005,TAPE_W*0.96),bMat);band.position.set(m+0.25,TAPE_Y+0.001,0);groundRulerGrp.add(band);}
+  const tickMat=new THREE.MeshStandardMaterial({color:0x111111});
+  for(let cm=0;cm<=(TAPE_START+TAPE_LEN+10)*100;cm+=10){let x=cm/100;if(x<TAPE_START||x>TAPE_START+TAPE_LEN+10)continue;let isM=cm%100===0,isH=cm%50===0;let th=isM?0.17:isH?0.12:0.07,tw=isM?0.022:isH?0.016:0.01;let tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.006,th),tickMat);tick.position.set(x,TAPE_Y+0.003,0.13);groundRulerGrp.add(tick);if(isM||isH){let lbl=x===0?'0':(x%1===0?x+'m':x.toFixed(1)+'m');let sp=makeTextSprite(lbl,isM?26:18,'#ffffff');let sc2=isM?0.55:0.38;sp.scale.set(sc2,sc2*0.5,1);sp.position.set(x,TAPE_Y+(isM?0.22:0.15),0.2);groundRulerGrp.add(sp);}}
+  [-TAPE_W/2, TAPE_W/2].forEach(ez=>{let edgeStrip=new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20,0.006,0.012),new THREE.MeshStandardMaterial({color:0x111111}));edgeStrip.position.set(TAPE_START+(TAPE_LEN+20)/2,TAPE_Y+0.002,ez);groundRulerGrp.add(edgeStrip);});
+}
+buildGroundRuler();
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshStandardMaterial({color:0x060a10,roughness:0.98})).rotateX(-Math.PI/2).position.set(0,-BENCH_THICK-BENCH_LEG_H-0.02,0));
+sc.add(new THREE.GridHelper(600,300,0x0e1a28,0x080f18).position.set(0,-BENCH_THICK-BENCH_LEG_H-0.015,0));
+(()=>{let g=new THREE.BufferGeometry(),p=new Float32Array(3000);for(let i=0;i<1000;i++){p[i*3]=(Math.random()-.5)*600;p[i*3+1]=40+Math.random()*200;p[i*3+2]=(Math.random()-.5)*600;}g.setAttribute('position',new THREE.BufferAttribute(p,3));sc.add(new THREE.Points(g,new THREE.PointsMaterial({color:0x8899cc,size:0.45,transparent:true,opacity:.55})));})();
+sc.add(new THREE.Mesh(new THREE.SphereGeometry(8,16,16),new THREE.MeshLambertMaterial({color:0xbbc8d8,emissive:0x202840,emissiveIntensity:.3})).position.set(-120,100,-150));
+
+// LAUNCHER with correct barrel positioning and screen attached by center of right side to center of left end
+let cannonGrp,_barrelPivot,_screenGrp,_updateScreenPos;
+function buildLauncher(){if(cannonGrp)sc.remove(cannonGrp);let h=S.h,mountH=Math.max(h+0.5,0.5);cannonGrp=new THREE.Group();let stand=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,mountH,12),new THREE.MeshStandardMaterial({color:0xb8ccd8,roughness:.35,metalness:.85}));stand.position.set(0,mountH/2,0);cannonGrp.add(stand);let foot=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.18,2.2),new THREE.MeshStandardMaterial({color:0x2a3c4e}));foot.position.set(0,0.09,0);cannonGrp.add(foot);[[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]].forEach(([fx,fz])=>{let s=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),new THREE.MeshStandardMaterial({color:0x889aaa}));s.position.set(fx,0.11,fz);cannonGrp.add(s);});let rulerH=mountH+0.3;let plate=new THREE.Mesh(new THREE.BoxGeometry(.07,rulerH,.15),new THREE.MeshStandardMaterial({color:0x1a2c3c}));plate.position.set(.42,rulerH/2-.05,0);cannonGrp.add(plate);for(let i=0;i<Math.ceil(rulerH/0.5)+1;i++){let y=i*0.5;if(y>rulerH+0.1)break;let isMajor=i%2===0;let tw=isMajor?0.26:0.15;let tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.014,0.018),new THREE.MeshStandardMaterial({color:isMajor?0xffffff:0x88aabb,emissive:isMajor?0x88eeff:0x203040,emissiveIntensity:.5}));tick.position.set(.42+tw/2+0.035,y,0.08);cannonGrp.add(tick);}for(let m=0;m<=Math.floor(rulerH);m++){let sp=makeTextSprite(m+'m',22,'#88eeff');sp.scale.set(0.7,0.35,1);sp.position.set(0.42+0.55,m,0.12);cannonGrp.add(sp);}
+let pivotHousing=new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.45,24),new THREE.MeshStandardMaterial({color:0x2a3c4e}));pivotHousing.rotation.z=Math.PI/2;pivotHousing.position.set(0,h,0);cannonGrp.add(pivotHousing);
+let protR=1.1;let protArc=new THREE.Mesh(new THREE.TorusGeometry(protR,.03,8,30,Math.PI/2),new THREE.MeshStandardMaterial({color:0x80c0e0,emissive:0x103050,emissiveIntensity:.5}));protArc.position.set(0,h,.24);cannonGrp.add(protArc);
+let baseLine=new THREE.Mesh(new THREE.BoxGeometry(protR*1.1,.018,.018),new THREE.MeshStandardMaterial({color:0x80c0e0}));baseLine.position.set(protR*0.55,h,.24);cannonGrp.add(baseLine);
+let vertLine=new THREE.Mesh(new THREE.BoxGeometry(.018,protR*1.1,.018),new THREE.MeshStandardMaterial({color:0x80c0e0}));vertLine.position.set(0,h+protR*0.55,.24);cannonGrp.add(vertLine);
+for(let deg=0;deg<=90;deg+=5){let rad=deg*Math.PI/180,isMaj10=deg%10===0,tlen=isMaj10?(deg%30===0?0.30:0.20):0.12;let ox=Math.cos(rad),oy=Math.sin(rad),midR=protR+0.01-tlen/2;let tck=new THREE.Mesh(new THREE.BoxGeometry(.012,tlen,.016),new THREE.MeshStandardMaterial({color:isMaj10?0xffffff:0x88aabb}));tck.rotation.z=rad-Math.PI/2;tck.position.set(ox*midR,h+oy*midR,.24);cannonGrp.add(tck);}
+let needleLen=protR*0.9,needleAngle=S.angle*Math.PI/180;let needle=new THREE.Mesh(new THREE.BoxGeometry(.018,needleLen,.016),new THREE.MeshStandardMaterial({color:0xff4444,emissive:0xff2222,emissiveIntensity:.8}));needle.rotation.z=needleAngle-Math.PI/2;needle.position.set(Math.cos(needleAngle)*needleLen/2,h+Math.sin(needleAngle)*needleLen/2,.25);cannonGrp.add(needle);
+[0,30,60,90].forEach(deg=>{let rad=deg*Math.PI/180,lx=Math.cos(rad)*protR*1.38,ly=Math.sin(rad)*protR*1.38;let sp=makeTextSprite(deg+'°',26,deg===S.angle?'#ff8888':'#aaddff');sp.scale.set(0.9,0.45,1);sp.position.set(lx,h+ly,0.3);cannonGrp.add(sp);});
+let knob=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.3,12),new THREE.MeshStandardMaterial({color:0x111820}));knob.rotation.z=Math.PI/2;knob.position.set(0,h,.82);cannonGrp.add(knob);
+_barrelPivot=new THREE.Group();_barrelPivot.position.set(0,h,0);
+// Barrel: center of first third at pivot (x=0)
+let BARREL_LEN=6.0;
+let FIRST_THIRD = BARREL_LEN/3;
+let PIVOT_OFFSET = -FIRST_THIRD/2;
+let BACK_LEN = -PIVOT_OFFSET;
+let FRONT_LEN = BARREL_LEN + PIVOT_OFFSET;
+let NEW_TOTAL_LEN = BACK_LEN + FRONT_LEN;
+let tube=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,NEW_TOTAL_LEN,16,1,true),new THREE.MeshStandardMaterial({color:0xa8d8f0,transparent:true,opacity:.38}));
+tube.rotation.z=Math.PI/2;
+tube.position.x = (FRONT_LEN - BACK_LEN)/2;
+_barrelPivot.add(tube);
+let innerGlow=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,NEW_TOTAL_LEN*0.92,12),new THREE.MeshStandardMaterial({color:0x1166ff,emissive:0x0044cc,emissiveIntensity:.8,transparent:true,opacity:.5}));
+innerGlow.rotation.z=Math.PI/2;
+innerGlow.position.x = tube.position.x;
+_barrelPivot.add(innerGlow);
+let frontCap=new THREE.Mesh(new THREE.TorusGeometry(.42,.07,8,16),new THREE.MeshStandardMaterial({color:0x8ab4cc}));frontCap.rotation.y=Math.PI/2;frontCap.position.x=FRONT_LEN;_barrelPivot.add(frontCap);
+let clamp=new THREE.Mesh(new THREE.TorusGeometry(.52,.08,8,16),new THREE.MeshStandardMaterial({color:0x2a3c4e}));clamp.rotation.y=Math.PI/2;clamp.position.x=0;_barrelPivot.add(clamp);
+// SCREEN: attached to left side of barrel, rotating with the barrel angle
+let BLOCK_W=1.6, BLOCK_H=1.2, BLOCK_D=0.8;
+let screenGrp=new THREE.Group(); _screenGrp=screenGrp;
+let outerBlock=new THREE.Mesh(new THREE.BoxGeometry(BLOCK_W, BLOCK_H, BLOCK_D),new THREE.MeshStandardMaterial({color:0x1a2a3a,roughness:0.5,metalness:0.5}));
+outerBlock.castShadow=true; outerBlock.receiveShadow=true; screenGrp.add(outerBlock);
+let greenPanel=new THREE.Mesh(new THREE.BoxGeometry(BLOCK_W-0.2, BLOCK_H-0.2, 0.1),new THREE.MeshStandardMaterial({color:0x1a5c3a,emissive:0x0a4020,emissiveIntensity:0.5}));
+greenPanel.position.set(0,0,BLOCK_D/2+0.05); screenGrp.add(greenPanel);
+function makeWhiteScreenText(txt,fontSize){
+  let c=document.createElement('canvas');c.width=512;c.height=128;let ctx=c.getContext('2d');
+  ctx.fillStyle='#ffffff';ctx.font=`bold ${fontSize}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(txt,256,64);
+  let tex=new THREE.CanvasTexture(c);let mat=new THREE.SpriteMaterial({map:tex,transparent:true});
+  let s=new THREE.Sprite(mat);return s;
+}
+let textZ = BLOCK_D/2+0.1;
+let barrelAngleRad=S.angle*Math.PI/180;
+let angleSp=makeWhiteScreenText('θ='+S.angle.toFixed(1)+'°',64);angleSp.scale.set(1.5,0.45,1);angleSp.position.set(0,0.35,textZ);angleSp.material.rotation=barrelAngleRad;screenGrp.add(angleSp);
+let v0Sp=makeWhiteScreenText('v₀='+S.v0.toFixed(1)+' m/s',56);v0Sp.scale.set(1.4,0.4,1);v0Sp.position.set(0,-0.02,textZ);v0Sp.material.rotation=barrelAngleRad;screenGrp.add(v0Sp);
+let hSp=makeWhiteScreenText('h='+S.h.toFixed(1)+' m',56);hSp.scale.set(1.2,0.4,1);hSp.position.set(0,-0.38,textZ);hSp.material.rotation=barrelAngleRad;screenGrp.add(hSp);
+// Store sprite refs for live updates
+screenGrp.userData.angleSp=angleSp;screenGrp.userData.v0Sp=v0Sp;screenGrp.userData.hSp=hSp;
+screenGrp.userData.makeText=makeWhiteScreenText;screenGrp.userData.textZ=textZ;
+// Position screen: rotated with the barrel, offset along barrel's local -X axis
+_updateScreenPos=function(angleRad){
+  // The back end of the barrel in world space (relative to cannonGrp origin at 0,h,0):
+  // back end local pos in _barrelPivot: x = -BACK_LEN
+  // After rotation by angleRad: world offset = (-BACK_LEN*cos(angleRad), -BACK_LEN*sin(angleRad) + h, 0)
+  let bx = -BACK_LEN*Math.cos(angleRad) - (BLOCK_W/2)*Math.cos(angleRad);
+  let by = h + (-BACK_LEN*Math.sin(angleRad)) - (BLOCK_W/2)*Math.sin(angleRad);
+  screenGrp.position.set(bx, by, 0);
+  screenGrp.rotation.z = angleRad;
+};
+_updateScreenPos(barrelAngleRad);
+cannonGrp.add(screenGrp);
+cannonGrp.add(_barrelPivot);
+cannonGrp.position.set(0,0,0);
+sc.add(cannonGrp);
+updateBarrel();}
+function updatePedestal(){ buildLauncher(); }
+function updateBarrel(){ if(_barrelPivot) _barrelPivot.rotation.z=S.angle*Math.PI/180; if(_screenGrp && typeof _updateScreenPos==='function'){ let rad=S.angle*Math.PI/180; _updateScreenPos(rad); _screenGrp.children.forEach(c=>{ if(c.isSprite && c.material) c.material.rotation=rad; }); // Refresh screen text sprites
+  let ud=_screenGrp.userData,mk=ud.makeText,tz=ud.textZ;
+  if(mk&&ud.angleSp&&ud.v0Sp&&ud.hSp){
+    function refreshSprite(sp,txt,fs){let c=document.createElement('canvas');c.width=512;c.height=128;let ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.font=`bold ${fs}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,256,64);sp.material.map.dispose();sp.material.map=new THREE.CanvasTexture(c);sp.material.map.needsUpdate=true;}
+    refreshSprite(ud.angleSp,'θ='+S.angle.toFixed(1)+'°',64);
+    refreshSprite(ud.v0Sp,'v₀='+S.v0.toFixed(1)+' m/s',56);
+    refreshSprite(ud.hSp,'h='+S.h.toFixed(1)+' m',56);
+  }
+}}
+buildLauncher();
+
+// PROJECTILE with ground collision respecting radius
+let projectileMesh=(()=>{let m=new THREE.Mesh(new THREE.SphereGeometry(.275,16,16),new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4}));m.castShadow=true;m.position.set(0,Math.max(S.h,0.275),0);sc.add(m);return m;})();
+let trailLine=null,trailPts=[],showTrail=true,showVectors=false;
+function clearTrail(){if(trailLine)sc.remove(trailLine);trailLine=null;trailPts=[];}
+function addTrailPt(x,y){if(!showTrail)return;trailPts.push(new THREE.Vector3(x,y,0));if(trailLine)sc.remove(trailLine);if(trailPts.length<2)return;let geo=new THREE.BufferGeometry().setFromPoints(trailPts);trailLine=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xff8844,opacity:.55,transparent:true}));sc.add(trailLine);}
+let vecArrows=[];
+function clearVectors(){vecArrows.forEach(a=>sc.remove(a));vecArrows=[];}
+function drawVectors(x,y,vx,vy){clearVectors();if(!showVectors)return;let o=new THREE.Vector3(x,y,0),s=.5;
+  function makeArrow(dir,len,color){
+    let mat=new THREE.MeshBasicMaterial({color,depthTest:false,depthWrite:false,transparent:true,opacity:0.92});
+    let shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,len,8),mat);
+    let head=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.35,8),mat);
+    let grp=new THREE.Group();grp.renderOrder=999;
+    shaft.position.y=len/2;head.position.y=len+0.175;
+    grp.add(shaft);grp.add(head);
+    // rotate group so +Y aligns with dir
+    let axis=new THREE.Vector3(0,1,0),d=dir.clone().normalize();
+    grp.quaternion.setFromUnitVectors(axis,d);
+    grp.position.copy(o);
+    shaft.renderOrder=999;head.renderOrder=999;
+    return grp;
+  }
+  let lenX=Math.abs(vx)*s+0.1,lenY=Math.abs(vy)*s+0.1;
+  let ax=makeArrow(new THREE.Vector3(vx>=0?1:-1,0,0),lenX,0x60dfff);
+  let yd=vy>=0?new THREE.Vector3(0,1,0):new THREE.Vector3(0,-1,0);
+  let ay=makeArrow(yd,lenY,0xffdd44);
+  sc.add(ax,ay);vecArrows=[ax,ay];}
+let staticCurve=null;
+function drawStaticCurve(){if(staticCurve){sc.remove(staticCurve);staticCurve.geometry.dispose();}if(currentMode==='challenge')return;let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tip={x:0,y:S.h},a2=0.5*S.g,b2=-vy,c2=-tip.y,disc=b2*b2-4*a2*c2,T2=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),pts=[];for(let i=0;i<=120;i++){let t=(i/120)*T2;pts.push(new THREE.Vector3(tip.x+vx*t,Math.max(PROJ_R,tip.y+vy*t-0.5*S.g*t*t),0));}let geo=new THREE.BufferGeometry().setFromPoints(pts);let mat=new THREE.LineDashedMaterial({color:0x1a3a5a,dashSize:.8,gapSize:.5,opacity:.5,transparent:true});staticCurve=new THREE.Line(geo,mat);staticCurve.computeLineDistances();sc.add(staticCurve);}
+let landingRing=null;
+function drawLandingRing(x){if(landingRing)sc.remove(landingRing);let ring=new THREE.Mesh(new THREE.RingGeometry(.5,1.2,24),new THREE.MeshBasicMaterial({color:0xff4422,transparent:true,opacity:.6,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.set(x,PROJ_R,0);sc.add(ring);landingRing=ring;}
+
+// CHALLENGE OBJECTS: pendulum longer rope, smaller bob, proper physics; blocks with gravity always on
+let pendulumGrp=null,pendulumBob=null,pendulumRope=null,pendBobPos={x:0,y:0},pendHit=false,stackGrp=null,stackBlocks=[],stackVels=[],stackAngVels=[],chObjVisible=false;
+function clearChallengeObjects(){if(pendulumGrp)sc.remove(pendulumGrp);if(stackGrp)sc.remove(stackGrp);pendulumGrp=pendulumBob=null;stackGrp=null;stackBlocks=[];stackVels=[];stackAngVels=[];chObjVisible=false;pendHit=false;}
+function placePendulum(x,y){clearChallengeObjects();pendulumGrp=new THREE.Group();let pendRopeLen=Math.max(y*1.2,3.5); // longer rope
+let pendAnchorX=x,pendAnchorY=y+pendRopeLen;window.pendAnchorX=pendAnchorX;window.pendAnchorY=pendAnchorY;window.pendRopeLen=pendRopeLen;window.pendAngle=0;window.pendAngVel=0;
+let anchor=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),new THREE.MeshStandardMaterial({color:0x4a6888}));anchor.position.set(pendAnchorX,pendAnchorY,0);pendulumGrp.add(anchor);
+let beam=new THREE.Mesh(new THREE.BoxGeometry(1.2,.1,.1),new THREE.MeshStandardMaterial({color:0x3a5570}));beam.position.set(pendAnchorX,pendAnchorY,0);pendulumGrp.add(beam);
+pendulumRope=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,pendRopeLen,6),new THREE.MeshStandardMaterial({color:0xddbb88}));pendulumRope.position.set(x,(pendAnchorY+y)/2,0);pendulumGrp.add(pendulumRope);
+pendulumBob=new THREE.Mesh(new THREE.SphereGeometry(.5,16,16),new THREE.MeshStandardMaterial({color:0x4488ff,emissive:0x1133aa})); // smaller bob
+pendulumBob.position.set(x,y,0);pendulumGrp.add(pendulumBob);
+let ring=new THREE.Mesh(new THREE.TorusGeometry(.6,.05,8,24),new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.4}));ring.rotation.x=Math.PI/2;ring.position.set(x,y,0);pendulumGrp.add(ring);
+sc.add(pendulumGrp);pendBobPos={x,y};chObjVisible=true;syncPendVars();}
+function placeStack(x){clearChallengeObjects();stackGrp=new THREE.Group();
+// Blocks standing on their small side: narrow width (bW), tall height (bH), deep (bD)
+let bW=0.7,bH=2.2,bD=1.0;
+// Two blocks stacked vertically: bottom block sits on ground, top block sits on top
+let positions=[[x, bH/2, 0],[x, bH+bH/2, 0]];
+let colors=[0x3a5a7a,0x5a3a7a];
+positions.forEach((p,i)=>{let b=new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD),new THREE.MeshStandardMaterial({color:colors[i]}));b.position.set(p[0],p[1],p[2]);stackGrp.add(b);stackBlocks.push({mesh:b,restX:p[0],restY:p[1]});stackVels.push({x:0,y:0});stackAngVels.push(0);});sc.add(stackGrp);chObjVisible=true;}
+
+let pendAnchorX=0,pendAnchorY=0,pendRopeLen=0,pendAngVel=0,pendAngle=0;
+// Sync helper: copies window.pend* into local pend* vars after placePendulum sets them
+function syncPendVars(){pendAnchorX=window.pendAnchorX||0;pendAnchorY=window.pendAnchorY||0;pendRopeLen=window.pendRopeLen||0;pendAngle=window.pendAngle||0;pendAngVel=window.pendAngVel||0;}
+let projBouncing=false,projVx=0,projVy=0,projX=0,projY=0;
+let isFlying=false,isPaused=false,animT=0,animId=null,_spawnX=0,_spawnY=0;
+// Independent physics loop — keeps pendulum/blocks alive after projectile stops
+let _physLastFrame=performance.now();
+(function physLoop(now){
+  requestAnimationFrame(physLoop);
+  let dt=Math.min((now-_physLastFrame)/1000,0.05);
+  _physLastFrame=now;
+  if(!isPaused&&!isFlying&&chObjVisible)updateChallengePhysics(dt);
+})(_physLastFrame);
+const PROJ_R=0.275,GROUND_E=0.55;
+function getBarrelTip(){return{x:0,y:Math.max(S.h,PROJ_R)};}
+function fireLaunch(){if(isFlying&&!isPaused)cancelAnimationFrame(animId);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);pendHit=false;projBouncing=false;syncPendVars();if(stackGrp)stackVels.forEach(v=>{v.x=0;v.y=0;});if(pendulumGrp&&pendulumBob)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);isFlying=true;isPaused=false;animT=0;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-step-back').style.display='inline-block';document.getElementById('btn-step-fwd').style.display='inline-block';runAnim();}
+function runAnim(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tip=getBarrelTip(),spawnX=tip.x,spawnY=tip.y;_spawnX=spawnX;_spawnY=spawnY;let a2=0.5*S.g,b2=-vy,c2=-spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);let lastFrame=performance.now();projBouncing=false;projVx=vx;projVy=vy;projX=spawnX;projY=spawnY;function step(now){if(!isFlying)return;let dtRaw=(now-lastFrame)/1000,dt=isPaused?0:Math.min(dtRaw,0.05);lastFrame=now;if(!isPaused)animT+=dt;let bx,by,cvx,cvy;if(!projBouncing){bx=spawnX+vx*animT;by=spawnY+vy*animT-0.5*S.g*animT*animT;cvx=vx;cvy=vy-S.g*animT;// Check collision BEFORE ground transition so blocks/pendulum in path are hit
+if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);if(!pendHit&&animT>=Tland&&Tland>0){projBouncing=true;projX=spawnX+vx*Tland;projY=PROJ_R;projVx=cvx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}if(projBouncing&&!pendHit){bx=projX;by=projY;}}if(projBouncing){if(!isPaused){projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;}if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05){projVx=0;projVy=0;isFlying=false;document.getElementById('btn-pause').style.display='none';}}}bx=projX;by=projY;cvx=projVx;cvy=projVy;if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);}if(chObjVisible&&!isPaused)updateChallengePhysics(dt);projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';if(isFlying)animId=requestAnimationFrame(step);}animId=requestAnimationFrame(step);}
+function checkCollision(bx,by,vx,vy){if(pendulumBob&&!pendHit){let pb=pendulumBob.position,dist=Math.hypot(bx-pb.x,by-pb.y);if(dist<0.5+PROJ_R){pendHit=true;let nx=(bx-pb.x)/dist,ny=(by-pb.y)/dist;projX=pb.x+nx*(0.5+PROJ_R);projY=pb.y+ny*(0.5+PROJ_R);let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;let ropeX=pb.x-pendAnchorX,ropeY=pb.y-pendAnchorY,ropeLen=Math.hypot(ropeX,ropeY),tanX=-ropeY/ropeLen,tanY=ropeX/ropeLen,tanSpeed=(v2nNew*nx)*tanX+(v2nNew*ny)*tanY;pendAngle=Math.atan2(pb.x-pendAnchorX,-(pb.y-pendAnchorY));pendAngVel=tanSpeed/ropeLen;projBouncing=true;flashHit(pb.x,pb.y);}}if(stackBlocks.length>0&&!pendHit){for(let b of stackBlocks){let bp=b.mesh.position,hw=b.mesh.geometry.parameters.width/2+PROJ_R,hh=b.mesh.geometry.parameters.height/2+PROJ_R;if(Math.abs(bx-bp.x)<hw&&Math.abs(by-bp.y)<hh){pendHit=true;let ox=hw-Math.abs(bx-bp.x),oy=hh-Math.abs(by-bp.y),nx=0,ny=0;if(ox<oy)nx=(bx<bp.x?-1:1);else ny=(by<bp.y?-1:1);projX=bx+nx*ox;projY=by+ny*oy;let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;projBouncing=true;let idx=stackBlocks.indexOf(b);if(idx!==-1){stackVels[idx]={x:v2nNew*nx,y:v2nNew*ny};let halfW=b.mesh.geometry.parameters.width/2,impactX=(bx-bp.x),impactY=(by-bp.y);let tangX=-ny,tangY=nx;let arm=impactX*tangX+impactY*tangY;stackAngVels[idx]+=(v2nNew*m2)*arm*0.6;}flashHit(bp.x,bp.y);break;}}}}
+function updateChallengePhysics(dt){
+// --- Pendulum physics with energy-dissipating damping ---
+if(pendulumBob&&(pendHit||Math.abs(pendAngVel)>0.0001||Math.abs(pendAngle)>0.0001)){
+  let gL=S.g/Math.max(pendRopeLen,0.5);
+  // Damping coefficient chosen so oscillations fade visibly but not instantly
+  let damping=0.025;
+  pendAngVel+=(-gL*Math.sin(pendAngle)-damping*pendAngVel)*dt;
+  pendAngle+=pendAngVel*dt;
+  let bx=pendAnchorX+pendRopeLen*Math.sin(pendAngle),by=pendAnchorY-pendRopeLen*Math.cos(pendAngle);
+  pendulumBob.position.set(bx,by,0);
+  if(pendulumRope){
+    pendulumRope.position.set((pendAnchorX+bx)/2,(pendAnchorY+by)/2,0);
+    let len=Math.hypot(bx-pendAnchorX,by-pendAnchorY);
+    pendulumRope.scale.y=len/pendRopeLen;
+    pendulumRope.rotation.z=Math.atan2(bx-pendAnchorX,-(by-pendAnchorY));
+  }
+}
+// --- Block physics with gravity and elastic inter-block collisions ---
+if(stackBlocks.length){
+  const BLOCK_E=0.72; // restitution coefficient for block-block collisions
+  const GROUND_E_B=0.45; // ground restitution
+  stackBlocks.forEach((b,i)=>{
+    stackVels[i].y-=S.g*dt;
+    b.mesh.position.x+=stackVels[i].x*dt;
+    b.mesh.position.y+=stackVels[i].y*dt;
+    b.mesh.rotation.z+=stackAngVels[i]*dt;
+    stackAngVels[i]*=0.985;
+    // Ground collision
+    let halfH=b.mesh.geometry.parameters.height/2;
+    if(b.mesh.position.y<=halfH){
+      b.mesh.position.y=halfH;
+      let spd=Math.abs(stackVels[i].y);
+      if(spd>0.3){
+        stackVels[i].y=spd*GROUND_E_B;
+        stackVels[i].x*=0.82;
+        stackAngVels[i]*=0.75;
+      }else{
+        stackVels[i].y=0;
+        stackVels[i].x*=0.78;
+        if(Math.abs(stackVels[i].x)<0.04)stackVels[i].x=0;
+        if(Math.abs(stackAngVels[i])<0.015)stackAngVels[i]=0;
+      }
+    }
+    if(b.mesh.position.x<-10||b.mesh.position.x>400)stackVels[i].x*=-0.85;
+  });
+  // Block-block elastic collision with energy loss (restitution < 1)
+  for(let i=0;i<stackBlocks.length;i++){
+    for(let j=i+1;j<stackBlocks.length;j++){
+      const a=stackBlocks[i].mesh,b2=stackBlocks[j].mesh;
+      const pw=(a.geometry.parameters.width+b2.geometry.parameters.width)/2;
+      const ph=(a.geometry.parameters.height+b2.geometry.parameters.height)/2;
+      const dx=b2.position.x-a.position.x,dy=b2.position.y-a.position.y;
+      if(Math.abs(dx)<pw&&Math.abs(dy)<ph){
+        const ox=pw-Math.abs(dx),oy=ph-Math.abs(dy);
+        if(ox<oy){
+          // Horizontal collision
+          const push=ox/2;const sign=dx>=0?1:-1;
+          a.position.x-=sign*push;b2.position.x+=sign*push;
+          // Elastic collision with restitution: v_rel_after = -e * v_rel_before (equal masses -> swap + dampen)
+          const va=stackVels[i].x,vb=stackVels[j].x;
+          const vRel=va-vb;
+          stackVels[i].x=va-(1+BLOCK_E)/2*vRel;
+          stackVels[j].x=vb+(1+BLOCK_E)/2*vRel;
+          // Impart some angular momentum from off-center impact
+          stackAngVels[i]+=(stackVels[j].x-va)*0.4;
+          stackAngVels[j]+=(stackVels[i].x-vb)*0.4;
+        }else{
+          // Vertical collision
+          const push=oy/2;const sign=dy>=0?1:-1;
+          a.position.y-=sign*push;b2.position.y+=sign*push;
+          const va=stackVels[i].y,vb=stackVels[j].y;
+          const vRel=va-vb;
+          stackVels[i].y=va-(1+BLOCK_E)/2*vRel;
+          stackVels[j].y=vb+(1+BLOCK_E)/2*vRel;
+        }
+      }
+    }
+  }
+}}
+function flashHit(x,y){let s=new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),new THREE.MeshBasicMaterial({color:0xffee44,transparent:true,opacity:.9}));s.position.set(x,y,0);sc.add(s);let op=0.9;function fade(){op-=0.08;s.material.opacity=op;if(op>0)requestAnimationFrame(fade);else sc.remove(s);}requestAnimationFrame(fade);}
+function togglePause(){if(!isFlying&&!isPaused)return;isPaused=!isPaused;document.getElementById('btn-pause').textContent=isPaused?'▶ Resume':'⏸ Pause';}
+function stepAnim(delta){if(!projectileMesh.visible)return;isPaused=true;isFlying=true;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-pause').textContent='▶ Resume';let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-_spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),bx,by,cvx,cvy;if(!projBouncing){animT=Math.max(0,Math.min(animT+delta,Tland+0.001));if(animT<=Tland){bx=_spawnX+vx*animT;by=Math.max(PROJ_R,_spawnY+vy*animT-0.5*S.g*animT*animT);cvx=vx;cvy=vy-S.g*animT;if(animT>=Tland){projBouncing=true;projX=_spawnX+vx*Tland;projY=PROJ_R;projVx=vx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}}}else{let dt=delta;projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;}}bx=projX;by=projY;cvx=projVx;cvy=projVy;}projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';}
+function resetScene(){if(animId)cancelAnimationFrame(animId);isFlying=false;isPaused=false;animT=0;projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);landingRing=null;pendHit=false;if(pendulumBob&&pendulumGrp)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);if(stackBlocks.length)stackBlocks.forEach((b,i)=>{b.mesh.position.set(b.restX,b.restY,0);stackVels[i]={x:0,y:0};stackAngVels[i]=0;b.mesh.rotation.z=0;});document.getElementById('btn-pause').style.display='none';document.getElementById('btn-step-back').style.display='none';document.getElementById('btn-step-fwd').style.display='none';drawStaticCurve();updateHUD();}
+function updateHUD(){let {vx,vy,T,R,H}=compute(S.angle,S.v0,S.h,S.g);document.getElementById('v-angle').innerText=S.angle.toFixed(1)+'°';document.getElementById('v-v0').innerText=S.v0.toFixed(1)+' m/s';document.getElementById('v-h').innerText=S.h.toFixed(1)+' m';document.getElementById('v-g').innerText=S.g.toFixed(2)+' m/s²';document.getElementById('v-range').innerText=R.toFixed(2)+' m';document.getElementById('v-maxh').innerText=H.toFixed(2)+' m';document.getElementById('v-time').innerText=T.toFixed(2)+' s';document.getElementById('v-vx').innerText=vx.toFixed(2)+' m/s';document.getElementById('v-vy').innerText=vy.toFixed(2)+' m/s';drawStaticCurve();updateBarrel();}
+function hideHUDRow(id){document.getElementById(id).style.display='none';}
+function showHUDRow(id){document.getElementById(id).style.display='flex';}
+function showAllHUDRows(){['row-range','row-maxh','row-time','row-vx','row-vy'].forEach(showHUDRow);}
+function onAngle(){S.angle=parseFloat(document.getElementById('sl-angle').value);document.getElementById('lbl-angle').innerText=S.angle.toFixed(1)+'°';buildLauncher();updateHUD();}
+function onV0(){S.v0=parseFloat(document.getElementById('sl-v0').value);document.getElementById('lbl-v0').innerText=S.v0.toFixed(1)+' m/s';updateHUD();updateBarrel();}
+function onH(){S.h=parseFloat(document.getElementById('sl-h').value);document.getElementById('lbl-h').innerText=S.h.toFixed(1)+' m';updatePedestal();updateHUD();projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);}
+function onG(){S.g=parseFloat(document.getElementById('sl-g').value);document.getElementById('lbl-g').innerText=S.g.toFixed(2);updateHUD();}
+function setG(v){S.g=v;document.getElementById('sl-g').value=v;document.getElementById('lbl-g').innerText=v.toFixed(2);updateHUD();}
+function onTrail(){showTrail=document.getElementById('cb-trail').checked;if(!showTrail)clearTrail();}
+function onVectors(){showVectors=document.getElementById('cb-vectors').checked;if(!showVectors)clearVectors();}
+let isDrag=false,lastMouse={x:0,y:0},orb={theta:0.4,phi:0.9,radius:30,cx:10,cy:4,cz:0};
+function applyCam(){cam.position.set(orb.cx+orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta),orb.cy+orb.radius*Math.cos(orb.phi),orb.cz+orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta));cam.lookAt(orb.cx,orb.cy,orb.cz);}
+applyCam(); let camAnimId=null;
+function animateCamTo(target){if(camAnimId)cancelAnimationFrame(camAnimId);let start={theta:orb.theta,phi:orb.phi,radius:orb.radius,cx:orb.cx,cy:orb.cy,cz:orb.cz},end=Object.assign({},target),dur=700,t0=performance.now(),dTheta=end.theta-start.theta;while(dTheta>Math.PI)dTheta-=2*Math.PI;while(dTheta<-Math.PI)dTheta+=2*Math.PI;function tick(now){let t=Math.min((now-t0)/dur,1),k=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;orb.theta=start.theta+dTheta*k;orb.phi=start.phi+(end.phi-start.phi)*k;orb.radius=start.radius+(end.radius-start.radius)*k;orb.cx=start.cx+(end.cx-start.cx)*k;orb.cy=start.cy+(end.cy-start.cy)*k;orb.cz=start.cz+(end.cz-start.cz)*k;applyCam();if(t<1)camAnimId=requestAnimationFrame(tick);else camAnimId=null;}camAnimId=requestAnimationFrame(tick);}
+function setView(v){let target={};if(v==='launcher')target={theta:0,phi:Math.PI/2,radius:8,cx:0,cy:Math.max(S.h,2),cz:0};else if(v==='range'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tl=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);target={theta:0,phi:Math.PI/2,radius:10,cx:vx*Tl,cy:1,cz:0};}else if(v==='center'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,T2=disc<0?0.1:(-b2+Math.sqrt(disc))/(2*a2),landX=vx*T2,apexY=S.h+vy*vy/(2*S.g);target={theta:0,phi:Math.PI/2,radius:Math.max(landX*0.65,apexY*2,20),cx:landX/2,cy:apexY*0.5,cz:0};}else if(v==='top'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tApex=vy/S.g,apexX=vx*tApex,apexY=S.h+vy*vy/(2*S.g);target={theta:0,phi:Math.PI/2,radius:Math.max(apexX*1.2,apexY*1.8,20),cx:apexX,cy:apexY,cz:0};}else target={theta:0.4,phi:0.85,radius:30,cx:10,cy:4,cz:0};animateCamTo(target);}
+document.getElementById('mainCanvas').addEventListener('mousedown',e=>{if(e.target.closest('#bottom-panels'))return;isDrag=true;lastMouse={x:e.clientX,y:e.clientY};});
+window.addEventListener('mousemove',e=>{if(!isDrag)return;orb.theta-=(e.clientX-lastMouse.x)*0.006;orb.phi=Math.max(0.04,Math.min(Math.PI*0.49,orb.phi+(e.clientY-lastMouse.y)*0.006));lastMouse={x:e.clientX,y:e.clientY};applyCam();});
+window.addEventListener('mouseup',()=>isDrag=false);
+document.getElementById('mainCanvas').addEventListener('wheel',e=>{orb.radius*=1+e.deltaY*0.001;orb.radius=Math.max(8,Math.min(300,orb.radius));applyCam();},{passive:true});
+function resize(){let w=innerWidth,h=innerHeight;renderer.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+window.addEventListener('resize',resize); resize();
+function loop(){requestAnimationFrame(loop);renderer.render(sc,cam);}
+loop();
+
+// VRULER TOOL
+let toolCvs,tctx,vrulerVisible=false;setTimeout(()=>{toolCvs=document.createElement('canvas');toolCvs.id='toolCanvas';toolCvs.style.cssText='position:fixed;inset:0;z-index:5;pointer-events:none';document.body.appendChild(toolCvs);tctx=toolCvs.getContext('2d');function drawTools(){if(!toolCvs)return;toolCvs.width=innerWidth;toolCvs.height=innerHeight;tctx.clearRect(0,0,innerWidth,innerHeight);if(!vrulerVisible)return;let {H}=compute(S.angle,S.v0,S.h,S.g),maxH=Math.max(H,S.h+0.5,1),midX=0;try{let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,T2=disc<0?0.1:(-b2+Math.sqrt(disc))/(2*a2),landX=vx*T2;midX=landX/2;}catch(e){}let p0=worldToScreen(midX,0,0),pTop=worldToScreen(midX,maxH,0);if(!p0||!pTop)return;let sy0=p0.y,syTop=pTop.y,px_per_m=(sy0-syTop)/maxH,rulerX=p0.x;tctx.strokeStyle='rgba(100,160,220,0.55)';tctx.beginPath();tctx.moveTo(rulerX,syTop);tctx.lineTo(rulerX,sy0);tctx.stroke();for(let dm=0;dm<=maxH*10+5;dm++){let m=dm/10;if(m>maxH+0.05)break;let sy=sy0-m*px_per_m,is1m=dm%10===0,is05m=dm%5===0,tickW=is1m?25:is05m?16:9;tctx.strokeStyle=is1m?'rgba(140,200,255,0.85)':'rgba(100,160,220,0.55)';tctx.beginPath();tctx.moveTo(rulerX,sy);tctx.lineTo(rulerX+tickW,sy);tctx.stroke();if(is1m){tctx.font="bold 10px 'Space Mono'";tctx.fillStyle='rgba(140,200,255,0.9)';tctx.fillText(m.toFixed(1)+'m',rulerX+tickW+2,sy+4);}}let apexSy=sy0-H*px_per_m;if(apexSy>=syTop&&apexSy<=sy0){tctx.save();tctx.setLineDash([5,4]);tctx.strokeStyle='rgba(255,200,60,0.8)';tctx.beginPath();tctx.moveTo(rulerX-6,apexSy);tctx.lineTo(rulerX+80,apexSy);tctx.stroke();tctx.font="bold 9px 'Space Mono'";tctx.fillStyle='rgba(255,200,60,0.9)';tctx.fillText('H='+H.toFixed(2)+'m',rulerX+55,apexSy+4);tctx.restore();}}function worldToScreen(wx,wy,wz){let vec=new THREE.Vector4(wx,wy,wz,1);vec.applyMatrix4(cam.matrixWorldInverse);vec.applyMatrix4(cam.projectionMatrix);if(vec.w===0)return null;let nx=vec.x/vec.w,ny=vec.y/vec.w;return{x:(nx+1)/2*innerWidth,y:(1-ny)/2*innerHeight};}window.addEventListener('resize',()=>drawTools());setInterval(()=>drawTools(),60);},50);
+function toggleVRuler(){vrulerVisible=!vrulerVisible;document.getElementById('btn-vruler').classList.toggle('on',vrulerVisible);if(toolCvs&&tctx)drawTools();}
+function spawnPendulumManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tApex=vy/S.g,xApex=vx*tApex,yApex=S.h+vy*tApex-0.5*S.g*tApex*tApex;placePendulum(xApex,yApex);}
+function spawnStackManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);placeStack(vx*Tland);}
+// MODE & CHALLENGE
+let currentMode='explore',chScore=0,chTotal=0,chCurrent=null;
+const CHALLENGES=[
+{type:'range',gen:()=>{let a=Math.round(15+Math.random()*65),v=Math.round(10+Math.random()*40),h=Math.round(Math.random()*15),g=9.81,{R}=compute(a,v,h,g);return{a,v,h,g,ans:R,unit:'m',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>, height <b>${h} m</b>.<br>Find <span style="color:#78b4ff;">horizontal range R</span>.`,given:`θ=${a}° · v₀=${v} m/s · h=${h} m · g=${g}`,hideRows:['row-range']};}},
+{type:'maxh',gen:()=>{let a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81,{H}=compute(a,v,0,g);return{a,v,h:0,g,ans:H,unit:'m',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#60dfff;">maximum height H</span>.`,given:`θ=${a}° · v₀=${v} m/s · g=${g}`,hideRows:['row-maxh']};}},
+{type:'time',gen:()=>{let a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81,{T}=compute(a,v,0,g);return{a,v,h:0,g,ans:T,unit:'s',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#ffcc44;">flight time T</span>.`,given:`θ=${a}° · v₀=${v} m/s · g=${g}`,hideRows:['row-time']};}},
+{type:'vx',gen:()=>{let a=Math.round(10+Math.random()*70),v=Math.round(10+Math.random()*40),g=9.81,vx=v*Math.cos(a*Math.PI/180);return{a,v,h:0,g,ans:vx,unit:'m/s',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#7fffb2;">horizontal velocity vₓ</span>.`,given:`θ=${a}° · v₀=${v} m/s`,hideRows:['row-vx']};}}
+];
+function setMode(mode){currentMode=mode;document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+mode).classList.add('active');if(mode==='challenge'){document.getElementById('challenge-panel').style.display='block';document.getElementById('hud-challenge-note').style.display='block';nextChallenge();}else{document.getElementById('challenge-panel').style.display='none';document.getElementById('hud-challenge-note').style.display='none';showAllHUDRows();clearChallengeObjects();resetScene();}}
+function exitChallengeMode(){setMode('explore');}
+function nextChallenge(){document.getElementById('ch-result').style.display='none';document.getElementById('ch-input').value='';let tmpl=CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];chCurrent=tmpl.gen();let c=chCurrent;S.angle=c.a;S.v0=c.v;S.h=c.h;S.g=c.g;document.getElementById('sl-angle').value=c.a;document.getElementById('lbl-angle').innerText=c.a.toFixed(1)+'°';document.getElementById('sl-v0').value=c.v;document.getElementById('lbl-v0').innerText=c.v.toFixed(1)+' m/s';document.getElementById('sl-h').value=c.h;document.getElementById('lbl-h').innerText=c.h.toFixed(1)+' m';document.getElementById('sl-g').value=c.g;document.getElementById('lbl-g').innerText=c.g.toFixed(2);updatePedestal();updateHUD();showAllHUDRows();c.hideRows.forEach(hideHUDRow);clearChallengeObjects();let {R,H}=compute(c.a,c.v,c.h,c.g);if(c.type==='maxh'){let {vx}=compute(c.a,c.v,c.h,c.g);placePendulum(vx*(c.v*Math.sin(c.a*Math.PI/180)/c.g),H);}else if(c.type==='range')placeStack(R);resetScene();document.getElementById('ch-q-text').innerHTML=c.q;document.getElementById('ch-given').innerText=c.given;document.getElementById('ch-unit-lbl').innerText=c.unit;document.getElementById('ch-score').innerText=chScore+' / '+chTotal;}
+function validateChallenge(){if(!chCurrent)return;let ans=parseFloat(document.getElementById('ch-input').value);if(isNaN(ans)){showChResult('err','Enter numeric value.');return;}let correct=chCurrent.ans;chTotal++;if(Math.abs(ans-correct)<=correct*0.03){chScore++;showChResult('ok',`✅ Correct! = ${correct.toFixed(2)} ${chCurrent.unit}`);fireLaunch();}else if(Math.abs(ans-correct)<=correct*0.08)showChResult('partial',`🟡 Close! Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);else showChResult('err',`❌ Incorrect. Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);document.getElementById('ch-score').innerText=chScore+' / '+chTotal;showAllHUDRows();updateHUD();chCurrent.hideRows.forEach(r=>document.getElementById(r).style.display='none');}
+function showChResult(type,msg){let el=document.getElementById('ch-result');el.style.display='block';el.className=type;el.innerHTML=msg;}
+// AR MODE (placeholder)
+function openAR(){alert('AR Mode requires HTTPS and camera permissions.\nSimulation remains fully functional in Explore/Challenge modes.');}
+function closeAR(){}
+function arFire(){}
+function arReset(){}
+function nextARChallenge(){}
+function validateARChallenge(){}
+// QR
+let QR_URL=window.location.href,_qrG=false;
+function openQR(){document.getElementById('qr-overlay').classList.add('open');if(!_qrG&&window.QRCode){let box=document.getElementById('qr-box');box.innerHTML='';new QRCode(box,{text:QR_URL,width:160,height:160,colorDark:'#141c2e',colorLight:'#fff'});document.getElementById('qr-url').innerText=QR_URL.slice(0,60)+(QR_URL.length>60?'…':'');_qrG=true;}}
+function closeQR(e){if(!e||e.target===document.getElementById('qr-overlay')||e.currentTarget===document.getElementById('qr-close'))document.getElementById('qr-overlay').classList.remove('open');}
+</script>
+</body>
+</html>
