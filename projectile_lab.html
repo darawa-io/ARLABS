@@ -101,7 +101,7 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
 <body>
 <canvas id="mainCanvas"></canvas>
 
-<div id="title"><div style="display:flex;align-items:center;gap:7px;"><img src="data:image/svg+xml;base64,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LTQgLTk0LC0xMCAtMTY3LC00NmMtMTA5LC01NCAtMjA2LC0xNDMgLTMxNCwtMjg5Yy00NywtNjQgLTkwLC0xMTMgLTEwMCwtMTEzYy0xNCwwIC0xNSwxMyAtMTAsMTIzYzMsNjggMiwxMjkgLTIxMzZjLTEwLDE2IC02MCwtNSAtMTEwLC00N2MtMzIsLTI3IC0zNCwtMzEgLTQxLC0xMjdjLTksLTExOCAtMTMsLTEzMSAtNTEsLTE1MGMtMzUsLTE5IC0xNjIsLTIwIC0xNzcsLTJjLTUsNiAtMTYsMzggLTIzLDcxYy03LDMyIC0yMCw2OCAtMzAsNzljLTE3LDIxIC0xNywyMSAtODMsLTQzbC02NywtNjVsMzEsLTk1bDMxLC05NGwtMjcsLTUxYy04NCwtMTU2IC0yNTcsLTM1MCAtMzg0LC00MzBsLTQ1LC0yOGw1OCwtMjBjNjEsLTIwIDY3LC0zMyAyNiwtNTVjLTMzLC0xOCAtMTQ2LC04IC0yODQsMjRjLTE3OSw0MiAtMTkxLDQyIC0yNTAsLTNjLTcyLC01NiAtNjgsLTcyIDI5LC0xMDZjMTc0LC02MSAzODUsLTg0IDQ3NSwtNTJjNjMsMjIgMTI3LDcwIDIyOCwxNzNjMTE3LDExOCAyMTQsMjQ2IDI1OSwzNDJjMjAsNDEgNDEsODYgNDcsMTAwYzEwLDE5IDMwLDI5IDEwMiw1MGM1MCwxNSAxMDQsMzQgMTIyLDQzYzQzLDIzIDU1LDIxIDg0LC05YzUzLC01NyA2NiwtNTkgMjk0LC01N2MxNDcsMSAyMzYsNyAyOTUsMThjMTQxLDI4IDE5MiwyOSAyNzIsOWM0OCwtMTMgMTA3LC0xOSAxNzMsLTE4YzE3NywxIDI5Miw1MyAzNjgsMTY2Yzc5LDEyMCA5MywyNDMgNzcsNzE4Yy03LDE5NSAtMTMsMzU2IC0xNCwzNThjLTIsMSAtMzUsLTIzIC03NCwtNTR6bS02MjUsLTY4MmM3NiwtMzkgMTIwLC0xMjEgOTUsLTE3N2MtMTYsLTM1IC0xNDEsLTkyIC0yNTIsLTExNWMtMTA3LC0yMiAtMzU3LC0zNyAtMzc5LC0yMmMtMjAsMTQgLTcsMzkgNjcsMTI3Yzc1LDg4IDE5MiwxNzUgMjY5LDIwMGM2MSwxOSAxNDcsMTMgMjAwLC0xM3oiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMCIgZD0ibTEwODQsMjIyN2wtNjksLTY4bDU4LC01NGMzMiwtMzAgNjUsLTU1IDczLC01NWM4LDAgMzksMjIgNjgsNTBsNTMsNTBsMjksLTMxYzE2LC0xNyA0MywtMzkgNjEsLTUwYzM4LC0yNCA0OSwtMjAgMTEyLDQ1bDQ0LDQ1bC01OCw2NWMtMzEsMzYgLTYwLDY2IC02NCw2NmMtNCwwIC0zMywtMjcgLTY1LC01OWwtNTgsLTU5bC01OCw2MWwtNTgsNjJsLTY4LC02OHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMSIgZD0ibTI3NjksMjI3MmMtMTQsLTkgLTUzLC00MSAtODcsLTcxbC02MiwtNTRsMSwtNTg4YzEsLTQ4MSA0LC01ODYgMTUsLTU4MmMyMSw4IDg5LDEwMiAxMjMsMTcwYzE4LDM2IDM1LDkxIDQxLDEzMGMxMCw3MyAxMSw3MDIgMSw4OTVsLTYsMTE4bC0yNiwtMTh6Ii8+CiAgIDxwYXRoIGZpbGw9IiNCQkJCQkIiIGlkPSJzdmdfMTIiIGQ9Im0zOTQxLDIyMTlsLTY0LC03MGw2NCwtNjVjMzUsLTM1IDY5LC02NCA3NSwtNjRjMTksMCAxMTQsMTA4IDExNCwxMzBjMCwxOSAtMTA0LDE0MSAtMTE5LDEzOWMtMywwIC0zNSwtMzIgLTcwLC03MHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xMyIgZD0ibTExOTUsMTkyNmMtNTcsLTQ5IC0xNzUsLTIyNiAtMjE0LC0zMjBjLTIxLC01MCAtMjUsLTc4IC0yNiwtMTU2YzAsLTg2IDMsLTEwMCAyOSwtMTQ3YzgyLC0xNDggMzE0LC0xODggNDg1LC04M2MxNTMsOTQgMjAwLDI4NyAxMTQsNDY5Yy0zMiw2NyAtMTA3LDE0OSAtMTgzLDIwMWMtNTcsMzggLTEzMyw4MCAtMTQ3LDgwYy01LDAgLTMxLC0yMCAtNTgsLTQ0em0xMjIsLTIyNmM1OCwtMzMgMTEzLC05NSAxNDIsLTE2MWMyOCwtNjAgMjYsLTkwIC02LC0xMjFjLTM5LC0zOCAtNzgsLTUwIC0xNTQsLTUxYy0xNDUsMCAtMjMwLDkwIC0xODUsMTk4YzMwLDcxIDExMSwxNjIgMTQ2LDE2NWMzLDAgMjgsLTEzIDU3LC0zMHoiLz4KICAgPHBhdGggZmlsbD0iI0JCQkJCQiIgaWQ9InN2Z18xNCIgZD0ibTIwMTMsMTg2NGMtMTI5LC00NyAtMjIzLC0yMDkgLTIyMywtMzg0YzAsLTE3MCA3NSwtMjU5IDI0MiwtMjkwYzU0LC0xMCA2OSwtOSAyMTIsMTZsMzksN2wtMjMsLTQyYy0yNSwtNDMgLTExOSwtMTQxIC0xODAsLTE4N2MtOTksLTc0IC0yMjEsLTExMSAtMzk0LC0xMjBjLTE1MCwtOCAtMTYyLC0xMyAtMTEwLC00N2M5OCwtNjUgMjM5LC0xMDIgMzU5LC05NWMxOTYsMTMgMzgzLDE3OSA0NTgsNDA3Yzk5LDI5NyAyOSw2MDcgLTE2MCw3MThjLTU2LDMyIC0xNTcsNDAgLTIyMCwxN3ptMTM4LC0yMDBjNTcsLTI4IDEyMSwtMTM1IDEzNSwtMjIxYzYsLTQwIDUsLTQyIC0yMCwtNDljLTE1LC0zIC02NCwtNCAtMTEwLC0yYy0xOTMsMTAgLTI3MywxMjMgLTE2OSwyMzljNTIsNTcgOTgsNjcgMTY0LDMzeiIvPgogICA8cGF0aCBmaWxsPSIjQkJCQkJCIiIGlkPSJzdmdfMTUiIGQ9Im00NDAwLDEwMTFjLTE0LC01IC03MCwtMzggLTEyNSwtNzVjLTE5OCwtMTMyIC00MTcsLTIyOSAtNjQ5LC0yODZjLTEyOSwtMzEgLTMyMywtNjAgLTQwOSwtNjBjLTEyOCwwIC0yNjUsLTQ3IC0zMjIsLTEwOWMtMzcsLTQxIC0xMywtNDYgMjM4LC00NmMzMDQsMCA0ODQsMjkgNzQ0LDExOWMyNTUsODkgNTM0LDI1MyA3MjMsNDI0bDQ1LDQxbC0xMTAsMGMtNjAsLTEgLTEyMSwtNCAtMTM1LC04eiIvPgogIDwvZz4KIDwvZz4KPC9zdmc+" style="height:13px;width:auto;opacity:0.85;filter:brightness(1.8) saturate(0);" alt="logo"><h1>PROJECTILE LAB</h1></div><p style="padding-left:20px;">Kinematics · 3D Interactive</p></div>
+<div id="title"><div style="display:flex;align-items:center;gap:7px;"><svg viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="height:30px;width:auto;opacity:0.82;flex-shrink:0;"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><h1>PROJECTILE LAB</h1></div><p style="padding-left:20px;">Kinematics · 3D Interactive</p></div>
 
 <div id="mode-bar">
   <button class="mode-tab active" id="tab-explore" onclick="setMode('explore')">🔭 Explore</button>
@@ -201,7 +201,7 @@ for(let lx=BENCH_OFFSET;lx<=BENCH_OFFSET+BENCH_X;lx+=20){[-BENCH_Z+0.3,BENCH_Z-0
 let groundRulerGrp=new THREE.Group(); sc.add(groundRulerGrp);
 function buildGroundRuler(){
   groundRulerGrp.children.forEach(c=>groundRulerGrp.remove(c));
-  const TAPE_W=0.26, TAPE_Y=0.003, TAPE_LEN=220, TAPE_START=0;
+  const TAPE_W=0.52, TAPE_Y=0.003, TAPE_LEN=220, TAPE_START=0;
   const tapeMat=new THREE.MeshStandardMaterial({color:0xf5c842,emissive:0x302200,emissiveIntensity:0.5});
   const tapeBody=new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20,0.004,TAPE_W),tapeMat);
   tapeBody.position.set(TAPE_START+(TAPE_LEN+20)/2, TAPE_Y,0);
@@ -209,7 +209,7 @@ function buildGroundRuler(){
   const band0=new THREE.MeshStandardMaterial({color:0xf5c842}); const band1=new THREE.MeshStandardMaterial({color:0xfcf0c0});
   for(let m=TAPE_START;m<TAPE_START+TAPE_LEN+10;m+=0.5){let bMat=(Math.round(m*2)%2===0)?band0:band1;let band=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.005,TAPE_W*0.96),bMat);band.position.set(m+0.25,TAPE_Y+0.001,0);groundRulerGrp.add(band);}
   const tickMat=new THREE.MeshStandardMaterial({color:0x111111});
-  for(let cm=0;cm<=(TAPE_START+TAPE_LEN+10)*100;cm+=10){let x=cm/100;if(x<TAPE_START||x>TAPE_START+TAPE_LEN+10)continue;let isM=cm%100===0,isH=cm%50===0;let th=isM?0.17:isH?0.12:0.07,tw=isM?0.022:isH?0.016:0.01;let tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.006,th),tickMat);tick.position.set(x,TAPE_Y+0.003,0.13);groundRulerGrp.add(tick);if(isM||isH){let lbl=x===0?'0':(x%1===0?x+'m':x.toFixed(1)+'m');let sp=makeTextSprite(lbl,isM?26:18,'#ffffff');let sc2=isM?0.55:0.38;sp.scale.set(sc2,sc2*0.5,1);sp.position.set(x,TAPE_Y+(isM?0.22:0.15),0.2);groundRulerGrp.add(sp);}}
+  for(let cm=0;cm<=(TAPE_START+TAPE_LEN+10)*100;cm+=10){let x=cm/100;if(x<TAPE_START||x>TAPE_START+TAPE_LEN+10)continue;let isM=cm%100===0,isH=cm%50===0;let th=isM?0.17:isH?0.12:0.07,tw=isM?0.022:isH?0.016:0.01;let tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.006,th),tickMat);tick.position.set(x,TAPE_Y+0.003,0.13);groundRulerGrp.add(tick);if(isM||isH){let lbl=x===0?'0':(x%1===0?x+'m':x.toFixed(1)+'m');let sp=makeTextSprite(lbl,isM?42:28,'#7ec8e3');let sc2=isM?0.80:0.55;sp.scale.set(sc2,sc2*0.5,1);sp.position.set(x,TAPE_Y+(isM?0.30:0.20),0.2);groundRulerGrp.add(sp);}}
   [-TAPE_W/2, TAPE_W/2].forEach(ez=>{let edgeStrip=new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN+20,0.006,0.012),new THREE.MeshStandardMaterial({color:0x111111}));edgeStrip.position.set(TAPE_START+(TAPE_LEN+20)/2,TAPE_Y+0.002,ez);groundRulerGrp.add(edgeStrip);});
 }
 buildGroundRuler();
@@ -298,7 +298,7 @@ function updateBarrel(){ if(_barrelPivot) _barrelPivot.rotation.z=S.angle*Math.P
 buildLauncher();
 
 // PROJECTILE with ground collision respecting radius
-let projectileMesh=(()=>{let m=new THREE.Mesh(new THREE.SphereGeometry(.275,16,16),new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4}));m.castShadow=true;m.position.set(0,Math.max(S.h,0.275),0);sc.add(m);return m;})();
+let projectileMesh=(()=>{let m=new THREE.Mesh(new THREE.SphereGeometry(.275,16,16),new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4}));m.castShadow=true;m.position.set(0,S.h,0);sc.add(m);return m;})();
 let trailLine=null,trailPts=[],showTrail=true,showVectors=false;
 function clearTrail(){if(trailLine)sc.remove(trailLine);trailLine=null;trailPts=[];}
 function addTrailPt(x,y){if(!showTrail)return;trailPts.push(new THREE.Vector3(x,y,0));if(trailLine)sc.remove(trailLine);if(trailPts.length<2)return;let geo=new THREE.BufferGeometry().setFromPoints(trailPts);trailLine=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xff8844,opacity:.55,transparent:true}));sc.add(trailLine);}
@@ -323,7 +323,7 @@ function drawVectors(x,y,vx,vy){clearVectors();if(!showVectors)return;let o=new 
   let ax=makeArrow(new THREE.Vector3(vx>=0?1:-1,0,0),lenX,0x60dfff);
   let yd=vy>=0?new THREE.Vector3(0,1,0):new THREE.Vector3(0,-1,0);
   let ay=makeArrow(yd,lenY,0xffdd44);
-  sc.add(ax,ay);vecArrows=[ax,ay];}
+  sc.add(ax);sc.add(ay);vecArrows=[ax,ay];}
 let staticCurve=null;
 function drawStaticCurve(){if(staticCurve){sc.remove(staticCurve);staticCurve.geometry.dispose();}if(currentMode==='challenge')return;let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tip={x:0,y:S.h},a2=0.5*S.g,b2=-vy,c2=-tip.y,disc=b2*b2-4*a2*c2,T2=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),pts=[];for(let i=0;i<=120;i++){let t=(i/120)*T2;pts.push(new THREE.Vector3(tip.x+vx*t,Math.max(PROJ_R,tip.y+vy*t-0.5*S.g*t*t),0));}let geo=new THREE.BufferGeometry().setFromPoints(pts);let mat=new THREE.LineDashedMaterial({color:0x1a3a5a,dashSize:.8,gapSize:.5,opacity:.5,transparent:true});staticCurve=new THREE.Line(geo,mat);staticCurve.computeLineDistances();sc.add(staticCurve);}
 let landingRing=null;
@@ -342,9 +342,8 @@ pendulumBob.position.set(x,y,0);pendulumGrp.add(pendulumBob);
 let ring=new THREE.Mesh(new THREE.TorusGeometry(.6,.05,8,24),new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.4}));ring.rotation.x=Math.PI/2;ring.position.set(x,y,0);pendulumGrp.add(ring);
 sc.add(pendulumGrp);pendBobPos={x,y};chObjVisible=true;syncPendVars();}
 function placeStack(x){clearChallengeObjects();stackGrp=new THREE.Group();
-// Blocks standing on their small side: narrow width (bW), tall height (bH), deep (bD)
+// Two blocks stacked vertically: bottom on ground, top sitting on bottom
 let bW=0.7,bH=2.2,bD=1.0;
-// Two blocks stacked vertically: bottom block sits on ground, top block sits on top
 let positions=[[x, bH/2, 0],[x, bH+bH/2, 0]];
 let colors=[0x3a5a7a,0x5a3a7a];
 positions.forEach((p,i)=>{let b=new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD),new THREE.MeshStandardMaterial({color:colors[i]}));b.position.set(p[0],p[1],p[2]);stackGrp.add(b);stackBlocks.push({mesh:b,restX:p[0],restY:p[1]});stackVels.push({x:0,y:0});stackAngVels.push(0);});sc.add(stackGrp);chObjVisible=true;}
@@ -363,11 +362,34 @@ let _physLastFrame=performance.now();
   if(!isPaused&&!isFlying&&chObjVisible)updateChallengePhysics(dt);
 })(_physLastFrame);
 const PROJ_R=0.275,GROUND_E=0.55;
-function getBarrelTip(){return{x:0,y:Math.max(S.h,PROJ_R)};}
-function fireLaunch(){if(isFlying&&!isPaused)cancelAnimationFrame(animId);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);pendHit=false;projBouncing=false;syncPendVars();if(stackGrp)stackVels.forEach(v=>{v.x=0;v.y=0;});if(pendulumGrp&&pendulumBob)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);isFlying=true;isPaused=false;animT=0;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-step-back').style.display='inline-block';document.getElementById('btn-step-fwd').style.display='inline-block';runAnim();}
+function getBarrelTip(){return{x:0,y:S.h};}
+function fireLaunch(){if(isFlying&&!isPaused)cancelAnimationFrame(animId);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);pendHit=false;projBouncing=false;syncPendVars();if(pendulumGrp&&pendulumBob)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);projectileMesh.position.set(0,S.h,0);isFlying=true;isPaused=false;animT=0;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-step-back').style.display='inline-block';document.getElementById('btn-step-fwd').style.display='inline-block';runAnim();}
 function runAnim(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tip=getBarrelTip(),spawnX=tip.x,spawnY=tip.y;_spawnX=spawnX;_spawnY=spawnY;let a2=0.5*S.g,b2=-vy,c2=-spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);let lastFrame=performance.now();projBouncing=false;projVx=vx;projVy=vy;projX=spawnX;projY=spawnY;function step(now){if(!isFlying)return;let dtRaw=(now-lastFrame)/1000,dt=isPaused?0:Math.min(dtRaw,0.05);lastFrame=now;if(!isPaused)animT+=dt;let bx,by,cvx,cvy;if(!projBouncing){bx=spawnX+vx*animT;by=spawnY+vy*animT-0.5*S.g*animT*animT;cvx=vx;cvy=vy-S.g*animT;// Check collision BEFORE ground transition so blocks/pendulum in path are hit
 if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);if(!pendHit&&animT>=Tland&&Tland>0){projBouncing=true;projX=spawnX+vx*Tland;projY=PROJ_R;projVx=cvx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}if(projBouncing&&!pendHit){bx=projX;by=projY;}}if(projBouncing){if(!isPaused){projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;}if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05){projVx=0;projVy=0;isFlying=false;document.getElementById('btn-pause').style.display='none';}}}bx=projX;by=projY;cvx=projVx;cvy=projVy;if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);}if(chObjVisible&&!isPaused)updateChallengePhysics(dt);projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';if(isFlying)animId=requestAnimationFrame(step);}animId=requestAnimationFrame(step);}
-function checkCollision(bx,by,vx,vy){if(pendulumBob&&!pendHit){let pb=pendulumBob.position,dist=Math.hypot(bx-pb.x,by-pb.y);if(dist<0.5+PROJ_R){pendHit=true;let nx=(bx-pb.x)/dist,ny=(by-pb.y)/dist;projX=pb.x+nx*(0.5+PROJ_R);projY=pb.y+ny*(0.5+PROJ_R);let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;let ropeX=pb.x-pendAnchorX,ropeY=pb.y-pendAnchorY,ropeLen=Math.hypot(ropeX,ropeY),tanX=-ropeY/ropeLen,tanY=ropeX/ropeLen,tanSpeed=(v2nNew*nx)*tanX+(v2nNew*ny)*tanY;pendAngle=Math.atan2(pb.x-pendAnchorX,-(pb.y-pendAnchorY));pendAngVel=tanSpeed/ropeLen;projBouncing=true;flashHit(pb.x,pb.y);}}if(stackBlocks.length>0&&!pendHit){for(let b of stackBlocks){let bp=b.mesh.position,hw=b.mesh.geometry.parameters.width/2+PROJ_R,hh=b.mesh.geometry.parameters.height/2+PROJ_R;if(Math.abs(bx-bp.x)<hw&&Math.abs(by-bp.y)<hh){pendHit=true;let ox=hw-Math.abs(bx-bp.x),oy=hh-Math.abs(by-bp.y),nx=0,ny=0;if(ox<oy)nx=(bx<bp.x?-1:1);else ny=(by<bp.y?-1:1);projX=bx+nx*ox;projY=by+ny*oy;let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;projBouncing=true;let idx=stackBlocks.indexOf(b);if(idx!==-1){stackVels[idx]={x:v2nNew*nx,y:v2nNew*ny};let halfW=b.mesh.geometry.parameters.width/2,impactX=(bx-bp.x),impactY=(by-bp.y);let tangX=-ny,tangY=nx;let arm=impactX*tangX+impactY*tangY;stackAngVels[idx]+=(v2nNew*m2)*arm*0.6;}flashHit(bp.x,bp.y);break;}}}}
+function checkCollision(bx,by,vx,vy){if(pendulumBob&&!pendHit){let pb=pendulumBob.position,dist=Math.hypot(bx-pb.x,by-pb.y);if(dist<0.5+PROJ_R){pendHit=true;let nx=(bx-pb.x)/dist,ny=(by-pb.y)/dist;projX=pb.x+nx*(0.5+PROJ_R);projY=pb.y+ny*(0.5+PROJ_R);let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;let ropeX=pb.x-pendAnchorX,ropeY=pb.y-pendAnchorY,ropeLen=Math.hypot(ropeX,ropeY),tanX=-ropeY/ropeLen,tanY=ropeX/ropeLen,tanSpeed=(v2nNew*nx)*tanX+(v2nNew*ny)*tanY;pendAngle=Math.atan2(pb.x-pendAnchorX,-(pb.y-pendAnchorY));pendAngVel=tanSpeed/ropeLen;projBouncing=true;flashHit(pb.x,pb.y);}}if(stackBlocks.length>0&&!pendHit){for(let b of stackBlocks){
+  let bp=b.mesh.position;
+  // Use bounding circle for initial hit (handles rotated blocks too)
+  let hw=b.mesh.geometry.parameters.width/2,hh=b.mesh.geometry.parameters.height/2;
+  let blockR=Math.hypot(hw,hh)+PROJ_R;
+  let dx2=bx-bp.x,dy2=by-bp.y,dist2=Math.hypot(dx2,dy2);
+  if(dist2<blockR){
+    pendHit=true;
+    let nx=dist2>0.001?dx2/dist2:1,ny=dist2>0.001?dy2/dist2:0;
+    projX=bp.x+nx*blockR;projY=bp.y+ny*blockR;
+    let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0;
+    let v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2);
+    let v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;
+    projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;projBouncing=true;
+    let idx=stackBlocks.indexOf(b);
+    if(idx!==-1){
+      stackVels[idx]={x:v2nNew*nx,y:v2nNew*ny};
+      // Torque from off-center impact
+      let arm=Math.hypot(dx2,dy2)*0.5;
+      let cross=dx2*ny-dy2*nx;
+      stackAngVels[idx]+=v2nNew*arm*0.5*(cross>=0?1:-1);
+    }
+    flashHit(bp.x,bp.y);break;
+  }}}}
 function updateChallengePhysics(dt){
 // --- Pendulum physics with energy-dissipating damping ---
 if(pendulumBob&&(pendHit||Math.abs(pendAngVel)>0.0001||Math.abs(pendAngle)>0.0001)){
@@ -385,64 +407,137 @@ if(pendulumBob&&(pendHit||Math.abs(pendAngVel)>0.0001||Math.abs(pendAngle)>0.000
     pendulumRope.rotation.z=Math.atan2(bx-pendAnchorX,-(by-pendAnchorY));
   }
 }
-// --- Block physics with gravity and elastic inter-block collisions ---
-if(stackBlocks.length){
-  const BLOCK_E=0.72; // restitution coefficient for block-block collisions
-  const GROUND_E_B=0.45; // ground restitution
+// --- Block physics: COM-projection stability + SAT OBB block-block collision ---
+if(stackBlocks.length && pendHit){
+  const BLOCK_E = 0.40;
+  const GROUND_E_B = 0.30;
+
+  // Get 4 world-space corners of a rotated box
+  function getCorners(mesh){
+    let hw=mesh.geometry.parameters.width/2, hh=mesh.geometry.parameters.height/2;
+    let ang=mesh.rotation.z, ca=Math.cos(ang), sa=Math.sin(ang);
+    let cx=mesh.position.x, cy=mesh.position.y;
+    return [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([lx,ly])=>({
+      x: cx + lx*ca - ly*sa,
+      y: cy + lx*sa + ly*ca
+    }));
+  }
+
+  // Ground data: lowest corner Y, and COM-stability test
+  function blockGroundData(mesh){
+    let corners=getCorners(mesh);
+    let sorted=[...corners].sort((a,b)=>a.y-b.y);
+    let minY=sorted[0].y;
+    let baseLeft =Math.min(sorted[0].x, sorted[1].x);
+    let baseRight=Math.max(sorted[0].x, sorted[1].x);
+    let stable=(mesh.position.x >= baseLeft && mesh.position.x <= baseRight);
+    return{minY, stable};
+  }
+
+  // SAT test for two OBBs. Returns null if separated, else {depth, nx, ny} of minimum overlap axis.
+  function satOBB(mA, mB){
+    let cA=getCorners(mA), cB=getCorners(mB);
+    // Build axes: 2 per box (normals of each edge)
+    let axes=[];
+    [[cA[0],cA[1]],[cA[1],cA[2]],[cB[0],cB[1]],[cB[1],cB[2]]].forEach(([p,q])=>{
+      let ex=q.x-p.x, ey=q.y-p.y, len=Math.hypot(ex,ey);
+      if(len>0) axes.push({nx:-ey/len, ny:ex/len});
+    });
+    let minDepth=Infinity, bestNx=0, bestNy=0;
+    for(let {nx,ny} of axes){
+      let minA=Infinity,maxA=-Infinity,minB=Infinity,maxB=-Infinity;
+      cA.forEach(c=>{let p=c.x*nx+c.y*ny; minA=Math.min(minA,p); maxA=Math.max(maxA,p);});
+      cB.forEach(c=>{let p=c.x*nx+c.y*ny; minB=Math.min(minB,p); maxB=Math.max(maxB,p);});
+      let overlap=Math.min(maxA,maxB)-Math.max(minA,minB);
+      if(overlap<=0) return null; // separating axis found
+      if(overlap<minDepth){minDepth=overlap; bestNx=nx; bestNy=ny;}
+    }
+    // Ensure normal points from A to B
+    let dx=mB.position.x-mA.position.x, dy=mB.position.y-mA.position.y;
+    if(dx*bestNx+dy*bestNy < 0){bestNx=-bestNx; bestNy=-bestNy;}
+    return{depth:minDepth, nx:bestNx, ny:bestNy};
+  }
+
+  // Per-block integration + ground response
   stackBlocks.forEach((b,i)=>{
-    stackVels[i].y-=S.g*dt;
-    b.mesh.position.x+=stackVels[i].x*dt;
-    b.mesh.position.y+=stackVels[i].y*dt;
-    b.mesh.rotation.z+=stackAngVels[i]*dt;
-    stackAngVels[i]*=0.985;
-    // Ground collision
-    let halfH=b.mesh.geometry.parameters.height/2;
-    if(b.mesh.position.y<=halfH){
-      b.mesh.position.y=halfH;
+    // Always apply gravity — even a "resting" block must fall if support is removed
+    stackVels[i].y -= S.g*dt;
+    b.mesh.position.x += stackVels[i].x*dt;
+    b.mesh.position.y += stackVels[i].y*dt;
+    b.mesh.rotation.z += stackAngVels[i]*dt;
+    // Light damping — doesn't fight rotation
+    stackAngVels[i] *= 0.995;
+    stackVels[i].x  *= 0.999;
+
+    let {minY, stable}=blockGroundData(b.mesh);
+    if(minY < 0){
+      b.mesh.position.y -= minY;
       let spd=Math.abs(stackVels[i].y);
-      if(spd>0.3){
-        stackVels[i].y=spd*GROUND_E_B;
-        stackVels[i].x*=0.82;
-        stackAngVels[i]*=0.75;
-      }else{
-        stackVels[i].y=0;
-        stackVels[i].x*=0.78;
-        if(Math.abs(stackVels[i].x)<0.04)stackVels[i].x=0;
-        if(Math.abs(stackAngVels[i])<0.015)stackAngVels[i]=0;
+      if(spd > 0.35){
+        stackVels[i].y  =  spd * GROUND_E_B;
+        stackVels[i].x *= 0.80;
+        stackAngVels[i]*= 0.60;
+      } else {
+        stackVels[i].y = 0;
+        stackVels[i].x *= 0.70;
+        stackAngVels[i]*= 0.50;
+        if(Math.abs(stackVels[i].x) < 0.04) stackVels[i].x = 0;
+        if(Math.abs(stackAngVels[i]) < 0.02){
+          if(stable){
+            // Stable: snap to nearest 90° and sit flush
+            stackAngVels[i]=0;
+            b.mesh.rotation.z=Math.round(b.mesh.rotation.z/(Math.PI/2))*(Math.PI/2);
+            let {minY:mY2}=blockGroundData(b.mesh);
+            if(mY2<0) b.mesh.position.y-=mY2;
+          } else {
+            // Unstable: apply gravitational torque about the pivot corner
+            // Pivot = lowest corner; torque = g * horizontal distance COM→pivot
+            let corners=getCorners(b.mesh);
+            let sorted=[...corners].sort((a,bv)=>a.y-bv.y);
+            let pivot=sorted[0]; // lowest corner on ground
+            let comX=b.mesh.position.x;
+            let leverArm=comX-pivot.x; // +ve → COM to right of pivot → tips right (negative angVel)
+            // Moment of inertia ≈ (w²+h²)/12 for a rectangle
+            let hw=b.mesh.geometry.parameters.width/2, hh=b.mesh.geometry.parameters.height/2;
+            let I=(4*hw*hw+4*hh*hh)/12;
+            let torque = -S.g * leverArm / I; // α = torque / I (mass=1)
+            stackAngVels[i] += torque * dt * 3; // ×3 for snappier feel
+          }
+        }
       }
     }
-    if(b.mesh.position.x<-10||b.mesh.position.x>400)stackVels[i].x*=-0.85;
+    if(b.mesh.position.x<-10||b.mesh.position.x>400) stackVels[i].x*=-0.7;
+    // If resting flat on ground with no meaningful motion, zero out velocity accumulation
+    let {minY:checkY, stable:checkStable}=blockGroundData(b.mesh);
+    if(checkY>=0 && checkY<0.01 && checkStable &&
+       Math.abs(stackVels[i].x)<0.04 && Math.abs(stackVels[i].y)<0.04 &&
+       Math.abs(stackAngVels[i])<0.01){
+      stackVels[i].y=0; stackVels[i].x=0; stackAngVels[i]=0;
+    }
   });
-  // Block-block elastic collision with energy loss (restitution < 1)
+
+  // Block-block: SAT OBB — works for any rotation, no false overlaps at rest
   for(let i=0;i<stackBlocks.length;i++){
     for(let j=i+1;j<stackBlocks.length;j++){
-      const a=stackBlocks[i].mesh,b2=stackBlocks[j].mesh;
-      const pw=(a.geometry.parameters.width+b2.geometry.parameters.width)/2;
-      const ph=(a.geometry.parameters.height+b2.geometry.parameters.height)/2;
-      const dx=b2.position.x-a.position.x,dy=b2.position.y-a.position.y;
-      if(Math.abs(dx)<pw&&Math.abs(dy)<ph){
-        const ox=pw-Math.abs(dx),oy=ph-Math.abs(dy);
-        if(ox<oy){
-          // Horizontal collision
-          const push=ox/2;const sign=dx>=0?1:-1;
-          a.position.x-=sign*push;b2.position.x+=sign*push;
-          // Elastic collision with restitution: v_rel_after = -e * v_rel_before (equal masses -> swap + dampen)
-          const va=stackVels[i].x,vb=stackVels[j].x;
-          const vRel=va-vb;
-          stackVels[i].x=va-(1+BLOCK_E)/2*vRel;
-          stackVels[j].x=vb+(1+BLOCK_E)/2*vRel;
-          // Impart some angular momentum from off-center impact
-          stackAngVels[i]+=(stackVels[j].x-va)*0.4;
-          stackAngVels[j]+=(stackVels[i].x-vb)*0.4;
-        }else{
-          // Vertical collision
-          const push=oy/2;const sign=dy>=0?1:-1;
-          a.position.y-=sign*push;b2.position.y+=sign*push;
-          const va=stackVels[i].y,vb=stackVels[j].y;
-          const vRel=va-vb;
-          stackVels[i].y=va-(1+BLOCK_E)/2*vRel;
-          stackVels[j].y=vb+(1+BLOCK_E)/2*vRel;
-        }
+      let result=satOBB(stackBlocks[i].mesh, stackBlocks[j].mesh);
+      if(!result) continue;
+      let{depth,nx,ny}=result;
+      // Positional correction — push apart along collision normal
+      stackBlocks[i].mesh.position.x -= nx*depth/2;
+      stackBlocks[i].mesh.position.y -= ny*depth/2;
+      stackBlocks[j].mesh.position.x += nx*depth/2;
+      stackBlocks[j].mesh.position.y += ny*depth/2;
+      // Velocity impulse along normal (equal masses)
+      let van=stackVels[i].x*nx+stackVels[i].y*ny;
+      let vbn=stackVels[j].x*nx+stackVels[j].y*ny;
+      if(van-vbn > 0){
+        let imp=(1+BLOCK_E)*(van-vbn)/2;
+        stackVels[i].x-=imp*nx; stackVels[i].y-=imp*ny;
+        stackVels[j].x+=imp*nx; stackVels[j].y+=imp*ny;
+        // Angular impulse from off-center hit (approximate moment arm from depth)
+        let arm=depth*0.4;
+        stackAngVels[i]-=imp*arm*0.3;
+        stackAngVels[j]+=imp*arm*0.3;
       }
     }
   }
@@ -450,14 +545,14 @@ if(stackBlocks.length){
 function flashHit(x,y){let s=new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),new THREE.MeshBasicMaterial({color:0xffee44,transparent:true,opacity:.9}));s.position.set(x,y,0);sc.add(s);let op=0.9;function fade(){op-=0.08;s.material.opacity=op;if(op>0)requestAnimationFrame(fade);else sc.remove(s);}requestAnimationFrame(fade);}
 function togglePause(){if(!isFlying&&!isPaused)return;isPaused=!isPaused;document.getElementById('btn-pause').textContent=isPaused?'▶ Resume':'⏸ Pause';}
 function stepAnim(delta){if(!projectileMesh.visible)return;isPaused=true;isFlying=true;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-pause').textContent='▶ Resume';let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-_spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),bx,by,cvx,cvy;if(!projBouncing){animT=Math.max(0,Math.min(animT+delta,Tland+0.001));if(animT<=Tland){bx=_spawnX+vx*animT;by=Math.max(PROJ_R,_spawnY+vy*animT-0.5*S.g*animT*animT);cvx=vx;cvy=vy-S.g*animT;if(animT>=Tland){projBouncing=true;projX=_spawnX+vx*Tland;projY=PROJ_R;projVx=vx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}}}else{let dt=delta;projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;}}bx=projX;by=projY;cvx=projVx;cvy=projVy;}projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';}
-function resetScene(){if(animId)cancelAnimationFrame(animId);isFlying=false;isPaused=false;animT=0;projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);landingRing=null;pendHit=false;if(pendulumBob&&pendulumGrp)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);if(stackBlocks.length)stackBlocks.forEach((b,i)=>{b.mesh.position.set(b.restX,b.restY,0);stackVels[i]={x:0,y:0};stackAngVels[i]=0;b.mesh.rotation.z=0;});document.getElementById('btn-pause').style.display='none';document.getElementById('btn-step-back').style.display='none';document.getElementById('btn-step-fwd').style.display='none';drawStaticCurve();updateHUD();}
+function resetScene(){if(animId)cancelAnimationFrame(animId);isFlying=false;isPaused=false;animT=0;projectileMesh.position.set(0,S.h,0);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);landingRing=null;pendHit=false;if(pendulumBob&&pendulumGrp)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);document.getElementById('btn-pause').style.display='none';document.getElementById('btn-step-back').style.display='none';document.getElementById('btn-step-fwd').style.display='none';drawStaticCurve();updateHUD();}
 function updateHUD(){let {vx,vy,T,R,H}=compute(S.angle,S.v0,S.h,S.g);document.getElementById('v-angle').innerText=S.angle.toFixed(1)+'°';document.getElementById('v-v0').innerText=S.v0.toFixed(1)+' m/s';document.getElementById('v-h').innerText=S.h.toFixed(1)+' m';document.getElementById('v-g').innerText=S.g.toFixed(2)+' m/s²';document.getElementById('v-range').innerText=R.toFixed(2)+' m';document.getElementById('v-maxh').innerText=H.toFixed(2)+' m';document.getElementById('v-time').innerText=T.toFixed(2)+' s';document.getElementById('v-vx').innerText=vx.toFixed(2)+' m/s';document.getElementById('v-vy').innerText=vy.toFixed(2)+' m/s';drawStaticCurve();updateBarrel();}
 function hideHUDRow(id){document.getElementById(id).style.display='none';}
 function showHUDRow(id){document.getElementById(id).style.display='flex';}
 function showAllHUDRows(){['row-range','row-maxh','row-time','row-vx','row-vy'].forEach(showHUDRow);}
 function onAngle(){S.angle=parseFloat(document.getElementById('sl-angle').value);document.getElementById('lbl-angle').innerText=S.angle.toFixed(1)+'°';buildLauncher();updateHUD();}
 function onV0(){S.v0=parseFloat(document.getElementById('sl-v0').value);document.getElementById('lbl-v0').innerText=S.v0.toFixed(1)+' m/s';updateHUD();updateBarrel();}
-function onH(){S.h=parseFloat(document.getElementById('sl-h').value);document.getElementById('lbl-h').innerText=S.h.toFixed(1)+' m';updatePedestal();updateHUD();projectileMesh.position.set(0,Math.max(S.h,PROJ_R),0);}
+function onH(){S.h=parseFloat(document.getElementById('sl-h').value);document.getElementById('lbl-h').innerText=S.h.toFixed(1)+' m';updatePedestal();updateHUD();projectileMesh.position.set(0,S.h,0);}
 function onG(){S.g=parseFloat(document.getElementById('sl-g').value);document.getElementById('lbl-g').innerText=S.g.toFixed(2);updateHUD();}
 function setG(v){S.g=v;document.getElementById('sl-g').value=v;document.getElementById('lbl-g').innerText=v.toFixed(2);updateHUD();}
 function onTrail(){showTrail=document.getElementById('cb-trail').checked;if(!showTrail)clearTrail();}
@@ -477,7 +572,8 @@ function loop(){requestAnimationFrame(loop);renderer.render(sc,cam);}
 loop();
 
 // VRULER TOOL
-let toolCvs,tctx,vrulerVisible=false;setTimeout(()=>{toolCvs=document.createElement('canvas');toolCvs.id='toolCanvas';toolCvs.style.cssText='position:fixed;inset:0;z-index:5;pointer-events:none';document.body.appendChild(toolCvs);tctx=toolCvs.getContext('2d');function drawTools(){if(!toolCvs)return;toolCvs.width=innerWidth;toolCvs.height=innerHeight;tctx.clearRect(0,0,innerWidth,innerHeight);if(!vrulerVisible)return;let {H}=compute(S.angle,S.v0,S.h,S.g),maxH=Math.max(H,S.h+0.5,1),midX=0;try{let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,T2=disc<0?0.1:(-b2+Math.sqrt(disc))/(2*a2),landX=vx*T2;midX=landX/2;}catch(e){}let p0=worldToScreen(midX,0,0),pTop=worldToScreen(midX,maxH,0);if(!p0||!pTop)return;let sy0=p0.y,syTop=pTop.y,px_per_m=(sy0-syTop)/maxH,rulerX=p0.x;tctx.strokeStyle='rgba(100,160,220,0.55)';tctx.beginPath();tctx.moveTo(rulerX,syTop);tctx.lineTo(rulerX,sy0);tctx.stroke();for(let dm=0;dm<=maxH*10+5;dm++){let m=dm/10;if(m>maxH+0.05)break;let sy=sy0-m*px_per_m,is1m=dm%10===0,is05m=dm%5===0,tickW=is1m?25:is05m?16:9;tctx.strokeStyle=is1m?'rgba(140,200,255,0.85)':'rgba(100,160,220,0.55)';tctx.beginPath();tctx.moveTo(rulerX,sy);tctx.lineTo(rulerX+tickW,sy);tctx.stroke();if(is1m){tctx.font="bold 10px 'Space Mono'";tctx.fillStyle='rgba(140,200,255,0.9)';tctx.fillText(m.toFixed(1)+'m',rulerX+tickW+2,sy+4);}}let apexSy=sy0-H*px_per_m;if(apexSy>=syTop&&apexSy<=sy0){tctx.save();tctx.setLineDash([5,4]);tctx.strokeStyle='rgba(255,200,60,0.8)';tctx.beginPath();tctx.moveTo(rulerX-6,apexSy);tctx.lineTo(rulerX+80,apexSy);tctx.stroke();tctx.font="bold 9px 'Space Mono'";tctx.fillStyle='rgba(255,200,60,0.9)';tctx.fillText('H='+H.toFixed(2)+'m',rulerX+55,apexSy+4);tctx.restore();}}function worldToScreen(wx,wy,wz){let vec=new THREE.Vector4(wx,wy,wz,1);vec.applyMatrix4(cam.matrixWorldInverse);vec.applyMatrix4(cam.projectionMatrix);if(vec.w===0)return null;let nx=vec.x/vec.w,ny=vec.y/vec.w;return{x:(nx+1)/2*innerWidth,y:(1-ny)/2*innerHeight};}window.addEventListener('resize',()=>drawTools());setInterval(()=>drawTools(),60);},50);
+let toolCvs,tctx,vrulerVisible=false;setTimeout(()=>{toolCvs=document.createElement('canvas');toolCvs.id='toolCanvas';toolCvs.style.cssText='position:fixed;inset:0;z-index:5;pointer-events:none';document.body.appendChild(toolCvs);tctx=toolCvs.getContext('2d');function drawTools(){if(!toolCvs)return;toolCvs.width=innerWidth;toolCvs.height=innerHeight;tctx.clearRect(0,0,innerWidth,innerHeight);if(!vrulerVisible)return;let {H,vx:vx0,vy:vy0}=compute(S.angle,S.v0,S.h,S.g),maxH=Math.ceil(Math.max(H,S.h+0.5,1));// Place ruler at apex X (where Hmax actually is)
+let apexX=0;try{let tApex=vy0/S.g;apexX=vx0*tApex;}catch(e){}let p0=worldToScreen(apexX,0,0),pTop=worldToScreen(apexX,maxH,0);if(!p0||!pTop)return;let sy0=p0.y,syTop=pTop.y,px_per_m=(sy0-syTop)/maxH,rulerX=p0.x;tctx.strokeStyle='rgba(255,255,255,0.6)';tctx.beginPath();tctx.moveTo(rulerX,syTop);tctx.lineTo(rulerX,sy0);tctx.stroke();for(let dm=0;dm<=maxH*10;dm++){let m=dm/10;if(m>maxH+0.001)break;let sy=sy0-m*px_per_m,is1m=dm%10===0,is05m=dm%5===0,tickW=is1m?28:is05m?18:10;tctx.strokeStyle=is1m?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.5)';tctx.beginPath();tctx.moveTo(rulerX,sy);tctx.lineTo(rulerX+tickW,sy);tctx.stroke();if(is1m){tctx.font="bold 15px 'Space Mono'";tctx.fillStyle='rgba(255,255,255,0.95)';tctx.fillText(m.toFixed(0)+'m',rulerX+tickW+4,sy+5);}}}function worldToScreen(wx,wy,wz){let vec=new THREE.Vector4(wx,wy,wz,1);vec.applyMatrix4(cam.matrixWorldInverse);vec.applyMatrix4(cam.projectionMatrix);if(vec.w===0)return null;let nx=vec.x/vec.w,ny=vec.y/vec.w;return{x:(nx+1)/2*innerWidth,y:(1-ny)/2*innerHeight};}window.addEventListener('resize',()=>drawTools());setInterval(()=>drawTools(),60);},50);
 function toggleVRuler(){vrulerVisible=!vrulerVisible;document.getElementById('btn-vruler').classList.toggle('on',vrulerVisible);if(toolCvs&&tctx)drawTools();}
 function spawnPendulumManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tApex=vy/S.g,xApex=vx*tApex,yApex=S.h+vy*tApex-0.5*S.g*tApex*tApex;placePendulum(xApex,yApex);}
 function spawnStackManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);placeStack(vx*Tland);}
@@ -502,9 +598,11 @@ function arReset(){}
 function nextARChallenge(){}
 function validateARChallenge(){}
 // QR
-let QR_URL=window.location.href,_qrG=false;
+let QR_URL='https://darawa-io.github.io/ARLABS/projectile_lab.html',_qrG=false;
 function openQR(){document.getElementById('qr-overlay').classList.add('open');if(!_qrG&&window.QRCode){let box=document.getElementById('qr-box');box.innerHTML='';new QRCode(box,{text:QR_URL,width:160,height:160,colorDark:'#141c2e',colorLight:'#fff'});document.getElementById('qr-url').innerText=QR_URL.slice(0,60)+(QR_URL.length>60?'…':'');_qrG=true;}}
 function closeQR(e){if(!e||e.target===document.getElementById('qr-overlay')||e.currentTarget===document.getElementById('qr-close'))document.getElementById('qr-overlay').classList.remove('open');}
+// Init
+setTimeout(()=>{updateHUD();setView('center');},100);
 </script>
 </body>
 </html>
