@@ -433,6 +433,18 @@
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Radioactive Decay</span>
                     </div>
                 </div>
+
+                <div class="category-header collapsed-header" onclick="toggleCategory('kinematics-content')">
+                    <span>Kinematics</span>
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                
+                <div id="kinematics-content" class="category-content collapsed">
+                    <div class="gallery-card" onclick="loadSimulation('Projectile Motion', 'https://darawa-io.github.io/ARLABS/projectile_lab.html', [])">
+                        <img src="assets/projectile.png" alt="Interactive 2D Projectile Motion Virtual Physics Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Projectile+Motion'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Projectile Motion</span>
+                    </div>
+                </div>
                 
                 <div class="bg-[#0A4A7F]/5 border border-[#0A4A7F]/10 p-6 rounded-3xl mt-6">
                     <h4 class="text-[10px] font-black tracking-widest text-[#0A4A7F] uppercase mb-3">AR Assets</h4>
