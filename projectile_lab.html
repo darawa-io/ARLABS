@@ -4,21 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Projectile Motion Lab</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
 <style>
+/* ========== STYLES ========== */
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:'Syne',sans-serif;color:#e8f4ff;}
 #mainCanvas{position:fixed;inset:0;z-index:1;}
-
-#title{position:fixed;top:14px;left:16px;z-index:10;}
-#title h1{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:2px;}
-#title p{font-size:9px;color:rgba(140,200,255,.45);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px;}
-
+#title{position:fixed;top:14px;left:16px;z-index:10;display:flex;align-items:center;gap:10px;}
+#title-logo{width:32px;height:35px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:2px;}
+#title-text p{font-size:9px;color:rgba(140,200,255,.45);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px;}
 #mode-bar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:4px;background:rgba(18,26,46,.96);border:1px solid rgba(140,200,255,.25);border-radius:50px;padding:4px;}
 .mode-tab{padding:5px 16px;border-radius:50px;border:none;background:transparent;color:rgba(140,200,255,.5);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;letter-spacing:.5px;white-space:nowrap;}
 .mode-tab.active{background:rgba(140,200,255,.18);color:#78b4ff;border:1px solid rgba(140,200,255,.4);}
 .mode-tab:hover:not(.active){color:rgba(140,200,255,.8);}
-
 #hud{position:fixed;top:14px;right:14px;background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:16px;padding:14px 16px;min-width:222px;z-index:10;}
 #hud h2{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:rgba(140,200,255,.5);text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid rgba(140,200,255,.14);padding-bottom:6px;}
 .dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding:3px 6px;border-radius:6px;background:rgba(140,200,255,.05);}
@@ -27,8 +27,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:
 .amber{color:#ffcc44!important;}.red{color:#ff7799!important;}.cyan{color:#60dfff!important;}.white{color:#fff!important;}
 .hdiv{height:1px;background:rgba(140,200,255,.12);margin:7px 0;}
 .formula-box{padding:7px 10px;border-radius:8px;background:rgba(80,160,255,.07);border:1px solid rgba(80,160,255,.22);font-size:10px;font-family:'Space Mono',monospace;color:rgba(160,220,255,.85);line-height:1.9;text-align:center;margin-bottom:6px;}
-
-#challenge-panel{display:none;position:fixed;top:60px;left:14px;background:rgba(18,26,46,.97);backdrop-filter:blur(18px);border:1px solid rgba(255,200,60,.28);border-radius:14px;padding:14px;z-index:10;min-width:240px;max-width:265px;}
+#challenge-panel{display:none;position:fixed;top:60px;left:14px;background:rgba(18,26,46,.97);backdrop-filter:blur(18px);border:1px solid rgba(255,200,60,.28);border-radius:14px;padding:14px;z-index:10;min-width:240px;max-width:265px;transition: all 0.3s ease-in-out;}
+#challenge-panel.big-panel{min-width:320px;max-width:360px;padding:20px; border-radius:20px;}
+#challenge-panel.big-panel .ch-q{font-size:16px;}
+#challenge-panel.big-panel .ch-var{font-size:13px;padding:8px 12px;}
+#challenge-panel.big-panel .ch-input-row input[type=number]{font-size:15px;padding:8px 12px;width:110px;}
+#challenge-panel.big-panel .ch-unit{font-size:13px;}
+#challenge-panel.big-panel .btn.validate{font-size:15px;padding:8px 16px;}
+#challenge-panel.big-panel .ch-title span{font-size:11px;}
+#challenge-panel.big-panel .ch-message{font-size:12px;padding:8px;}
 .ch-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2.5px;color:rgba(255,200,60,.65);text-transform:uppercase;border-bottom:1px solid rgba(255,200,60,.15);padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
 .ch-close{background:none;border:none;color:rgba(255,200,60,.5);cursor:pointer;font-size:14px;line-height:1;padding:0;margin:0;outline:none;transition:color .15s;}
 .ch-close:hover{color:rgba(255,100,100,.85);}
@@ -42,7 +49,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:
 #ch-result.ok{background:rgba(80,200,80,.1);border:1px solid rgba(80,200,80,.35);color:#80e880;}
 #ch-result.err{background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);color:#ff8888;}
 #ch-result.partial{background:rgba(255,180,60,.08);border:1px solid rgba(255,180,60,.3);color:#ffc060;}
-
+.ch-message{font-family:'Syne',sans-serif;font-size:10px;color:rgba(255,200,100,.9);background:rgba(0,0,0,0.5);border-radius:8px;padding:6px;margin-top:8px;text-align:center;}
 #bottom-panels{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:flex-end;z-index:10;flex-wrap:nowrap;justify-content:center;max-width:calc(100vw - 20px);}
 .panel{background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:14px;padding:7px 14px;display:flex;flex-direction:column;gap:5px;}
 .panel-title{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:2.5px;color:rgba(140,200,255,.4);text-transform:uppercase;text-align:center;padding-bottom:4px;border-bottom:1px solid rgba(140,200,255,.1);}
@@ -55,7 +62,6 @@ input[type=range].vel::-webkit-slider-thumb{background:#ffcc44;}
 input[type=range].vel{background:rgba(255,200,60,.2)!important;}
 input[type=range].hgt::-webkit-slider-thumb{background:#60dfff;}
 input[type=range].hgt{background:rgba(60,200,255,.2)!important;}
-
 .btn{padding:5px 13px;border-radius:30px;border:1px solid rgba(140,200,255,.32);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;}
 .btn:hover{background:rgba(140,200,255,.22);border-color:rgba(140,200,255,.65);}
 .btn.on{background:rgba(140,200,255,.28);border-color:#78b4ff;color:#fff;}
@@ -68,7 +74,6 @@ input[type=range].hgt{background:rgba(60,200,255,.2)!important;}
 .sep{width:1px;height:16px;background:rgba(140,200,255,.18);flex-shrink:0;}
 .sw{display:flex;align-items:center;gap:5px;color:rgba(170,205,255,.75);font-size:10px;font-family:'Space Mono',monospace;white-space:nowrap;}
 input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;}
-
 #qr-btn{position:fixed;bottom:18px;left:18px;z-index:12;width:34px;height:34px;border-radius:10px;border:1px solid rgba(140,200,255,.32);background:rgba(18,26,46,.92);backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:#78b4ff;padding:0;outline:none;}
 #qr-btn:hover{background:rgba(140,200,255,.18);}
 #qr-btn svg{width:18px;height:18px;fill:currentColor;}
@@ -80,10 +85,7 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
 #qr-box canvas,#qr-box img{width:160px!important;height:160px!important;}
 #qr-url{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.5);text-align:center;word-break:break-all;line-height:1.6;}
 #qr-close{padding:6px 22px;border-radius:30px;border:1px solid rgba(140,200,255,.28);background:rgba(140,200,255,.08);color:#78b4ff;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;}
-
 #hint{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(140,200,255,.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:9;white-space:nowrap;}
-
-/* AR Overlay */
 #ar-overlay{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;background:#000;}
 #ar-overlay.open{display:flex;}
 #ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -94,14 +96,19 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
 #ar-marker-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,26,46,.88);border:1px solid rgba(140,200,255,.3);border-radius:16px;padding:18px 22px;text-align:center;pointer-events:none;z-index:5;}
 #ar-marker-hint p{font-family:'Space Mono',monospace;font-size:10px;color:rgba(140,200,255,.7);margin-top:8px;letter-spacing:1px;}
 #ar-ui{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(18,26,46,.9);backdrop-filter:blur(10px);border:1px solid rgba(140,200,255,.3);border-radius:50px;padding:8px 16px;display:flex;gap:10px;align-items:center;z-index:10;}
-
+#temp-message{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#ffcc44;padding:8px 16px;border-radius:40px;font-family:'Space Mono',monospace;font-size:12px;z-index:200;pointer-events:none;white-space:nowrap;backdrop-filter:blur(8px);border:1px solid rgba(255,200,60,.5);opacity:0;transition:opacity 0.2s;}
+#timer-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.88);backdrop-filter:blur(16px);border:2px solid #ffcc44;border-radius:24px;padding:20px 40px;z-index:300;display:none;flex-direction:column;align-items:center;gap:12px;font-family:'Space Mono',monospace;box-shadow:0 0 40px rgba(0,0,0,0.5);}
+#timer-display{font-size:72px;font-weight:bold;color:#ffcc44;letter-spacing:4px;}
+#timer-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#ffcc44;font-size:24px;cursor:pointer;font-weight:bold;padding:2px 8px;border-radius:30px;}
+#timer-close:hover{background:rgba(255,200,68,0.2);}
+#timer-label{font-size:16px;color:#aaa;letter-spacing:2px;}
 ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:rgba(140,200,255,.2);border-radius:2px;}
 </style>
 </head>
 <body>
 <canvas id="mainCanvas"></canvas>
 
-<div id="title"><div style="display:flex;align-items:center;gap:7px;"><svg viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="height:30px;width:auto;opacity:0.82;flex-shrink:0;"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><h1>PROJECTILE LAB</h1></div><p style="padding-left:20px;">Kinematics · 3D Interactive</p></div>
+<div id="title"><svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><div id="title-text"><h1>PROJECTILE LAB</h1><p>Kinematics · 3D Interactive</p></div></div>
 
 <div id="mode-bar">
   <button class="mode-tab active" id="tab-explore" onclick="setMode('explore')">🔭 Explore</button>
@@ -109,9 +116,7 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
   <button class="mode-tab" id="tab-ar" onclick="openAR()">📡 AR Mode</button>
 </div>
 
-<!-- RIGHT HUD -->
-<div id="hud">
-  <h2>Measurements</h2>
+<div id="hud"><h2>Measurements</h2>
   <div class="dr"><span class="dl">θ  angle</span><span class="dv amber" id="v-angle">45.0°</span></div>
   <div class="dr"><span class="dl">v₀ speed</span><span class="dv" id="v-v0">20.0 m/s</span></div>
   <div class="dr"><span class="dl">h  height</span><span class="dv cyan" id="v-h">0.0 m</span></div>
@@ -127,18 +132,23 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
   <div id="hud-challenge-note" style="display:none;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.7);text-align:center;letter-spacing:1px;padding-top:2px;">🎯 CHALLENGE MODE</div>
 </div>
 
-<!-- LEFT CHALLENGE PANEL -->
-<div id="challenge-panel">
+<div id="challenge-panel" class="big-panel">
   <div class="ch-title"><span>🎯 Challenge</span><button class="ch-close" onclick="exitChallengeMode()">✕</button></div>
   <div id="ch-q-text" class="ch-q"></div>
   <div id="ch-given" class="ch-var"></div>
-  <div class="ch-input-row"><input type="number" id="ch-input" placeholder="?" step="any"><span class="ch-unit" id="ch-unit-lbl">m</span></div>
+  <div class="ch-input-row"><input type="number" id="ch-input" placeholder="?" step="any" min="0"><span class="ch-unit" id="ch-unit-lbl">m</span></div>
   <div style="display:flex;gap:5px;"><button class="btn validate" onclick="validateChallenge()" style="flex:1;">✔ Check</button><button class="btn" onclick="nextChallenge()" style="flex:1;font-size:10px;">↻ New</button></div>
   <div id="ch-result"></div>
+  <div id="ch-message" class="ch-message"></div>
   <div style="margin-top:10px;border-top:1px solid rgba(255,200,60,.1);padding-top:8px;display:flex;justify-content:space-between;"><span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.5);">Score</span><span style="font-family:'Space Mono',monospace;font-size:13px;color:#ffcc44;" id="ch-score">0 / 0</span></div>
 </div>
 
-<!-- BOTTOM CONTROLS -->
+<div id="timer-panel">
+  <button id="timer-close" onclick="closeTimerPanel()">✕</button>
+  <div id="timer-display">0.00 s</div>
+  <div id="timer-label">Flight time</div>
+</div>
+
 <div id="bottom-panels">
   <div class="panel" style="min-width:295px;"><div class="panel-title">⚡ Launch</div>
     <div class="panel-row"><span class="sl-lbl">θ</span><input type="range" id="sl-angle" min="0" max="90" value="45" step="0.5" oninput="onAngle()"><span class="sl-val" id="lbl-angle">45.0°</span></div>
@@ -168,6 +178,7 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
 <div id="qr-overlay" onclick="closeQR(event)"><div id="qr-card"><h3>📱 Open on Mobile</h3><div id="qr-box"></div><div id="qr-url"></div><button id="qr-close" onclick="closeQR()">Close</button></div></div>
 <div id="ar-overlay"><video id="ar-video" autoplay playsinline muted></video><canvas id="ar-canvas"></canvas><button id="ar-close" onclick="closeAR()">✕ Exit AR</button><div id="ar-hud"><div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(140,200,255,.4);text-transform:uppercase;border-bottom:1px solid rgba(140,200,255,.1);padding-bottom:5px;margin-bottom:7px;">AR Readout</div><div class="dr"><span class="dl">θ</span><span class="dv amber" id="ar-v-angle">45°</span></div><div class="dr"><span class="dl">v₀</span><span class="dv" id="ar-v-v0">20 m/s</span></div><div class="dr"><span class="dl">R</span><span class="dv white" id="ar-v-range">—</span></div><div class="dr"><span class="dl">H</span><span class="dv white" id="ar-v-maxh">—</span></div><div class="dr"><span class="dl">T</span><span class="dv white" id="ar-v-time">—</span></div></div><div id="ar-challenge"><div class="ch-title"><span>🎯 AR Challenge</span></div><div id="ar-ch-text" style="font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.55;margin-bottom:7px;"></div><div id="ar-ch-given" class="ch-var" style="font-size:9px;"></div><div class="ch-input-row"><input type="number" id="ar-ch-input" placeholder="?" step="any"><span class="ch-unit" id="ar-ch-unit">m</span></div><button class="btn validate" onclick="validateARChallenge()" style="width:100%;margin-top:5px;">✔ Check</button><div id="ar-ch-result" style="display:none;"></div></div><div id="ar-marker-hint"><div style="font-size:28px;">🎯</div><p>Point camera at HIRO marker</p></div><div id="ar-ui"><button class="btn fire" onclick="arFire()">🚀 Launch</button><button class="btn reset" onclick="arReset()">↺ Reset</button><button class="btn" onclick="nextARChallenge()" style="font-size:10px;">↻ Challenge</button></div></div>
 <div id="hint">Drag to orbit · Scroll to zoom · Sliders to adjust</div>
+<div id="temp-message"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -176,6 +187,7 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
 const S = { angle:45, v0:20, h:0, g:9.81 };
 function compute(a,v0,h,g){ let rad=a*Math.PI/180, vx=v0*Math.cos(rad), vy=v0*Math.sin(rad), disc=vy*vy+2*g*h, T=disc<0?0:(vy+Math.sqrt(disc))/g; return {vx,vy,T,R:vx*T,H:h+vy*vy/(2*g)}; }
 
+// Three.js setup (condensed but fully functional)
 const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('mainCanvas'),antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; renderer.setClearColor(0x141c2e,1);
 const sc=new THREE.Scene(); sc.fog=new THREE.FogExp2(0x141c2e,0.003);
@@ -188,7 +200,7 @@ sc.add(new THREE.DirectionalLight(0x70b8d8,0.5).position.set(0,2,0));
 
 function makeTextSprite(txt,sz,col){let c=document.createElement('canvas');c.width=128;c.height=64;let ctx=c.getContext('2d');ctx.fillStyle=col||'#fff';ctx.font=`bold ${sz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,64,32);let s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));s.renderOrder=10;return s;}
 
-// BENCH - shifted left by 0.6m, no grid lines
+// BENCH
 const BENCH_Z=8, BENCH_X=400, BENCH_THICK=0.18, BENCH_LEG_H=1.0, BENCH_OFFSET=-0.6;
 const floor=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X, BENCH_THICK, BENCH_Z*2), new THREE.MeshStandardMaterial({color:0x060c18,roughness:0.55,emissive:0x103050,emissiveIntensity:0.25}));
 floor.position.set(BENCH_OFFSET+BENCH_X/2, -BENCH_THICK/2,0); floor.receiveShadow=true; sc.add(floor);
@@ -197,7 +209,6 @@ const trimMat=new THREE.MeshStandardMaterial({color:0x4a8aaa});
 const legMat=new THREE.MeshStandardMaterial({color:0x3a6880});
 [-BENCH_Z+0.06, BENCH_Z-0.06].forEach(z=>{let a=new THREE.Mesh(new THREE.BoxGeometry(BENCH_X,0.12,0.08),legMat);a.position.set(BENCH_OFFSET+BENCH_X/2,-BENCH_THICK-0.06,z);sc.add(a);});
 for(let lx=BENCH_OFFSET;lx<=BENCH_OFFSET+BENCH_X;lx+=20){[-BENCH_Z+0.3,BENCH_Z-0.3].forEach(z=>{let leg=new THREE.Mesh(new THREE.BoxGeometry(0.15,BENCH_LEG_H,0.15),legMat);leg.position.set(lx,-BENCH_THICK-BENCH_LEG_H/2,z);sc.add(leg);});}
-// MEASURING TAPE - starts at x=0
 let groundRulerGrp=new THREE.Group(); sc.add(groundRulerGrp);
 function buildGroundRuler(){
   groundRulerGrp.children.forEach(c=>groundRulerGrp.remove(c));
@@ -218,7 +229,7 @@ sc.add(new THREE.GridHelper(600,300,0x0e1a28,0x080f18).position.set(0,-BENCH_THI
 (()=>{let g=new THREE.BufferGeometry(),p=new Float32Array(3000);for(let i=0;i<1000;i++){p[i*3]=(Math.random()-.5)*600;p[i*3+1]=40+Math.random()*200;p[i*3+2]=(Math.random()-.5)*600;}g.setAttribute('position',new THREE.BufferAttribute(p,3));sc.add(new THREE.Points(g,new THREE.PointsMaterial({color:0x8899cc,size:0.45,transparent:true,opacity:.55})));})();
 sc.add(new THREE.Mesh(new THREE.SphereGeometry(8,16,16),new THREE.MeshLambertMaterial({color:0xbbc8d8,emissive:0x202840,emissiveIntensity:.3})).position.set(-120,100,-150));
 
-// LAUNCHER with correct barrel positioning and screen attached by center of right side to center of left end
+// LAUNCHER (shortened barrel)
 let cannonGrp,_barrelPivot,_screenGrp,_updateScreenPos;
 function buildLauncher(){if(cannonGrp)sc.remove(cannonGrp);let h=S.h,mountH=Math.max(h+0.5,0.5);cannonGrp=new THREE.Group();let stand=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,mountH,12),new THREE.MeshStandardMaterial({color:0xb8ccd8,roughness:.35,metalness:.85}));stand.position.set(0,mountH/2,0);cannonGrp.add(stand);let foot=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.18,2.2),new THREE.MeshStandardMaterial({color:0x2a3c4e}));foot.position.set(0,0.09,0);cannonGrp.add(foot);[[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]].forEach(([fx,fz])=>{let s=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),new THREE.MeshStandardMaterial({color:0x889aaa}));s.position.set(fx,0.11,fz);cannonGrp.add(s);});let rulerH=mountH+0.3;let plate=new THREE.Mesh(new THREE.BoxGeometry(.07,rulerH,.15),new THREE.MeshStandardMaterial({color:0x1a2c3c}));plate.position.set(.42,rulerH/2-.05,0);cannonGrp.add(plate);for(let i=0;i<Math.ceil(rulerH/0.5)+1;i++){let y=i*0.5;if(y>rulerH+0.1)break;let isMajor=i%2===0;let tw=isMajor?0.26:0.15;let tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.014,0.018),new THREE.MeshStandardMaterial({color:isMajor?0xffffff:0x88aabb,emissive:isMajor?0x88eeff:0x203040,emissiveIntensity:.5}));tick.position.set(.42+tw/2+0.035,y,0.08);cannonGrp.add(tick);}for(let m=0;m<=Math.floor(rulerH);m++){let sp=makeTextSprite(m+'m',22,'#88eeff');sp.scale.set(0.7,0.35,1);sp.position.set(0.42+0.55,m,0.12);cannonGrp.add(sp);}
 let pivotHousing=new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.45,24),new THREE.MeshStandardMaterial({color:0x2a3c4e}));pivotHousing.rotation.z=Math.PI/2;pivotHousing.position.set(0,h,0);cannonGrp.add(pivotHousing);
@@ -230,8 +241,7 @@ let needleLen=protR*0.9,needleAngle=S.angle*Math.PI/180;let needle=new THREE.Mes
 [0,30,60,90].forEach(deg=>{let rad=deg*Math.PI/180,lx=Math.cos(rad)*protR*1.38,ly=Math.sin(rad)*protR*1.38;let sp=makeTextSprite(deg+'°',26,deg===S.angle?'#ff8888':'#aaddff');sp.scale.set(0.9,0.45,1);sp.position.set(lx,h+ly,0.3);cannonGrp.add(sp);});
 let knob=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.3,12),new THREE.MeshStandardMaterial({color:0x111820}));knob.rotation.z=Math.PI/2;knob.position.set(0,h,.82);cannonGrp.add(knob);
 _barrelPivot=new THREE.Group();_barrelPivot.position.set(0,h,0);
-// Barrel: center of first third at pivot (x=0)
-let BARREL_LEN=6.0;
+let BARREL_LEN=3.0;
 let FIRST_THIRD = BARREL_LEN/3;
 let PIVOT_OFFSET = -FIRST_THIRD/2;
 let BACK_LEN = -PIVOT_OFFSET;
@@ -247,7 +257,6 @@ innerGlow.position.x = tube.position.x;
 _barrelPivot.add(innerGlow);
 let frontCap=new THREE.Mesh(new THREE.TorusGeometry(.42,.07,8,16),new THREE.MeshStandardMaterial({color:0x8ab4cc}));frontCap.rotation.y=Math.PI/2;frontCap.position.x=FRONT_LEN;_barrelPivot.add(frontCap);
 let clamp=new THREE.Mesh(new THREE.TorusGeometry(.52,.08,8,16),new THREE.MeshStandardMaterial({color:0x2a3c4e}));clamp.rotation.y=Math.PI/2;clamp.position.x=0;_barrelPivot.add(clamp);
-// SCREEN: attached to left side of barrel, rotating with the barrel angle
 let BLOCK_W=1.6, BLOCK_H=1.2, BLOCK_D=0.8;
 let screenGrp=new THREE.Group(); _screenGrp=screenGrp;
 let outerBlock=new THREE.Mesh(new THREE.BoxGeometry(BLOCK_W, BLOCK_H, BLOCK_D),new THREE.MeshStandardMaterial({color:0x1a2a3a,roughness:0.5,metalness:0.5}));
@@ -266,14 +275,9 @@ let barrelAngleRad=S.angle*Math.PI/180;
 let angleSp=makeWhiteScreenText('θ='+S.angle.toFixed(1)+'°',64);angleSp.scale.set(1.5,0.45,1);angleSp.position.set(0,0.35,textZ);angleSp.material.rotation=barrelAngleRad;screenGrp.add(angleSp);
 let v0Sp=makeWhiteScreenText('v₀='+S.v0.toFixed(1)+' m/s',56);v0Sp.scale.set(1.4,0.4,1);v0Sp.position.set(0,-0.02,textZ);v0Sp.material.rotation=barrelAngleRad;screenGrp.add(v0Sp);
 let hSp=makeWhiteScreenText('h='+S.h.toFixed(1)+' m',56);hSp.scale.set(1.2,0.4,1);hSp.position.set(0,-0.38,textZ);hSp.material.rotation=barrelAngleRad;screenGrp.add(hSp);
-// Store sprite refs for live updates
 screenGrp.userData.angleSp=angleSp;screenGrp.userData.v0Sp=v0Sp;screenGrp.userData.hSp=hSp;
 screenGrp.userData.makeText=makeWhiteScreenText;screenGrp.userData.textZ=textZ;
-// Position screen: rotated with the barrel, offset along barrel's local -X axis
 _updateScreenPos=function(angleRad){
-  // The back end of the barrel in world space (relative to cannonGrp origin at 0,h,0):
-  // back end local pos in _barrelPivot: x = -BACK_LEN
-  // After rotation by angleRad: world offset = (-BACK_LEN*cos(angleRad), -BACK_LEN*sin(angleRad) + h, 0)
   let bx = -BACK_LEN*Math.cos(angleRad) - (BLOCK_W/2)*Math.cos(angleRad);
   let by = h + (-BACK_LEN*Math.sin(angleRad)) - (BLOCK_W/2)*Math.sin(angleRad);
   screenGrp.position.set(bx, by, 0);
@@ -286,10 +290,7 @@ cannonGrp.position.set(0,0,0);
 sc.add(cannonGrp);
 updateBarrel();}
 function updatePedestal(){ buildLauncher(); }
-function updateBarrel(){ if(_barrelPivot) _barrelPivot.rotation.z=S.angle*Math.PI/180; if(_screenGrp && typeof _updateScreenPos==='function'){ let rad=S.angle*Math.PI/180; _updateScreenPos(rad); _screenGrp.children.forEach(c=>{ if(c.isSprite && c.material) c.material.rotation=rad; }); // Refresh screen text sprites
-  let ud=_screenGrp.userData,mk=ud.makeText,tz=ud.textZ;
-  if(mk&&ud.angleSp&&ud.v0Sp&&ud.hSp){
-    function refreshSprite(sp,txt,fs){let c=document.createElement('canvas');c.width=512;c.height=128;let ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.font=`bold ${fs}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,256,64);sp.material.map.dispose();sp.material.map=new THREE.CanvasTexture(c);sp.material.map.needsUpdate=true;}
+function updateBarrel(){ if(_barrelPivot) _barrelPivot.rotation.z=S.angle*Math.PI/180; if(_screenGrp && typeof _updateScreenPos==='function'){ let rad=S.angle*Math.PI/180; _updateScreenPos(rad); _screenGrp.children.forEach(c=>{ if(c.isSprite && c.material) c.material.rotation=rad; }); let ud=_screenGrp.userData,mk=ud.makeText,tz=ud.textZ; if(mk&&ud.angleSp&&ud.v0Sp&&ud.hSp){ function refreshSprite(sp,txt,fs){let c=document.createElement('canvas');c.width=512;c.height=128;let ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.font=`bold ${fs}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,256,64);sp.material.map.dispose();sp.material.map=new THREE.CanvasTexture(c);sp.material.map.needsUpdate=true;}
     refreshSprite(ud.angleSp,'θ='+S.angle.toFixed(1)+'°',64);
     refreshSprite(ud.v0Sp,'v₀='+S.v0.toFixed(1)+' m/s',56);
     refreshSprite(ud.hSp,'h='+S.h.toFixed(1)+' m',56);
@@ -297,7 +298,7 @@ function updateBarrel(){ if(_barrelPivot) _barrelPivot.rotation.z=S.angle*Math.P
 }}
 buildLauncher();
 
-// PROJECTILE with ground collision respecting radius
+// PROJECTILE
 let projectileMesh=(()=>{let m=new THREE.Mesh(new THREE.SphereGeometry(.275,16,16),new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4}));m.castShadow=true;m.position.set(0,S.h,0);sc.add(m);return m;})();
 let trailLine=null,trailPts=[],showTrail=true,showVectors=false;
 function clearTrail(){if(trailLine)sc.remove(trailLine);trailLine=null;trailPts=[];}
@@ -312,11 +313,9 @@ function drawVectors(x,y,vx,vy){clearVectors();if(!showVectors)return;let o=new 
     let grp=new THREE.Group();grp.renderOrder=999;
     shaft.position.y=len/2;head.position.y=len+0.175;
     grp.add(shaft);grp.add(head);
-    // rotate group so +Y aligns with dir
     let axis=new THREE.Vector3(0,1,0),d=dir.clone().normalize();
     grp.quaternion.setFromUnitVectors(axis,d);
     grp.position.copy(o);
-    shaft.renderOrder=999;head.renderOrder=999;
     return grp;
   }
   let lenX=Math.abs(vx)*s+0.1,lenY=Math.abs(vy)*s+0.1;
@@ -329,280 +328,308 @@ function drawStaticCurve(){if(staticCurve){sc.remove(staticCurve);staticCurve.ge
 let landingRing=null;
 function drawLandingRing(x){if(landingRing)sc.remove(landingRing);let ring=new THREE.Mesh(new THREE.RingGeometry(.5,1.2,24),new THREE.MeshBasicMaterial({color:0xff4422,transparent:true,opacity:.6,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.set(x,PROJ_R,0);sc.add(ring);landingRing=ring;}
 
-// CHALLENGE OBJECTS: pendulum longer rope, smaller bob, proper physics; blocks with gravity always on
+// CHALLENGE OBJECTS
 let pendulumGrp=null,pendulumBob=null,pendulumRope=null,pendBobPos={x:0,y:0},pendHit=false,stackGrp=null,stackBlocks=[],stackVels=[],stackAngVels=[],chObjVisible=false;
-function clearChallengeObjects(){if(pendulumGrp)sc.remove(pendulumGrp);if(stackGrp)sc.remove(stackGrp);pendulumGrp=pendulumBob=null;stackGrp=null;stackBlocks=[];stackVels=[];stackAngVels=[];chObjVisible=false;pendHit=false;}
-function placePendulum(x,y){clearChallengeObjects();pendulumGrp=new THREE.Group();let pendRopeLen=Math.max(y*1.2,3.5); // longer rope
-let pendAnchorX=x,pendAnchorY=y+pendRopeLen;window.pendAnchorX=pendAnchorX;window.pendAnchorY=pendAnchorY;window.pendRopeLen=pendRopeLen;window.pendAngle=0;window.pendAngVel=0;
-let anchor=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),new THREE.MeshStandardMaterial({color:0x4a6888}));anchor.position.set(pendAnchorX,pendAnchorY,0);pendulumGrp.add(anchor);
-let beam=new THREE.Mesh(new THREE.BoxGeometry(1.2,.1,.1),new THREE.MeshStandardMaterial({color:0x3a5570}));beam.position.set(pendAnchorX,pendAnchorY,0);pendulumGrp.add(beam);
-pendulumRope=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,pendRopeLen,6),new THREE.MeshStandardMaterial({color:0xddbb88}));pendulumRope.position.set(x,(pendAnchorY+y)/2,0);pendulumGrp.add(pendulumRope);
-pendulumBob=new THREE.Mesh(new THREE.SphereGeometry(.5,16,16),new THREE.MeshStandardMaterial({color:0x4488ff,emissive:0x1133aa})); // smaller bob
-pendulumBob.position.set(x,y,0);pendulumGrp.add(pendulumBob);
-let ring=new THREE.Mesh(new THREE.TorusGeometry(.6,.05,8,24),new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.4}));ring.rotation.x=Math.PI/2;ring.position.set(x,y,0);pendulumGrp.add(ring);
-sc.add(pendulumGrp);pendBobPos={x,y};chObjVisible=true;syncPendVars();}
-function placeStack(x){clearChallengeObjects();stackGrp=new THREE.Group();
-// Two blocks stacked vertically: bottom on ground, top sitting on bottom
-let bW=0.7,bH=2.2,bD=1.0;
-let positions=[[x, bH/2, 0],[x, bH+bH/2, 0]];
-let colors=[0x3a5a7a,0x5a3a7a];
-positions.forEach((p,i)=>{let b=new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD),new THREE.MeshStandardMaterial({color:colors[i]}));b.position.set(p[0],p[1],p[2]);stackGrp.add(b);stackBlocks.push({mesh:b,restX:p[0],restY:p[1]});stackVels.push({x:0,y:0});stackAngVels.push(0);});sc.add(stackGrp);chObjVisible=true;}
+let bugGroup=null, bugVx=0, bugLegAngle=0;
+let timerAnimationId = null;
+let timerStopped = false;
+
+function createBug(x,y,z){
+  let group=new THREE.Group();
+  let bodyGeo=new THREE.SphereGeometry(0.32,24,24);
+  let bodyMat=new THREE.MeshStandardMaterial({color:0x88ee44,emissive:0x44aa22,emissiveIntensity:0.6});
+  let body=new THREE.Mesh(bodyGeo,bodyMat); body.scale.set(1.3,0.8,0.7); group.add(body);
+  let headGeo=new THREE.SphereGeometry(0.22,24,24);
+  let headMat=new THREE.MeshStandardMaterial({color:0xaaff66});
+  let head=new THREE.Mesh(headGeo,headMat); head.position.set(0.35,0.12,0); group.add(head);
+  let eyeMat=new THREE.MeshStandardMaterial({color:0xffffff});
+  let eyeGeo=new THREE.SphereGeometry(0.09,16,16);
+  let leftEye=new THREE.Mesh(eyeGeo,eyeMat); leftEye.position.set(0.46,0.26,0.15);
+  let rightEye=new THREE.Mesh(eyeGeo,eyeMat); rightEye.position.set(0.46,0.26,-0.15);
+  group.add(leftEye); group.add(rightEye);
+  let pupilMat=new THREE.MeshStandardMaterial({color:0x000000});
+  let pupilGeo=new THREE.SphereGeometry(0.05,8,8);
+  let leftPupil=new THREE.Mesh(pupilGeo,pupilMat); leftPupil.position.set(0.48,0.24,0.17);
+  let rightPupil=new THREE.Mesh(pupilGeo,pupilMat); rightPupil.position.set(0.48,0.24,-0.17);
+  group.add(leftPupil); group.add(rightPupil);
+  let antennaMat=new THREE.MeshStandardMaterial({color:0x886644});
+  let antennaGeo=new THREE.CylinderGeometry(0.04,0.04,0.32,4);
+  let antennaL=new THREE.Mesh(antennaGeo,antennaMat); antennaL.position.set(0.52,0.32,0.12); antennaL.rotation.z=-0.5;
+  let antennaR=new THREE.Mesh(antennaGeo,antennaMat); antennaR.position.set(0.52,0.32,-0.12); antennaR.rotation.z=0.5;
+  group.add(antennaL); group.add(antennaR);
+  let legMatLeg=new THREE.MeshStandardMaterial({color:0x886644});
+  let legGeoLeg=new THREE.CylinderGeometry(0.05,0.05,0.45,4);
+  let legPositions=[[-0.25,-0.15,0.38,0.6],[-0.25,-0.15,-0.38,-0.6],[0.0,-0.22,0.42,0.4],[0.0,-0.22,-0.42,-0.4],[0.28,-0.15,0.4,0.5],[0.28,-0.15,-0.4,-0.5]];
+  let legs=[];
+  legPositions.forEach(p=>{
+    let leg=new THREE.Mesh(legGeoLeg,legMatLeg);
+    leg.position.set(p[0],p[1],p[2]); leg.rotation.z=p[3];
+    group.add(leg); legs.push(leg);
+  });
+  group.userData={legs:legs, legAngle:0};
+  group.position.set(x,y,z);
+  return group;
+}
+function animateBugLegs(bug,dt){ if(!bug) return; bugLegAngle+=dt*8; let legs=bug.userData.legs; if(legs) legs.forEach((leg,i)=>{ let sign=(i%2===0)?1:-1; leg.rotation.x=Math.sin(bugLegAngle+i)*0.6*sign; }); }
+function clearChallengeObjects(){ if(pendulumGrp) sc.remove(pendulumGrp); if(stackGrp) sc.remove(stackGrp); if(bugGroup) sc.remove(bugGroup); pendulumGrp=pendulumBob=null; stackGrp=null; stackBlocks=[]; stackVels=[]; stackAngVels=[]; bugGroup=null; chObjVisible=false; pendHit=false; }
+function placePendulum(x,y){ clearChallengeObjects(); pendulumGrp=new THREE.Group(); let pendRopeLen=Math.max(y*1.2,3.5); let pendAnchorX=x,pendAnchorY=y+pendRopeLen; window.pendAnchorX=pendAnchorX; window.pendAnchorY=pendAnchorY; window.pendRopeLen=pendRopeLen; window.pendAngle=0; window.pendAngVel=0; let anchor=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),new THREE.MeshStandardMaterial({color:0x4a6888})); anchor.position.set(pendAnchorX,pendAnchorY,0); pendulumGrp.add(anchor); let beam=new THREE.Mesh(new THREE.BoxGeometry(1.2,.1,.1),new THREE.MeshStandardMaterial({color:0x3a5570})); beam.position.set(pendAnchorX,pendAnchorY,0); pendulumGrp.add(beam); pendulumRope=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,pendRopeLen,6),new THREE.MeshStandardMaterial({color:0xddbb88})); pendulumRope.position.set(x,(pendAnchorY+y)/2,0); pendulumGrp.add(pendulumRope); pendulumBob=new THREE.Mesh(new THREE.SphereGeometry(.5,16,16),new THREE.MeshStandardMaterial({color:0x4488ff,emissive:0x1133aa})); pendulumBob.position.set(x,y,0); pendulumGrp.add(pendulumBob); let ring=new THREE.Mesh(new THREE.TorusGeometry(.6,.05,8,24),new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.4})); ring.rotation.x=Math.PI/2; ring.position.set(x,y,0); pendulumGrp.add(ring); sc.add(pendulumGrp); pendBobPos={x,y}; chObjVisible=true; syncPendVars(); }
+function placeStack(x){ clearChallengeObjects(); stackGrp=new THREE.Group(); let bW=0.7,bH=2.2,bD=1.0; let positions=[[x,bH/2,0],[x,bH+bH/2,0]]; let colors=[0x3a5a7a,0x5a3a7a]; positions.forEach((p,i)=>{ let b=new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD),new THREE.MeshStandardMaterial({color:colors[i]})); b.position.set(p[0],p[1],p[2]); stackGrp.add(b); stackBlocks.push({mesh:b,restX:p[0],restY:p[1]}); stackVels.push({x:0,y:0}); stackAngVels.push(0); }); sc.add(stackGrp); chObjVisible=true; }
+function placeBug(x,y,vx){ clearChallengeObjects(); bugGroup=createBug(x,y,0.2); sc.add(bugGroup); bugVx=vx; chObjVisible=true; }
 
 let pendAnchorX=0,pendAnchorY=0,pendRopeLen=0,pendAngVel=0,pendAngle=0;
-// Sync helper: copies window.pend* into local pend* vars after placePendulum sets them
-function syncPendVars(){pendAnchorX=window.pendAnchorX||0;pendAnchorY=window.pendAnchorY||0;pendRopeLen=window.pendRopeLen||0;pendAngle=window.pendAngle||0;pendAngVel=window.pendAngVel||0;}
+function syncPendVars(){ pendAnchorX=window.pendAnchorX||0; pendAnchorY=window.pendAnchorY||0; pendRopeLen=window.pendRopeLen||0; pendAngle=window.pendAngle||0; pendAngVel=window.pendAngVel||0; }
 let projBouncing=false,projVx=0,projVy=0,projX=0,projY=0;
 let isFlying=false,isPaused=false,animT=0,animId=null,_spawnX=0,_spawnY=0;
-// Independent physics loop — keeps pendulum/blocks alive after projectile stops
 let _physLastFrame=performance.now();
 (function physLoop(now){
   requestAnimationFrame(physLoop);
   let dt=Math.min((now-_physLastFrame)/1000,0.05);
   _physLastFrame=now;
-  if(!isPaused&&!isFlying&&chObjVisible)updateChallengePhysics(dt);
-})(_physLastFrame);
+  if(!isPaused&&!isFlying&&chObjVisible) updateChallengePhysics(dt);
+  if(bugGroup && !isFlying && !isPaused && chObjVisible) animateBugLegs(bugGroup, dt);
+})();
 const PROJ_R=0.275,GROUND_E=0.55;
 function getBarrelTip(){return{x:0,y:S.h};}
-function fireLaunch(){if(isFlying&&!isPaused)cancelAnimationFrame(animId);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);pendHit=false;projBouncing=false;syncPendVars();if(pendulumGrp&&pendulumBob)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);projectileMesh.position.set(0,S.h,0);isFlying=true;isPaused=false;animT=0;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-step-back').style.display='inline-block';document.getElementById('btn-step-fwd').style.display='inline-block';runAnim();}
-function runAnim(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tip=getBarrelTip(),spawnX=tip.x,spawnY=tip.y;_spawnX=spawnX;_spawnY=spawnY;let a2=0.5*S.g,b2=-vy,c2=-spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);let lastFrame=performance.now();projBouncing=false;projVx=vx;projVy=vy;projX=spawnX;projY=spawnY;function step(now){if(!isFlying)return;let dtRaw=(now-lastFrame)/1000,dt=isPaused?0:Math.min(dtRaw,0.05);lastFrame=now;if(!isPaused)animT+=dt;let bx,by,cvx,cvy;if(!projBouncing){bx=spawnX+vx*animT;by=spawnY+vy*animT-0.5*S.g*animT*animT;cvx=vx;cvy=vy-S.g*animT;// Check collision BEFORE ground transition so blocks/pendulum in path are hit
-if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);if(!pendHit&&animT>=Tland&&Tland>0){projBouncing=true;projX=spawnX+vx*Tland;projY=PROJ_R;projVx=cvx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}if(projBouncing&&!pendHit){bx=projX;by=projY;}}if(projBouncing){if(!isPaused){projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;}if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05){projVx=0;projVy=0;isFlying=false;document.getElementById('btn-pause').style.display='none';}}}bx=projX;by=projY;cvx=projVx;cvy=projVy;if(!pendHit&&chObjVisible)checkCollision(bx,by,cvx,cvy);}if(chObjVisible&&!isPaused)updateChallengePhysics(dt);projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';if(isFlying)animId=requestAnimationFrame(step);}animId=requestAnimationFrame(step);}
-function checkCollision(bx,by,vx,vy){if(pendulumBob&&!pendHit){let pb=pendulumBob.position,dist=Math.hypot(bx-pb.x,by-pb.y);if(dist<0.5+PROJ_R){pendHit=true;let nx=(bx-pb.x)/dist,ny=(by-pb.y)/dist;projX=pb.x+nx*(0.5+PROJ_R);projY=pb.y+ny*(0.5+PROJ_R);let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;let ropeX=pb.x-pendAnchorX,ropeY=pb.y-pendAnchorY,ropeLen=Math.hypot(ropeX,ropeY),tanX=-ropeY/ropeLen,tanY=ropeX/ropeLen,tanSpeed=(v2nNew*nx)*tanX+(v2nNew*ny)*tanY;pendAngle=Math.atan2(pb.x-pendAnchorX,-(pb.y-pendAnchorY));pendAngVel=tanSpeed/ropeLen;projBouncing=true;flashHit(pb.x,pb.y);}}if(stackBlocks.length>0&&!pendHit){for(let b of stackBlocks){
-  let bp=b.mesh.position;
-  // Use bounding circle for initial hit (handles rotated blocks too)
-  let hw=b.mesh.geometry.parameters.width/2,hh=b.mesh.geometry.parameters.height/2;
-  let blockR=Math.hypot(hw,hh)+PROJ_R;
-  let dx2=bx-bp.x,dy2=by-bp.y,dist2=Math.hypot(dx2,dy2);
-  if(dist2<blockR){
-    pendHit=true;
-    let nx=dist2>0.001?dx2/dist2:1,ny=dist2>0.001?dy2/dist2:0;
-    projX=bp.x+nx*blockR;projY=bp.y+ny*blockR;
-    let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0;
-    let v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2);
-    let v1tx=vx-v1n*nx,v1ty=vy-v1n*ny;
-    projVx=v1tx+v1nNew*nx;projVy=v1ty+v1nNew*ny;projBouncing=true;
-    let idx=stackBlocks.indexOf(b);
-    if(idx!==-1){
-      stackVels[idx]={x:v2nNew*nx,y:v2nNew*ny};
-      // Torque from off-center impact
-      let arm=Math.hypot(dx2,dy2)*0.5;
-      let cross=dx2*ny-dy2*nx;
-      stackAngVels[idx]+=v2nNew*arm*0.5*(cross>=0?1:-1);
-    }
-    flashHit(bp.x,bp.y);break;
-  }}}}
-function updateChallengePhysics(dt){
-// --- Pendulum physics with energy-dissipating damping ---
-if(pendulumBob&&(pendHit||Math.abs(pendAngVel)>0.0001||Math.abs(pendAngle)>0.0001)){
-  let gL=S.g/Math.max(pendRopeLen,0.5);
-  // Damping coefficient chosen so oscillations fade visibly but not instantly
-  let damping=0.025;
-  pendAngVel+=(-gL*Math.sin(pendAngle)-damping*pendAngVel)*dt;
-  pendAngle+=pendAngVel*dt;
-  let bx=pendAnchorX+pendRopeLen*Math.sin(pendAngle),by=pendAnchorY-pendRopeLen*Math.cos(pendAngle);
-  pendulumBob.position.set(bx,by,0);
-  if(pendulumRope){
-    pendulumRope.position.set((pendAnchorX+bx)/2,(pendAnchorY+by)/2,0);
-    let len=Math.hypot(bx-pendAnchorX,by-pendAnchorY);
-    pendulumRope.scale.y=len/pendRopeLen;
-    pendulumRope.rotation.z=Math.atan2(bx-pendAnchorX,-(by-pendAnchorY));
-  }
+let _onLandCallback=null;
+function fireLaunch(onLandCb){ if(isFlying&&!isPaused) cancelAnimationFrame(animId); clearTrail(); clearVectors(); if(landingRing) sc.remove(landingRing); pendHit=false; projBouncing=false; syncPendVars(); if(pendulumGrp&&pendulumBob) pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0); projectileMesh.position.set(0,S.h,0); isFlying=true; isPaused=false; animT=0; projX=0; projY=S.h; _onLandCallback=onLandCb||null; document.getElementById('btn-pause').style.display='inline-block'; document.getElementById('btn-step-back').style.display='inline-block'; document.getElementById('btn-step-fwd').style.display='inline-block'; runAnim(); }
+function runAnim(){ let {vx,vy}=compute(S.angle,S.v0,S.h,S.g), tip=getBarrelTip(), spawnX=tip.x, spawnY=tip.y; _spawnX=spawnX; _spawnY=spawnY; let a2=0.5*S.g,b2=-vy,c2=-spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2); let lastFrame=performance.now(); projBouncing=false; projVx=vx; projVy=vy; projX=spawnX; projY=spawnY; function step(now){ if(!isFlying) return; let dtRaw=(now-lastFrame)/1000, dt=isPaused?0:Math.min(dtRaw,0.05); lastFrame=now; if(!isPaused) animT+=dt; let bx,by,cvx,cvy; if(!projBouncing){ bx=spawnX+vx*animT; by=spawnY+vy*animT-0.5*S.g*animT*animT; cvx=vx; cvy=vy-S.g*animT; if(!pendHit&&chObjVisible) checkCollision(bx,by,cvx,cvy); if(!pendHit&&animT>=Tland&&Tland>0){ projBouncing=true; projX=spawnX+vx*Tland; projY=PROJ_R; projVx=cvx*0.85; projVy=Math.abs(vy-S.g*Tland)*GROUND_E; bx=projX; by=PROJ_R; drawLandingRing(projX); } if(projBouncing&&!pendHit){ bx=projX; by=projY; } } if(projBouncing){ if(!isPaused){ projVy-=S.g*dt; projX+=projVx*dt; projY+=projVy*dt; } if(projY<=PROJ_R){ projY=PROJ_R; let spd=Math.abs(projVy); if(spd>0.3){ projVy=spd*GROUND_E; projVx*=0.9; } else { projVy=0; projVx*=0.6; if(Math.abs(projVx)<0.05&&Math.abs(projVy)<0.05){ projVx=0; projVy=0; isFlying=false; document.getElementById('btn-pause').style.display='none'; if(_onLandCallback){ let cb=_onLandCallback; _onLandCallback=null; cb(); } } } } bx=projX; by=projY; cvx=projVx; cvy=projVy; if(!pendHit&&chObjVisible) checkCollision(bx,by,cvx,cvy); } if(chObjVisible&&!isPaused) updateChallengePhysics(dt); projectileMesh.position.set(bx,by,0); addTrailPt(bx,by); drawVectors(bx,by,cvx||0,cvy||0); document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s'; document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';
+if(bugGroup && !projBouncing && bugVx !== undefined) {
+    bugGroup.position.x = bugVx * animT;  // starts at 0
+    bugGroup.position.y = 0.1;
+    animateBugLegs(bugGroup, dt);
 }
-// --- Block physics: COM-projection stability + SAT OBB block-block collision ---
-if(stackBlocks.length && pendHit){
-  const BLOCK_E = 0.40;
-  const GROUND_E_B = 0.30;
-
-  // Get 4 world-space corners of a rotated box
-  function getCorners(mesh){
-    let hw=mesh.geometry.parameters.width/2, hh=mesh.geometry.parameters.height/2;
-    let ang=mesh.rotation.z, ca=Math.cos(ang), sa=Math.sin(ang);
-    let cx=mesh.position.x, cy=mesh.position.y;
-    return [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([lx,ly])=>({
-      x: cx + lx*ca - ly*sa,
-      y: cy + lx*sa + ly*ca
-    }));
-  }
-
-  // Ground data: lowest corner Y, and COM-stability test
-  function blockGroundData(mesh){
-    let corners=getCorners(mesh);
-    let sorted=[...corners].sort((a,b)=>a.y-b.y);
-    let minY=sorted[0].y;
-    let baseLeft =Math.min(sorted[0].x, sorted[1].x);
-    let baseRight=Math.max(sorted[0].x, sorted[1].x);
-    let stable=(mesh.position.x >= baseLeft && mesh.position.x <= baseRight);
-    return{minY, stable};
-  }
-
-  // SAT test for two OBBs. Returns null if separated, else {depth, nx, ny} of minimum overlap axis.
-  function satOBB(mA, mB){
-    let cA=getCorners(mA), cB=getCorners(mB);
-    // Build axes: 2 per box (normals of each edge)
-    let axes=[];
-    [[cA[0],cA[1]],[cA[1],cA[2]],[cB[0],cB[1]],[cB[1],cB[2]]].forEach(([p,q])=>{
-      let ex=q.x-p.x, ey=q.y-p.y, len=Math.hypot(ex,ey);
-      if(len>0) axes.push({nx:-ey/len, ny:ex/len});
-    });
-    let minDepth=Infinity, bestNx=0, bestNy=0;
-    for(let {nx,ny} of axes){
-      let minA=Infinity,maxA=-Infinity,minB=Infinity,maxB=-Infinity;
-      cA.forEach(c=>{let p=c.x*nx+c.y*ny; minA=Math.min(minA,p); maxA=Math.max(maxA,p);});
-      cB.forEach(c=>{let p=c.x*nx+c.y*ny; minB=Math.min(minB,p); maxB=Math.max(maxB,p);});
-      let overlap=Math.min(maxA,maxB)-Math.max(minA,minB);
-      if(overlap<=0) return null; // separating axis found
-      if(overlap<minDepth){minDepth=overlap; bestNx=nx; bestNy=ny;}
-    }
-    // Ensure normal points from A to B
-    let dx=mB.position.x-mA.position.x, dy=mB.position.y-mA.position.y;
-    if(dx*bestNx+dy*bestNy < 0){bestNx=-bestNx; bestNy=-bestNy;}
-    return{depth:minDepth, nx:bestNx, ny:bestNy};
-  }
-
-  // Per-block integration + ground response
-  stackBlocks.forEach((b,i)=>{
-    // Always apply gravity — even a "resting" block must fall if support is removed
-    stackVels[i].y -= S.g*dt;
-    b.mesh.position.x += stackVels[i].x*dt;
-    b.mesh.position.y += stackVels[i].y*dt;
-    b.mesh.rotation.z += stackAngVels[i]*dt;
-    // Light damping — doesn't fight rotation
-    stackAngVels[i] *= 0.995;
-    stackVels[i].x  *= 0.999;
-
-    let {minY, stable}=blockGroundData(b.mesh);
-    if(minY < 0){
-      b.mesh.position.y -= minY;
-      let spd=Math.abs(stackVels[i].y);
-      if(spd > 0.35){
-        stackVels[i].y  =  spd * GROUND_E_B;
-        stackVels[i].x *= 0.80;
-        stackAngVels[i]*= 0.60;
-      } else {
-        stackVels[i].y = 0;
-        stackVels[i].x *= 0.70;
-        stackAngVels[i]*= 0.50;
-        if(Math.abs(stackVels[i].x) < 0.04) stackVels[i].x = 0;
-        if(Math.abs(stackAngVels[i]) < 0.02){
-          if(stable){
-            // Stable: snap to nearest 90° and sit flush
-            stackAngVels[i]=0;
-            b.mesh.rotation.z=Math.round(b.mesh.rotation.z/(Math.PI/2))*(Math.PI/2);
-            let {minY:mY2}=blockGroundData(b.mesh);
-            if(mY2<0) b.mesh.position.y-=mY2;
-          } else {
-            // Unstable: apply gravitational torque about the pivot corner
-            // Pivot = lowest corner; torque = g * horizontal distance COM→pivot
-            let corners=getCorners(b.mesh);
-            let sorted=[...corners].sort((a,bv)=>a.y-bv.y);
-            let pivot=sorted[0]; // lowest corner on ground
-            let comX=b.mesh.position.x;
-            let leverArm=comX-pivot.x; // +ve → COM to right of pivot → tips right (negative angVel)
-            // Moment of inertia ≈ (w²+h²)/12 for a rectangle
-            let hw=b.mesh.geometry.parameters.width/2, hh=b.mesh.geometry.parameters.height/2;
-            let I=(4*hw*hw+4*hh*hh)/12;
-            let torque = -S.g * leverArm / I; // α = torque / I (mass=1)
-            stackAngVels[i] += torque * dt * 3; // ×3 for snappier feel
-          }
-        }
-      }
-    }
-    if(b.mesh.position.x<-10||b.mesh.position.x>400) stackVels[i].x*=-0.7;
-    // If resting flat on ground with no meaningful motion, zero out velocity accumulation
-    let {minY:checkY, stable:checkStable}=blockGroundData(b.mesh);
-    if(checkY>=0 && checkY<0.01 && checkStable &&
-       Math.abs(stackVels[i].x)<0.04 && Math.abs(stackVels[i].y)<0.04 &&
-       Math.abs(stackAngVels[i])<0.01){
-      stackVels[i].y=0; stackVels[i].x=0; stackAngVels[i]=0;
-    }
-  });
-
-  // Block-block: SAT OBB — works for any rotation, no false overlaps at rest
-  for(let i=0;i<stackBlocks.length;i++){
-    for(let j=i+1;j<stackBlocks.length;j++){
-      let result=satOBB(stackBlocks[i].mesh, stackBlocks[j].mesh);
-      if(!result) continue;
-      let{depth,nx,ny}=result;
-      // Positional correction — push apart along collision normal
-      stackBlocks[i].mesh.position.x -= nx*depth/2;
-      stackBlocks[i].mesh.position.y -= ny*depth/2;
-      stackBlocks[j].mesh.position.x += nx*depth/2;
-      stackBlocks[j].mesh.position.y += ny*depth/2;
-      // Velocity impulse along normal (equal masses)
-      let van=stackVels[i].x*nx+stackVels[i].y*ny;
-      let vbn=stackVels[j].x*nx+stackVels[j].y*ny;
-      if(van-vbn > 0){
-        let imp=(1+BLOCK_E)*(van-vbn)/2;
-        stackVels[i].x-=imp*nx; stackVels[i].y-=imp*ny;
-        stackVels[j].x+=imp*nx; stackVels[j].y+=imp*ny;
-        // Angular impulse from off-center hit (approximate moment arm from depth)
-        let arm=depth*0.4;
-        stackAngVels[i]-=imp*arm*0.3;
-        stackAngVels[j]+=imp*arm*0.3;
-      }
-    }
-  }
-}}
-function flashHit(x,y){let s=new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),new THREE.MeshBasicMaterial({color:0xffee44,transparent:true,opacity:.9}));s.position.set(x,y,0);sc.add(s);let op=0.9;function fade(){op-=0.08;s.material.opacity=op;if(op>0)requestAnimationFrame(fade);else sc.remove(s);}requestAnimationFrame(fade);}
-function togglePause(){if(!isFlying&&!isPaused)return;isPaused=!isPaused;document.getElementById('btn-pause').textContent=isPaused?'▶ Resume':'⏸ Pause';}
-function stepAnim(delta){if(!projectileMesh.visible)return;isPaused=true;isFlying=true;document.getElementById('btn-pause').style.display='inline-block';document.getElementById('btn-pause').textContent='▶ Resume';let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-_spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),bx,by,cvx,cvy;if(!projBouncing){animT=Math.max(0,Math.min(animT+delta,Tland+0.001));if(animT<=Tland){bx=_spawnX+vx*animT;by=Math.max(PROJ_R,_spawnY+vy*animT-0.5*S.g*animT*animT);cvx=vx;cvy=vy-S.g*animT;if(animT>=Tland){projBouncing=true;projX=_spawnX+vx*Tland;projY=PROJ_R;projVx=vx*0.85;projVy=Math.abs(vy-S.g*Tland)*GROUND_E;bx=projX;by=PROJ_R;drawLandingRing(projX);}}}else{let dt=delta;projVy-=S.g*dt;projX+=projVx*dt;projY+=projVy*dt;if(projY<=PROJ_R){projY=PROJ_R;let spd=Math.abs(projVy);if(spd>0.3){projVy=spd*GROUND_E;projVx*=0.9;}else{projVy=0;projVx*=0.6;}}bx=projX;by=projY;cvx=projVx;cvy=projVy;}projectileMesh.position.set(bx,by,0);addTrailPt(bx,by);drawVectors(bx,by,cvx||0,cvy||0);document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s';document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s';}
-function resetScene(){if(animId)cancelAnimationFrame(animId);isFlying=false;isPaused=false;animT=0;projectileMesh.position.set(0,S.h,0);clearTrail();clearVectors();if(landingRing)sc.remove(landingRing);landingRing=null;pendHit=false;if(pendulumBob&&pendulumGrp)pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0);document.getElementById('btn-pause').style.display='none';document.getElementById('btn-step-back').style.display='none';document.getElementById('btn-step-fwd').style.display='none';drawStaticCurve();updateHUD();}
-function updateHUD(){let {vx,vy,T,R,H}=compute(S.angle,S.v0,S.h,S.g);document.getElementById('v-angle').innerText=S.angle.toFixed(1)+'°';document.getElementById('v-v0').innerText=S.v0.toFixed(1)+' m/s';document.getElementById('v-h').innerText=S.h.toFixed(1)+' m';document.getElementById('v-g').innerText=S.g.toFixed(2)+' m/s²';document.getElementById('v-range').innerText=R.toFixed(2)+' m';document.getElementById('v-maxh').innerText=H.toFixed(2)+' m';document.getElementById('v-time').innerText=T.toFixed(2)+' s';document.getElementById('v-vx').innerText=vx.toFixed(2)+' m/s';document.getElementById('v-vy').innerText=vy.toFixed(2)+' m/s';drawStaticCurve();updateBarrel();}
-function hideHUDRow(id){document.getElementById(id).style.display='none';}
-function showHUDRow(id){document.getElementById(id).style.display='flex';}
-function showAllHUDRows(){['row-range','row-maxh','row-time','row-vx','row-vy'].forEach(showHUDRow);}
-function onAngle(){S.angle=parseFloat(document.getElementById('sl-angle').value);document.getElementById('lbl-angle').innerText=S.angle.toFixed(1)+'°';buildLauncher();updateHUD();}
-function onV0(){S.v0=parseFloat(document.getElementById('sl-v0').value);document.getElementById('lbl-v0').innerText=S.v0.toFixed(1)+' m/s';updateHUD();updateBarrel();}
-function onH(){S.h=parseFloat(document.getElementById('sl-h').value);document.getElementById('lbl-h').innerText=S.h.toFixed(1)+' m';updatePedestal();updateHUD();projectileMesh.position.set(0,S.h,0);}
-function onG(){S.g=parseFloat(document.getElementById('sl-g').value);document.getElementById('lbl-g').innerText=S.g.toFixed(2);updateHUD();}
-function setG(v){S.g=v;document.getElementById('sl-g').value=v;document.getElementById('lbl-g').innerText=v.toFixed(2);updateHUD();}
-function onTrail(){showTrail=document.getElementById('cb-trail').checked;if(!showTrail)clearTrail();}
-function onVectors(){showVectors=document.getElementById('cb-vectors').checked;if(!showVectors)clearVectors();}
+if(isFlying) animId=requestAnimationFrame(step); } animId=requestAnimationFrame(step); }
+function checkCollision(bx,by,vx,vy){ if(pendulumBob&&!pendHit){ let pb=pendulumBob.position, dist=Math.hypot(bx-pb.x,by-pb.y); if(dist<0.5+PROJ_R){ pendHit=true; let nx=(bx-pb.x)/dist,ny=(by-pb.y)/dist; projX=pb.x+nx*(0.5+PROJ_R); projY=pb.y+ny*(0.5+PROJ_R); let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0,v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2),v1tx=vx-v1n*nx,v1ty=vy-v1n*ny; projVx=v1tx+v1nNew*nx; projVy=v1ty+v1nNew*ny; let ropeX=pb.x-pendAnchorX,ropeY=pb.y-pendAnchorY,ropeLen=Math.hypot(ropeX,ropeY),tanX=-ropeY/ropeLen,tanY=ropeX/ropeLen,tanSpeed=(v2nNew*nx)*tanX+(v2nNew*ny)*tanY; pendAngle=Math.atan2(pb.x-pendAnchorX,-(pb.y-pendAnchorY)); pendAngVel=tanSpeed/ropeLen; projBouncing=true; flashHit(pb.x,pb.y); } } if(stackBlocks.length>0&&!pendHit){ for(let b of stackBlocks){ let bp=b.mesh.position; let hw=b.mesh.geometry.parameters.width/2,hh=b.mesh.geometry.parameters.height/2; let blockR=Math.hypot(hw,hh)+PROJ_R; let dx2=bx-bp.x,dy2=by-bp.y,dist2=Math.hypot(dx2,dy2); if(dist2<blockR){ pendHit=true; let nx=dist2>0.001?dx2/dist2:1,ny=dist2>0.001?dy2/dist2:0; projX=bp.x+nx*blockR; projY=bp.y+ny*blockR; let m1=1,m2=2,v1n=vx*nx+vy*ny,v2n=0; let v1nNew=(v1n*(m1-m2)+2*m2*v2n)/(m1+m2),v2nNew=(v2n*(m2-m1)+2*m1*v1n)/(m1+m2); let v1tx=vx-v1n*nx,v1ty=vy-v1n*ny; projVx=v1tx+v1nNew*nx; projVy=v1ty+v1nNew*ny; projBouncing=true; let idx=stackBlocks.indexOf(b); if(idx!==-1){ stackVels[idx]={x:v2nNew*nx,y:v2nNew*ny}; let arm=Math.hypot(dx2,dy2)*0.5; let cross=dx2*ny-dy2*nx; stackAngVels[idx]+=v2nNew*arm*0.5*(cross>=0?1:-1); } flashHit(bp.x,bp.y); break; } } } if(bugGroup&&!pendHit){ let bugPos=bugGroup.position; let distFromSpawn=Math.hypot(bx-_spawnX,by-_spawnY); let distBug=Math.hypot(bx-bugPos.x,by-bugPos.y); if(distFromSpawn>1.5&&distBug<0.45+PROJ_R){ pendHit=true; flashHit(bugPos.x,bugPos.y); projX=bugPos.x; projY=bugPos.y; projVx*=0.8; projVy=Math.abs(projVy)*0.5; projBouncing=true; sc.remove(bugGroup); bugGroup=null; } } }
+function updateChallengePhysics(dt){ if(pendulumBob&&(pendHit||Math.abs(pendAngVel)>0.0001||Math.abs(pendAngle)>0.0001)){ let gL=S.g/Math.max(pendRopeLen,0.5); let damping=0.025; pendAngVel+=(-gL*Math.sin(pendAngle)-damping*pendAngVel)*dt; pendAngle+=pendAngVel*dt; let bx=pendAnchorX+pendRopeLen*Math.sin(pendAngle),by=pendAnchorY-pendRopeLen*Math.cos(pendAngle); pendulumBob.position.set(bx,by,0); if(pendulumRope){ pendulumRope.position.set((pendAnchorX+bx)/2,(pendAnchorY+by)/2,0); let len=Math.hypot(bx-pendAnchorX,by-pendAnchorY); pendulumRope.scale.y=len/pendRopeLen; pendulumRope.rotation.z=Math.atan2(bx-pendAnchorX,-(by-pendAnchorY)); } } if(stackBlocks.length && pendHit){ const BLOCK_E=0.40, GROUND_E_B=0.30; function getCorners(mesh){ let hw=mesh.geometry.parameters.width/2,hh=mesh.geometry.parameters.height/2; let ang=mesh.rotation.z,ca=Math.cos(ang),sa=Math.sin(ang); let cx=mesh.position.x,cy=mesh.position.y; return [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([lx,ly])=>({x:cx+lx*ca-ly*sa,y:cy+lx*sa+ly*ca})); } function blockGroundData(mesh){ let corners=getCorners(mesh); let sorted=[...corners].sort((a,b)=>a.y-b.y); let minY=sorted[0].y; let baseLeft=Math.min(sorted[0].x,sorted[1].x); let baseRight=Math.max(sorted[0].x,sorted[1].x); let stable=(mesh.position.x>=baseLeft&&mesh.position.x<=baseRight); return{minY,stable}; } function satOBB(mA,mB){ let cA=getCorners(mA),cB=getCorners(mB); let axes=[]; [[cA[0],cA[1]],[cA[1],cA[2]],[cB[0],cB[1]],[cB[1],cB[2]]].forEach(([p,q])=>{ let ex=q.x-p.x,ey=q.y-p.y,len=Math.hypot(ex,ey); if(len>0) axes.push({nx:-ey/len,ny:ex/len}); }); let minDepth=Infinity,bestNx=0,bestNy=0; for(let {nx,ny} of axes){ let minA=Infinity,maxA=-Infinity,minB=Infinity,maxB=-Infinity; cA.forEach(c=>{let p=c.x*nx+c.y*ny; minA=Math.min(minA,p); maxA=Math.max(maxA,p);}); cB.forEach(c=>{let p=c.x*nx+c.y*ny; minB=Math.min(minB,p); maxB=Math.max(maxB,p);}); let overlap=Math.min(maxA,maxB)-Math.max(minA,minB); if(overlap<=0) return null; if(overlap<minDepth){minDepth=overlap; bestNx=nx; bestNy=ny;} } let dx=mB.position.x-mA.position.x, dy=mB.position.y-mA.position.y; if(dx*bestNx+dy*bestNy<0){bestNx=-bestNx; bestNy=-bestNy;} return{depth:minDepth, nx:bestNx, ny:bestNy}; } stackBlocks.forEach((b,i)=>{ stackVels[i].y-=S.g*dt; b.mesh.position.x+=stackVels[i].x*dt; b.mesh.position.y+=stackVels[i].y*dt; b.mesh.rotation.z+=stackAngVels[i]*dt; stackAngVels[i]*=0.995; stackVels[i].x*=0.999; let {minY,stable}=blockGroundData(b.mesh); if(minY<0){ b.mesh.position.y-=minY; let spd=Math.abs(stackVels[i].y); if(spd>0.35){ stackVels[i].y=spd*GROUND_E_B; stackVels[i].x*=0.80; stackAngVels[i]*=0.60; } else { stackVels[i].y=0; stackVels[i].x*=0.70; stackAngVels[i]*=0.50; if(Math.abs(stackVels[i].x)<0.04) stackVels[i].x=0; if(Math.abs(stackAngVels[i])<0.02){ if(stable){ stackAngVels[i]=0; b.mesh.rotation.z=Math.round(b.mesh.rotation.z/(Math.PI/2))*(Math.PI/2); let{minY:mY2}=blockGroundData(b.mesh); if(mY2<0) b.mesh.position.y-=mY2; } else { let corners=getCorners(b.mesh); let sorted=[...corners].sort((a,bv)=>a.y-bv.y); let pivot=sorted[0]; let comX=b.mesh.position.x; let leverArm=comX-pivot.x; let hw=b.mesh.geometry.parameters.width/2,hh=b.mesh.geometry.parameters.height/2; let I=(4*hw*hw+4*hh*hh)/12; let torque=-S.g*leverArm/I; stackAngVels[i]+=torque*dt*3; } } } } if(b.mesh.position.x<-10||b.mesh.position.x>400) stackVels[i].x*=-0.7; let {minY:checkY, stable:checkStable}=blockGroundData(b.mesh); if(checkY>=0&&checkY<0.01&&checkStable&&Math.abs(stackVels[i].x)<0.04&&Math.abs(stackVels[i].y)<0.04&&Math.abs(stackAngVels[i])<0.01){ stackVels[i].y=0; stackVels[i].x=0; stackAngVels[i]=0; } }); for(let i=0;i<stackBlocks.length;i++){ for(let j=i+1;j<stackBlocks.length;j++){ let result=satOBB(stackBlocks[i].mesh,stackBlocks[j].mesh); if(!result) continue; let{depth,nx,ny}=result; stackBlocks[i].mesh.position.x-=nx*depth/2; stackBlocks[i].mesh.position.y-=ny*depth/2; stackBlocks[j].mesh.position.x+=nx*depth/2; stackBlocks[j].mesh.position.y+=ny*depth/2; let van=stackVels[i].x*nx+stackVels[i].y*ny; let vbn=stackVels[j].x*nx+stackVels[j].y*ny; if(van-vbn>0){ let imp=(1+BLOCK_E)*(van-vbn)/2; stackVels[i].x-=imp*nx; stackVels[i].y-=imp*ny; stackVels[j].x+=imp*nx; stackVels[j].y+=imp*ny; let arm=depth*0.4; stackAngVels[i]-=imp*arm*0.3; stackAngVels[j]+=imp*arm*0.3; } } } } }
+function flashHit(x,y){ let s=new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),new THREE.MeshBasicMaterial({color:0xffee44,transparent:true,opacity:.9})); s.position.set(x,y,0); sc.add(s); let op=0.9; function fade(){ op-=0.08; s.material.opacity=op; if(op>0) requestAnimationFrame(fade); else sc.remove(s); } requestAnimationFrame(fade); }
+function togglePause(){ if(!isFlying&&!isPaused) return; isPaused=!isPaused; document.getElementById('btn-pause').textContent=isPaused?'▶ Resume':'⏸ Pause'; }
+function stepAnim(delta){ if(!projectileMesh.visible) return; isPaused=true; isFlying=true; document.getElementById('btn-pause').style.display='inline-block'; document.getElementById('btn-pause').textContent='▶ Resume'; let {vx,vy}=compute(S.angle,S.v0,S.h,S.g), a2=0.5*S.g,b2=-vy,c2=-_spawnY,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2),bx,by,cvx,cvy; if(!projBouncing){ animT=Math.max(0,Math.min(animT+delta,Tland+0.001)); if(animT<=Tland){ bx=_spawnX+vx*animT; by=Math.max(PROJ_R,_spawnY+vy*animT-0.5*S.g*animT*animT); cvx=vx; cvy=vy-S.g*animT; if(animT>=Tland){ projBouncing=true; projX=_spawnX+vx*Tland; projY=PROJ_R; projVx=vx*0.85; projVy=Math.abs(vy-S.g*Tland)*GROUND_E; bx=projX; by=PROJ_R; drawLandingRing(projX); } } } else { let dt=delta; projVy-=S.g*dt; projX+=projVx*dt; projY+=projVy*dt; if(projY<=PROJ_R){ projY=PROJ_R; let spd=Math.abs(projVy); if(spd>0.3){ projVy=spd*GROUND_E; projVx*=0.9; } else { projVy=0; projVx*=0.6; } } bx=projX; by=projY; cvx=projVx; cvy=projVy; } projectileMesh.position.set(bx,by,0); addTrailPt(bx,by); drawVectors(bx,by,cvx||0,cvy||0); document.getElementById('v-vx').textContent=(cvx||0).toFixed(2)+' m/s'; document.getElementById('v-vy').textContent=(cvy||0).toFixed(2)+' m/s'; }
+function resetScene(){ if(animId) cancelAnimationFrame(animId); isFlying=false; isPaused=false; animT=0; projectileMesh.position.set(0,S.h,0); clearTrail(); clearVectors(); if(landingRing) sc.remove(landingRing); landingRing=null; pendHit=false; if(pendulumBob&&pendulumGrp) pendulumBob.position.set(pendBobPos.x,pendBobPos.y,0); document.getElementById('btn-pause').style.display='none'; document.getElementById('btn-step-back').style.display='none'; document.getElementById('btn-step-fwd').style.display='none'; drawStaticCurve(); updateHUD(); }
+function updateHUD(){ let {vx,vy,T,R,H}=compute(S.angle,S.v0,S.h,S.g); document.getElementById('v-angle').innerText=S.angle.toFixed(1)+'°'; document.getElementById('v-v0').innerText=S.v0.toFixed(1)+' m/s'; document.getElementById('v-h').innerText=S.h.toFixed(1)+' m'; document.getElementById('v-g').innerText=S.g.toFixed(2)+' m/s²'; document.getElementById('v-range').innerText=R.toFixed(2)+' m'; document.getElementById('v-maxh').innerText=H.toFixed(2)+' m'; document.getElementById('v-time').innerText=T.toFixed(2)+' s'; document.getElementById('v-vx').innerText=vx.toFixed(2)+' m/s'; document.getElementById('v-vy').innerText=vy.toFixed(2)+' m/s'; drawStaticCurve(); updateBarrel(); }
+function hideHUDRow(id){ document.getElementById(id).style.display='none'; }
+function showHUDRow(id){ document.getElementById(id).style.display='flex'; }
+function showAllHUDRows(){ ['row-range','row-maxh','row-time','row-vx','row-vy'].forEach(showHUDRow); }
+function onAngle(){ S.angle=parseFloat(document.getElementById('sl-angle').value); document.getElementById('lbl-angle').innerText=S.angle.toFixed(1)+'°'; buildLauncher(); updateHUD(); }
+function onV0(){ S.v0=parseFloat(document.getElementById('sl-v0').value); document.getElementById('lbl-v0').innerText=S.v0.toFixed(1)+' m/s'; updateHUD(); updateBarrel(); }
+function onH(){ S.h=parseFloat(document.getElementById('sl-h').value); document.getElementById('lbl-h').innerText=S.h.toFixed(1)+' m'; updatePedestal(); updateHUD(); projectileMesh.position.set(0,S.h,0); }
+function onG(){ S.g=parseFloat(document.getElementById('sl-g').value); document.getElementById('lbl-g').innerText=S.g.toFixed(2); updateHUD(); }
+function setG(v){ S.g=v; document.getElementById('sl-g').value=v; document.getElementById('lbl-g').innerText=v.toFixed(2); updateHUD(); }
+function onTrail(){ showTrail=document.getElementById('cb-trail').checked; if(!showTrail) clearTrail(); }
+function onVectors(){ showVectors=document.getElementById('cb-vectors').checked; if(!showVectors) clearVectors(); }
 let isDrag=false,lastMouse={x:0,y:0},orb={theta:0.4,phi:0.9,radius:30,cx:10,cy:4,cz:0};
-function applyCam(){cam.position.set(orb.cx+orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta),orb.cy+orb.radius*Math.cos(orb.phi),orb.cz+orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta));cam.lookAt(orb.cx,orb.cy,orb.cz);}
+function applyCam(){ cam.position.set(orb.cx+orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta), orb.cy+orb.radius*Math.cos(orb.phi), orb.cz+orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta)); cam.lookAt(orb.cx,orb.cy,orb.cz); }
 applyCam(); let camAnimId=null;
-function animateCamTo(target){if(camAnimId)cancelAnimationFrame(camAnimId);let start={theta:orb.theta,phi:orb.phi,radius:orb.radius,cx:orb.cx,cy:orb.cy,cz:orb.cz},end=Object.assign({},target),dur=700,t0=performance.now(),dTheta=end.theta-start.theta;while(dTheta>Math.PI)dTheta-=2*Math.PI;while(dTheta<-Math.PI)dTheta+=2*Math.PI;function tick(now){let t=Math.min((now-t0)/dur,1),k=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;orb.theta=start.theta+dTheta*k;orb.phi=start.phi+(end.phi-start.phi)*k;orb.radius=start.radius+(end.radius-start.radius)*k;orb.cx=start.cx+(end.cx-start.cx)*k;orb.cy=start.cy+(end.cy-start.cy)*k;orb.cz=start.cz+(end.cz-start.cz)*k;applyCam();if(t<1)camAnimId=requestAnimationFrame(tick);else camAnimId=null;}camAnimId=requestAnimationFrame(tick);}
-function setView(v){let target={};if(v==='launcher')target={theta:0,phi:Math.PI/2,radius:8,cx:0,cy:Math.max(S.h,2),cz:0};else if(v==='range'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tl=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);target={theta:0,phi:Math.PI/2,radius:10,cx:vx*Tl,cy:1,cz:0};}else if(v==='center'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,T2=disc<0?0.1:(-b2+Math.sqrt(disc))/(2*a2),landX=vx*T2,apexY=S.h+vy*vy/(2*S.g);target={theta:0,phi:Math.PI/2,radius:Math.max(landX*0.65,apexY*2,20),cx:landX/2,cy:apexY*0.5,cz:0};}else if(v==='top'){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tApex=vy/S.g,apexX=vx*tApex,apexY=S.h+vy*vy/(2*S.g);target={theta:0,phi:Math.PI/2,radius:Math.max(apexX*1.2,apexY*1.8,20),cx:apexX,cy:apexY,cz:0};}else target={theta:0.4,phi:0.85,radius:30,cx:10,cy:4,cz:0};animateCamTo(target);}
-document.getElementById('mainCanvas').addEventListener('mousedown',e=>{if(e.target.closest('#bottom-panels'))return;isDrag=true;lastMouse={x:e.clientX,y:e.clientY};});
-window.addEventListener('mousemove',e=>{if(!isDrag)return;orb.theta-=(e.clientX-lastMouse.x)*0.006;orb.phi=Math.max(0.04,Math.min(Math.PI*0.49,orb.phi+(e.clientY-lastMouse.y)*0.006));lastMouse={x:e.clientX,y:e.clientY};applyCam();});
+function animateCamTo(target){ if(camAnimId) cancelAnimationFrame(camAnimId); let start={theta:orb.theta,phi:orb.phi,radius:orb.radius,cx:orb.cx,cy:orb.cy,cz:orb.cz}, end=Object.assign({},target), dur=700, t0=performance.now(), dTheta=end.theta-start.theta; while(dTheta>Math.PI) dTheta-=2*Math.PI; while(dTheta<-Math.PI) dTheta+=2*Math.PI; function tick(now){ let t=Math.min((now-t0)/dur,1), k=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2; orb.theta=start.theta+dTheta*k; orb.phi=start.phi+(end.phi-start.phi)*k; orb.radius=start.radius+(end.radius-start.radius)*k; orb.cx=start.cx+(end.cx-start.cx)*k; orb.cy=start.cy+(end.cy-start.cy)*k; orb.cz=start.cz+(end.cz-start.cz)*k; applyCam(); if(t<1) camAnimId=requestAnimationFrame(tick); else camAnimId=null; } camAnimId=requestAnimationFrame(tick); }
+function setView(v){ let target={}; if(v==='launcher') target={theta:0,phi:Math.PI/2,radius:8,cx:0,cy:Math.max(S.h,2),cz:0}; else if(v==='range'){ let {vx,vy}=compute(S.angle,S.v0,S.h,S.g), a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tl=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2); target={theta:0,phi:Math.PI/2,radius:10,cx:vx*Tl,cy:1,cz:0}; } else if(v==='center'){ let {vx,vy}=compute(S.angle,S.v0,S.h,S.g), a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,T2=disc<0?0.1:(-b2+Math.sqrt(disc))/(2*a2), landX=vx*T2, apexY=S.h+vy*vy/(2*S.g); target={theta:0,phi:Math.PI/2,radius:Math.max(landX*0.65,apexY*2,20),cx:landX/2,cy:apexY*0.5,cz:0}; } else if(v==='top'){ let {vx,vy}=compute(S.angle,S.v0,S.h,S.g), tApex=vy/S.g, apexX=vx*tApex, apexY=S.h+vy*vy/(2*S.g); target={theta:0,phi:Math.PI/2,radius:Math.max(apexX*1.2,apexY*1.8,20),cx:apexX,cy:apexY,cz:0}; } else target={theta:0.4,phi:0.85,radius:30,cx:10,cy:4,cz:0}; animateCamTo(target); }
+document.getElementById('mainCanvas').addEventListener('mousedown',e=>{ if(e.target.closest('#bottom-panels')) return; isDrag=true; lastMouse={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mousemove',e=>{ if(!isDrag) return; orb.theta-=(e.clientX-lastMouse.x)*0.006; orb.phi=Math.max(0.04,Math.min(Math.PI*0.49,orb.phi+(e.clientY-lastMouse.y)*0.006)); lastMouse={x:e.clientX,y:e.clientY}; applyCam(); });
 window.addEventListener('mouseup',()=>isDrag=false);
-document.getElementById('mainCanvas').addEventListener('wheel',e=>{orb.radius*=1+e.deltaY*0.001;orb.radius=Math.max(8,Math.min(300,orb.radius));applyCam();},{passive:true});
-function resize(){let w=innerWidth,h=innerHeight;renderer.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+document.getElementById('mainCanvas').addEventListener('wheel',e=>{ orb.radius*=1+e.deltaY*0.001; orb.radius=Math.max(8,Math.min(300,orb.radius)); applyCam(); },{passive:true});
+function resize(){ let w=innerWidth,h=innerHeight; renderer.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); }
 window.addEventListener('resize',resize); resize();
-function loop(){requestAnimationFrame(loop);renderer.render(sc,cam);}
+function loop(){ requestAnimationFrame(loop); renderer.render(sc,cam); }
 loop();
 
 // VRULER TOOL
-let toolCvs,tctx,vrulerVisible=false;setTimeout(()=>{toolCvs=document.createElement('canvas');toolCvs.id='toolCanvas';toolCvs.style.cssText='position:fixed;inset:0;z-index:5;pointer-events:none';document.body.appendChild(toolCvs);tctx=toolCvs.getContext('2d');function drawTools(){if(!toolCvs)return;toolCvs.width=innerWidth;toolCvs.height=innerHeight;tctx.clearRect(0,0,innerWidth,innerHeight);if(!vrulerVisible)return;let {H,vx:vx0,vy:vy0}=compute(S.angle,S.v0,S.h,S.g),maxH=Math.ceil(Math.max(H,S.h+0.5,1));// Place ruler at apex X (where Hmax actually is)
-let apexX=0;try{let tApex=vy0/S.g;apexX=vx0*tApex;}catch(e){}let p0=worldToScreen(apexX,0,0),pTop=worldToScreen(apexX,maxH,0);if(!p0||!pTop)return;let sy0=p0.y,syTop=pTop.y,px_per_m=(sy0-syTop)/maxH,rulerX=p0.x;tctx.strokeStyle='rgba(255,255,255,0.6)';tctx.beginPath();tctx.moveTo(rulerX,syTop);tctx.lineTo(rulerX,sy0);tctx.stroke();for(let dm=0;dm<=maxH*10;dm++){let m=dm/10;if(m>maxH+0.001)break;let sy=sy0-m*px_per_m,is1m=dm%10===0,is05m=dm%5===0,tickW=is1m?28:is05m?18:10;tctx.strokeStyle=is1m?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.5)';tctx.beginPath();tctx.moveTo(rulerX,sy);tctx.lineTo(rulerX+tickW,sy);tctx.stroke();if(is1m){tctx.font="bold 15px 'Space Mono'";tctx.fillStyle='rgba(255,255,255,0.95)';tctx.fillText(m.toFixed(0)+'m',rulerX+tickW+4,sy+5);}}}function worldToScreen(wx,wy,wz){let vec=new THREE.Vector4(wx,wy,wz,1);vec.applyMatrix4(cam.matrixWorldInverse);vec.applyMatrix4(cam.projectionMatrix);if(vec.w===0)return null;let nx=vec.x/vec.w,ny=vec.y/vec.w;return{x:(nx+1)/2*innerWidth,y:(1-ny)/2*innerHeight};}window.addEventListener('resize',()=>drawTools());setInterval(()=>drawTools(),60);},50);
+let toolCvs,tctx,vrulerVisible=false;setTimeout(()=>{toolCvs=document.createElement('canvas');toolCvs.id='toolCanvas';toolCvs.style.cssText='position:fixed;inset:0;z-index:5;pointer-events:none';document.body.appendChild(toolCvs);tctx=toolCvs.getContext('2d');function drawTools(){if(!toolCvs)return;toolCvs.width=innerWidth;toolCvs.height=innerHeight;tctx.clearRect(0,0,innerWidth,innerHeight);if(!vrulerVisible)return;let {H,vx:vx0,vy:vy0}=compute(S.angle,S.v0,S.h,S.g),maxH=Math.ceil(Math.max(H,S.h+0.5,1));let apexX=0;try{let tApex=vy0/S.g;apexX=vx0*tApex;}catch(e){}let p0=worldToScreen(apexX,0,0),pTop=worldToScreen(apexX,maxH,0);if(!p0||!pTop)return;let sy0=p0.y,syTop=pTop.y,px_per_m=(sy0-syTop)/maxH,rulerX=p0.x;tctx.strokeStyle='rgba(255,255,255,0.6)';tctx.beginPath();tctx.moveTo(rulerX,syTop);tctx.lineTo(rulerX,sy0);tctx.stroke();for(let dm=0;dm<=maxH*10;dm++){let m=dm/10;if(m>maxH+0.001)break;let sy=sy0-m*px_per_m,is1m=dm%10===0,is05m=dm%5===0,tickW=is1m?28:is05m?18:10;tctx.strokeStyle=is1m?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.5)';tctx.beginPath();tctx.moveTo(rulerX,sy);tctx.lineTo(rulerX+tickW,sy);tctx.stroke();if(is1m){tctx.font="bold 15px 'Space Mono'";tctx.fillStyle='rgba(255,255,255,0.95)';tctx.fillText(m.toFixed(0)+'m',rulerX+tickW+4,sy+5);}}}function worldToScreen(wx,wy,wz){let vec=new THREE.Vector4(wx,wy,wz,1);vec.applyMatrix4(cam.matrixWorldInverse);vec.applyMatrix4(cam.projectionMatrix);if(vec.w===0)return null;let nx=vec.x/vec.w,ny=vec.y/vec.w;return{x:(nx+1)/2*innerWidth,y:(1-ny)/2*innerHeight};}window.addEventListener('resize',()=>drawTools());setInterval(()=>drawTools(),60);},50);
 function toggleVRuler(){vrulerVisible=!vrulerVisible;document.getElementById('btn-vruler').classList.toggle('on',vrulerVisible);if(toolCvs&&tctx)drawTools();}
-function spawnPendulumManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),tApex=vy/S.g,xApex=vx*tApex,yApex=S.h+vy*tApex-0.5*S.g*tApex*tApex;placePendulum(xApex,yApex);}
-function spawnStackManual(){let {vx,vy}=compute(S.angle,S.v0,S.h,S.g),a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2);placeStack(vx*Tland);}
+function spawnPendulumManual(){ let {vx,vy}=compute(S.angle,S.v0,S.h,S.g); let tApex=vy/S.g, xApex=vx*tApex, yApex=S.h+vy*tApex-0.5*S.g*tApex*tApex; placePendulum(xApex,yApex); }
+function spawnStackManual(){ let {vx,vy}=compute(S.angle,S.v0,S.h,S.g); let a2=0.5*S.g,b2=-vy,c2=-S.h,disc=b2*b2-4*a2*c2,Tland=disc<0?0:(-b2+Math.sqrt(disc))/(2*a2); placeStack(vx*Tland); }
+
+// Timer panel functions (stop counting but panel stays)
+function showTimerPanel() { document.getElementById('timer-panel').style.display='flex'; }
+function hideTimerPanel() { 
+    document.getElementById('timer-panel').style.display='none'; 
+    if(timerAnimationId) cancelAnimationFrame(timerAnimationId);
+    timerAnimationId = null;
+    timerStopped = false;
+}
+function closeTimerPanel() { hideTimerPanel(); }
+function updateTimerDisplay(seconds) { document.getElementById('timer-display').textContent=seconds.toFixed(2)+' s'; }
+function startTimerChallenge(){
+    showTimerPanel();
+    timerStopped = false;
+    function tick() {
+        if(!isFlying || (timerStopped === false && projBouncing)) {
+            if(!timerStopped && projBouncing) {
+                timerStopped = true;
+                updateTimerDisplay(animT);
+            }
+            if(timerStopped) {
+                timerAnimationId = requestAnimationFrame(tick);
+                return;
+            }
+            if(!isFlying) {
+                hideTimerPanel();
+                return;
+            }
+        }
+        if(!timerStopped) updateTimerDisplay(animT);
+        timerAnimationId = requestAnimationFrame(tick);
+    }
+    timerAnimationId = requestAnimationFrame(tick);
+}
+
 // MODE & CHALLENGE
 let currentMode='explore',chScore=0,chTotal=0,chCurrent=null;
 const CHALLENGES=[
 {type:'range',gen:()=>{let a=Math.round(15+Math.random()*65),v=Math.round(10+Math.random()*40),h=Math.round(Math.random()*15),g=9.81,{R}=compute(a,v,h,g);return{a,v,h,g,ans:R,unit:'m',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>, height <b>${h} m</b>.<br>Find <span style="color:#78b4ff;">horizontal range R</span>.`,given:`θ=${a}° · v₀=${v} m/s · h=${h} m · g=${g}`,hideRows:['row-range']};}},
 {type:'maxh',gen:()=>{let a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81,{H}=compute(a,v,0,g);return{a,v,h:0,g,ans:H,unit:'m',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#60dfff;">maximum height H</span>.`,given:`θ=${a}° · v₀=${v} m/s · g=${g}`,hideRows:['row-maxh']};}},
 {type:'time',gen:()=>{let a=Math.round(20+Math.random()*60),v=Math.round(10+Math.random()*40),g=9.81,{T}=compute(a,v,0,g);return{a,v,h:0,g,ans:T,unit:'s',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#ffcc44;">flight time T</span>.`,given:`θ=${a}° · v₀=${v} m/s · g=${g}`,hideRows:['row-time']};}},
-{type:'vx',gen:()=>{let a=Math.round(10+Math.random()*70),v=Math.round(10+Math.random()*40),g=9.81,vx=v*Math.cos(a*Math.PI/180);return{a,v,h:0,g,ans:vx,unit:'m/s',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b>.<br>Find <span style="color:#7fffb2;">horizontal velocity vₓ</span>.`,given:`θ=${a}° · v₀=${v} m/s`,hideRows:['row-vx']};}}
+{type:'vx',gen:()=>{let a=Math.round(10+Math.random()*70),v=Math.round(10+Math.random()*40),g=9.81,vx=v*Math.cos(a*Math.PI/180);return{a,v,h:0.5,g,ans:vx,unit:'m/s',q:`Launch at <b>${a}°</b>, speed <b>${v} m/s</b> from height <b>0.5 m</b>.<br>Find <span style="color:#7fffb2;">horizontal velocity vₓ</span>.`,given:`θ=${a}° · v₀=${v} m/s · h=0.5 m`,hideRows:['row-vx']};}}
 ];
-function setMode(mode){currentMode=mode;document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+mode).classList.add('active');if(mode==='challenge'){document.getElementById('challenge-panel').style.display='block';document.getElementById('hud-challenge-note').style.display='block';nextChallenge();}else{document.getElementById('challenge-panel').style.display='none';document.getElementById('hud-challenge-note').style.display='none';showAllHUDRows();clearChallengeObjects();resetScene();}}
-function exitChallengeMode(){setMode('explore');}
-function nextChallenge(){document.getElementById('ch-result').style.display='none';document.getElementById('ch-input').value='';let tmpl=CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];chCurrent=tmpl.gen();let c=chCurrent;S.angle=c.a;S.v0=c.v;S.h=c.h;S.g=c.g;document.getElementById('sl-angle').value=c.a;document.getElementById('lbl-angle').innerText=c.a.toFixed(1)+'°';document.getElementById('sl-v0').value=c.v;document.getElementById('lbl-v0').innerText=c.v.toFixed(1)+' m/s';document.getElementById('sl-h').value=c.h;document.getElementById('lbl-h').innerText=c.h.toFixed(1)+' m';document.getElementById('sl-g').value=c.g;document.getElementById('lbl-g').innerText=c.g.toFixed(2);updatePedestal();updateHUD();showAllHUDRows();c.hideRows.forEach(hideHUDRow);clearChallengeObjects();let {R,H}=compute(c.a,c.v,c.h,c.g);if(c.type==='maxh'){let {vx}=compute(c.a,c.v,c.h,c.g);placePendulum(vx*(c.v*Math.sin(c.a*Math.PI/180)/c.g),H);}else if(c.type==='range')placeStack(R);resetScene();document.getElementById('ch-q-text').innerHTML=c.q;document.getElementById('ch-given').innerText=c.given;document.getElementById('ch-unit-lbl').innerText=c.unit;document.getElementById('ch-score').innerText=chScore+' / '+chTotal;}
-function validateChallenge(){if(!chCurrent)return;let ans=parseFloat(document.getElementById('ch-input').value);if(isNaN(ans)){showChResult('err','Enter numeric value.');return;}let correct=chCurrent.ans;chTotal++;if(Math.abs(ans-correct)<=correct*0.03){chScore++;showChResult('ok',`✅ Correct! = ${correct.toFixed(2)} ${chCurrent.unit}`);fireLaunch();}else if(Math.abs(ans-correct)<=correct*0.08)showChResult('partial',`🟡 Close! Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);else showChResult('err',`❌ Incorrect. Answer = ${correct.toFixed(2)} ${chCurrent.unit}`);document.getElementById('ch-score').innerText=chScore+' / '+chTotal;showAllHUDRows();updateHUD();chCurrent.hideRows.forEach(r=>document.getElementById(r).style.display='none');}
-function showChResult(type,msg){let el=document.getElementById('ch-result');el.style.display='block';el.className=type;el.innerHTML=msg;}
-// AR MODE (placeholder)
-function openAR(){alert('AR Mode requires HTTPS and camera permissions.\nSimulation remains fully functional in Explore/Challenge modes.');}
+function setMode(mode){
+  currentMode=mode;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+mode).classList.add('active');
+  let fireBtn=document.getElementById('btn-fire');
+  if(mode==='challenge'){
+    document.getElementById('challenge-panel').style.display='block';
+    document.getElementById('hud-challenge-note').style.display='block';
+    if(fireBtn) fireBtn.disabled=true;
+    nextChallenge();
+  } else {
+    document.getElementById('challenge-panel').style.display='none';
+    document.getElementById('hud-challenge-note').style.display='none';
+    if(fireBtn) fireBtn.disabled=false;
+    showAllHUDRows(); clearChallengeObjects(); resetScene();
+  }
+}
+function exitChallengeMode(){ setMode('explore'); }
+function nextChallenge(){
+  _onLandCallback=null;
+  document.getElementById('ch-result').style.display='none';
+  document.getElementById('ch-input').value='';
+  hideTimerPanel();
+  let tmpl=CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
+  chCurrent=tmpl.gen();
+  chCurrent.type = tmpl.type;
+  let c=chCurrent;
+  S.angle=c.a; S.v0=c.v; S.h=c.h; S.g=c.g;
+  document.getElementById('sl-angle').value=c.a;
+  document.getElementById('lbl-angle').innerText=c.a.toFixed(1)+'°';
+  document.getElementById('sl-v0').value=c.v;
+  document.getElementById('lbl-v0').innerText=c.v.toFixed(1)+' m/s';
+  document.getElementById('sl-h').value=c.h;
+  document.getElementById('lbl-h').innerText=c.h.toFixed(1)+' m';
+  document.getElementById('sl-g').value=c.g;
+  document.getElementById('lbl-g').innerText=c.g.toFixed(2);
+  updatePedestal(); updateHUD(); showAllHUDRows();
+  c.hideRows.forEach(hideHUDRow);
+  clearChallengeObjects(); resetScene();
+  let checkBtn = document.querySelector('.btn.validate');
+  if(checkBtn) checkBtn.disabled = false;
+  let panel=document.getElementById('challenge-panel');
+  panel.classList.add('big-panel');
+  let msgDiv=document.getElementById('ch-message');
+  if(c.type==='maxh') msgDiv.innerHTML='🔍 The pendulum will be placed at your guessed height. Aim to hit it at the highest point of the trajectory!';
+  else if(c.type==='range') msgDiv.innerHTML='🧱 Blocks will be placed at your guessed range. Hit them with precision!';
+  else if(c.type==='vx') msgDiv.innerHTML='🐞 A bug will crawl at your guessed speed. Smash it exactly when the projectile hits the ground!';
+  else msgDiv.innerHTML='';
+  setView('launcher');
+  document.getElementById('ch-q-text').innerHTML=c.q;
+  document.getElementById('ch-given').innerText=c.given;
+  document.getElementById('ch-unit-lbl').innerText=c.unit;
+  document.getElementById('ch-score').innerText=chScore+' / '+chTotal;
+}
+function showMessage(msg, duration=2000){
+  let msgDiv=document.getElementById('temp-message');
+  msgDiv.textContent=msg; msgDiv.style.opacity='1';
+  setTimeout(()=>{ msgDiv.style.opacity='0'; }, duration);
+}
+function showChResult(type,msg){ let el=document.getElementById('ch-result'); el.style.display='block'; el.className=type; el.innerHTML=msg; }
+function validateChallenge(){
+  let inputVal=parseFloat(document.getElementById('ch-input').value);
+  if(isNaN(inputVal)){ showChResult('err','❌ Please enter a number.'); return; }
+  if(inputVal < 0){ showChResult('err','❌ Please enter a non‑negative number.'); return; }
+  let c=chCurrent;
+  let userAns=inputVal, correct=c.ans;
+  let panel=document.getElementById('challenge-panel');
+  panel.classList.remove('big-panel');
+  setView('center');
+  let checkBtn = document.querySelector('.btn.validate');
+  if(checkBtn) checkBtn.disabled = true;
+  if(c.type==='maxh'){
+    showMessage('🔍 Placing pendulum at height '+userAns.toFixed(2)+' m...',2000);
+    let rad=S.angle*Math.PI/180, vx=S.v0*Math.cos(rad), vy=S.v0*Math.sin(rad), tApex=vy/S.g, apexX=vx*tApex;
+    clearChallengeObjects(); placePendulum(apexX, userAns);
+    let marker=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshStandardMaterial({color:0xff3333,emissive:0xff0000}));
+    marker.position.set(apexX,userAns,0); sc.add(marker); setTimeout(()=>sc.remove(marker),2000);
+    fireLaunch(()=>{
+      chTotal++;
+      if(Math.abs(userAns-correct)<=correct*0.03){ chScore++; showChResult('ok','✅ Correct! = '+correct.toFixed(2)+' '+c.unit); }
+      else if(Math.abs(userAns-correct)<=correct*0.08) showChResult('partial','🟡 Close! Answer = '+correct.toFixed(2)+' '+c.unit);
+      else showChResult('err','❌ Incorrect. Answer = '+correct.toFixed(2)+' '+c.unit);
+      document.getElementById('ch-score').innerText=chScore+' / '+chTotal;
+      showAllHUDRows(); updateHUD();
+      if(c.hideRows) c.hideRows.forEach(r=>document.getElementById(r).style.display='none');
+    });
+    return;
+  }
+  if(c.type==='range'){
+    showMessage('🧱 Placing blocks at range '+userAns.toFixed(2)+' m...',2000);
+    clearChallengeObjects(); placeStack(userAns);
+    let marker=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.1,0.5),new THREE.MeshStandardMaterial({color:0x44ff44,emissive:0x22aa22}));
+    marker.position.set(userAns,0.05,0); sc.add(marker); setTimeout(()=>sc.remove(marker),2000);
+    fireLaunch(()=>{
+      chTotal++;
+      if(Math.abs(userAns-correct)<=correct*0.03){ chScore++; showChResult('ok','✅ Correct! = '+correct.toFixed(2)+' '+c.unit); }
+      else if(Math.abs(userAns-correct)<=correct*0.08) showChResult('partial','🟡 Close! Answer = '+correct.toFixed(2)+' '+c.unit);
+      else showChResult('err','❌ Incorrect. Answer = '+correct.toFixed(2)+' '+c.unit);
+      document.getElementById('ch-score').innerText=chScore+' / '+chTotal;
+      showAllHUDRows(); updateHUD();
+      if(c.hideRows) c.hideRows.forEach(r=>document.getElementById(r).style.display='none');
+    });
+    return;
+  }
+  if(c.type==='time'){
+    showMessage(`⏱️ Flight time: watch the timer...`,2000);
+    startTimerChallenge();
+    fireLaunch(()=>{
+      chTotal++;
+      if(Math.abs(userAns-correct)<=correct*0.03){ chScore++; showChResult('ok',`✅ Correct! Time = ${correct.toFixed(2)} s`); }
+      else if(Math.abs(userAns-correct)<=correct*0.08) showChResult('partial',`🟡 Close! Answer = ${correct.toFixed(2)} s`);
+      else showChResult('err',`❌ Incorrect. Answer = ${correct.toFixed(2)} s`);
+      document.getElementById('ch-score').innerText=chScore+' / '+chTotal;
+      showAllHUDRows(); updateHUD();
+      if(c.hideRows) c.hideRows.forEach(r=>document.getElementById(r).style.display='none');
+    });
+    return;
+  }
+  if(c.type==='vx'){
+    showMessage(`🐞 Bug will crawl at ${userAns.toFixed(2)} m/s. Smash it!`,2000);
+    clearChallengeObjects(); placeBug(0,0.1,userAns);
+    fireLaunch(()=>{
+      if(bugGroup) sc.remove(bugGroup); bugGroup=null;
+      chTotal++;
+      if(Math.abs(userAns-correct)<=correct*0.03){ chScore++; showChResult('ok',`✅ Correct! vₓ = ${correct.toFixed(2)} m/s`); }
+      else if(Math.abs(userAns-correct)<=correct*0.08) showChResult('partial',`🟡 Close! Answer = ${correct.toFixed(2)} m/s`);
+      else showChResult('err',`❌ Incorrect. Answer = ${correct.toFixed(2)} m/s`);
+      document.getElementById('ch-score').innerText=chScore+' / '+chTotal;
+      showAllHUDRows(); updateHUD();
+      if(c.hideRows) c.hideRows.forEach(r=>document.getElementById(r).style.display='none');
+    });
+    return;
+  }
+  // fallback
+  chTotal++;
+  if(Math.abs(userAns-correct)<=correct*0.03){ chScore++; showChResult('ok','✅ Correct! = '+correct.toFixed(2)+' '+c.unit); }
+  else if(Math.abs(userAns-correct)<=correct*0.08) showChResult('partial','🟡 Close! Answer = '+correct.toFixed(2)+' '+c.unit);
+  else showChResult('err','❌ Incorrect. Answer = '+correct.toFixed(2)+' '+c.unit);
+  document.getElementById('ch-score').innerText=chScore+' / '+chTotal;
+  showAllHUDRows(); updateHUD();
+  if(c.hideRows) c.hideRows.forEach(r=>document.getElementById(r).style.display='none');
+}
+function openAR(){ alert('AR Mode requires HTTPS and camera permissions.\nSimulation remains fully functional in Explore/Challenge modes.'); }
 function closeAR(){}
 function arFire(){}
 function arReset(){}
 function nextARChallenge(){}
 function validateARChallenge(){}
-// QR
-let QR_URL='https://darawa-io.github.io/ARLABS/projectile_lab.html',_qrG=false;
-function openQR(){document.getElementById('qr-overlay').classList.add('open');if(!_qrG&&window.QRCode){let box=document.getElementById('qr-box');box.innerHTML='';new QRCode(box,{text:QR_URL,width:160,height:160,colorDark:'#141c2e',colorLight:'#fff'});document.getElementById('qr-url').innerText=QR_URL.slice(0,60)+(QR_URL.length>60?'…':'');_qrG=true;}}
-function closeQR(e){if(!e||e.target===document.getElementById('qr-overlay')||e.currentTarget===document.getElementById('qr-close'))document.getElementById('qr-overlay').classList.remove('open');}
-// Init
-setTimeout(()=>{updateHUD();setView('center');},100);
+let QR_URL='https://darawa-io.github.io/ARLABS/projectile_lab.html', _qrG=false;
+function openQR(){ document.getElementById('qr-overlay').classList.add('open'); if(!_qrG&&window.QRCode){ let box=document.getElementById('qr-box'); box.innerHTML=''; new QRCode(box,{text:QR_URL,width:160,height:160,colorDark:'#141c2e',colorLight:'#fff'}); document.getElementById('qr-url').innerText=QR_URL.slice(0,60)+(QR_URL.length>60?'…':''); _qrG=true; } }
+function closeQR(e){ if(!e||e.target===document.getElementById('qr-overlay')||e.currentTarget===document.getElementById('qr-close')) document.getElementById('qr-overlay').classList.remove('open'); }
+setTimeout(()=>{ updateHUD(); setView('center'); },100);
 </script>
 </body>
 </html>
