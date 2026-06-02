@@ -503,10 +503,12 @@ function paintProjection(blurAmt, inverted, imgH){
   if(bright < 0.02){ if(screenTex) screenTex.needsUpdate=true; return; }
 
   const cx=W/2, cy=H/2;
-  // imgH in cm, map so 20 cm fills screen; always use real size
-  const imgPx = Math.min(H*0.92, Math.max(12, (imgH/20) * H*0.92));
+  // imgH in cm — map so objectHeight (10 cm default) at mag=1 fills ~42% of screen.
+  // Scale proportionally: larger |mag| → taller arrow; cap at 96% so it stays on screen.
+  const refPx = H * 0.42;           // pixels for a 10 cm (1× magnification) image
+  const imgPx = Math.min(H*0.96, Math.max(8, (imgH / 10) * refPx));
 
-  // Arrow geometry — SAME SIZE whether focused or not
+  // Arrow geometry
   const headH = imgPx * 0.28;
   const shaftH = imgPx - headH;
   const shaftW = imgPx * 0.09;
@@ -554,11 +556,13 @@ function paintProjection(blurAmt, inverted, imgH){
 
 function refreshScreenTexture(){
   const f=effectiveF(),do_=S.objectDist,ho=S.objectHeight;
-  const di=1/(1/f-1/do_),mag=isFinite(di)?-di/do_:0,hi=Math.abs(mag*ho);
+  const di=1/(1/f-1/do_),mag=isFinite(di)?-di/do_:0,hi=mag*ho;
   const dlt=Math.abs(S.screenDist-di);
   // Virtual images (di<0) can't be projected on a screen — show dark
   const canProject=isFinite(di)&&di>0;
-  paintProjection(canProject?Math.min(dlt/14,1.0):1.0, canProject, canProject?(isFinite(hi)?hi:0):0);
+  // inverted = mag < 0 (real images); pass signed hi so size reflects magnification
+  const inverted = canProject && mag < 0;
+  paintProjection(canProject?Math.min(dlt/14,1.0):1.0, inverted, canProject?(isFinite(hi)?Math.abs(hi):0):0);
   // Update desktop texture
   if(desktopTex) desktopTex.needsUpdate=true;
   // Update AR texture
