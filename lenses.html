@@ -83,6 +83,22 @@ body.ar-active #focal-quiz{display:flex;}
 
 
 
+/* ── 2D canvas layer ── */
+#canvas2d{position:absolute;inset:0;z-index:1;display:none;}
+body.view2d #simWrap{display:none;}
+body.view2d #canvas2d{display:block;}
+body.view2d #pip{display:none!important;}
+body.view2d #cam-controls{display:none!important;}
+body.view2d #hint{bottom:72px;}
+/* 2D hint text */
+#hint2d{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(100,200,255,.22);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;display:none;}
+body.view2d #hint{display:none;}
+body.view2d #hint2d{display:block;}
+/* View toggle button — pulse ring on switch */
+#btn-view{border-color:rgba(160,120,255,.5);color:#c080ff;background:rgba(160,120,255,.08);}
+#btn-view:hover{background:rgba(160,120,255,.18);}
+#btn-view.on{background:rgba(160,120,255,.22);border-color:#c080ff;color:#fff;box-shadow:0 0 12px rgba(160,120,255,.3);}
+
 /* ── QR code button ── */
 #qr-btn{position:absolute;bottom:20px;right:20px;width:36px;height:36px;border-radius:10px;border:1px solid rgba(100,200,255,.25);background:rgba(8,18,35,.9);backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s;color:rgba(100,200,255,.6);}
 #qr-btn:hover{border-color:rgba(100,200,255,.55);background:rgba(100,200,255,.12);color:#64c8ff;}
@@ -186,6 +202,12 @@ body.ar-active #focal-quiz{display:flex;}
 </div>
 
 <!-- ═══════════════════════════════════════════
+     2D CANVAS LAYER
+════════════════════════════════════════════ -->
+<canvas id="canvas2d"></canvas>
+<div id="hint2d">DRAG arrow or screen along bench · DRAG arrow vertically to resize</div>
+
+<!-- ═══════════════════════════════════════════
      AR.js SCENE (injected when AR activated)
 ════════════════════════════════════════════ -->
 <div id="arWrap"></div>
@@ -257,6 +279,7 @@ body.ar-active #focal-quiz{display:flex;}
   <button class="btn ctrl-ar-hide" id="btn-diverging">⬤ Converging</button>
   <button class="btn amber" id="btn-challenge">🏆 Challenge</button>
   <div class="sep"></div>
+  <button class="btn" id="btn-view">⊞ 2D View</button>
   <button class="btn green" id="btn-ar">📷 AR Mode</button>
   <button class="btn ctrl-ar-show" id="btn-guide" style="display:none;" onclick="toggleARGuide()">📋 Guide</button>
   <div class="sep"></div>
@@ -1846,6 +1869,473 @@ document.getElementById('btn-reset').addEventListener('click',()=>{
 }
 layoutScene();
 desktopLoop();
+
+// ═══════════════════════════════════════════════════════
+//  2D VIEW ENGINE
+//  Shares physics state S — toggled by btn-view
+// ═══════════════════════════════════════════════════════
+(function(){
+'use strict';
+
+let view2d = false;
+let raf2d  = null;
+
+// ── Canvas & coordinate helpers ──────────────────────
+const cv = document.getElementById('canvas2d');
+const cx = cv.getContext('2d');
+
+let W2, H2, OX2, OY2, PX2; // OX2=lens x-px, OY2=axis y-px, PX2=px/cm
+
+function resize2d(){
+  W2 = cv.width  = window.innerWidth;
+  H2 = cv.height = window.innerHeight;
+  OX2 = W2 * 0.5;
+  OY2 = H2 * 0.56;
+  PX2 = W2 * 0.0075;   // pixels per cm — tune for screen width
+  if(view2d) draw2d();
+}
+window.addEventListener('resize', resize2d);
+resize2d();
+
+// world-cm → screen-px
+function wx(cm){ return OX2 + cm * PX2; }
+function wy(cm){ return OY2 - cm * PX2; }
+// screen-px → world-cm
+function sx(px){ return (px - OX2) / PX2; }
+function sy(py){ return (OY2 - py) / PX2; }
+
+// ── Drawing primitives ────────────────────────────────
+function line2(x1,y1,x2,y2,style,w,dash){
+  cx.save();cx.strokeStyle=style;cx.lineWidth=w||1.5;cx.setLineDash(dash||[]);
+  cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();cx.restore();
+}
+function txt(t,x,y,col,sz,align,glow){
+  cx.save();cx.font=`600 ${sz||11}px "Space Mono",monospace`;
+  cx.fillStyle=col;cx.textAlign=align||'center';
+  if(glow){cx.shadowColor=col;cx.shadowBlur=glow;}
+  cx.fillText(t,x,y);cx.restore();
+}
+
+// ── Main 2D draw ──────────────────────────────────────
+function draw2d(){
+  if(!view2d) return;
+  cx.clearRect(0,0,W2,H2);
+
+  const f   = effectiveF();
+  const do_ = S.objectDist;
+  const di  = 1/(1/f - 1/do_);
+  const ho  = S.objectHeight;
+  const mag = isFinite(di) ? -di/do_ : 0;
+  const hi  = mag * ho;
+  const dlt = S.screenDist - di;
+  const isVirtual = isFinite(di) && di < 0;
+
+  // ── White/light background (textbook style from reference image) ──
+  cx.fillStyle = '#f4f6fa';
+  cx.fillRect(0,0,W2,H2);
+
+  // Subtle grid
+  cx.save();
+  cx.strokeStyle = 'rgba(180,195,220,0.35)';
+  cx.lineWidth = 0.5;
+  const gridStep = PX2 * 5; // every 5 cm
+  for(let x = OX2 % gridStep; x < W2; x += gridStep){
+    cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H2);cx.stroke();
+  }
+  for(let y = OY2 % gridStep; y < H2; y += gridStep){
+    cx.beginPath();cx.moveTo(0,y);cx.lineTo(W2,y);cx.stroke();
+  }
+  cx.restore();
+
+  // ── Rail bench ──
+  const railY = OY2 + PX2 * 3.5;
+  cx.save();
+  cx.fillStyle = 'rgba(150,170,200,0.55)';
+  cx.fillRect(wx(-55), railY - 3, PX2*110, 6);
+  cx.fillStyle = 'rgba(120,140,175,0.35)';
+  cx.fillRect(wx(-55), railY + 3, PX2*110, 2);
+  cx.restore();
+
+  // ── Ruler ticks ──
+  cx.save();
+  for(let mm=-500; mm<=500; mm++){
+    const cm=mm/10, rx=wx(cm);
+    if(rx<0||rx>W2) continue;
+    const is5cm=(mm%50===0), isCm=(mm%10===0), is5mm=(mm%5===0), isZ=(mm===0);
+    const tickH = isZ?20 : is5cm?14 : isCm?9 : is5mm?5 : 3;
+    cx.fillStyle = isZ ? '#e8a000' : 'rgba(100,120,160,0.5)';
+    const tw = isZ?2.5 : is5cm?2 : 1;
+    cx.fillRect(rx-tw/2, railY-tickH, tw, tickH);
+    if(is5cm && rx>40 && rx<W2-40){
+      cx.font = isZ ? 'bold 10px monospace' : '8px monospace';
+      cx.fillStyle = isZ ? '#c07800' : 'rgba(90,110,150,0.7)';
+      cx.textAlign='center';
+      cx.fillText(isZ?'0':Math.abs(cm).toFixed(0), rx, railY+12);
+    }
+  }
+  cx.restore();
+
+  // ── Optical axis (dashed grey-blue, reference-image style) ──
+  line2(wx(-55), OY2, wx(55), OY2, 'rgba(120,140,200,0.55)', 1.5, [10,7]);
+
+  // ── Lens vertical line (semi-transparent blue) ──
+  line2(wx(0), OY2 - PX2*28, wx(0), OY2 + PX2*28, 'rgba(140,160,220,0.4)', 1, []);
+
+  // ── Focal points (yellow circles with dot, reference style) ──
+  const fpx = f * PX2;
+  if(Math.abs(fpx) < W2*0.45){
+    drawFocalDot2(wx(-f), OY2);
+    drawFocalDot2(wx(+f), OY2);
+  }
+
+  // ── Principal rays (black lines, reference style) ──
+  if(S.showRays && isFinite(di)){
+    drawRays2(do_, di, ho, hi, f, isVirtual);
+  }
+
+  // ── Lens shape ──
+  drawLens2(wx(0), OY2, S.diverging);
+
+  // ── Object arrow (solid blue, reference style) ──
+  drawArrow2(wx(-do_), OY2, ho * PX2, '#2255cc', '#3366ee', false);
+
+  // ── Image arrow (ghost) ──
+  if(S.showRays && isFinite(di) && Math.abs(di)<80){
+    const alpha = isVirtual ? 0.38 : 0.55;
+    drawArrow2(wx(di), OY2, hi*PX2, `rgba(60,120,220,${alpha})`, `rgba(80,140,240,${alpha})`, true);
+  }
+
+  // ── Screen ──
+  drawScreen2(wx(S.screenDist), OY2, hi, dlt, isVirtual);
+
+  // ── Distance annotations ──
+  drawDistances2(do_, di);
+
+  // ── Labels ──
+  const objX=wx(-do_), lensX=wx(0), scrX=wx(S.screenDist);
+  const objTipY = OY2 - ho*PX2 - PX2*2.5;
+  txt(`OBJECT  h=${S.objectHeight.toFixed(1)}cm`, objX, objTipY < 14 ? 14 : objTipY, '#1a3aaa', 10, 'center', 0);
+  txt((challengeMode&&challengeType==='focal')?'LENS  f=??':`LENS  f=${S.focalLength}cm`, lensX, OY2 - PX2*29, '#3355bb', 10, 'center', 0);
+  txt('SCREEN', scrX, OY2 - Math.max(PX2*10, Math.abs(hi)*PX2) - PX2*3, '#226644', 10, 'center', 0);
+}
+
+// Focal point: yellow circle with black dot (reference image style)
+function drawFocalDot2(x, y){
+  cx.save();
+  cx.beginPath(); cx.arc(x, y, 8, 0, Math.PI*2);
+  cx.fillStyle = '#f5d000';
+  cx.strokeStyle = '#8a7000';
+  cx.lineWidth = 1.2;
+  cx.fill(); cx.stroke();
+  cx.beginPath(); cx.arc(x, y, 3, 0, Math.PI*2);
+  cx.fillStyle = '#444400';
+  cx.fill();
+  cx.restore();
+}
+
+// Lens shape (biconvex or biconcave, dark blue/grey with fill — textbook style)
+function drawLens2(x, y, diverging){
+  const lH = PX2 * 22;
+  cx.save();
+  if(diverging){
+    // Biconcave
+    cx.beginPath();
+    cx.moveTo(x, y - lH);
+    cx.quadraticCurveTo(x + lH*0.3, y, x, y + lH);
+    cx.quadraticCurveTo(x - lH*0.3, y, x, y - lH);
+    cx.closePath();
+    cx.fillStyle = 'rgba(200,210,230,0.82)';
+    cx.fill();
+    cx.strokeStyle = '#4a5a7a';
+    cx.lineWidth = 1.5;
+    cx.stroke();
+    // Concave cuts
+    cx.beginPath();
+    cx.moveTo(x, y - lH);
+    cx.quadraticCurveTo(x - lH*0.22, y, x, y + lH);
+    cx.strokeStyle = '#6a7a9a'; cx.lineWidth = 1; cx.stroke();
+    cx.beginPath();
+    cx.moveTo(x, y - lH);
+    cx.quadraticCurveTo(x + lH*0.22, y, x, y + lH);
+    cx.stroke();
+  } else {
+    // Biconvex — reference image has an oval blue-grey filled shape
+    cx.beginPath();
+    cx.moveTo(x, y - lH);
+    cx.quadraticCurveTo(x + lH*0.38, y, x, y + lH);
+    cx.quadraticCurveTo(x - lH*0.38, y, x, y - lH);
+    cx.closePath();
+    // Blue-grey fill like reference image
+    const lg = cx.createLinearGradient(x - lH*0.4, y, x + lH*0.4, y);
+    lg.addColorStop(0,   'rgba(120,145,200,0.72)');
+    lg.addColorStop(0.45,'rgba(165,185,230,0.85)');
+    lg.addColorStop(0.55,'rgba(165,185,230,0.85)');
+    lg.addColorStop(1,   'rgba(100,125,185,0.72)');
+    cx.fillStyle = lg; cx.fill();
+    cx.strokeStyle = '#3a4f80'; cx.lineWidth = 1.5; cx.stroke();
+  }
+  // Arrowheads on axis intersections (reference image shows these)
+  const asz = 8;
+  cx.fillStyle = '#3a4f80';
+  // Top arrow pointing up
+  cx.beginPath();cx.moveTo(x,y-lH-1);cx.lineTo(x-asz*0.45,y-lH+asz);cx.lineTo(x+asz*0.45,y-lH+asz);cx.closePath();cx.fill();
+  // Bottom arrow pointing down
+  cx.beginPath();cx.moveTo(x,y+lH+1);cx.lineTo(x-asz*0.45,y+lH-asz);cx.lineTo(x+asz*0.45,y+lH-asz);cx.closePath();cx.fill();
+  cx.restore();
+}
+
+// Arrow (solid or ghost)
+function drawArrow2(x, y, hPx, colBody, colHead, ghost){
+  if(Math.abs(hPx) < 1) return;
+  const dir = hPx >= 0 ? 1 : -1;
+  const absH = Math.abs(hPx);
+  const headH = Math.min(absH*0.30, PX2*4);
+  const shW   = Math.max(3, absH * 0.07);
+  const hdW   = Math.max(9, absH * 0.20);
+  const tip   = y - hPx; // arrow tip (screen y)
+  const base  = y;
+
+  cx.save();
+  if(ghost){ cx.globalAlpha = 0.55; cx.setLineDash([4,3]); }
+
+  // Shaft
+  cx.fillStyle = colBody;
+  const shTop = dir>0 ? (tip + headH) : (tip - headH);
+  cx.fillRect(x - shW/2, Math.min(shTop, base), shW, Math.abs(shTop - base));
+
+  // Head
+  cx.fillStyle = colHead;
+  cx.beginPath();
+  if(dir > 0){
+    cx.moveTo(x, tip);
+    cx.lineTo(x + hdW/2, tip + headH);
+    cx.lineTo(x - hdW/2, tip + headH);
+  } else {
+    cx.moveTo(x, tip);
+    cx.lineTo(x + hdW/2, tip - headH);
+    cx.lineTo(x - hdW/2, tip - headH);
+  }
+  cx.closePath(); cx.fill();
+
+  // Base dot
+  if(!ghost){
+    cx.beginPath(); cx.arc(x, base, 3.5, 0, Math.PI*2);
+    cx.fillStyle = colBody; cx.fill();
+    // Post to bench
+    line2(x, base, x, OY2 + PX2*3.2, 'rgba(80,100,160,0.3)', 1.5, [3,3]);
+  }
+  cx.restore();
+}
+
+// Screen panel
+function drawScreen2(x, y, hi, dlt, isVirtual){
+  const focused = Math.abs(dlt) < 0.8 && !isVirtual;
+  const sH = PX2 * 20;
+  const panW = PX2 * 2.5;
+  cx.save();
+  // Panel bg
+  cx.fillStyle = focused ? 'rgba(220,240,225,0.92)' : 'rgba(210,215,230,0.75)';
+  cx.strokeStyle = focused ? '#2a9955' : '#6a7a9a';
+  cx.lineWidth = focused ? 2 : 1.5;
+  cx.shadowColor = focused ? 'rgba(40,180,100,0.4)' : 'transparent';
+  cx.shadowBlur  = focused ? 12 : 0;
+  cx.fillRect(x - panW/2, y - sH, panW, sH*2);
+  cx.strokeRect(x - panW/2, y - sH, panW, sH*2);
+  cx.restore();
+
+  // Projected image
+  const f = effectiveF();
+  const di_calc = 1/(1/f - 1/S.objectDist);
+  const canProject = isFinite(di_calc) && di_calc > 0;
+  if(canProject && Math.abs(hi) > 0.1){
+    const blur = Math.min(1, Math.abs(dlt)/14);
+    const imgPxH = Math.min(sH*1.85, Math.abs(hi)*PX2);
+    drawScreenProj2(x, y, imgPxH, hi < 0, Math.max(0, 1-blur*0.85), blur);
+  }
+
+  // Post to bench
+  line2(x, y + sH, x, OY2 + PX2*3.2, 'rgba(60,100,80,0.55)', 2);
+}
+
+function drawScreenProj2(x, y, imgPxH, inverted, alpha, blur){
+  if(alpha < 0.02 || imgPxH < 2) return;
+  const headH = Math.min(imgPxH*0.3, PX2*3.5);
+  const shW   = Math.max(2.5, imgPxH*0.09);
+  const hdW   = Math.max(7, imgPxH*0.24);
+  cx.save();
+  if(blur > 0.04) cx.filter=`blur(${Math.min(10,blur*blur*70).toFixed(1)}px)`;
+  cx.globalAlpha = alpha;
+  if(inverted){ cx.translate(x,y); cx.scale(1,-1); cx.translate(-x,-y); }
+  const tip = y - imgPxH;
+  cx.fillStyle = `rgba(200,50,50,${Math.min(1,alpha*1.5)})`;
+  // Shaft
+  cx.fillRect(x - shW/2, tip + headH, shW, imgPxH - headH);
+  // Head
+  cx.beginPath();
+  cx.moveTo(x, tip); cx.lineTo(x+hdW/2, tip+headH); cx.lineTo(x-hdW/2, tip+headH);
+  cx.closePath(); cx.fill();
+  cx.restore();
+}
+
+// Rays — black lines with arrowheads, reference-image style
+function drawRays2(do_, di, ho, hi, f, isVirtual){
+  const lx  = OX2;
+  const ox  = wx(-do_);
+  const tipY = OY2 - ho * PX2;
+  const farX = wx(56);
+  const imgX = wx(di), imgY = OY2 - hi * PX2;
+
+  // Near focal point
+  const fNearX = lx - f * PX2;
+  let r3_lY;
+  {const dx=fNearX-ox,dy=OY2-tipY;r3_lY=Math.abs(dx)<0.5?tipY:tipY+dy*(lx-ox)/dx;}
+
+  function fwdSlope(rLY){const dx=imgX-lx;return Math.abs(dx)<0.5?0:(imgY-rLY)/dx;}
+  const rLYs  = [tipY, OY2, r3_lY];
+  const slopes = rLYs.map(fwdSlope);
+
+  // Reference image: all black lines, slightly thicker
+  const RC = 'rgba(30,30,40,0.82)';
+  const RW = 1.6;
+
+  // Incident rays (arrow tip → lens)
+  rLYs.forEach(rly => line2(ox, tipY, lx, rly, RC, RW));
+
+  // Refracted rays (lens → far / virtual back-ext)
+  slopes.forEach((s,i) => {
+    const endY = rLYs[i] + s*(farX-lx);
+    if(isVirtual){
+      // Solid dotted forward, dashed backward extension
+      line2(lx, rLYs[i], farX, endY, RC, RW);
+      line2(lx, rLYs[i], imgX, imgY, 'rgba(80,80,120,0.45)', RW, [6,4]);
+    } else {
+      line2(lx, rLYs[i], farX, endY, RC, RW);
+    }
+  });
+
+  // Convergence point / image marker
+  if(Math.abs(di) < 80){
+    line2(imgX, OY2, imgX, imgY, isVirtual?'rgba(80,100,180,0.3)':'rgba(60,90,170,0.45)', 1, [4,3]);
+  }
+}
+
+// Distance annotation brackets
+function drawDistances2(do_, di){
+  const y  = OY2 + PX2 * 5.5;
+  const lx = OX2, ox = wx(-do_), scrX = wx(S.screenDist);
+
+  cx.save();
+  cx.strokeStyle = 'rgba(60,100,180,0.35)'; cx.lineWidth=1;
+  cx.beginPath(); cx.moveTo(ox,y); cx.lineTo(lx,y); cx.stroke();
+  [[ox,y-4,ox,y+4],[lx,y-4,lx,y+4]].forEach(([x1,y1,x2,y2])=>{cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();});
+  cx.font='10px "Space Mono",monospace'; cx.fillStyle='rgba(40,70,160,0.7)'; cx.textAlign='center';
+  cx.fillText(`d_o = ${do_.toFixed(1)} cm`,(ox+lx)/2, y+14);
+
+  cx.strokeStyle='rgba(40,130,90,0.4)';
+  cx.beginPath();cx.moveTo(lx,y);cx.lineTo(scrX,y);cx.stroke();
+  [[lx,y-4,lx,y+4],[scrX,y-4,scrX,y+4]].forEach(([x1,y1,x2,y2])=>{cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();});
+  cx.fillStyle='rgba(20,100,60,0.7)';
+  cx.fillText(`d_s = ${S.screenDist.toFixed(1)} cm`,(lx+scrX)/2, y+14);
+  cx.restore();
+}
+
+// ── 2D Drag interaction ───────────────────────────────
+let drag2 = null;
+const HIT = 18;
+
+function hitTest2(mx, my){
+  const ox=wx(-S.objectDist), scrX=wx(S.screenDist), tipY=OY2-S.objectHeight*PX2;
+  const arrowTop=Math.min(OY2,tipY)-12, arrowBot=Math.max(OY2,tipY)+12;
+  if(mx>ox-HIT&&mx<ox+HIT&&my>arrowTop&&my<arrowBot) return 'object';
+  const sH=PX2*20;
+  if(mx>scrX-HIT&&mx<scrX+HIT&&my>OY2-sH-10&&my<OY2+sH+10) return 'screen';
+  return null;
+}
+
+cv.addEventListener('mousedown', e=>{
+  if(!view2d) return;
+  const t=hitTest2(e.clientX,e.clientY);
+  if(t){ drag2={mode:t,lastX:e.clientX,lastY:e.clientY,startDo:S.objectDist,startDs:S.screenDist,startH:S.objectHeight}; cv.style.cursor='grabbing'; }
+});
+cv.addEventListener('mousemove', e=>{
+  if(!view2d) return;
+  if(!drag2){ cv.style.cursor=hitTest2(e.clientX,e.clientY)?'grab':'default'; return; }
+  const dx=e.clientX-drag2.lastX, dy=e.clientY-drag2.lastY;
+  const dcm=dx/PX2, dycm=-dy/PX2;
+  if(drag2.mode==='object'){
+    if(!(challengeMode&&challengeType==='image')){
+      S.objectDist=Math.max(5,Math.min(45,drag2.startDo-dcm));
+      if(!S.lockHeight) S.objectHeight=Math.max(1,Math.min(25,drag2.startH+dycm));
+      drag2.startDo=S.objectDist; drag2.startH=S.objectHeight;
+    }
+  } else if(drag2.mode==='screen'){
+    if(!(challengeMode&&challengeType==='image')){
+      S.screenDist=Math.max(1,Math.min(150,drag2.startDs+dcm));
+      drag2.startDs=S.screenDist;
+    }
+  }
+  drag2.lastX=e.clientX; drag2.lastY=e.clientY;
+  layoutScene();  // update HUD + 3D textures, triggers draw2d via loop
+});
+cv.addEventListener('mouseup',   ()=>{ drag2=null; cv.style.cursor='default'; });
+cv.addEventListener('mouseleave',()=>{ drag2=null; });
+
+// Touch support for 2D canvas
+cv.addEventListener('touchstart',e=>{
+  if(!view2d)return; e.preventDefault();
+  const t=e.changedTouches[0], hit=hitTest2(t.clientX,t.clientY);
+  if(hit) drag2={mode:hit,lastX:t.clientX,lastY:t.clientY,startDo:S.objectDist,startDs:S.screenDist,startH:S.objectHeight};
+},{passive:false});
+cv.addEventListener('touchmove',e=>{
+  if(!view2d||!drag2)return; e.preventDefault();
+  const t=e.changedTouches[0], dx=t.clientX-drag2.lastX, dy=t.clientY-drag2.lastY;
+  const dcm=dx/PX2, dycm=-dy/PX2;
+  if(drag2.mode==='object'&&!(challengeMode&&challengeType==='image')){
+    S.objectDist=Math.max(5,Math.min(45,drag2.startDo-dcm));
+    if(!S.lockHeight) S.objectHeight=Math.max(1,Math.min(25,drag2.startH+dycm));
+    drag2.startDo=S.objectDist; drag2.startH=S.objectHeight;
+  } else if(drag2.mode==='screen'&&!(challengeMode&&challengeType==='image')){
+    S.screenDist=Math.max(1,Math.min(150,drag2.startDs+dcm));
+    drag2.startDs=S.screenDist;
+  }
+  drag2.lastX=t.clientX; drag2.lastY=t.clientY;
+  layoutScene();
+},{passive:false});
+cv.addEventListener('touchend',()=>{ drag2=null; },{passive:false});
+
+// ── 2D render loop (runs alongside 3D) ───────────────
+function loop2d(){
+  if(view2d){ draw2d(); }
+  raf2d = requestAnimationFrame(loop2d);
+}
+raf2d = requestAnimationFrame(loop2d);
+
+// Patch layoutScene so 2D redraws whenever 3D updates
+const _orig_layout = layoutScene;
+layoutScene = function(){
+  _orig_layout.call(this,...arguments);
+  if(view2d) draw2d();
+};
+
+// ── View toggle button ────────────────────────────────
+const btnView = document.getElementById('btn-view');
+btnView.addEventListener('click', ()=>{
+  view2d = !view2d;
+  document.body.classList.toggle('view2d', view2d);
+  btnView.classList.toggle('on', view2d);
+  btnView.textContent = view2d ? '⊟ 3D View' : '⊞ 2D View';
+  if(view2d){
+    resize2d();
+    draw2d();
+    // Pause 3D render loop (just hide canvas, loop keeps going for HUD)
+    // The desktopLoop checks arMode so we reuse simWrap display:none via CSS
+  } else {
+    // Return to 3D — force relayout
+    layoutScene();
+  }
+});
+
+})(); // end 2D IIFE
 </script>
 </body>
 </html>
