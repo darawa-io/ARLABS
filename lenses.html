@@ -99,6 +99,13 @@ body.view2d #hint2d{display:block;}
 #btn-view:hover{background:rgba(160,120,255,.18);}
 #btn-view.on{background:rgba(160,120,255,.22);border-color:#c080ff;color:#fff;box-shadow:0 0 12px rgba(160,120,255,.3);}
 
+/* 2D mode — dark title & logo to contrast against light background */
+body.view2d #title-logo { opacity:1; filter:brightness(0) saturate(0); }
+body.view2d #title-text h1 { color:#1a2030; }
+body.view2d #title-text p  { color:rgba(40,60,120,.65); }
+body.view2d #focus-badge.focused   { background:rgba(20,140,70,.12); border-color:rgba(20,140,70,.45); color:#1a8040; }
+body.view2d #focus-badge.unfocused { background:rgba(180,30,30,.08); border-color:rgba(180,30,30,.3); color:#aa2020; }
+
 /* ── QR code button ── */
 #qr-btn{position:absolute;bottom:20px;right:20px;width:36px;height:36px;border-radius:10px;border:1px solid rgba(100,200,255,.25);background:rgba(8,18,35,.9);backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s;color:rgba(100,200,255,.6);}
 #qr-btn:hover{border-color:rgba(100,200,255,.55);background:rgba(100,200,255,.12);color:#64c8ff;}
@@ -685,15 +692,15 @@ function applyOrbit(){
 applyOrbit();
 
 // Floor + Grid
-const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x010e18,roughness:1}));
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x08243e,roughness:0.95}));
 floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.6; floorM.receiveShadow=true; scene3.add(floorM);
-const gridM=new THREE.GridHelper(80,80,0x0c2840,0x0c2840); gridM.position.y=-2.58; scene3.add(gridM);
+const gridM=new THREE.GridHelper(80,80,0x1a4a6a,0x163858); gridM.position.y=-2.58; scene3.add(gridM);
 
 // Scene root (all optics objects)
 const root3=new THREE.Group(); scene3.add(root3);
 
 // ── Optical axis
-{const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20,0,0),new THREE.Vector3(20,0,0)]);const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x1a5070,dashSize:0.5,gapSize:0.3}));l.computeLineDistances();root3.add(l);}
+{const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-22,0,0),new THREE.Vector3(22,0,0)]);const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0x3a9abf,dashSize:0.55,gapSize:0.28,linewidth:2}));l.computeLineDistances();root3.add(l);}
 
 // ── I-beam rail (web + top flange + bottom flange)
 const railMat3=new THREE.MeshStandardMaterial({color:0x1a3a55,metalness:0.8,roughness:0.2});
@@ -724,7 +731,7 @@ const railBot3=new THREE.Mesh(new THREE.BoxGeometry(38,0.06,0.50),railMat3); rai
                 : is5mm   ? RH*0.25
                 : RH*0.14;
     // Tick colour
-    rx.fillStyle = isZero ? '#ffdd88' : mm<0 ? '#ff8888' : '#88ffcc';
+    rx.fillStyle = isZero ? '#ffee44' : mm<0 ? '#ff9999' : '#55ffcc';
     // Tick width: thicker for major marks
     const tw = isZero ? 4 : is5cm ? 3 : isCm ? 2 : 1;
     rx.fillRect(px - Math.floor(tw/2), 0, tw, tickH);
@@ -734,7 +741,7 @@ const railBot3=new THREE.Mesh(new THREE.BoxGeometry(38,0.06,0.50),railMat3); rai
       const label = isZero ? '0' : Math.abs(cm).toFixed(0);
       rx.font = isZero ? 'bold 72px monospace' : 'bold 56px monospace';
       rx.textAlign = 'center';
-      rx.fillStyle = isZero ? '#ffdd88' : mm<0 ? '#ffaaaa' : '#aaffcc';
+      rx.fillStyle = isZero ? '#ffee44' : mm<0 ? '#ffbbbb' : '#88ffdd';
       rx.fillText(label, px, RH-4);
     }
   }
@@ -1854,6 +1861,10 @@ document.getElementById('btn-reset').addEventListener('click',()=>{
   btnRays.classList.remove('on');btnLock.textContent='🔓 Lock h';btnLock.classList.remove('on');
   S.diverging=false;btnDiverging.textContent='⬤ Converging';btnDiverging.classList.remove('on');
   document.getElementById('lens-type-label').textContent='Converging Lens';
+  // Also reset camera to initial position (smooth animated, 3D mode only)
+  if(!(window._getView2d && window._getView2d()) && document.getElementById('cam-reset-btn')){
+    document.getElementById('cam-reset-btn').click();
+  }
   layoutScene();
 });
 
@@ -1878,6 +1889,7 @@ desktopLoop();
 'use strict';
 
 let view2d = false;
+window._getView2d = ()=>view2d;
 let raf2d  = null;
 
 // ── Canvas & coordinate helpers ──────────────────────
@@ -1950,40 +1962,51 @@ function draw2d(){
   // ── Rail bench ──
   const railY = OY2 + PX2 * 3.5;
   cx.save();
-  cx.fillStyle = 'rgba(150,170,200,0.55)';
+  cx.fillStyle = 'rgba(110,130,170,0.75)';
   cx.fillRect(wx(-55), railY - 3, PX2*110, 6);
-  cx.fillStyle = 'rgba(120,140,175,0.35)';
+  cx.fillStyle = 'rgba(80,105,150,0.5)';
   cx.fillRect(wx(-55), railY + 3, PX2*110, 2);
   cx.restore();
 
-  // ── Ruler ticks ──
+  // ── Ruler ticks — high contrast ──
   cx.save();
   for(let mm=-500; mm<=500; mm++){
     const cm=mm/10, rx=wx(cm);
     if(rx<0||rx>W2) continue;
     const is5cm=(mm%50===0), isCm=(mm%10===0), is5mm=(mm%5===0), isZ=(mm===0);
-    const tickH = isZ?20 : is5cm?14 : isCm?9 : is5mm?5 : 3;
-    cx.fillStyle = isZ ? '#e8a000' : 'rgba(100,120,160,0.5)';
-    const tw = isZ?2.5 : is5cm?2 : 1;
+    const tickH = isZ?22 : is5cm?16 : isCm?10 : is5mm?6 : 3;
+    // Crisp high-contrast colours: zero=amber, left=red, right=teal
+    cx.fillStyle = isZ ? '#c07000' : (cm<0 ? '#c03030' : '#1a7a55');
+    const tw = isZ?3 : is5cm?2.5 : isCm?1.5 : 1;
+    cx.globalAlpha = isZ ? 1 : is5cm ? 0.9 : isCm ? 0.75 : is5mm ? 0.55 : 0.35;
     cx.fillRect(rx-tw/2, railY-tickH, tw, tickH);
     if(is5cm && rx>40 && rx<W2-40){
-      cx.font = isZ ? 'bold 10px monospace' : '8px monospace';
-      cx.fillStyle = isZ ? '#c07800' : 'rgba(90,110,150,0.7)';
+      cx.globalAlpha = 1;
+      cx.font = isZ ? 'bold 11px monospace' : 'bold 9px monospace';
+      cx.fillStyle = isZ ? '#8a5000' : (cm<0 ? '#992222' : '#115533');
       cx.textAlign='center';
-      cx.fillText(isZ?'0':Math.abs(cm).toFixed(0), rx, railY+12);
+      cx.fillText(isZ?'0':Math.abs(cm).toFixed(0), rx, railY+13);
     }
   }
+  cx.globalAlpha = 1;
   cx.restore();
 
-  // ── Optical axis (dashed grey-blue, reference-image style) ──
-  line2(wx(-55), OY2, wx(55), OY2, 'rgba(120,140,200,0.55)', 1.5, [10,7]);
+  // ── Optical axis — bold dashed, clearly visible (principal axis)
+  cx.save();
+  cx.strokeStyle = 'rgba(60,100,190,0.75)';
+  cx.lineWidth = 2;
+  cx.setLineDash([12, 7]);
+  cx.shadowColor = 'rgba(60,100,200,0.3)';
+  cx.shadowBlur = 4;
+  cx.beginPath(); cx.moveTo(wx(-55), OY2); cx.lineTo(wx(55), OY2); cx.stroke();
+  cx.restore();
 
   // ── Lens vertical line (semi-transparent blue) ──
   line2(wx(0), OY2 - PX2*28, wx(0), OY2 + PX2*28, 'rgba(140,160,220,0.4)', 1, []);
 
   // ── Focal points (yellow circles with dot, reference style) ──
   const fpx = f * PX2;
-  if(Math.abs(fpx) < W2*0.45){
+  if(show2dFocalPts && Math.abs(fpx) < W2*0.45){
     drawFocalDot2(wx(-f), OY2);
     drawFocalDot2(wx(+f), OY2);
   }
@@ -2035,29 +2058,80 @@ function drawFocalDot2(x, y){
 
 // Lens shape (biconvex or biconcave, dark blue/grey with fill — textbook style)
 function drawLens2(x, y, diverging){
-  const lH = PX2 * 22;
+  const lH = PX2 * 22;  // half-height
   cx.save();
   if(diverging){
-    // Biconcave
+    // ── Biconcave hourglass — matches reference image ──
+    // The shape has flat-ish wide ends at top/bottom, and pinches inward at centre.
+    // We use bezier curves for both the left and right profiles.
+    const ew = PX2 * 3.2;   // half-width at the top/bottom edge (wide)
+    const cw = PX2 * 0.8;   // half-width at the waist / centre (narrow)
+    const bend = lH * 0.38; // control point offset for the inward curve
+
+    // Gradient fill — matching reference blue-lavender tone
+    const lg = cx.createLinearGradient(x - ew, y, x + ew, y);
+    lg.addColorStop(0,    'rgba(120,145,200,0.72)');
+    lg.addColorStop(0.35, 'rgba(155,175,228,0.82)');
+    lg.addColorStop(0.5,  'rgba(165,185,235,0.88)');
+    lg.addColorStop(0.65, 'rgba(155,175,228,0.82)');
+    lg.addColorStop(1,    'rgba(110,135,195,0.72)');
+
+    // Build the full closed path:
+    // Start at top-left, draw right profile to bottom, left profile back to top.
     cx.beginPath();
-    cx.moveTo(x, y - lH);
-    cx.quadraticCurveTo(x + lH*0.3, y, x, y + lH);
-    cx.quadraticCurveTo(x - lH*0.3, y, x, y - lH);
+    // Top-left corner → top-right corner (flat top edge)
+    cx.moveTo(x - ew, y - lH);
+    cx.lineTo(x + ew, y - lH);
+    // Right profile: top-right → waist-right → bottom-right (concave curve inward)
+    cx.bezierCurveTo(
+      x + ew, y - lH + bend,   // cp1: pull inward from top-right
+      x + cw, y - bend*0.4,    // cp2: near waist
+      x + cw, y                 // end: right waist point
+    );
+    cx.bezierCurveTo(
+      x + cw, y + bend*0.4,    // cp1: near waist
+      x + ew, y + lH - bend,   // cp2: pull out toward bottom-right
+      x + ew, y + lH            // end: bottom-right
+    );
+    // Bottom edge (flat)
+    cx.lineTo(x - ew, y + lH);
+    // Left profile: bottom-left → waist-left → top-left (concave curve inward)
+    cx.bezierCurveTo(
+      x - ew, y + lH - bend,
+      x - cw, y + bend*0.4,
+      x - cw, y
+    );
+    cx.bezierCurveTo(
+      x - cw, y - bend*0.4,
+      x - ew, y - lH + bend,
+      x - ew, y - lH
+    );
     cx.closePath();
-    cx.fillStyle = 'rgba(200,210,230,0.82)';
+
+    cx.fillStyle = lg;
     cx.fill();
-    cx.strokeStyle = '#4a5a7a';
-    cx.lineWidth = 1.5;
+
+    // Dark outline matching reference image
+    cx.strokeStyle = '#2a3a5a';
+    cx.lineWidth = 2;
     cx.stroke();
-    // Concave cuts
+
+    // Inner highlight lines along each concave surface (gives glass depth)
+    cx.save();
+    cx.strokeStyle = 'rgba(200,215,255,0.55)';
+    cx.lineWidth = 1;
+    // Right inner highlight
     cx.beginPath();
-    cx.moveTo(x, y - lH);
-    cx.quadraticCurveTo(x - lH*0.22, y, x, y + lH);
-    cx.strokeStyle = '#6a7a9a'; cx.lineWidth = 1; cx.stroke();
-    cx.beginPath();
-    cx.moveTo(x, y - lH);
-    cx.quadraticCurveTo(x + lH*0.22, y, x, y + lH);
+    cx.moveTo(x + cw*1.6, y - lH + bend*0.3);
+    cx.bezierCurveTo(x + cw*1.1, y - bend*0.2, x + cw*1.1, y + bend*0.2, x + cw*1.6, y + lH - bend*0.3);
     cx.stroke();
+    // Left inner highlight
+    cx.beginPath();
+    cx.moveTo(x - cw*1.6, y - lH + bend*0.3);
+    cx.bezierCurveTo(x - cw*1.1, y - bend*0.2, x - cw*1.1, y + bend*0.2, x - cw*1.6, y + lH - bend*0.3);
+    cx.stroke();
+    cx.restore();
+
   } else {
     // Biconvex — reference image has an oval blue-grey filled shape
     cx.beginPath();
@@ -2072,15 +2146,15 @@ function drawLens2(x, y, diverging){
     lg.addColorStop(0.55,'rgba(165,185,230,0.85)');
     lg.addColorStop(1,   'rgba(100,125,185,0.72)');
     cx.fillStyle = lg; cx.fill();
-    cx.strokeStyle = '#3a4f80'; cx.lineWidth = 1.5; cx.stroke();
+    cx.strokeStyle = '#2a3a5a'; cx.lineWidth = 2; cx.stroke();
   }
-  // Arrowheads on axis intersections (reference image shows these)
-  const asz = 8;
-  cx.fillStyle = '#3a4f80';
+  // Arrowheads on lens tips (reference image shows these)
+  const asz = 9;
+  cx.fillStyle = '#2a3a5a';
   // Top arrow pointing up
-  cx.beginPath();cx.moveTo(x,y-lH-1);cx.lineTo(x-asz*0.45,y-lH+asz);cx.lineTo(x+asz*0.45,y-lH+asz);cx.closePath();cx.fill();
+  cx.beginPath();cx.moveTo(x,y-lH-2);cx.lineTo(x-asz*0.45,y-lH+asz);cx.lineTo(x+asz*0.45,y-lH+asz);cx.closePath();cx.fill();
   // Bottom arrow pointing down
-  cx.beginPath();cx.moveTo(x,y+lH+1);cx.lineTo(x-asz*0.45,y+lH-asz);cx.lineTo(x+asz*0.45,y+lH-asz);cx.closePath();cx.fill();
+  cx.beginPath();cx.moveTo(x,y+lH+2);cx.lineTo(x-asz*0.45,y+lH-asz);cx.lineTo(x+asz*0.45,y+lH-asz);cx.closePath();cx.fill();
   cx.restore();
 }
 
@@ -2239,7 +2313,9 @@ function drawDistances2(do_, di){
   cx.restore();
 }
 
-// ── 2D Drag interaction ───────────────────────────────
+// ── 2D focal-point visibility flag ───────────────────
+// Hidden during "Find Focal Length" challenge so the student can't cheat
+let show2dFocalPts = true;
 let drag2 = null;
 const HIT = 18;
 
@@ -2275,7 +2351,9 @@ cv.addEventListener('mousemove', e=>{
     }
   }
   drag2.lastX=e.clientX; drag2.lastY=e.clientY;
-  layoutScene();  // update HUD + 3D textures, triggers draw2d via loop
+  // State updated — rAF loop redraws 2D; also update HUD via layoutScene
+  // but defer to avoid sync DOM+canvas jitter
+  requestAnimationFrame(layoutScene);
 });
 cv.addEventListener('mouseup',   ()=>{ drag2=null; cv.style.cursor='default'; });
 cv.addEventListener('mouseleave',()=>{ drag2=null; });
@@ -2299,7 +2377,7 @@ cv.addEventListener('touchmove',e=>{
     drag2.startDs=S.screenDist;
   }
   drag2.lastX=t.clientX; drag2.lastY=t.clientY;
-  layoutScene();
+  requestAnimationFrame(layoutScene);
 },{passive:false});
 cv.addEventListener('touchend',()=>{ drag2=null; },{passive:false});
 
@@ -2310,14 +2388,45 @@ function loop2d(){
 }
 raf2d = requestAnimationFrame(loop2d);
 
-// Patch layoutScene so 2D redraws whenever 3D updates
-const _orig_layout = layoutScene;
-layoutScene = function(){
-  _orig_layout.call(this,...arguments);
-  if(view2d) draw2d();
+// 2D redraws via its own rAF loop — no layoutScene patch needed.
+// This prevents double-draw jitter when the focal slider fires rapidly.
+
+// Hook selectChallengeType type-switch to also update foci
+const _origSelectType = selectChallengeType;
+window.selectChallengeType = selectChallengeType = function(type){
+  _origSelectType(type);
+  show2dFocalPts = (type === 'image');
+};
+// The shared newFocalChallenge / newImageChallenge / btn-challenge click
+// are defined in outer scope — we wrap them to toggle show2dFocalPts.
+const _origNewFocal  = window.newFocalChallenge  || newFocalChallenge;
+const _origNewImage  = window.newImageChallenge  || newImageChallenge;
+
+// Wrap via assignment on window so inner + outer refs both update
+window.newFocalChallenge = function(){
+  _origNewFocal();
+  show2dFocalPts = false; // hide foci during focal challenge
+};
+window.newImageChallenge = function(){
+  _origNewImage();
+  show2dFocalPts = true;  // foci visible during image challenge
 };
 
-// ── View toggle button ────────────────────────────────
+// Also hook the challenge toggle button to restore foci when exiting
+document.getElementById('btn-challenge').addEventListener('click', ()=>{
+  // After the original handler runs, check current mode
+  requestAnimationFrame(()=>{
+    if(!challengeMode) show2dFocalPts = true;
+    else show2dFocalPts = (challengeType === 'image');
+  });
+});
+// And the panel close button
+document.getElementById('ch-close') && document.getElementById('ch-close').addEventListener('click', ()=>{
+  show2dFocalPts = true;
+});
+
+// Helper called by challenge-panel close button's inline onclick
+window._restore2dFoci = function(){ show2dFocalPts = true; };
 const btnView = document.getElementById('btn-view');
 btnView.addEventListener('click', ()=>{
   view2d = !view2d;
