@@ -1151,11 +1151,19 @@ function solveCircuit() {
     }
 
     for (const vs of vsEdges) {
-      const posNode = graph.nodes.findIndex((_, i) => sn(i) === vs.from_sn);
-      const negNode = graph.nodes.findIndex((_, i) => sn(i) === vs.to_sn);
-      if (posNode === -1 || negNode === -1) continue;
+      // In ideal mode, all wire-connected nodes collapse into super-nodes.
+      // A single posNode representative misses wires whose BOTH endpoints are
+      // in the same super-node (zero ΔV, but still carry current).
+      // Fix: seed findAllPaths from EVERY graph node that belongs to the + super-node,
+      // and treat EVERY graph node in the − super-node as a valid destination.
+      const posNodes = graph.nodes.map((_, i) => i).filter(i => sn(i) === vs.from_sn);
+      const negNodes = new Set(graph.nodes.map((_, i) => i).filter(i => sn(i) === vs.to_sn));
+      if (!posNodes.length || !negNodes.size) continue;
 
-      const allPaths = findAllPaths(graph, posNode, negNode, vs.comp, 32);
+      // findAllPathsMulti: DFS from any of posNodes to any of negNodes
+      const allPaths = findAllPathsMultiSeed(graph, posNodes, negNodes, vs.comp, 64);
+      const posNode = posNodes[0]; // kept for compat (unused below)
+      const negNode = [...negNodes][0];
       const validPaths = allPaths.filter(path => {
         for (let i = 0; i < path.length - 1; i++) {
           const from = path[i], to = path[i + 1];
@@ -1165,6 +1173,8 @@ function solveCircuit() {
             if (c.type === 'switch' && !c.closed) return false;
             if (c.type === 'voltmeter') return false;
             if (c.type === 'led' && from === c._nodeB && to === c._nodeA) return false;
+            // Fully-charged capacitor blocks current — no animation through it
+            if (c.type === 'capacitor' && c._charge >= 0.999) return false;
             // Reject open-branch components (no MNA current)
             if (c.type !== 'battery' && c.type !== 'dcpsu' && !compHasCurrent(c)) return false;
           }
@@ -1176,10 +1186,7 @@ function solveCircuit() {
         markPathWires(path, graph);
 
         // Assign per-path current to every wire on this path.
-        // Find the passive component on this path and use its _current.
-        // If multiple passive components exist (series), they share the same current.
-        // This correctly gives parallel branches different animation speeds.
-        let pathI = vs.comp._current || 0; // fallback: source current
+        let pathI = vs.comp._current || 0;
         for (let i = 0; i < path.length - 1; i++) {
           const from = path[i], to = path[i + 1];
           for (const { to: t2, edge } of (graph.adj[from] || [])) {
@@ -1199,6 +1206,67 @@ function solveCircuit() {
             const w = edge.wire;
             if (w._active) w._current = pathI;
           }
+        }
+      }
+    }
+
+    // ── Intra-super-node wire pass ──────────────────────────────────────────
+    // Path-finding never traverses wires whose both endpoints share a super-node
+    // (the DFS stops at the first negNode it hits, and never re-enters a posNode
+    // it already started from). Fix: after path marking, activate every wire
+    // whose both endpoints are in the same super-node IF that super-node is
+    // already live (i.e. touches at least one already-active wire or component).
+    //
+    // Flow direction: pick the direction whose "from" side neighbours an
+    // already-active wire — that side is the one current is arriving from.
+    // A super-node is live only if an already-active wire touches it.
+    // Do NOT use component._current here — the battery retains a stale _current
+    // even when the cap is fully charged and the path-finder correctly produced
+    // zero active wires. Active wires are the sole ground truth.
+    const liveSuperNodes = new Set();
+    for (const e of graph.edges) {
+      if (e.wire && e.wire._active) {
+        liveSuperNodes.add(sn(e.from));
+        liveSuperNodes.add(sn(e.to));
+      }
+    }
+    for (const e of graph.edges) {
+      if (!e.wire) continue;
+      const snA = sn(e.from), snB = sn(e.to);
+      if (snA !== snB) continue;            // not an intra-super-node wire
+      if (!liveSuperNodes.has(snA)) continue; // super-node carries no current
+      const w = e.wire;
+      if (w._active) continue;              // already marked by path pass
+
+      // Determine flow direction by finding an active neighbouring wire and asking:
+      // "which end of *this* wire does current enter from?"
+      // An active neighbour nw touches endpoint. If nw's exit-node === endpoint,
+      // current arrives at endpoint, so it exits through the other end of w.
+      // _flowForward = true means particles travel nodeA→nodeB (pts[0]→pts[last]).
+      let flowForward = true; // default, overridden below when a neighbour is found
+      let dirFound = false;
+      for (const endpoint of [e.from, e.to]) {
+        if (dirFound) break;
+        for (const { edge: ne } of (graph.adj[endpoint] || [])) {
+          if (!ne.wire || !ne.wire._active) continue;
+          const nw = ne.wire;
+          const nwExitNode = nw._flowForward ? nw._nodeB : nw._nodeA;
+          if (nwExitNode === endpoint) {
+            // current arrives at `endpoint` → exits out the far end of w
+            // _flowForward=true  ↔ entry at nodeA (e.from)
+            // _flowForward=false ↔ entry at nodeB (e.to)
+            flowForward = (endpoint === w._nodeA);
+            dirFound = true;
+            break;
+          }
+        }
+      }
+      w._active = true;
+      w._flowForward = flowForward;
+      // Inherit current magnitude from an active neighbour wire
+      for (const { edge: ne } of (graph.adj[e.from] || [])) {
+        if (ne.wire && ne.wire._active && ne.wire._current > 0) {
+          w._current = ne.wire._current; break;
         }
       }
     }
@@ -1241,7 +1309,9 @@ function _tickCapacitors(sources, graph) {
         // Discharging into the circuit
         cap._charge = Math.max(0, cap._charge - CAP_DISCHARGE_RATE * cap._charge - 0.001);
         cap._capVoltage = cap._charge * (cap._sourceV || 0);
-        // light up wires on discharge path
+        // light up wires on discharge path.
+        // Current flows from cap+ terminal (A) through external circuit back to cap− (B),
+        // which is the same direction as the BFS path A→…→B, so no reversal needed.
         markPathWires(path, g);
         // Give discharge current to components on that path
         const disI = cap._charge * 0.05;
@@ -1281,6 +1351,43 @@ function findAllPaths(graph, start, end, excludeComp, maxPaths) {
   }
 
   dfs(start, [start]);
+  return results;
+}
+
+// Like findAllPaths but starts from ALL nodes in the + super-node and accepts
+// ANY node in negNodes as destination. Crucially, it does NOT stop when it first
+// reaches a negNode — it records the path AND continues exploring, so that wires
+// connecting two negNodes (or two posNodes) are also traversed and marked.
+function findAllPathsMultiSeed(graph, startNodes, negNodes, excludeComp, maxPaths) {
+  const results = [];
+  const posSet = new Set(startNodes);
+
+  function dfs(node, path, visited) {
+    if (results.length >= maxPaths) return;
+    // Record path whenever we reach a negNode (but not if we started there)
+    if (negNodes.has(node) && path.length > 1) {
+      results.push([...path]);
+      // Do NOT return — continue exploring so intra-neg wires get traversed too.
+      // The visited guard below prevents infinite loops.
+    }
+    visited.add(node);
+    for (const { to, edge } of (graph.adj[node] || [])) {
+      if (edge.comp && edge.comp === excludeComp) continue;
+      if (!visited.has(to)) {
+        path.push(to);
+        dfs(to, path, visited);
+        path.pop();
+      }
+    }
+    visited.delete(node);
+  }
+
+  for (const start of startNodes) {
+    if (results.length >= maxPaths) break;
+    // Each seed gets its own visited set so intra-pos wires between two seed
+    // nodes are found by later seeds (earlier seeds don't poison the visited set).
+    dfs(start, [start], new Set());
+  }
   return results;
 }
 
@@ -1384,8 +1491,24 @@ function markPathWires(path, graph) {
     for (const { to: t, edge } of (graph.adj[from] || [])) {
       if (t === to && edge.wire) {
         const w = edge.wire;
+        // Only set _flowForward on first activation — prevents duplicate paths
+        // from the multi-seed DFS flipping the direction on an already-marked wire.
+        if (!w._active) w._flowForward = (from === w._nodeA);
         w._active = true;
-        w._flowForward = (from === w._nodeA);
+      }
+    }
+  }
+}
+
+// markPathWiresReversed — currently unused; kept for reference.
+function markPathWiresReversed(path, graph) {
+  for (let i = 0; i < path.length - 1; i++) {
+    const from = path[i], to = path[i + 1];
+    for (const { to: t, edge } of (graph.adj[from] || [])) {
+      if (t === to && edge.wire) {
+        const w = edge.wire;
+        if (!w._active) w._flowForward = (from !== w._nodeA);
+        w._active = true;
       }
     }
   }
@@ -1448,7 +1571,9 @@ function drawGrid() {
 }
 
 function drawWire(w) {
-  const active = powerOn && w._active;
+  // Active when powered OR when a capacitor is discharging (wire marked _active by _tickCapacitors)
+  const capDischarging = !powerOn && w._active && components.some(c => c.type === 'capacitor' && c._charge > 0);
+  const active = (powerOn && w._active) || capDischarging;
   ctx.save();
   const isSel = (w === selectedWire);
   ctx.strokeStyle = active ? '#00bfff' : (isSel ? '#ff5050' : (w === hoverWire ? '#ff3355' : '#1e4060'));
@@ -1460,8 +1585,8 @@ function drawWire(w) {
   ctx.stroke();
   ctx.restore();
 
-  // Flow animation on active wires
-  if (active && powerOn) drawFlowParticles(w);
+  // Flow animation on active wires (charging) or discharging capacitor paths
+  if (active) drawFlowParticles(w);
 }
 
 function drawFlowParticles(w) {
