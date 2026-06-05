@@ -19,8 +19,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#141c2e;font-family:
 .mode-tab{padding:5px 16px;border-radius:50px;border:none;background:transparent;color:rgba(140,200,255,.5);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;outline:none;letter-spacing:.5px;white-space:nowrap;}
 .mode-tab.active{background:rgba(140,200,255,.18);color:#78b4ff;border:1px solid rgba(140,200,255,.4);}
 .mode-tab:hover:not(.active){color:rgba(140,200,255,.8);}
-#hud{position:fixed;top:14px;right:14px;background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:16px;padding:14px 16px;min-width:222px;z-index:10;}
-#hud h2{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:rgba(140,200,255,.5);text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid rgba(140,200,255,.14);padding-bottom:6px;}
+#hud{position:fixed;top:14px;right:14px;background:rgba(18,26,46,.96);backdrop-filter:blur(20px);border:1px solid rgba(140,200,255,.28);border-radius:16px;padding:0;min-width:222px;z-index:10;overflow:hidden;}
+#hud-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;border-bottom:1px solid transparent;transition:border-color .2s;}
+#hud.open #hud-toggle{border-bottom-color:rgba(140,200,255,.14);}
+#hud-toggle h2{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:rgba(140,200,255,.5);text-transform:uppercase;margin:0;}
+#hud-chevron{font-size:10px;color:rgba(140,200,255,.35);transition:transform .25s;margin-left:8px;flex-shrink:0;}
+#hud.open #hud-chevron{transform:rotate(180deg);}
+#hud-body{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;padding:0 14px;}
+#hud.open #hud-body{max-height:500px;padding:10px 14px 14px;}
 .dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding:3px 6px;border-radius:6px;background:rgba(140,200,255,.05);}
 .dl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(170,205,255,.6);}
 .dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#78b4ff;}
@@ -128,7 +134,11 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
   <button class="mode-tab" id="tab-ar" onclick="openAR()">📡 AR Mode</button>
 </div>
 
-<div id="hud"><h2>Measurements</h2>
+<div id="hud">
+  <div id="hud-toggle" onclick="this.parentElement.classList.toggle('open')">
+    <h2>Measurements</h2><span id="hud-chevron">▲</span>
+  </div>
+  <div id="hud-body">
   <div class="dr"><span class="dl">θ  angle</span><span class="dv amber" id="v-angle">45.0°</span></div>
   <div class="dr"><span class="dl">v₀ speed</span><span class="dv" id="v-v0">20.0 m/s</span></div>
   <div class="dr"><span class="dl">h  height</span><span class="dv cyan" id="v-h">0.0 m</span></div>
@@ -142,6 +152,7 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
   <div class="hdiv"></div>
   <div class="formula-box">R = v₀²·sin2θ / g<br>H = v₀²sin²θ / (2g)<br>T = 2v₀sinθ / g</div>
   <div id="hud-challenge-note" style="display:none;font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.7);text-align:center;letter-spacing:1px;padding-top:2px;">🎯 CHALLENGE MODE</div>
+  </div>
 </div>
 
 <div id="challenge-panel" class="big-panel">
@@ -583,15 +594,18 @@ function setMode(mode){
   document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+mode).classList.add('active');
   let fireBtn=document.getElementById('btn-fire');
+  const launchPanel=document.getElementById('launch-panel-tl');
   if(mode==='challenge'){
     document.getElementById('challenge-panel').style.display='block';
     document.getElementById('hud-challenge-note').style.display='block';
     if(fireBtn) fireBtn.disabled=true;
+    if(launchPanel) launchPanel.style.display='none';
     nextChallenge();
   } else {
     document.getElementById('challenge-panel').style.display='none';
     document.getElementById('hud-challenge-note').style.display='none';
     if(fireBtn) fireBtn.disabled=false;
+    if(launchPanel) launchPanel.style.display='';
     showAllHUDRows(); clearChallengeObjects(); resetScene();
   }
 }
