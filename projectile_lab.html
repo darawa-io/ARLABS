@@ -99,7 +99,9 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
 #ar-canvas{position:absolute;inset:0;width:100%;height:100%;}
 #arWrap{display:none;position:fixed;inset:0;z-index:200;width:100vw;height:100vh;}
 #arWrap.show{display:block;}
-#arWrap a-scene{width:100%!important;height:100%!important;position:absolute!important;top:0;left:0;}
+#arWrap a-scene{width:100%!important;height:100%!important;position:absolute!important;top:0!important;left:0!important;}
+#arWrap a-scene canvas{width:100%!important;height:100%!important;position:absolute!important;top:0!important;left:0!important;}
+#arWrap video{width:100%!important;height:100%!important;position:absolute!important;top:0!important;left:0!important;object-fit:cover!important;}
 #ar-status{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;padding:7px 18px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;white-space:nowrap;transition:all 0.3s;background:rgba(255,180,0,.12);border:1px solid rgba(255,180,0,.4);color:#ffb400;}
 #ar-instructions{display:none;background:rgba(10,16,30,.97);backdrop-filter:blur(16px);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:24px 26px;z-index:310;max-width:340px;width:90%;font-family:'Space Mono',monospace;font-size:11px;color:#4dffa0;line-height:1.9;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);}
 #ar-instructions.show{display:block;}
@@ -194,10 +196,12 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
     <div class="panel-row"><span class="sl-lbl">g</span><input type="range" id="sl-g" min="1" max="25" value="9.81" step="0.01" oninput="onG()"><span class="sl-val" id="lbl-g">9.81</span></div>
     <div class="panel-row" style="justify-content:center;"><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(9.81)">🌍</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(3.72)">🔴</button><button class="btn" style="font-size:10px;padding:4px 8px;" onclick="setG(1.62)">🌙</button></div>
   </div>
-  <div class="panel" style="min-width:130px;"><div class="panel-title">📷 Camera</div>
-    <div class="panel-row" style="flex-wrap:wrap;gap:4px;justify-content:center;max-width:130px;">
+  <div class="panel" style="min-width:150px;"><div class="panel-title">📷 Camera</div>
+    <div class="panel-row" style="gap:4px;justify-content:center;">
       <button class="btn" style="font-size:10px;padding:4px 7px;" onclick="setView('launcher')">🔭 Launcher</button>
       <button class="btn" style="font-size:10px;padding:4px 7px;" onclick="setView('range')">📏 Range</button>
+    </div>
+    <div class="panel-row" style="gap:4px;justify-content:center;">
       <button class="btn" style="font-size:10px;padding:4px 7px;" onclick="setView('center')">🎯 Center</button>
       <button class="btn" style="font-size:10px;padding:4px 7px;" onclick="setView('top')">🔝 Apex</button>
     </div>
@@ -243,13 +247,41 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
   </span>
 </div>
 <div id="ar-ui-bar">
-  <span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(140,200,255,.5);">θ</span>
-  <input type="range" id="sl-angle-ar" min="0" max="90" value="45" step="1" style="width:90px;">
-  <span id="lbl-angle-ar" style="font-family:'Space Mono',monospace;font-size:11px;color:#ffcc44;min-width:28px;">45°</span>
-  <div style="width:1px;height:16px;background:rgba(140,200,255,.18);"></div>
-  <button class="btn fire" onclick="arFire()" style="font-size:11px;padding:5px 12px;">🚀 Launch</button>
-  <button class="btn reset" onclick="arReset()" style="font-size:11px;padding:5px 12px;">↺ Reset</button>
-  <button class="btn" onclick="exitAR()" style="font-size:11px;padding:5px 12px;border-color:rgba(255,80,80,.4);color:#ff8888;">✕ Exit AR</button>
+  <!-- Explore controls -->
+  <div id="ar-explore-ui" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">
+    <span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(140,200,255,.5);">θ</span>
+    <input type="range" id="sl-angle-ar" min="0" max="90" value="45" step="1" style="width:90px;">
+    <span id="lbl-angle-ar" style="font-family:'Space Mono',monospace;font-size:11px;color:#ffcc44;min-width:28px;">45°</span>
+    <div style="width:1px;height:16px;background:rgba(140,200,255,.18);"></div>
+    <button class="btn fire" id="ar-fire-btn" onclick="arFire()" style="font-size:11px;padding:5px 12px;">🚀 Launch</button>
+    <button class="btn reset" onclick="arReset()" style="font-size:11px;padding:5px 12px;">↺ Reset</button>
+  </div>
+  <!-- Mode switch + exit -->
+  <div style="display:flex;gap:6px;align-items:center;margin-top:4px;justify-content:center;">
+    <button class="btn" id="ar-mode-explore-btn" onclick="setARMode('explore')" style="font-size:10px;padding:4px 10px;" class="on">🔭 Explore</button>
+    <button class="btn" id="ar-mode-challenge-btn" onclick="setARMode('challenge')" style="font-size:10px;padding:4px 10px;">🎯 Challenge</button>
+    <button class="btn" onclick="exitAR()" style="font-size:11px;padding:5px 12px;border-color:rgba(255,80,80,.4);color:#ff8888;">✕ Exit AR</button>
+  </div>
+</div>
+
+<!-- AR Challenge panel (overlays on arWrap) -->
+<div id="ar-challenge-panel" style="display:none;position:fixed;top:70px;left:12px;background:rgba(18,26,46,.97);backdrop-filter:blur(18px);border:1px solid rgba(255,200,60,.28);border-radius:14px;padding:14px;z-index:310;min-width:240px;max-width:270px;">
+  <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2.5px;color:rgba(255,200,60,.65);text-transform:uppercase;border-bottom:1px solid rgba(255,200,60,.15);padding-bottom:6px;margin-bottom:8px;">🎯 AR Challenge</div>
+  <div id="ar-ch-q" style="font-family:'Syne',sans-serif;font-size:11px;color:rgba(210,230,255,.8);line-height:1.6;margin-bottom:8px;"></div>
+  <div id="ar-ch-given" style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.85);background:rgba(255,200,60,.06);border:1px solid rgba(255,200,60,.18);border-radius:6px;padding:5px 8px;margin-bottom:8px;line-height:1.6;"></div>
+  <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;">
+    <input type="number" id="ar-ch-input" placeholder="?" step="any" min="0" style="background:rgba(8,14,30,.9);border:1px solid rgba(140,200,255,.25);color:#78b4ff;border-radius:8px;padding:5px 8px;font-family:'Space Mono',monospace;font-size:11px;width:90px;outline:none;">
+    <span id="ar-ch-unit" style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(170,205,255,.5);">m</span>
+  </div>
+  <div style="display:flex;gap:5px;">
+    <button class="btn validate" id="ar-ch-check-btn" onclick="validateARChallenge()" style="flex:1;">✔ Check</button>
+    <button class="btn" onclick="nextARChallenge()" style="flex:1;font-size:10px;">↻ New</button>
+  </div>
+  <div id="ar-ch-result" style="display:none;margin-top:5px;padding:7px 10px;border-radius:8px;font-family:'Syne',sans-serif;font-size:11px;line-height:1.5;"></div>
+  <div style="margin-top:8px;border-top:1px solid rgba(255,200,60,.1);padding-top:6px;display:flex;justify-content:space-between;">
+    <span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,.5);">Score</span>
+    <span style="font-family:'Space Mono',monospace;font-size:13px;color:#ffcc44;" id="ar-ch-score">0 / 0</span>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -736,286 +768,153 @@ function validateChallenge(){
 }
 // ════════════════════════════════════════════════════════════
 // AR MODE — Custom Three.js renderer + camera video + JS-Aruco marker tracking
-// Uses the SAME meshes as desktop (buildLauncher geometry mirrored)
 // ════════════════════════════════════════════════════════════
-let arMode=false, arRenderer=null, arCamera=null, arScene3=null;
-let arVideoEl=null, arVideoStream=null, arCanvasEl=null, arCtx=null;
-let arSceneGroup=null, arMarkerFound=false, arAnimFrameId=null;
-let arPinchDist0=null, arScale0=null, arScale=0.018;
-let arIsFlying=false, arFlyAnimId=null, arAnimT=0;
+// AR MODE — A-Frame + AR.js, native primitives (no Three.js bridge)
+// Exact same pattern as working polarization lab
+// ════════════════════════════════════════════════════════════
+let arMode=false, arMarkerFound=false;
+let arPinchDist0=null, arScale0=null;
+let arIsFlying=false, _arFlyLast=0, _arFlyT=0;
+let _arScene=null, _arEntities={}, _arScale=0.38;
 
 function showARStep(n){ [1,2,3].forEach(i=>{ const el=document.getElementById('ar-step'+i); if(el) el.style.display=(i===n?'':'none'); }); }
 
-// Build a Three.js launcher group matching ALL desktop geometry, scaled for AR
-function buildARLauncherGroup(angle){
-  const grp = new THREE.Group();
-  const h = S.h;
-  const mountH = Math.max(h + 0.5, 0.5);
+function buildARScene(){
+  const wrap=document.getElementById('arWrap');
+  wrap.innerHTML=''; wrap.classList.add('show');
+  _arScale=0.38; _arEntities={};
 
-  // Stand
-  const stand = new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,mountH,12), new THREE.MeshStandardMaterial({color:0xb8ccd8,roughness:.35,metalness:.85}));
-  stand.position.set(0,mountH/2,0); grp.add(stand);
+  // ── scene: EXACT attributes from working polarization lab ──
+  const sceneEl=document.createElement('a-scene');
+  sceneEl.setAttribute('embedded','');
+  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.50;');
+  sceneEl.setAttribute('renderer','antialias:true;precision:medium;');
+  sceneEl.setAttribute('vr-mode-ui','enabled:false');
+  sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
+  sceneEl.style.cssText='width:100%;height:100%;display:block;';
 
-  // Foot
-  const foot = new THREE.Mesh(new THREE.BoxGeometry(1.2,0.18,2.2), new THREE.MeshStandardMaterial({color:0x2a3c4e}));
-  foot.position.set(0,0.09,0); grp.add(foot);
+  // ── camera: plain camera entity, no extra components ──
+  const camEnt=document.createElement('a-entity');
+  camEnt.setAttribute('camera','');
+  sceneEl.appendChild(camEnt);
 
-  // Foot bolts
-  [[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]].forEach(([fx,fz])=>{
-    const s=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),new THREE.MeshStandardMaterial({color:0x889aaa}));
-    s.position.set(fx,0.11,fz); grp.add(s);
-  });
-
-  // Ruler plate on stand
-  const rulerH = mountH+0.3;
-  const plate=new THREE.Mesh(new THREE.BoxGeometry(.07,rulerH,.15),new THREE.MeshStandardMaterial({color:0x1a2c3c}));
-  plate.position.set(.42,rulerH/2-.05,0); grp.add(plate);
-  for(let i=0;i<Math.ceil(rulerH/0.5)+1;i++){
-    const y=i*0.5; if(y>rulerH+0.1) break;
-    const isMajor=i%2===0, tw=isMajor?0.26:0.15;
-    const tick=new THREE.Mesh(new THREE.BoxGeometry(tw,0.014,0.018),new THREE.MeshStandardMaterial({color:isMajor?0xffffff:0x88aabb,emissive:isMajor?0x88eeff:0x203040,emissiveIntensity:.5}));
-    tick.position.set(.42+tw/2+0.035,y,0.08); grp.add(tick);
-  }
-
-  // Pivot housing
-  const pivotH = new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.45,24), new THREE.MeshStandardMaterial({color:0x2a3c4e}));
-  pivotH.rotation.z=Math.PI/2; pivotH.position.set(0,h,0); grp.add(pivotH);
-
-  // Protractor arc
-  const protR=1.1;
-  const protArc=new THREE.Mesh(new THREE.TorusGeometry(protR,.03,8,30,Math.PI/2),new THREE.MeshStandardMaterial({color:0x80c0e0,emissive:0x103050,emissiveIntensity:.5}));
-  protArc.position.set(0,h,.24); grp.add(protArc);
-  const baseLine=new THREE.Mesh(new THREE.BoxGeometry(protR*1.1,.018,.018),new THREE.MeshStandardMaterial({color:0x80c0e0}));
-  baseLine.position.set(protR*0.55,h,.24); grp.add(baseLine);
-  const vertLine=new THREE.Mesh(new THREE.BoxGeometry(.018,protR*1.1,.018),new THREE.MeshStandardMaterial({color:0x80c0e0}));
-  vertLine.position.set(0,h+protR*0.55,.24); grp.add(vertLine);
-  for(let deg=0;deg<=90;deg+=5){
-    const rad=deg*Math.PI/180, isMaj10=deg%10===0, tlen=isMaj10?(deg%30===0?0.30:0.20):0.12;
-    const ox=Math.cos(rad),oy=Math.sin(rad),midR=protR+0.01-tlen/2;
-    const tck=new THREE.Mesh(new THREE.BoxGeometry(.012,tlen,.016),new THREE.MeshStandardMaterial({color:isMaj10?0xffffff:0x88aabb}));
-    tck.rotation.z=rad-Math.PI/2; tck.position.set(ox*midR,h+oy*midR,.24); grp.add(tck);
-  }
-  // Needle
-  const needleLen=protR*0.9, needleAngle=angle*Math.PI/180;
-  const needle=new THREE.Mesh(new THREE.BoxGeometry(.018,needleLen,.016),new THREE.MeshStandardMaterial({color:0xff4444,emissive:0xff2222,emissiveIntensity:.8}));
-  needle.rotation.z=needleAngle-Math.PI/2;
-  needle.position.set(Math.cos(needleAngle)*needleLen/2,h+Math.sin(needleAngle)*needleLen/2,.25);
-  grp.add(needle);
-
-  // Knob
-  const knob=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.3,12),new THREE.MeshStandardMaterial({color:0x111820}));
-  knob.rotation.z=Math.PI/2; knob.position.set(0,h,.82); grp.add(knob);
-
-  // Barrel pivot group
-  const barrelPivot = new THREE.Group();
-  barrelPivot.position.set(0,h,0);
-  barrelPivot.rotation.z = angle * Math.PI/180;
-
-  const BARREL_LEN=3.0, FIRST_THIRD=BARREL_LEN/3;
-  const PIVOT_OFFSET=-FIRST_THIRD/2;
-  const BACK_LEN=-PIVOT_OFFSET, FRONT_LEN=BARREL_LEN+PIVOT_OFFSET;
-  const TOTAL=BACK_LEN+FRONT_LEN;
-
-  const tube = new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,TOTAL,16,1,true), new THREE.MeshStandardMaterial({color:0xa8d8f0,transparent:true,opacity:.38}));
-  tube.rotation.z=Math.PI/2; tube.position.x=(FRONT_LEN-BACK_LEN)/2; barrelPivot.add(tube);
-
-  const glow = new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,TOTAL*.92,12), new THREE.MeshStandardMaterial({color:0x1166ff,emissive:0x0044cc,emissiveIntensity:.8,transparent:true,opacity:.5}));
-  glow.rotation.z=Math.PI/2; glow.position.x=tube.position.x; barrelPivot.add(glow);
-
-  const frontCap = new THREE.Mesh(new THREE.TorusGeometry(.42,.07,8,16), new THREE.MeshStandardMaterial({color:0x8ab4cc}));
-  frontCap.rotation.y=Math.PI/2; frontCap.position.x=FRONT_LEN; barrelPivot.add(frontCap);
-
-  // Clamp at pivot
-  const clamp=new THREE.Mesh(new THREE.TorusGeometry(.52,.08,8,16),new THREE.MeshStandardMaterial({color:0x2a3c4e}));
-  clamp.rotation.y=Math.PI/2; clamp.position.x=0; barrelPivot.add(clamp);
-
-  grp.add(barrelPivot);
-  grp._barrelPivot = barrelPivot;
-
-  // Display screen block (on back of barrel)
-  const BLOCK_W=1.6, BLOCK_H=1.2, BLOCK_D=0.8;
-  const screenGrp=new THREE.Group();
-  const outerBlock=new THREE.Mesh(new THREE.BoxGeometry(BLOCK_W,BLOCK_H,BLOCK_D),new THREE.MeshStandardMaterial({color:0x1a2a3a,roughness:0.5,metalness:0.5}));
-  screenGrp.add(outerBlock);
-  const greenPanel=new THREE.Mesh(new THREE.BoxGeometry(BLOCK_W-0.2,BLOCK_H-0.2,0.1),new THREE.MeshStandardMaterial({color:0x1a5c3a,emissive:0x0a4020,emissiveIntensity:0.5}));
-  greenPanel.position.set(0,0,BLOCK_D/2+0.05); screenGrp.add(greenPanel);
-  function makeARScreenSprite(txt,fontSize){
-    const c=document.createElement('canvas');c.width=512;c.height=128;
-    const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.font=`bold ${fontSize}px Arial`;
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,256,64);
-    const mat=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true});
-    return new THREE.Sprite(mat);
-  }
-  const textZ=BLOCK_D/2+0.1, barrelAngleRad=angle*Math.PI/180;
-  const angleSp=makeARScreenSprite('θ='+angle.toFixed(1)+'°',64); angleSp.scale.set(1.5,.45,1); angleSp.position.set(0,.35,textZ); angleSp.material.rotation=barrelAngleRad; screenGrp.add(angleSp);
-  const v0Sp=makeARScreenSprite('v₀='+S.v0.toFixed(1)+' m/s',56); v0Sp.scale.set(1.4,.4,1); v0Sp.position.set(0,-.02,textZ); v0Sp.material.rotation=barrelAngleRad; screenGrp.add(v0Sp);
-  const hSp=makeARScreenSprite('h='+S.h.toFixed(1)+' m',56); hSp.scale.set(1.2,.4,1); hSp.position.set(0,-.38,textZ); hSp.material.rotation=barrelAngleRad; screenGrp.add(hSp);
-  // Position screen at back of barrel
-  const bx=-BACK_LEN*Math.cos(barrelAngleRad)-(BLOCK_W/2)*Math.cos(barrelAngleRad);
-  const by=h+(-BACK_LEN*Math.sin(barrelAngleRad))-(BLOCK_W/2)*Math.sin(barrelAngleRad);
-  screenGrp.position.set(bx,by,0); screenGrp.rotation.z=barrelAngleRad;
-  grp.add(screenGrp);
-
-  // Bench strip
-  const bench = new THREE.Mesh(new THREE.BoxGeometry(22,.18,2.2*2), new THREE.MeshStandardMaterial({color:0x060c18,roughness:.55,emissive:0x103050,emissiveIntensity:.25}));
-  bench.position.set(10.4,-0.09,0); grp.add(bench);
-
-  const tape = new THREE.Mesh(new THREE.BoxGeometry(12,.01,.52), new THREE.MeshStandardMaterial({color:0xf5c842,emissive:0x302200,emissiveIntensity:.5}));
-  tape.position.set(6,.01,0); grp.add(tape);
-
-  return grp;
-}
-
-// AR projectile ball (matches desktop)
-function makeARBall(){
-  return new THREE.Mesh(new THREE.SphereGeometry(.275,16,16), new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:.4}));
-}
-
-function initARRenderer(){
-  // Full-screen canvas for AR rendering
-  arCanvasEl = document.createElement('canvas');
-  arCanvasEl.style.cssText='position:fixed;inset:0;width:100%;height:100%;z-index:201;pointer-events:none;';
-  document.body.appendChild(arCanvasEl);
-
-  arRenderer = new THREE.WebGLRenderer({canvas:arCanvasEl, antialias:true, alpha:true});
-  arRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  arRenderer.setSize(innerWidth, innerHeight);
-  arRenderer.setClearColor(0x000000, 0);
-  arRenderer.shadowMap.enabled = false;
-
-  arCamera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.01, 200);
-  arCamera.position.set(0,0,5);
-
-  arScene3 = new THREE.Scene();
-  arScene3.add(new THREE.AmbientLight(0xd8eeff, 1.8));
-  const dlight = new THREE.DirectionalLight(0xfff8e0, 2.0); dlight.position.set(5,8,3); arScene3.add(dlight);
-  arScene3.add(new THREE.DirectionalLight(0xd0e8ff, 0.8).position.set(-3,2,-2));
-
-  // Create the scene group (launcher + ball)
-  arSceneGroup = new THREE.Group();
-  arSceneGroup.visible = false;
-
-  const launcherGrp = buildARLauncherGroup(S.angle);
-  launcherGrp.name = 'launcher';
-  arSceneGroup.add(launcherGrp);
-
-  const ball = makeARBall();
-  ball.name = 'ball';
-  ball.position.set(0, S.h, 0);
-  arSceneGroup.add(ball);
-
-  arScene3.add(arSceneGroup);
-}
-
-// Simple homography-based marker pose using jsartoolkit or manual detection
-// We use a lightweight approach: detect the Hiro marker via the video frame
-// using a Canvas2D-based corner detector, then compute the pose manually.
-// For reliable results on iOS Safari we use a simplified planar homography.
-
-let _arDetector=null, _arMarkerCtx=null, _arMarkerCanvas=null;
-const AR_MARKER_SIZE=1.0; // half-size in world units
-
-function initMarkerDetection(){
-  _arMarkerCanvas = document.createElement('canvas');
-  _arMarkerCanvas.width = 320; _arMarkerCanvas.height = 240;
-  _arMarkerCtx = _arMarkerCanvas.getContext('2d');
-}
-
-// Simplified: use jsartoolkit3d for marker pose.
-// We'll use AR.js (three.js version, not A-Frame) which gives us the camera matrix directly.
-// Strategy: load AR.js three.js build, create an ArToolkitSource + ArToolkitContext,
-// attach to our existing arRenderer/arCamera.
-
-let _artoolkitSource=null, _artoolkitContext=null, _arMarkerControl=null, _arMarkerRoot=null;
-
-function buildARWithARToolkit(){
-  // ArToolkit source: webcam video
-  _artoolkitSource = new THREEx.ArToolkitSource({ sourceType:'webcam', sourceWidth:640, sourceHeight:480 });
-  _artoolkitSource.init(()=>{
-    // Add the video element as a background
-    const vid = _artoolkitSource.domElement;
-    vid.style.cssText='position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:200;';
-    document.body.appendChild(vid);
-    arVideoEl = vid;
-    onARResize();
+  // ── marker ──
+  const marker=document.createElement('a-marker');
+  marker.setAttribute('preset','hiro');
+  marker.setAttribute('smooth','true');
+  marker.setAttribute('smoothCount','5');
+  marker.setAttribute('smoothTolerance','0.01');
+  marker.setAttribute('smoothThreshold','2');
+  marker.addEventListener('markerFound',()=>{
+    arMarkerFound=true;
     const s=document.getElementById('ar-status');
-    s.textContent='🔍 SCANNING FOR MARKER…';
-    s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
-    showARStep(3);
-  }, e=>{ console.error('AR source error',e); });
-
-  _artoolkitContext = new THREEx.ArToolkitContext({
-    cameraParametersUrl: 'https://raw.githack.com/AR-js-org/AR.js/master/data/data/camera_para.dat',
-    detectionMode: 'mono',
-    patternRatio: 0.50,
-    imageSmoothingEnabled: true,
+    s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(77,255,160,.18)'; s.style.border='1px solid rgba(77,255,160,.5)'; s.style.color='#4dffa0';
+  });
+  marker.addEventListener('markerLost',()=>{
+    arMarkerFound=false;
+    const s=document.getElementById('ar-status');
+    s.textContent='🔍 SCANNING FOR MARKER…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
   });
 
-  _artoolkitContext.init(()=>{
-    arCamera.projectionMatrix.copy(_artoolkitContext.getProjectionMatrix());
-  });
+  // ── scale group ──
+  const sg=document.createElement('a-entity');
+  sg.setAttribute('id','ar-scale-group');
+  sg.setAttribute('scale',`${_arScale} ${_arScale} ${_arScale}`);
+  _arEntities.scaleGroup=sg;
 
-  _arMarkerRoot = new THREE.Group();
-  arScene3.add(_arMarkerRoot);
-
-  _arMarkerControl = new THREEx.ArMarkerControls(_artoolkitContext, _arMarkerRoot, {
-    type: 'preset', patternUrl: null,
-    type: 'pattern',
-    patternUrl: 'https://raw.githack.com/AR-js-org/AR.js/master/data/patt.hiro',
-  });
-
-  // Attach scene to marker root
-  _arMarkerRoot.add(arSceneGroup);
-
-  // Show/hide based on marker visibility
-  function checkMarker(){
-    const visible = _arMarkerRoot.visible;
-    if(visible !== arMarkerFound){
-      arMarkerFound = visible;
-      const s=document.getElementById('ar-status');
-      if(visible){
-        arSceneGroup.visible=true;
-        s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(77,255,160,.18)'; s.style.border='1px solid rgba(77,255,160,.5)'; s.style.color='#4dffa0';
-      } else {
-        s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
-      }
-    }
+  // helpers
+  function mkBox(w,h,d,col,met,rou,emi,emiInt){
+    const b=document.createElement('a-box');
+    b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d);
+    b.setAttribute('color',col);
+    if(met!=null) b.setAttribute('metalness',met);
+    if(rou!=null) b.setAttribute('roughness',rou);
+    if(emi) b.setAttribute('emissive',emi);
+    if(emiInt!=null) b.setAttribute('emissive-intensity',emiInt);
+    return b;
   }
+  function mkCyl(r,h,col,met,rou){
+    const c=document.createElement('a-cylinder');
+    c.setAttribute('radius',r); c.setAttribute('height',h); c.setAttribute('color',col);
+    if(met!=null) c.setAttribute('metalness',met);
+    if(rou!=null) c.setAttribute('roughness',rou);
+    return c;
+  }
+  function pos(el,x,y,z){ el.setAttribute('position',`${x} ${y} ${z}`); return el; }
+  function rot(el,x,y,z){ el.setAttribute('rotation',`${x} ${y} ${z}`); return el; }
+  function ent(px,py,pz){ const e=document.createElement('a-entity'); if(px!=null) e.setAttribute('position',`${px} ${py} ${pz}`); return e; }
 
-  function arRenderLoop(){
-    arAnimFrameId = requestAnimationFrame(arRenderLoop);
-    if(!arMode) return;
-    if(_artoolkitSource.ready){
-      _artoolkitContext.update(_artoolkitSource.domElement);
-    }
-    checkMarker();
+  const h=S.h, mountH=Math.max(h+0.5,0.5);
+
+  // foot
+  const foot=mkBox(1.2,0.18,2.2,'#2a3c4e',0.6,0.4); pos(foot,0,0.09,0); sg.appendChild(foot);
+  // bolts
+  [[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]].forEach(([fx,fz])=>{
+    const bolt=mkCyl(0.07,0.22,'#889aaa',0.7,0.3); pos(bolt,fx,0.11,fz); sg.appendChild(bolt);
+  });
+  // stand column
+  const stand=mkCyl(0.24,mountH,'#b8ccd8',0.85,0.35); pos(stand,0,mountH/2,0); sg.appendChild(stand);
+  // pivot housing (horizontal cylinder)
+  const pivot=mkCyl(0.64,0.45,'#2a3c4e',0.6,0.4); rot(pivot,0,0,90); pos(pivot,0,h,0); sg.appendChild(pivot);
+  // bench
+  const bench=mkBox(22,0.18,4.4,'#060c18',0.4,0.6,'#103050',0.3); pos(bench,10.4,-0.09,0); sg.appendChild(bench);
+  // tape measure
+  const tape=mkBox(12,0.01,0.52,'#f5c842',null,null,'#302200',0.5); pos(tape,6,0.01,0); sg.appendChild(tape);
+
+  // barrel group — rotated by angle
+  const barrelG=ent(0,h,0);
+  barrelG.setAttribute('rotation',`0 0 ${S.angle}`);
+  _arEntities.barrelG=barrelG;
+  const BARREL_LEN=3.0, BACK=0.5, FRONT=2.5, TOTAL=3.0;
+  // tube (open cylinder)
+  const tube=document.createElement('a-cylinder');
+  tube.setAttribute('radius','0.38'); tube.setAttribute('height',TOTAL); tube.setAttribute('color','#a8d8f0');
+  tube.setAttribute('material','color:#a8d8f0;transparent:true;opacity:0.38;side:double;');
+  rot(tube,0,0,90); pos(tube,(FRONT-BACK)/2,0,0); barrelG.appendChild(tube);
+  // glow core
+  const glow=mkCyl(0.28,TOTAL*0.92,'#1166ff',null,null); rot(glow,0,0,90); pos(glow,(FRONT-BACK)/2,0,0);
+  glow.setAttribute('emissive','#0044cc'); glow.setAttribute('emissive-intensity','0.8');
+  glow.setAttribute('material','color:#1166ff;transparent:true;opacity:0.5;emissive:#0044cc;emissive-intensity:0.8;');
+  barrelG.appendChild(glow);
+  // muzzle ring
+  const muzzle=document.createElement('a-torus');
+  muzzle.setAttribute('radius','0.42'); muzzle.setAttribute('radius-tubular','0.07');
+  muzzle.setAttribute('color','#8ab4cc'); rot(muzzle,0,90,0); pos(muzzle,FRONT,0,0); barrelG.appendChild(muzzle);
+  // clamp ring at pivot
+  const clamp=document.createElement('a-torus');
+  clamp.setAttribute('radius','0.52'); clamp.setAttribute('radius-tubular','0.08');
+  clamp.setAttribute('color','#2a3c4e'); rot(clamp,0,90,0); pos(clamp,0,0,0); barrelG.appendChild(clamp);
+  sg.appendChild(barrelG);
+
+  // projectile ball
+  const ball=document.createElement('a-sphere');
+  ball.setAttribute('radius','0.275'); ball.setAttribute('color','#ff6633');
+  ball.setAttribute('emissive','#cc2200'); ball.setAttribute('emissive-intensity','0.4');
+  pos(ball,0,h,0); _arEntities.ball=ball; sg.appendChild(ball);
+
+  marker.appendChild(sg);
+  sceneEl.appendChild(marker);
+  wrap.appendChild(sceneEl);
+  _arScene=sceneEl;
+
+  // RAF tick loop for flight animation (A-Frame doesn't call our code automatically)
+  let _arRafRunning=true;
+  function arTick(){
+    if(!_arRafRunning||!arMode) return;
     if(arIsFlying) tickARFlight();
-    arRenderer.render(arScene3, arCamera);
+    requestAnimationFrame(arTick);
   }
-  arRenderLoop();
-}
+  requestAnimationFrame(arTick);
+  // Store stop-function so exitAR can kill the loop
+  _arEntities._stopTick=()=>{ _arRafRunning=false; };
 
-function onARResize(){
-  if(!_artoolkitSource) return;
-  _artoolkitSource.onResizeElement();
-  _artoolkitSource.copyElementSizeTo(arRenderer.domElement);
-  if(_artoolkitContext && _artoolkitContext.arController){
-    _artoolkitSource.copyElementSizeTo(_artoolkitContext.arController.canvas);
-  }
+  syncARAngle();
 }
 
 function syncARAngle(){
-  if(!arSceneGroup) return;
-  // Rebuild launcher with current angle
-  const existing = arSceneGroup.getObjectByName('launcher');
-  if(existing) arSceneGroup.remove(existing);
-  const lg = buildARLauncherGroup(S.angle);
-  lg.name='launcher';
-  arSceneGroup.add(lg);
-  // Reset ball
-  const ball = arSceneGroup.getObjectByName('ball');
-  if(ball && !arIsFlying) ball.position.set(0, S.h, 0);
-  // Update pills
+  if(!_arEntities.barrelG) return;
+  _arEntities.barrelG.setAttribute('rotation',`0 0 ${S.angle}`);
+  if(_arEntities.ball && !arIsFlying) _arEntities.ball.setAttribute('position',`0 ${S.h} 0`);
   document.getElementById('ar-theta-val').textContent='= '+S.angle.toFixed(0)+'°';
   document.getElementById('ar-v0-val').textContent='= '+S.v0.toFixed(1)+' m/s';
   const {R}=compute(S.angle,S.v0,S.h,S.g);
@@ -1026,33 +925,120 @@ function syncARAngle(){
   if(lblAR) lblAR.textContent=S.angle.toFixed(0)+'°';
 }
 
-let _arFlyT=0, _arFlyLast=0;
+function syncARAngle(){
+  if(!_arEntities.barrelG) return;
+  _arEntities.barrelG.setAttribute('rotation',`0 0 ${S.angle}`);
+  if(_arEntities.ball && !arIsFlying) _arEntities.ball.setAttribute('position',`0 ${S.h} 0`);
+  document.getElementById('ar-theta-val').textContent='= '+S.angle.toFixed(0)+'°';
+  document.getElementById('ar-v0-val').textContent='= '+S.v0.toFixed(1)+' m/s';
+  const {R}=compute(S.angle,S.v0,S.h,S.g);
+  document.getElementById('ar-range-val').textContent='= '+R.toFixed(1)+' m';
+  const slAR=document.getElementById('sl-angle-ar');
+  if(slAR && parseInt(slAR.value)!==S.angle) slAR.value=S.angle;
+  const lblAR=document.getElementById('lbl-angle-ar');
+  if(lblAR) lblAR.textContent=S.angle.toFixed(0)+'°';
+}
+
+function arReset_flight(){
+  arIsFlying=false; _arFlyT=0; _arFlyCallback=null;
+  if(_arEntities.ball) _arEntities.ball.setAttribute('position',`0 ${S.h} 0`);
+  const btn=document.getElementById('ar-fire-btn');
+  if(btn){ btn.textContent='🚀 Launch'; btn.disabled=false; }
+}
 function arFire(){
   if(arIsFlying){ arReset_flight(); return; }
   arIsFlying=true; _arFlyT=0; _arFlyLast=performance.now();
 }
+function arFire_btn(){ arFire(); }
+function arReset(){ arReset_flight(); }
+
+// ── AR mode switcher (explore / challenge) ──────────────────
+let _arCurrentMode='explore', _arChScore=0, _arChTotal=0, _arChCurrent=null, _arFlyCallback=null;
+
+function setARMode(mode){
+  _arCurrentMode=mode;
+  const exploreBtn=document.getElementById('ar-mode-explore-btn');
+  const challengeBtn=document.getElementById('ar-mode-challenge-btn');
+  const exploreUI=document.getElementById('ar-explore-ui');
+  const challengePanel=document.getElementById('ar-challenge-panel');
+  if(mode==='explore'){
+    if(exploreBtn) exploreBtn.classList.add('on');
+    if(challengeBtn) challengeBtn.classList.remove('on');
+    if(exploreUI) exploreUI.style.display='flex';
+    if(challengePanel) challengePanel.style.display='none';
+  } else {
+    if(exploreBtn) exploreBtn.classList.remove('on');
+    if(challengeBtn) challengeBtn.classList.add('on');
+    if(exploreUI) exploreUI.style.display='none';
+    if(challengePanel) challengePanel.style.display='block';
+    nextARChallenge();
+  }
+}
+
+function nextARChallenge(){
+  _arFlyCallback=null;
+  document.getElementById('ar-ch-result').style.display='none';
+  document.getElementById('ar-ch-input').value='';
+  const tmpl=CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
+  _arChCurrent=tmpl.gen(); _arChCurrent.type=tmpl.type;
+  const c=_arChCurrent;
+  S.angle=c.a; S.v0=c.v; S.h=c.h; S.g=c.g;
+  syncARAngle();
+  document.getElementById('ar-ch-q').innerHTML=c.q;
+  document.getElementById('ar-ch-given').textContent=c.given;
+  document.getElementById('ar-ch-unit').textContent=c.unit;
+  document.getElementById('ar-ch-score').textContent=_arChScore+' / '+_arChTotal;
+  const checkBtn=document.getElementById('ar-ch-check-btn');
+  if(checkBtn) checkBtn.disabled=false;
+  arReset_flight();
+}
+
+function arFireWithCallback(cb){
+  _arFlyCallback=cb;
+  arIsFlying=false; _arFlyT=0; _arFlyLast=performance.now();
+  arIsFlying=true;
+}
+
+// Override tickARFlight to call callback on land
 function tickARFlight(){
   const now=performance.now();
   const dt=Math.min((now-_arFlyLast)/1000,0.05); _arFlyLast=now;
   _arFlyT+=dt;
   const {vx,vy,T}=compute(S.angle,S.v0,S.h,S.g);
-  const SCALE=arScale/arScale; // scale is 1 in marker space (already handled by arSceneGroup.scale)
-  if(_arFlyT>T+0.8){ arReset_flight(); return; }
   const x=vx*_arFlyT;
   const y=S.h+(vy*_arFlyT - 0.5*S.g*_arFlyT*_arFlyT);
-  const ball=arSceneGroup.getObjectByName('ball');
-  if(ball){ ball.position.set(x, Math.max(0, y), 0); }
+  if(_arEntities.ball) _arEntities.ball.setAttribute('position',`${x} ${Math.max(0,y)} 0`);
+  if(_arFlyT>T+0.4){
+    arIsFlying=false; _arFlyT=0;
+    if(_arEntities.ball) _arEntities.ball.setAttribute('position',`${vx*T} 0 0`);
+    if(_arFlyCallback){ const cb=_arFlyCallback; _arFlyCallback=null; cb(); }
+  }
 }
-function arReset_flight(){
-  arIsFlying=false; _arFlyT=0;
-  const ball=arSceneGroup.getObjectByName('ball');
-  if(ball) ball.position.set(0, S.h, 0);
+
+function _showARChResult(type,msg){
+  const el=document.getElementById('ar-ch-result');
+  el.style.display='block'; el.className=type; el.innerHTML=msg;
 }
-function arFire_btn(){ arFire(); }
-function arReset(){ arReset_flight(); }
+
+function validateARChallenge(){
+  const inputVal=parseFloat(document.getElementById('ar-ch-input').value);
+  if(isNaN(inputVal)){ _showARChResult('err','❌ Enter a number.'); return; }
+  const c=_arChCurrent;
+  const correct=c.ans;
+  const checkBtn=document.getElementById('ar-ch-check-btn');
+  if(checkBtn) checkBtn.disabled=true;
+  arFireWithCallback(()=>{
+    _arChTotal++;
+    const diff=Math.abs(inputVal-correct);
+    if(diff<=correct*0.03){ _arChScore++; _showARChResult('ok','✅ Correct! = '+correct.toFixed(2)+' '+c.unit); }
+    else if(diff<=correct*0.08){ _showARChResult('partial','🟡 Close! = '+correct.toFixed(2)+' '+c.unit); }
+    else { _showARChResult('err','❌ Answer = '+correct.toFixed(2)+' '+c.unit); }
+    document.getElementById('ar-ch-score').textContent=_arChScore+' / '+_arChTotal;
+  });
+}
 
 function openAR(){
-  arMode=true;
+  arMode=true; _arCurrentMode='explore';
   document.getElementById('mainCanvas').style.display='none';
   document.getElementById('hud').style.display='none';
   document.getElementById('mode-bar').style.display='none';
@@ -1064,6 +1050,8 @@ function openAR(){
   document.getElementById('ar-v0-pill').style.display='block';
   document.getElementById('ar-range-pill').style.display='block';
   document.getElementById('ar-ui-bar').classList.add('show');
+  document.getElementById('ar-challenge-panel').style.display='none';
+  document.getElementById('ar-explore-ui').style.display='flex';
   document.getElementById('ar-instructions').classList.add('show');
   showARStep(1);
   document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
@@ -1071,19 +1059,15 @@ function openAR(){
 }
 
 function exitAR(){
-  arMode=false; arIsFlying=false;
-  if(arAnimFrameId){ cancelAnimationFrame(arAnimFrameId); arAnimFrameId=null; }
-  // Stop video
-  if(arVideoEl && arVideoEl.parentNode) arVideoEl.parentNode.removeChild(arVideoEl);
-  if(arVideoEl && arVideoEl.srcObject){ arVideoEl.srcObject.getTracks().forEach(t=>t.stop()); }
-  arVideoEl=null;
+  arMode=false; arIsFlying=false; _arFlyT=0;
+  if(_arEntities._stopTick) _arEntities._stopTick();
+  // Stop all video tracks
   document.querySelectorAll('video').forEach(v=>{ try{ if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;} }catch(e){} });
-  // Remove AR canvas
-  if(arCanvasEl && arCanvasEl.parentNode) arCanvasEl.parentNode.removeChild(arCanvasEl);
-  arCanvasEl=null;
-  if(arRenderer){ arRenderer.dispose(); arRenderer=null; }
-  arScene3=null; arCamera=null; arSceneGroup=null;
-  _artoolkitSource=null; _artoolkitContext=null; _arMarkerRoot=null; _arMarkerControl=null;
+  // Tear down A-Frame scene
+  const wrap=document.getElementById('arWrap');
+  wrap.classList.remove('show');
+  wrap.innerHTML='';
+  _arScene=null; _arEntities={};
   // Restore UI
   document.getElementById('mainCanvas').style.display='';
   document.getElementById('hud').style.display='';
@@ -1096,6 +1080,7 @@ function exitAR(){
   document.getElementById('ar-v0-pill').style.display='none';
   document.getElementById('ar-range-pill').style.display='none';
   document.getElementById('ar-ui-bar').classList.remove('show');
+  document.getElementById('ar-challenge-panel').style.display='none';
   document.getElementById('ar-instructions').classList.remove('show');
   document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-explore').classList.add('active');
@@ -1109,15 +1094,15 @@ document.addEventListener('touchstart',function(e){
   if(!arMode) return;
   if(e.touches.length===2){
     arPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-    arScale0=arSceneGroup ? arSceneGroup.scale.x : arScale;
+    arScale0=_arScale;
   }
 },{passive:true});
 document.addEventListener('touchmove',function(e){
-  if(!arMode||!arSceneGroup) return;
+  if(!arMode||!_arEntities.scaleGroup) return;
   if(e.touches.length===2 && arPinchDist0!==null){
     const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-    const s=Math.max(0.003,Math.min(0.2, arScale0*(nd/arPinchDist0)));
-    arSceneGroup.scale.set(s,s,s);
+    _arScale=Math.max(0.05,Math.min(3.0, arScale0*(nd/arPinchDist0)));
+    _arEntities.scaleGroup.setAttribute('scale',`${_arScale} ${_arScale} ${_arScale}`);
   }
 },{passive:true});
 document.addEventListener('touchend',function(e){
@@ -1128,30 +1113,25 @@ document.getElementById('ar-start-btn').addEventListener('click',function(){
   showARStep(2);
   function loadScript(urls,onDone,onFail){
     if(!urls.length){onFail();return;}
-    const s=document.createElement('script'); s.src=urls[0];
+    const s=document.createElement('script'); s.src=urls[0]; s.setAttribute('data-arscript','1');
     s.onload=onDone; s.onerror=()=>loadScript(urls.slice(1),onDone,onFail);
     document.head.appendChild(s);
   }
   function onLibsReady(){
-    initARRenderer();
-    // Scale the AR scene to match marker physical size
-    arSceneGroup.scale.set(arScale, arScale, arScale);
-    syncARAngle();
-    buildARWithARToolkit();
+    const wrap=document.getElementById('arWrap');
+    const old=wrap.querySelector('a-scene');
+    if(old){ old.querySelectorAll('video').forEach(v=>{if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}}); wrap.removeChild(old); }
+    _arScene=null; _arEntities={};
+    buildARScene();
+    const s=document.getElementById('ar-status');
+    s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…';
+    s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+    showARStep(3);
   }
-  // Load AR.js three.js build (not aframe)
-  const artoolkitCDNs=[
-    'https://raw.githack.com/AR-js-org/AR.js/3.4.5/three.js/build/ar-threex.js',
-    'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/three.js/build/ar-threex.js'
-  ];
-  if(window.THREEx && window.THREEx.ArToolkitSource){ onLibsReady(); return; }
-  loadScript(artoolkitCDNs, onLibsReady, ()=>{
-    // Fallback: try ar-threex-full
-    loadScript([
-      'https://raw.githack.com/AR-js-org/AR.js/3.4.5/three.js/build/ar-threex-full.js',
-      'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/three.js/build/ar-threex-full.js'
-    ], onLibsReady, ()=>alert('Could not load AR.js Three.js build'));
-  });
+  if(window.AFRAME&&window.AFRAME.version){ onLibsReady(); return; }
+  const aframeCDNs=['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js'];
+  const arjsCDNs=['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'];
+  loadScript(aframeCDNs, ()=>loadScript(arjsCDNs, onLibsReady, ()=>alert('Could not load AR.js')), ()=>alert('Could not load A-Frame'));
 });
 
 // AR angle slider
