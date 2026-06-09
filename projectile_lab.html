@@ -1109,31 +1109,137 @@ document.addEventListener('touchend',function(e){
   if(e.touches.length<2) arPinchDist0=null;
 },{passive:true});
 
-document.getElementById('ar-start-btn').addEventListener('click',function(){
+document.getElementById('ar-start-btn').addEventListener('click', async function(){
+
+  // AR camera requires HTTPS (or localhost)
+  if (
+    location.protocol !== 'https:' &&
+    location.hostname !== 'localhost' &&
+    location.hostname !== '127.0.0.1'
+  ) {
+    alert(
+      'AR camera requires HTTPS.\n\n' +
+      'Upload the file to a web server or GitHub Pages and open it using https://'
+    );
+    return;
+  }
+
+  // Request camera permission directly from user click
+  try {
+    const testStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' }
+      },
+      audio: false
+    });
+
+    testStream.getTracks().forEach(track => track.stop());
+
+  } catch (err) {
+    alert(
+      'Camera access was denied or unavailable.\n\n' +
+      (err && err.message ? err.message : err)
+    );
+    return;
+  }
+
   showARStep(2);
-  function loadScript(urls,onDone,onFail){
-    if(!urls.length){onFail();return;}
-    const s=document.createElement('script'); s.src=urls[0]; s.setAttribute('data-arscript','1');
-    s.onload=onDone; s.onerror=()=>loadScript(urls.slice(1),onDone,onFail);
+
+  function loadScript(urls, onDone, onFail) {
+    if (!urls.length) {
+      onFail();
+      return;
+    }
+
+    const s = document.createElement('script');
+    s.src = urls[0];
+    s.setAttribute('data-arscript', '1');
+
+    s.onload = onDone;
+    s.onerror = () => loadScript(urls.slice(1), onDone, onFail);
+
     document.head.appendChild(s);
   }
-  function onLibsReady(){
-    const wrap=document.getElementById('arWrap');
-    const old=wrap.querySelector('a-scene');
-    if(old){ old.querySelectorAll('video').forEach(v=>{if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}}); wrap.removeChild(old); }
-    _arScene=null; _arEntities={};
+
+  function onLibsReady() {
+
+    const wrap = document.getElementById('arWrap');
+    const oldScene = wrap.querySelector('a-scene');
+
+    if (oldScene) {
+
+      oldScene.querySelectorAll('video').forEach(v => {
+        try {
+          if (v.srcObject) {
+            v.srcObject.getTracks().forEach(t => t.stop());
+            v.srcObject = null;
+          }
+        } catch(e){}
+      });
+
+      wrap.removeChild(oldScene);
+    }
+
+    _arScene = null;
+    _arEntities = {};
+
     buildARScene();
-    const s=document.getElementById('ar-status');
-    s.style.display='block'; s.textContent='🔍 SCANNING FOR MARKER…';
-    s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+
+    const s = document.getElementById('ar-status');
+    s.style.display = 'block';
+    s.textContent = '🔍 SCANNING FOR MARKER…';
+    s.style.background = 'rgba(255,180,0,.12)';
+    s.style.border = '1px solid rgba(255,180,0,.4)';
+    s.style.color = '#ffb400';
+
     showARStep(3);
   }
-  if(window.AFRAME&&window.AFRAME.version){ onLibsReady(); return; }
-  const aframeCDNs=['https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js','https://aframe.io/releases/1.4.0/aframe.min.js'];
-  const arjsCDNs=['https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js','https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js'];
-  loadScript(aframeCDNs, ()=>loadScript(arjsCDNs, onLibsReady, ()=>alert('Could not load AR.js')), ()=>alert('Could not load A-Frame'));
-});
 
+  const hasAFrame =
+    !!(window.AFRAME && window.AFRAME.version);
+
+  const hasARJS =
+    !!(
+      window.ARjs ||
+      (
+        window.AFRAME &&
+        AFRAME.components &&
+        AFRAME.components.arjs
+      )
+    );
+
+  if (hasAFrame && hasARJS) {
+    onLibsReady();
+    return;
+  }
+
+  const aframeCDNs = [
+    'https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js',
+    'https://aframe.io/releases/1.4.0/aframe.min.js'
+  ];
+
+  const arjsCDNs = [
+    'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js',
+    'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js'
+  ];
+
+  const loadARJS = () =>
+    loadScript(
+      arjsCDNs,
+      onLibsReady,
+      () => alert('Could not load AR.js')
+    );
+
+  if (hasAFrame) {
+    loadARJS();
+  } else {
+    loadScript(
+      aframeCDNs,
+      loadARJS,
+      () => alert('Could not load A-Frame')
+    );
+  }
+});
 // AR angle slider
 document.getElementById('sl-angle-ar').addEventListener('input',function(){
   S.angle=parseInt(this.value);
