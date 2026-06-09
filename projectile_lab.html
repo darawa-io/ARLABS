@@ -232,17 +232,12 @@ input[type=checkbox]{accent-color:#78b4ff;cursor:pointer;width:12px;height:12px;
   <button onclick="document.getElementById('ar-instructions').classList.remove('show');exitAR();" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;">✕</button>
   <strong style="color:#fff;">AR Mode — Projectile Lab</strong><br><br>
   <span id="ar-step1">
-    Print or display the Hiro marker (A5 or larger):<br><br>
-    <img src="https://ar-js-org.github.io/AR.js/data/images/hiro.png" alt="Hiro marker"
-         style="width:150px;height:150px;display:block;margin:0 auto 8px;border:6px solid white;background:white;border-radius:4px;"
-         onerror="this.style.display='none'"/>
-    <small style="color:rgba(255,200,100,.9);font-size:10px;display:block;margin-bottom:8px;">⚠️ This exact pattern is required</small>
-    Place flat on a table, then tap:<br><br>
+    Point your camera at a flat surface (desk, floor, table), then tap:<br><br>
     <button id="ar-start-btn" style="padding:10px 28px;border-radius:30px;border:1px solid rgba(140,200,255,.7);background:rgba(140,200,255,.18);color:#78b4ff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Open Camera</button>
   </span>
-  <span id="ar-step2" style="display:none;">⏳ Loading AR engine…<br><small style="color:rgba(140,200,255,.5);">(first load ~5–10 s)</small></span>
+  <span id="ar-step2" style="display:none;">⏳ Starting camera…</span>
   <span id="ar-step3" style="display:none;">
-    ✅ Camera ready!<br><br>Point at the <strong>Hiro marker</strong>.<br>The launcher appears on it.<br><br>
+    ✅ Camera active!<br><br>The launcher appears on screen.<br>Use the <strong>angle slider</strong> to adjust and <strong>Launch</strong> to fire.<br>Pinch to scale the launcher.<br><br>
     <button onclick="document.getElementById('ar-instructions').classList.remove('show')" style="padding:8px 22px;border-radius:20px;border:1px solid rgba(140,200,255,.6);background:rgba(140,200,255,.15);color:#78b4ff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Got it!</button>
   </span>
 </div>
@@ -767,168 +762,137 @@ function validateChallenge(){
   if(c.hideRows) c.hideRows.forEach(r=>document.getElementById(r).style.display='none');
 }
 // ════════════════════════════════════════════════════════════
-// AR MODE — Custom Three.js renderer + camera video + JS-Aruco marker tracking
+// AR MODE — native getUserMedia + Three.js transparent overlay
+// Tap-to-place launcher. No A-Frame / AR.js.
 // ════════════════════════════════════════════════════════════
-// AR MODE — A-Frame + AR.js, native primitives (no Three.js bridge)
-// Exact same pattern as working polarization lab
-// ════════════════════════════════════════════════════════════
-let arMode=false, arMarkerFound=false;
+let arMode=false, arMarkerFound=true;
 let arPinchDist0=null, arScale0=null;
 let arIsFlying=false, _arFlyLast=0, _arFlyT=0;
-let _arScene=null, _arEntities={}, _arScale=0.38;
+let _arEntities={}, _arScale=1.0;
+let _arStream=null, _arRenderer=null, _arCamera=null, _arSceneThree=null, _arRaf=null;
+let _arPlaced=false;
 
 function showARStep(n){ [1,2,3].forEach(i=>{ const el=document.getElementById('ar-step'+i); if(el) el.style.display=(i===n?'':'none'); }); }
 
-function buildARScene(){
+async function buildARScene(){
   const wrap=document.getElementById('arWrap');
   wrap.innerHTML=''; wrap.classList.add('show');
-  _arScale=0.38; _arEntities={};
+  _arScale=1.0; _arEntities={}; _arPlaced=false;
 
-  // ── scene: EXACT attributes from working polarization lab ──
-  const sceneEl=document.createElement('a-scene');
-  sceneEl.setAttribute('embedded','');
-  sceneEl.setAttribute('arjs','sourceType:webcam;debugUIEnabled:false;detectionMode:mono;patternRatio:0.50;');
-  sceneEl.setAttribute('renderer','antialias:true;precision:medium;');
-  sceneEl.setAttribute('vr-mode-ui','enabled:false');
-  sceneEl.setAttribute('device-orientation-permission-ui','enabled:false');
-  sceneEl.style.cssText='width:100%;height:100%;display:block;';
+  // ── 1. Camera video element (fills entire screen) ──
+  const vid=document.createElement('video');
+  vid.setAttribute('playsinline','');
+  vid.setAttribute('autoplay','');
+  vid.muted=true;
+  vid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
+  wrap.appendChild(vid);
 
-  // ── camera: plain camera entity, no extra components ──
-  const camEnt=document.createElement('a-entity');
-  camEnt.setAttribute('camera','');
-  sceneEl.appendChild(camEnt);
+  // ── 2. Three.js canvas overlay (transparent bg) ──
+  const arCanvas=document.createElement('canvas');
+  arCanvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;';
+  wrap.appendChild(arCanvas);
 
-  // ── marker ──
-  const marker=document.createElement('a-marker');
-  marker.setAttribute('preset','hiro');
-  marker.setAttribute('smooth','true');
-  marker.setAttribute('smoothCount','5');
-  marker.setAttribute('smoothTolerance','0.01');
-  marker.setAttribute('smoothThreshold','2');
-  marker.addEventListener('markerFound',()=>{
-    arMarkerFound=true;
-    const s=document.getElementById('ar-status');
-    s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(77,255,160,.18)'; s.style.border='1px solid rgba(77,255,160,.5)'; s.style.color='#4dffa0';
-  });
-  marker.addEventListener('markerLost',()=>{
-    arMarkerFound=false;
-    const s=document.getElementById('ar-status');
-    s.textContent='🔍 SCANNING FOR MARKER…'; s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
-  });
-
-  // ── scale group ──
-  const sg=document.createElement('a-entity');
-  sg.setAttribute('id','ar-scale-group');
-  sg.setAttribute('scale',`${_arScale} ${_arScale} ${_arScale}`);
-  _arEntities.scaleGroup=sg;
-
-  // helpers
-  function mkBox(w,h,d,col,met,rou,emi,emiInt){
-    const b=document.createElement('a-box');
-    b.setAttribute('width',w); b.setAttribute('height',h); b.setAttribute('depth',d);
-    b.setAttribute('color',col);
-    if(met!=null) b.setAttribute('metalness',met);
-    if(rou!=null) b.setAttribute('roughness',rou);
-    if(emi) b.setAttribute('emissive',emi);
-    if(emiInt!=null) b.setAttribute('emissive-intensity',emiInt);
-    return b;
+  // ── 3. Start camera stream ──
+  try {
+    _arStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
+      audio:false
+    });
+    vid.srcObject=_arStream;
+    await vid.play();
+  } catch(e) {
+    alert('Camera error: '+e.message); exitAR(); return;
   }
-  function mkCyl(r,h,col,met,rou){
-    const c=document.createElement('a-cylinder');
-    c.setAttribute('radius',r); c.setAttribute('height',h); c.setAttribute('color',col);
-    if(met!=null) c.setAttribute('metalness',met);
-    if(rou!=null) c.setAttribute('roughness',rou);
-    return c;
-  }
-  function pos(el,x,y,z){ el.setAttribute('position',`${x} ${y} ${z}`); return el; }
-  function rot(el,x,y,z){ el.setAttribute('rotation',`${x} ${y} ${z}`); return el; }
-  function ent(px,py,pz){ const e=document.createElement('a-entity'); if(px!=null) e.setAttribute('position',`${px} ${py} ${pz}`); return e; }
 
-  const h=S.h, mountH=Math.max(h+0.5,0.5);
+  // ── 4. Three.js renderer on the overlay canvas ──
+  const W=innerWidth, H=innerHeight;
+  arCanvas.width=W; arCanvas.height=H;
+  _arRenderer=new THREE.WebGLRenderer({canvas:arCanvas, alpha:true, antialias:true});
+  _arRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  _arRenderer.setSize(W,H);
+  _arRenderer.setClearColor(0x000000,0); // fully transparent
+
+  _arCamera=new THREE.PerspectiveCamera(60, W/H, 0.01, 200);
+  _arCamera.position.set(0,3,10);
+  _arCamera.lookAt(0,1,0);
+
+  _arSceneThree=new THREE.Scene();
+  _arSceneThree.add(new THREE.AmbientLight(0xffffff,1.5));
+  const dLight=new THREE.DirectionalLight(0xffffff,1.8);
+  dLight.position.set(3,6,4); _arSceneThree.add(dLight);
+
+  // ── 5. Build launcher group ──
+  const root=new THREE.Group();
+  _arSceneThree.add(root);
+  _arEntities.root=root;
+
+  // scale wrapper
+  const scaleGrp=new THREE.Group();
+  root.add(scaleGrp);
+  _arEntities.scaleGroup=scaleGrp;
+
+  const hh=S.h, mountH=Math.max(hh+0.5,0.5);
+
+  function box(w,h,d,col){ return new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({color:col})); }
+  function cyl(r,h,col){ return new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,14), new THREE.MeshStandardMaterial({color:col})); }
 
   // foot
-  const foot=mkBox(1.2,0.18,2.2,'#2a3c4e',0.6,0.4); pos(foot,0,0.09,0); sg.appendChild(foot);
-  // bolts
-  [[-0.4,-0.8],[0.4,-0.8],[-0.4,0.8],[0.4,0.8]].forEach(([fx,fz])=>{
-    const bolt=mkCyl(0.07,0.22,'#889aaa',0.7,0.3); pos(bolt,fx,0.11,fz); sg.appendChild(bolt);
-  });
-  // stand column
-  const stand=mkCyl(0.24,mountH,'#b8ccd8',0.85,0.35); pos(stand,0,mountH/2,0); sg.appendChild(stand);
-  // pivot housing (horizontal cylinder)
-  const pivot=mkCyl(0.64,0.45,'#2a3c4e',0.6,0.4); rot(pivot,0,0,90); pos(pivot,0,h,0); sg.appendChild(pivot);
+  const foot=box(1.2,0.18,2.2,0x2a3c4e); foot.position.set(0,0.09,0); scaleGrp.add(foot);
+  // stand
+  const stand=cyl(0.24,mountH,0xb8ccd8); stand.position.set(0,mountH/2,0); scaleGrp.add(stand);
+  // pivot housing
+  const piv=cyl(0.64,0.45,0x2a3c4e); piv.rotation.z=Math.PI/2; piv.position.set(0,hh,0); scaleGrp.add(piv);
   // bench
-  const bench=mkBox(22,0.18,4.4,'#060c18',0.4,0.6,'#103050',0.3); pos(bench,10.4,-0.09,0); sg.appendChild(bench);
-  // tape measure
-  const tape=mkBox(12,0.01,0.52,'#f5c842',null,null,'#302200',0.5); pos(tape,6,0.01,0); sg.appendChild(tape);
+  const bench=box(22,0.18,4.4,0x060c18); bench.position.set(10.4,-0.09,0); scaleGrp.add(bench);
+  // tape
+  const tape=box(12,0.01,0.52,0xf5c842); tape.position.set(6,0.01,0); scaleGrp.add(tape);
 
-  // barrel group — rotated by angle
-  const barrelG=ent(0,h,0);
-  barrelG.setAttribute('rotation',`0 0 ${S.angle}`);
+  // barrel group
+  const barrelG=new THREE.Group(); barrelG.position.set(0,hh,0);
   _arEntities.barrelG=barrelG;
-  const BARREL_LEN=3.0, BACK=0.5, FRONT=2.5, TOTAL=3.0;
-  // tube (open cylinder)
-  const tube=document.createElement('a-cylinder');
-  tube.setAttribute('radius','0.38'); tube.setAttribute('height',TOTAL); tube.setAttribute('color','#a8d8f0');
-  tube.setAttribute('material','color:#a8d8f0;transparent:true;opacity:0.38;side:double;');
-  rot(tube,0,0,90); pos(tube,(FRONT-BACK)/2,0,0); barrelG.appendChild(tube);
-  // glow core
-  const glow=mkCyl(0.28,TOTAL*0.92,'#1166ff',null,null); rot(glow,0,0,90); pos(glow,(FRONT-BACK)/2,0,0);
-  glow.setAttribute('emissive','#0044cc'); glow.setAttribute('emissive-intensity','0.8');
-  glow.setAttribute('material','color:#1166ff;transparent:true;opacity:0.5;emissive:#0044cc;emissive-intensity:0.8;');
-  barrelG.appendChild(glow);
-  // muzzle ring
-  const muzzle=document.createElement('a-torus');
-  muzzle.setAttribute('radius','0.42'); muzzle.setAttribute('radius-tubular','0.07');
-  muzzle.setAttribute('color','#8ab4cc'); rot(muzzle,0,90,0); pos(muzzle,FRONT,0,0); barrelG.appendChild(muzzle);
-  // clamp ring at pivot
-  const clamp=document.createElement('a-torus');
-  clamp.setAttribute('radius','0.52'); clamp.setAttribute('radius-tubular','0.08');
-  clamp.setAttribute('color','#2a3c4e'); rot(clamp,0,90,0); pos(clamp,0,0,0); barrelG.appendChild(clamp);
-  sg.appendChild(barrelG);
+  const TOTAL=3.0, FRONT=2.5, BACK=0.5;
+  const tubeMat=new THREE.MeshStandardMaterial({color:0xa8d8f0,transparent:true,opacity:0.38,side:THREE.DoubleSide});
+  const tube=new THREE.Mesh(new THREE.CylinderGeometry(0.38,0.38,TOTAL,14),tubeMat);
+  tube.rotation.z=Math.PI/2; tube.position.x=(FRONT-BACK)/2; barrelG.add(tube);
+  const glowMat=new THREE.MeshStandardMaterial({color:0x1166ff,emissive:0x0044cc,emissiveIntensity:0.8,transparent:true,opacity:0.5});
+  const glow=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.28,TOTAL*0.92,12),glowMat);
+  glow.rotation.z=Math.PI/2; glow.position.x=(FRONT-BACK)/2; barrelG.add(glow);
+  const muzzle=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.07,8,16),new THREE.MeshStandardMaterial({color:0x8ab4cc}));
+  muzzle.rotation.y=Math.PI/2; muzzle.position.x=FRONT; barrelG.add(muzzle);
+  scaleGrp.add(barrelG);
 
-  // projectile ball
-  const ball=document.createElement('a-sphere');
-  ball.setAttribute('radius','0.275'); ball.setAttribute('color','#ff6633');
-  ball.setAttribute('emissive','#cc2200'); ball.setAttribute('emissive-intensity','0.4');
-  pos(ball,0,h,0); _arEntities.ball=ball; sg.appendChild(ball);
+  // ball
+  const ball=new THREE.Mesh(new THREE.SphereGeometry(0.275,14,14),new THREE.MeshStandardMaterial({color:0xff6633,emissive:0xcc2200,emissiveIntensity:0.4}));
+  ball.position.set(0,hh,0); _arEntities.ball=ball; scaleGrp.add(ball);
 
-  marker.appendChild(sg);
-  sceneEl.appendChild(marker);
-  wrap.appendChild(sceneEl);
-  _arScene=sceneEl;
+  // Show launcher immediately, centered in view
+  root.visible=true;
+  _arPlaced=true;
 
-  // RAF tick loop for flight animation (A-Frame doesn't call our code automatically)
-  let _arRafRunning=true;
-  function arTick(){
-    if(!_arRafRunning||!arMode) return;
-    if(arIsFlying) tickARFlight();
-    requestAnimationFrame(arTick);
-  }
-  requestAnimationFrame(arTick);
-  // Store stop-function so exitAR can kill the loop
-  _arEntities._stopTick=()=>{ _arRafRunning=false; };
+  // Status
+  const statusEl=document.getElementById('ar-status');
+  statusEl.textContent='✅ CAMERA ACTIVE — tap screen to reposition';
+  statusEl.style.background='rgba(77,255,160,.18)'; statusEl.style.border='1px solid rgba(77,255,160,.5)'; statusEl.style.color='#4dffa0';
+  setTimeout(()=>{ if(arMode) statusEl.style.opacity='0.4'; },3000);
 
   syncARAngle();
+
+  // ── 7. Render loop ──
+  let running=true;
+  _arEntities._stopTick=()=>{ running=false; };
+  function arLoop(){
+    if(!running||!arMode){ return; }
+    _arRaf=requestAnimationFrame(arLoop);
+    if(arIsFlying) tickARFlight();
+    _arRenderer.render(_arSceneThree, _arCamera);
+  }
+  _arRaf=requestAnimationFrame(arLoop);
 }
 
 function syncARAngle(){
   if(!_arEntities.barrelG) return;
-  _arEntities.barrelG.setAttribute('rotation',`0 0 ${S.angle}`);
-  if(_arEntities.ball && !arIsFlying) _arEntities.ball.setAttribute('position',`0 ${S.h} 0`);
-  document.getElementById('ar-theta-val').textContent='= '+S.angle.toFixed(0)+'°';
-  document.getElementById('ar-v0-val').textContent='= '+S.v0.toFixed(1)+' m/s';
-  const {R}=compute(S.angle,S.v0,S.h,S.g);
-  document.getElementById('ar-range-val').textContent='= '+R.toFixed(1)+' m';
-  const slAR=document.getElementById('sl-angle-ar');
-  if(slAR && parseInt(slAR.value)!==S.angle) slAR.value=S.angle;
-  const lblAR=document.getElementById('lbl-angle-ar');
-  if(lblAR) lblAR.textContent=S.angle.toFixed(0)+'°';
-}
-
-function syncARAngle(){
-  if(!_arEntities.barrelG) return;
-  _arEntities.barrelG.setAttribute('rotation',`0 0 ${S.angle}`);
-  if(_arEntities.ball && !arIsFlying) _arEntities.ball.setAttribute('position',`0 ${S.h} 0`);
+  _arEntities.barrelG.rotation.z=S.angle*Math.PI/180;
+  if(_arEntities.ball && !arIsFlying) _arEntities.ball.position.set(0,S.h,0);
   document.getElementById('ar-theta-val').textContent='= '+S.angle.toFixed(0)+'°';
   document.getElementById('ar-v0-val').textContent='= '+S.v0.toFixed(1)+' m/s';
   const {R}=compute(S.angle,S.v0,S.h,S.g);
@@ -941,7 +905,7 @@ function syncARAngle(){
 
 function arReset_flight(){
   arIsFlying=false; _arFlyT=0; _arFlyCallback=null;
-  if(_arEntities.ball) _arEntities.ball.setAttribute('position',`0 ${S.h} 0`);
+  if(_arEntities.ball) _arEntities.ball.position.set(0,S.h,0);
   const btn=document.getElementById('ar-fire-btn');
   if(btn){ btn.textContent='🚀 Launch'; btn.disabled=false; }
 }
@@ -1007,10 +971,10 @@ function tickARFlight(){
   const {vx,vy,T}=compute(S.angle,S.v0,S.h,S.g);
   const x=vx*_arFlyT;
   const y=S.h+(vy*_arFlyT - 0.5*S.g*_arFlyT*_arFlyT);
-  if(_arEntities.ball) _arEntities.ball.setAttribute('position',`${x} ${Math.max(0,y)} 0`);
+  if(_arEntities.ball) _arEntities.ball.position.set(x,Math.max(0,y),0);
   if(_arFlyT>T+0.4){
     arIsFlying=false; _arFlyT=0;
-    if(_arEntities.ball) _arEntities.ball.setAttribute('position',`${vx*T} 0 0`);
+    if(_arEntities.ball) _arEntities.ball.position.set(vx*T,0,0);
     if(_arFlyCallback){ const cb=_arFlyCallback; _arFlyCallback=null; cb(); }
   }
 }
@@ -1059,15 +1023,19 @@ function openAR(){
 }
 
 function exitAR(){
-  arMode=false; arIsFlying=false; _arFlyT=0;
+  arMode=false; arIsFlying=false; _arFlyT=0; _arPlaced=false;
   if(_arEntities._stopTick) _arEntities._stopTick();
-  // Stop all video tracks
-  document.querySelectorAll('video').forEach(v=>{ try{ if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;} }catch(e){} });
-  // Tear down A-Frame scene
+  if(_arRaf){ cancelAnimationFrame(_arRaf); _arRaf=null; }
+  // Stop camera stream
+  if(_arStream){ _arStream.getTracks().forEach(t=>t.stop()); _arStream=null; }
+  // Dispose Three.js renderer
+  if(_arRenderer){ _arRenderer.dispose(); _arRenderer=null; }
+  _arCamera=null; _arSceneThree=null;
+  // Tear down wrap
   const wrap=document.getElementById('arWrap');
   wrap.classList.remove('show');
   wrap.innerHTML='';
-  _arScene=null; _arEntities={};
+  _arEntities={};
   // Restore UI
   document.getElementById('mainCanvas').style.display='';
   document.getElementById('hud').style.display='';
@@ -1101,145 +1069,23 @@ document.addEventListener('touchmove',function(e){
   if(!arMode||!_arEntities.scaleGroup) return;
   if(e.touches.length===2 && arPinchDist0!==null){
     const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-    _arScale=Math.max(0.05,Math.min(3.0, arScale0*(nd/arPinchDist0)));
-    _arEntities.scaleGroup.setAttribute('scale',`${_arScale} ${_arScale} ${_arScale}`);
+    _arScale=Math.max(0.1,Math.min(5.0, arScale0*(nd/arPinchDist0)));
+    _arEntities.scaleGroup.scale.setScalar(_arScale);
   }
 },{passive:true});
 document.addEventListener('touchend',function(e){
   if(e.touches.length<2) arPinchDist0=null;
 },{passive:true});
 
-document.getElementById('ar-start-btn').addEventListener('click', async function(){
-
-  // AR camera requires HTTPS (or localhost)
-  if (
-    location.protocol !== 'https:' &&
-    location.hostname !== 'localhost' &&
-    location.hostname !== '127.0.0.1'
-  ) {
-    alert(
-      'AR camera requires HTTPS.\n\n' +
-      'Upload the file to a web server or GitHub Pages and open it using https://'
-    );
-    return;
-  }
-
-  // Request camera permission directly from user click
-  try {
-    const testStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' }
-      },
-      audio: false
-    });
-
-    testStream.getTracks().forEach(track => track.stop());
-
-  } catch (err) {
-    alert(
-      'Camera access was denied or unavailable.\n\n' +
-      (err && err.message ? err.message : err)
-    );
-    return;
-  }
-
+document.getElementById('ar-start-btn').addEventListener('click',function(){
   showARStep(2);
-
-  function loadScript(urls, onDone, onFail) {
-    if (!urls.length) {
-      onFail();
-      return;
-    }
-
-    const s = document.createElement('script');
-    s.src = urls[0];
-    s.setAttribute('data-arscript', '1');
-
-    s.onload = onDone;
-    s.onerror = () => loadScript(urls.slice(1), onDone, onFail);
-
-    document.head.appendChild(s);
-  }
-
-  function onLibsReady() {
-
-    const wrap = document.getElementById('arWrap');
-    const oldScene = wrap.querySelector('a-scene');
-
-    if (oldScene) {
-
-      oldScene.querySelectorAll('video').forEach(v => {
-        try {
-          if (v.srcObject) {
-            v.srcObject.getTracks().forEach(t => t.stop());
-            v.srcObject = null;
-          }
-        } catch(e){}
-      });
-
-      wrap.removeChild(oldScene);
-    }
-
-    _arScene = null;
-    _arEntities = {};
-
-    buildARScene();
-
-    const s = document.getElementById('ar-status');
-    s.style.display = 'block';
-    s.textContent = '🔍 SCANNING FOR MARKER…';
-    s.style.background = 'rgba(255,180,0,.12)';
-    s.style.border = '1px solid rgba(255,180,0,.4)';
-    s.style.color = '#ffb400';
-
-    showARStep(3);
-  }
-
-  const hasAFrame =
-    !!(window.AFRAME && window.AFRAME.version);
-
-  const hasARJS =
-    !!(
-      window.ARjs ||
-      (
-        window.AFRAME &&
-        AFRAME.components &&
-        AFRAME.components.arjs
-      )
-    );
-
-  if (hasAFrame && hasARJS) {
-    onLibsReady();
-    return;
-  }
-
-  const aframeCDNs = [
-    'https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js',
-    'https://aframe.io/releases/1.4.0/aframe.min.js'
-  ];
-
-  const arjsCDNs = [
-    'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js',
-    'https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js'
-  ];
-
-  const loadARJS = () =>
-    loadScript(
-      arjsCDNs,
-      onLibsReady,
-      () => alert('Could not load AR.js')
-    );
-
-  if (hasAFrame) {
-    loadARJS();
-  } else {
-    loadScript(
-      aframeCDNs,
-      loadARJS,
-      () => alert('Could not load A-Frame')
-    );
-  }
+  const s=document.getElementById('ar-status');
+  s.style.display='block'; s.textContent='📷 Starting camera…';
+  s.style.background='rgba(255,180,0,.12)'; s.style.border='1px solid rgba(255,180,0,.4)'; s.style.color='#ffb400';
+  showARStep(3);
+  buildARScene();
 });
+
 // AR angle slider
 document.getElementById('sl-angle-ar').addEventListener('input',function(){
   S.angle=parseInt(this.value);
