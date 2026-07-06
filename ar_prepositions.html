@@ -1,0 +1,672 @@
+:English Prepositions AR practice - Hand Tracking Fix:ar_prepositions.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Preposition Practice - Fixed Tracking</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+        #webcam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror camera feed for natural interaction */
+            z-index: 1;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        #minimap-container {
+            width: 160px;
+            height: 160px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 2px solid rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-black text-white overflow-hidden w-screen h-screen select-none">
+
+    <video id="webcam" autoplay playsinline muted></video>
+
+    <div id="canvas-container"></div>
+
+    <div class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-4 md:p-6">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start w-full gap-4">
+            <div class="glass-panel rounded-2xl p-5 max-w-md pointer-events-auto shadow-2xl w-full">
+                <span class="text-xs uppercase tracking-widest text-blue-400 font-bold">English Practice Challenge</span>
+                <h1 class="text-2xl font-extrabold mt-1 tracking-tight leading-none text-white">
+                    Place the <span class="text-cyan-400 animate-pulse">Blue Toy Car</span>:
+                </h1>
+                <div class="mt-3 bg-blue-600/30 border border-blue-500/50 rounded-lg px-4 py-3 flex items-center justify-between">
+                    <span id="target-preposition" class="text-3xl font-black tracking-wide text-yellow-300 uppercase">...</span>
+                    <button onclick="speakInstruction()" class="p-2 bg-white/10 hover:bg-white/20 rounded-full transition pointer-events-auto" title="Listen">
+                        🔊
+                    </button>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                    🎯 <span id="target-guide">Guide info goes here</span>
+                </p>
+                <div id="status-guide-text" class="mt-3 text-xs bg-slate-800/60 text-slate-200 py-1.5 px-3 rounded-lg border border-slate-700/50 flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                    <span id="guide-message">Initializing hand tracking...</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-2.5 pointer-events-auto w-full md:w-auto pt-2 md:pt-0">
+                <div class="glass-panel rounded-2xl p-2.5 flex flex-col items-center shadow-xl">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                        🗺️ Top View (Depth Check)
+                    </span>
+                    <div id="minimap-container" class="relative bg-slate-950"></div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-3.5 flex flex-col gap-1.5 min-w-[210px] w-full shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-400">System Status</span>
+                        <span id="ar-status" class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                    </div>
+                    <hr class="border-white/10 my-1">
+                    <div class="text-[11px] space-y-1 text-slate-300">
+                        <div class="flex justify-between items-center">
+                            <span>Car Drive (Right Hand):</span>
+                            <span id="status-hand-1" class="font-bold text-red-400">Offline</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Lock Trigger (Left Hand):</span>
+                            <span id="status-hand-2" class="font-bold text-red-400">Not Seen</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Current Position Is:</span>
+                            <span id="status-current-zone" class="font-bold text-cyan-400">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex flex-col md:flex-row justify-between items-end gap-4 mt-auto">
+            <div class="glass-panel rounded-2xl px-5 py-3.5 flex items-center gap-6 pointer-events-auto w-full md:w-auto justify-between md:justify-start">
+                <div class="text-center">
+                    <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Streak</div>
+                    <div id="streak-count" class="text-2xl font-black text-emerald-400">0</div>
+                </div>
+                <div class="w-px h-8 bg-white/20 hidden md:block"></div>
+                <div class="text-center">
+                    <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Total Correct</div>
+                    <div id="total-count" class="text-2xl font-black text-white">0</div>
+                </div>
+                <button onclick="nextRound(true)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 active:scale-95 transition text-sm font-semibold rounded-xl text-slate-200">
+                    Skip/Next ➔
+                </button>
+                <button onclick="openQrModal()" title="Scan QR Code" class="p-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition rounded-xl text-white flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                        <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zM3 14h7v7H3v-7zm2 2v3h3v-3H5zM14 3h7v7h-7V3zm2 2v3h3V5h-3zM14 14h2v2h-2v-2zM19 14h2v2h-2v-2zM14 19h2v2h-2v-2zM19 19h2v2h-2v-2zM16 16h2v2h-2v-2z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-4 max-w-sm w-full md:w-auto">
+                <h4 class="text-xs font-bold text-yellow-400 uppercase mb-1">🎮 Control Guide</h4>
+                <ul class="text-xs space-y-1 text-slate-300">
+                    <li>• <b class="text-white">Right Hand:</b> Move your hand to drive; twist it like a wheel to turn.</li>
+                    <li>• <b class="text-white">Left Hand:</b> Raise your left hand into view to <b>Lock & Validate</b>.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-modal" class="absolute inset-0 bg-black/60 z-20 hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full rounded-3xl p-8 text-center border-2 border-slate-500/30 flex flex-col items-center shadow-2xl">
+            <div id="feedback-emoji" class="text-7xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-3xl font-black tracking-tight mb-2">Excellent job!</h2>
+            <p id="feedback-desc" class="text-slate-200 text-base mb-6 leading-relaxed"></p>
+            <button id="feedback-btn" onclick="closeFeedback()" class="w-full py-4 rounded-2xl font-bold text-white shadow-lg pointer-events-auto transition active:scale-95"></button>
+        </div>
+    </div>
+
+    <div id="qr-modal" class="absolute inset-0 bg-black/60 z-30 hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-xs w-full rounded-3xl p-6 text-center border-2 border-indigo-500/30 flex flex-col items-center shadow-2xl">
+            <h3 class="text-lg font-black tracking-tight mb-1 text-white">Scan to Open</h3>
+            <p class="text-xs text-slate-300 mb-4">Scan with your phone camera to open it there</p>
+            <div class="bg-white p-3 rounded-2xl">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAAC0UlEQVR4nO2cQY7bMAxFHysDs5RvMEeRr5abxUfpDeTlADZ+F5LspAU6HUziRgC1CGD5LQgQpD5JKya+suYfX8LBeeedfyq/WF3TYgZsBsuATWzGPEJ7P5xjj/MP5oMkSRBXikMnQBd7EykDSZKUz7LH+UfzNTgBUg5iHjcj5RrJJcSnE+1x/in88iYzG9CVIJsIYn5f/589zn+bH+6etnL+KuXRIK4Y8Vx7nH8sX/zbiqSwWrqCEYXNFtb6IgpYzrDH+cfzW5HHdWcZIP0cIGWwaRlgNjOz8Sx7nH8cj25WBoiSpJX2c7eur2a/85/yRSEPmI1BRTXP40Hs0b14/dsfj5SDWtRKQChVbw3YWCOZlIPHb3f8noH3Miiu9SdlSqVUMvU1en7uj+fGecpBJO0Bq5UjsCWP3w753b8rcMQqUORWKjm7RbL7tzO+uLEes7kdx0mqkVyyclTZc//2xjev7udvaqqq+rftlUzt/u2Mb/m5DZFKJF+Ptxnamez+7Y+/y8o56Ajn2u6gvXD93CNfXHv0qppq3vPzXv/i+qpPPq4w25tsWgZ0GYNqfi4fcQQxjzSJ/YL2O/+XVeZHBqB5xMpDyhuaxzpYMmJoE6ZXs9/5T9ahqppgrmdteZ1K93L1+rdP/kZf3Wrl3JrQRU5H7092yjdVtXc1DsFcx4XVtV7/ds3HFV3GzaS8GcQPY36vWRmWAV19Ptghv/cn9wN3r4/KYwZKY9rnCx3yf36/QauPDrlVRsSur/rkj/sLpUn5YRBvJ/02sZnXv13ye/9KbWqUgT2Im7Deu9OvZr/z/8LX+wvL3dfQSSs2sZnZuNkd/2x7nH8KH48PNj7KhRRdxnr02nS+Pc5/mx9+35gtrEbMMgiCmMu+zrHH+cfy9/cXQPMEsBiaDZR+GrdXwF/Nfuc/Wa0qgtbEWm/mv6W/sfcsXV/1xpv/P4PzznfL/wJpNHN+EieuOAAAAABJRU5ErkJggg==" alt="QR code linking to the AR Prepositions lab" class="w-48 h-48">
+            </div>
+            <a href="https://darawa-io.github.io/ARLABS/ar_prepositions.html" target="_blank" rel="noopener" class="text-[11px] text-indigo-300 hover:text-indigo-200 mt-3 break-all pointer-events-auto">
+                darawa-io.github.io/ARLABS/ar_prepositions.html
+            </a>
+            <button onclick="closeQrModal()" class="w-full mt-5 py-3 rounded-2xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg pointer-events-auto transition active:scale-95">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <div id="error-screen" class="absolute inset-0 bg-slate-950 z-50 hidden flex flex-col items-center justify-center text-center p-6">
+        <div class="max-w-md p-8 bg-slate-900 border border-red-500/30 rounded-3xl flex flex-col items-center">
+            <span class="text-6xl mb-4">⚠️</span>
+            <h2 class="text-2xl font-bold mb-2 text-red-400">Webcam Required</h2>
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed">Camera access is required for real-time tracking.</p>
+            <button onclick="location.reload()" class="px-6 py-3 bg-red-600 hover:bg-red-700 transition font-bold rounded-xl text-white">Retry</button>
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            if (type === 'success') {
+                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(783.99, now + 0.24);
+                osc.start(now); osc.stop(now + 0.5);
+            } else if (type === 'failure') {
+                gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(220, now);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'pop') {
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.frequency.setValueAtTime(400, now); osc.start(now); osc.stop(now + 0.09);
+            }
+        }
+    </script>
+
+    <script>
+        let scene, camera, renderer;
+        let minimapCamera, minimapRenderer; 
+        let house, car, targetAreaRing;
+        let webcamEl;
+        let prevIndexPosition = null;
+        let prevSteeringAngle = null;
+        let triggerHandFirstSeenAt = null;
+        const TRIGGER_HOLD_MS = 700; // left hand must be held steady this long before it locks in
+        let gameActive = true;
+        let streak = 0;
+        let totalCount = 0;
+        let isLocked = false;
+
+        const prepositions = ['in', 'on', 'in front of', 'opposite', 'behind', 'under'];
+        const targetGuides = {
+            'in': 'Park the car inside the playroom container of the stilt house.',
+            'on': 'Place the car on top of the house pitched roof.',
+            'in front of': 'Park the car in front of the house (near the stairs).',
+            'opposite': 'Park opposite the house! Across the road, with headlights pointing toward the front door.',
+            'behind': 'Hide the car behind the back wall of the house (use the Top View map to help!).',
+            'under': 'Park the car directly underneath the wooden house floor, between the stilts.'
+        };
+        let currentTarget = '';
+
+        function init3D() {
+            webcamEl = document.getElementById('webcam');
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 0.1, 4.3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const minimapContainer = document.getElementById('minimap-container');
+            minimapCamera = new THREE.OrthographicCamera(-2.2, 2.2, 2.2, -2.2, 0.1, 20);
+            minimapCamera.position.set(0, 6, -1.8); 
+            minimapCamera.lookAt(0, -1.2, -1.8);
+
+            minimapRenderer = new THREE.WebGLRenderer({ antialias: true });
+            minimapRenderer.setSize(160, 160);
+            minimapRenderer.setClearColor(0x020617, 1); 
+            minimapContainer.appendChild(minimapRenderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
+            dirLight.position.set(5, 10, 6);
+            scene.add(dirLight);
+
+            const gridHelper = new THREE.GridHelper(10, 20, 0x3b82f6, 0x1e293b);
+            gridHelper.position.y = -1.2;
+            scene.add(gridHelper);
+
+            const roadGeo = new THREE.PlaneGeometry(10, 1.4);
+            const roadMat = new THREE.MeshBasicMaterial({ color: 0x0f172a, side: THREE.DoubleSide });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = Math.PI / 2;
+            road.position.set(0, -1.19, -0.1); 
+            scene.add(road);
+
+            house = new THREE.Group();
+            house.position.set(0, -1.2, -1.8); 
+
+            const stiltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
+            const stiltCoords = [{x: -0.8, z: -0.5}, {x: 0.8, z: -0.5}, {x: -0.8, z: 0.5}, {x: 0.8, z: 0.5}];
+            stiltCoords.forEach(c => {
+                const stilt = new THREE.Mesh(stiltGeo, woodMat);
+                stilt.position.set(c.x, 0.35, c.z);
+                house.add(stilt);
+            });
+
+            const floorGeo = new THREE.BoxGeometry(1.8, 0.08, 1.2);
+            const deckMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.5 });
+            const floorDeck = new THREE.Mesh(floorGeo, deckMat);
+            floorDeck.position.y = 0.7;
+            house.add(floorDeck);
+
+            const wallMat = new THREE.MeshStandardMaterial({ 
+                color: 0x38bdf8, 
+                roughness: 0.5,
+                side: THREE.DoubleSide
+            });
+
+            const sideWallGeo = new THREE.PlaneGeometry(1.2, 0.8);
+            const leftWall = new THREE.Mesh(sideWallGeo, wallMat); leftWall.rotation.y = Math.PI / 2; leftWall.position.set(-0.9, 1.1, 0); house.add(leftWall);
+            const rightWall = new THREE.Mesh(sideWallGeo, wallMat); rightWall.rotation.y = -Math.PI / 2; rightWall.position.set(0.9, 1.1, 0); house.add(rightWall);
+
+            const backWallGeo = new THREE.PlaneGeometry(1.8, 0.8);
+            const backWall = new THREE.Mesh(backWallGeo, wallMat);
+            backWall.position.set(0, 1.1, -0.6);
+            house.add(backWall);
+
+            const frontWallGeoLeft = new THREE.PlaneGeometry(0.6, 0.8);
+            const frontWallLeft = new THREE.Mesh(frontWallGeoLeft, wallMat); frontWallLeft.position.set(-0.6, 1.1, 0.6); house.add(frontWallLeft);
+            const frontWallGeoRight = new THREE.PlaneGeometry(0.6, 0.8);
+            const frontWallRight = new THREE.Mesh(frontWallGeoRight, wallMat); frontWallRight.position.set(0.6, 1.1, 0.6); house.add(frontWallRight);
+
+            const stairStepGeo = new THREE.BoxGeometry(0.6, 0.1, 0.2);
+            for (let i = 0; i < 3; i++) {
+                const step = new THREE.Mesh(stairStepGeo, woodMat);
+                step.position.set(0, 0.55 - (i * 0.15), 0.7 + (i * 0.18));
+                house.add(step);
+            }
+
+            const roofGeometry = new THREE.BufferGeometry();
+            const w = 0.9, d = 0.6, h = 0.55; 
+            const vertices = new Float32Array([
+                -w, 1.5,  d,   w, 1.5,  d,   0, 1.5 + h, 0,
+                 w, 1.5, -d,  -w, 1.5, -d,   0, 1.5 + h, 0,
+                -w, 1.5, -d,  -w, 1.5,  d,   0, 1.5 + h, 0,
+                 w, 1.5,  d,   w, 1.5, -d,   0, 1.5 + h, 0,
+                -w, 1.5, -d,   w, 1.5, -d,   w, 1.5,  d,
+                -w, 1.5, -d,   w, 1.5,  d,  -w, 1.5,  d
+            ]);
+            roofGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            roofGeometry.computeVertexNormals();
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4, side: THREE.DoubleSide });
+            const roof = new THREE.Mesh(roofGeometry, roofMat);
+            house.add(roof);
+
+            scene.add(house);
+
+            car = new THREE.Group();
+            const bodyGeo = new THREE.BoxGeometry(0.5, 0.2, 0.28);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.2, metalness: 0.6 });
+            const mainBody = new THREE.Mesh(bodyGeo, bodyMat); mainBody.position.y = 0.12; car.add(mainBody);
+
+            const domeGeo = new THREE.BoxGeometry(0.28, 0.15, 0.24);
+            const domeMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+            const dome = new THREE.Mesh(domeGeo, domeMat); dome.position.set(-0.04, 0.28, 0); car.add(dome);
+
+            const wheelGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.05, 12);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+            const wheelCoords = [{x: -0.16, z: -0.15}, {x: 0.16, z: -0.15}, {x: -0.16, z: 0.15}, {x: 0.16, z: 0.15}];
+            wheelCoords.forEach(c => {
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat); wheel.rotation.x = Math.PI / 2; wheel.position.set(c.x, 0.08, c.z); car.add(wheel);
+            });
+
+            const lightGeo = new THREE.SphereGeometry(0.03, 8, 8);
+            const lightMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+            const leftHeadlight = new THREE.Mesh(lightGeo, lightMat); leftHeadlight.position.set(0.25, 0.15, 0.08); car.add(leftHeadlight);
+            const rightHeadlight = new THREE.Mesh(lightGeo, lightMat); rightHeadlight.position.set(0.25, 0.15, -0.08); car.add(rightHeadlight);
+
+            car.position.set(1.1, -1.0, -0.5);
+            scene.add(car);
+
+            const ringGeo = new THREE.RingGeometry(0.3, 0.33, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+            targetAreaRing = new THREE.Mesh(ringGeo, ringMat); targetAreaRing.rotation.x = Math.PI / 2; targetAreaRing.position.y = -1.18;
+            scene.add(targetAreaRing);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function initMediaPipe() {
+            const videoElement = document.getElementById('webcam');
+            const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.65, minTrackingConfidence: 0.6 });
+            hands.onResults(onHandResults);
+
+            cameraUtils = new Camera(videoElement, {
+                onFrame: async () => { await hands.send({ image: videoElement }); },
+                width: 640, height: 480
+            });
+
+            cameraUtils.start()
+                .then(() => {
+                    document.getElementById('ar-status').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                    document.getElementById('guide-message').innerText = "Right Hand: Drive & Rotate. Left Hand: Show to Lock.";
+                    speakText("Ready!");
+                })
+                .catch(() => { document.getElementById('error-screen').classList.remove('hidden'); });
+        }
+
+        // Casts a ray from the camera through a point in Normalized Device
+        // Coordinates (-1..1) and finds where it crosses the plane world.z === worldZ.
+        // This is what actually lines up a 2D screen position with a 3D point,
+        // accounting for the perspective camera's field of view - a fixed
+        // multiplier can't do this correctly because how much world-space
+        // distance one screen-pixel covers changes with depth.
+        function getWorldPointAtDepth(ndcX, ndcY, worldZ) {
+            const point = new THREE.Vector3(ndcX, ndcY, 0.5);
+            point.unproject(camera);
+            const dir = point.sub(camera.position).normalize();
+            const t = (worldZ - camera.position.z) / dir.z;
+            return camera.position.clone().add(dir.multiplyScalar(t));
+        }
+
+        // Converts a raw MediaPipe landmark (normalized 0..1 over the actual
+        // camera frame) into the 3D world point at a given depth that would
+        // render exactly under that landmark on screen. This has to replicate
+        // two things the video element does that plain math otherwise misses:
+        //   1) object-fit: cover crops the video to fill the screen, so the
+        //      visible portion of the raw frame depends on the video's native
+        //      aspect ratio vs. the window's aspect ratio.
+        //   2) the video is mirrored (scaleX(-1)) for natural interaction.
+        function landmarkToWorldAtDepth(lm, worldZ) {
+            const vw = (webcamEl && webcamEl.videoWidth) || 640;
+            const vh = (webcamEl && webcamEl.videoHeight) || 480;
+            const cw = window.innerWidth;
+            const ch = window.innerHeight;
+
+            const coverScale = Math.max(cw / vw, ch / vh);
+            const displayedW = vw * coverScale;
+            const displayedH = vh * coverScale;
+            const cropX = (displayedW - cw) / 2;
+            const cropY = (displayedH - ch) / 2;
+
+            // Where this landmark falls within the visible viewport, as a 0..1 fraction
+            const fracX = (lm.x * displayedW - cropX) / cw;
+            const fracY = (lm.y * displayedH - cropY) / ch;
+
+            const mirroredFracX = 1 - fracX; // undo the CSS mirror
+
+            const ndcX = mirroredFracX * 2 - 1;
+            const ndcY = -(fracY * 2 - 1); // NDC y increases upward, screen y increases downward
+
+            return getWorldPointAtDepth(ndcX, ndcY, worldZ);
+        }
+
+        function computeCurrentPreposition() {
+            const hX = 0, hY = -1.2, hZ = -1.8;
+            const dx = car.position.x - hX;
+            const dy = car.position.y - hY;
+            const dz = car.position.z - hZ;
+
+            if (Math.abs(dx) < 0.8 && Math.abs(dz) < 0.55 && dy < 0.6) return 'under';
+            if (Math.abs(dx) < 0.8 && Math.abs(dz) < 0.55 && dy >= 0.6 && dy < 1.4) return 'in';
+            if (Math.abs(dx) < 1.0 && Math.abs(dz) < 0.7 && dy >= 1.4 && dy < 2.3) return 'on';
+            
+            if (dz < -0.45 && Math.abs(dx) < 1.1) return 'behind';
+
+            // Front zone (the house's door/stairs side). "opposite" and "in front of" both
+            // live here - the difference is orientation, not distance:
+            //   - "opposite": the car's front (headlights) points back at the house's front face
+            //   - "in front of": the car is parked on that side but NOT facing the house
+            if (dz > 0.45 && dz < 2.5 && Math.abs(dx) < 1.1) {
+                // Car's forward direction in world space (car's local +X axis, rotated by rotation.y)
+                const forwardX = Math.cos(car.rotation.y);
+                const forwardZ = -Math.sin(car.rotation.y);
+
+                // Direction from the car back toward the house
+                const toHouseX = -dx, toHouseZ = -dz;
+                const len = Math.hypot(toHouseX, toHouseZ) || 1;
+                const dot = (forwardX * toHouseX + forwardZ * toHouseZ) / len;
+
+                // dot near 1 = car's front end is aimed at the house (within ~55 degrees)
+                return (dot > 0.55) ? 'opposite' : 'in front of';
+            }
+
+            return 'out of bounds';
+        }
+
+        function onHandResults(results) {
+            const trackHand1 = document.getElementById('status-hand-1');
+            const trackHand2 = document.getElementById('status-hand-2');
+            
+            let driveHandLandmarks = null;
+            let triggerHandLandmarks = null;
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                // FIXED MIRROR SORTING: 
+                // Under scaleX(-1), your physical right hand falls into the lower half of the screen array coordinate workspace.
+                let sortedHands = [...results.multiHandLandmarks].sort((a, b) => a[0].x - b[0].x);
+                
+                if (sortedHands.length === 1) {
+                    if (sortedHands[0][0].x < 0.5) driveHandLandmarks = sortedHands[0];
+                    else triggerHandLandmarks = sortedHands[0];
+                } else {
+                    driveHandLandmarks = sortedHands[0];   // Physical Right Hand
+                    triggerHandLandmarks = sortedHands[1]; // Physical Left Hand
+                }
+            }
+
+            if (driveHandLandmarks) {
+                trackHand1.innerText = "Active"; trackHand1.className = "font-bold text-emerald-400";
+
+                if (!isLocked && gameActive) {
+                    const tip = driveHandLandmarks[8], wrist = driveHandLandmarks[0], mcp = driveHandLandmarks[5];
+
+                    const handScale = Math.hypot(mcp.x - wrist.x, mcp.y - wrist.y);
+
+                    const minS = 0.10, maxS = 0.28;
+                    const normScale = Math.min(Math.max((handScale - minS) / (maxS - minS), 0), 1);
+                    const targetZ = -3.2 + (normScale * 4.2);
+
+                    // Map the fingertip's actual screen position to the world point
+                    // at this depth, so the car lands exactly under the finger
+                    // instead of at a fixed offset.
+                    const worldPoint = landmarkToWorldAtDepth(tip, targetZ);
+
+                    car.position.x += (worldPoint.x - car.position.x) * 0.25;
+                    car.position.y += (worldPoint.y - car.position.y) * 0.25;
+                    car.position.z += (targetZ - car.position.z) * 0.25;
+
+                    // REAL-TIME WHEEL STEERING MODEL
+                    // Twisting your wrist (like a steering wheel) rotates the hand around the
+                    // forearm axis. The wrist->knuckle vector sits ON that axis, so it barely
+                    // moves when you twist (like the tip of a spinning pencil) - that's why
+                    // rotation wasn't responding. The palm-width vector (index knuckle -> pinky
+                    // knuckle) is perpendicular to that axis, so it sweeps strongly when you
+                    // twist, just like the rim of a real steering wheel.
+                    const idxMcp = driveHandLandmarks[5];
+                    const pinkyMcp = driveHandLandmarks[17];
+
+                    // Mirror the X component to match the mirrored video the user sees
+                    const steerDX = idxMcp.x - pinkyMcp.x;
+                    const steerDY = pinkyMcp.y - idxMcp.y;
+                    const steeringAngle = Math.atan2(steerDY, steerDX);
+
+                    if (prevSteeringAngle === null) {
+                        // First frame with a newly-detected hand: just calibrate, don't jump
+                        prevSteeringAngle = steeringAngle;
+                    } else {
+                        let angleDelta = steeringAngle - prevSteeringAngle;
+                        while (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
+                        while (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
+
+                        car.rotation.y += angleDelta * 1.4; // steering sensitivity
+                        prevSteeringAngle = steeringAngle;
+                    }
+
+                    if (!prevIndexPosition) playSound('pop');
+                    prevIndexPosition = true;
+
+                    targetAreaRing.position.x = car.position.x;
+                    targetAreaRing.position.z = car.position.z;
+
+                    const zone = computeCurrentPreposition();
+                    const hud = document.getElementById('status-current-zone');
+                    hud.innerText = zone.toUpperCase();
+                    hud.className = (zone === currentTarget) ? "font-bold text-emerald-400 animate-pulse" : "font-bold text-cyan-400";
+                }
+            } else {
+                trackHand1.innerText = "Searching..."; trackHand1.className = "font-bold text-yellow-400";
+                prevSteeringAngle = null;
+            }
+
+            if (triggerHandLandmarks) {
+                if (triggerHandFirstSeenAt === null) triggerHandFirstSeenAt = performance.now();
+                const heldMs = performance.now() - triggerHandFirstSeenAt;
+                const holdRatio = Math.min(heldMs / TRIGGER_HOLD_MS, 1);
+
+                if (holdRatio >= 1) {
+                    trackHand2.innerText = "DETECTED"; trackHand2.className = "font-bold text-emerald-400 animate-pulse";
+                    if (!isLocked && gameActive) triggerCheckAction();
+                } else {
+                    trackHand2.innerText = `Hold... ${Math.round(holdRatio * 100)}%`;
+                    trackHand2.className = "font-bold text-yellow-400";
+                }
+            } else {
+                trackHand2.innerText = "Not Seen"; trackHand2.className = "font-bold text-slate-500";
+                triggerHandFirstSeenAt = null;
+            }
+        }
+
+        function triggerCheckAction() {
+            isLocked = true;
+            document.getElementById('guide-message').innerText = "Checking final placement...";
+            setTimeout(() => { evaluateResult(computeCurrentPreposition()); }, 600);
+        }
+
+        function evaluateResult(finalZone) {
+            gameActive = false;
+            const isCorrect = (finalZone === currentTarget);
+            const modal = document.getElementById('feedback-modal');
+            const fbEmoji = document.getElementById('feedback-emoji');
+            const fbTitle = document.getElementById('feedback-title');
+            const fbDesc = document.getElementById('feedback-desc');
+            const fbBtn = document.getElementById('feedback-btn');
+
+            if (isCorrect) {
+                streak++; totalCount++; playSound('success');
+                fbEmoji.innerText = "🎉"; fbTitle.innerText = "Excellent Job!";
+                fbTitle.className = "text-3xl font-black text-emerald-400 mb-2";
+                fbDesc.innerHTML = `The Toy Car is exactly <b>${currentTarget.toUpperCase()}</b> the stilt house.`;
+                fbBtn.className = "w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl font-bold text-white shadow-lg pointer-events-auto";
+                fbBtn.innerText = "Next Challenge ➔";
+                speakText(`Great job! The car is ${currentTarget} the house.`);
+            } else {
+                streak = 0; playSound('failure');
+                fbEmoji.innerText = "❌"; fbTitle.innerText = "Not Quite!";
+                fbTitle.className = "text-3xl font-black text-rose-400 mb-2";
+                let readable = finalZone === 'out of bounds' ? 'outside' : finalZone;
+                fbDesc.innerHTML = `You put the car <b>${readable.toUpperCase()}</b>, but the goal was <b>${currentTarget.toUpperCase()}</b> the house.`;
+                fbBtn.className = "w-full py-4 bg-gradient-to-r from-rose-500 to-red-600 rounded-2xl font-bold text-white shadow-lg pointer-events-auto";
+                fbBtn.innerText = "Try Again ➔";
+                speakText(`That is ${readable} the house. Let's try again.`);
+            }
+
+            document.getElementById('streak-count').innerText = streak;
+            document.getElementById('total-count').innerText = totalCount;
+            modal.classList.remove('hidden');
+        }
+
+        function nextRound(skip = false) {
+            if (skip) { streak = 0; document.getElementById('streak-count').innerText = streak; }
+            let nextZone = currentTarget;
+            while (nextZone === currentTarget) {
+                nextZone = prepositions[Math.floor(Math.random() * prepositions.length)];
+            }
+            currentTarget = nextZone;
+
+            document.getElementById('target-preposition').innerText = currentTarget.toUpperCase();
+            document.getElementById('target-guide').innerText = targetGuides[currentTarget];
+            document.getElementById('guide-message').innerText = `Goal: Place the car ${currentTarget.toUpperCase()} the house.`;
+
+            car.position.set(1.1, -1.0, -0.5); car.rotation.set(0, 0, 0);
+            targetAreaRing.position.set(1.1, -1.18, -0.5);
+            prevIndexPosition = null; prevSteeringAngle = null; triggerHandFirstSeenAt = null; isLocked = false; gameActive = true;
+            document.getElementById('feedback-modal').classList.add('hidden');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            if (!gameActive) nextRound();
+        }
+
+        let wasActiveBeforeQr = true;
+        function openQrModal() {
+            wasActiveBeforeQr = gameActive;
+            gameActive = false;
+            document.getElementById('qr-modal').classList.remove('hidden');
+        }
+
+        function closeQrModal() {
+            document.getElementById('qr-modal').classList.add('hidden');
+            gameActive = wasActiveBeforeQr;
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = 1.0;
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        function speakInstruction() { speakText(`Place the toy car ${currentTarget} the stilt house.`); }
+
+        window.onload = () => {
+            init3D();
+            initMediaPipe();
+            nextRound();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (targetAreaRing) targetAreaRing.rotation.z += 0.015;
+                
+                renderer.render(scene, camera);
+                
+                if (minimapRenderer && minimapCamera) {
+                    minimapRenderer.render(scene, minimapCamera);
+                }
+            }
+            animate();
+        };
+    </script>
+</body>
+</html>
