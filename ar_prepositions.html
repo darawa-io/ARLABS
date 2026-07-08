@@ -233,6 +233,8 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
             container.appendChild(renderer.domElement);
 
             const minimapContainer = document.getElementById('minimap-container');
@@ -245,71 +247,141 @@
             minimapRenderer.setClearColor(0x020617, 1); 
             minimapContainer.appendChild(minimapRenderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+            // Soft sky/ground ambient gradient instead of flat fill light
+            const hemiLight = new THREE.HemisphereLight(0xbfd6ff, 0x3a2a1a, 0.55);
+            scene.add(hemiLight);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.28);
             scene.add(ambientLight);
 
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
-            dirLight.position.set(5, 10, 6);
+            const dirLight = new THREE.DirectionalLight(0xfff4e0, 1.1);
+            dirLight.position.set(4, 8, 5);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.set(1024, 1024);
+            dirLight.shadow.camera.left = -4;
+            dirLight.shadow.camera.right = 4;
+            dirLight.shadow.camera.top = 4;
+            dirLight.shadow.camera.bottom = -4;
+            dirLight.shadow.camera.near = 1;
+            dirLight.shadow.camera.far = 20;
+            dirLight.shadow.bias = -0.0025;
             scene.add(dirLight);
+
+            // Soft cool fill light from the opposite side so shadowed faces aren't pitch black
+            const fillLight = new THREE.DirectionalLight(0x9ec5ff, 0.3);
+            fillLight.position.set(-5, 3, -4);
+            scene.add(fillLight);
 
             const gridHelper = new THREE.GridHelper(10, 20, 0x3b82f6, 0x1e293b);
             gridHelper.position.y = -1.2;
             scene.add(gridHelper);
 
             const roadGeo = new THREE.PlaneGeometry(10, 1.4);
-            const roadMat = new THREE.MeshBasicMaterial({ color: 0x0f172a, side: THREE.DoubleSide });
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.95 });
             const road = new THREE.Mesh(roadGeo, roadMat);
-            road.rotation.x = Math.PI / 2;
-            road.position.set(0, -1.19, -0.1); 
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(0, -1.19, -0.1);
+            road.receiveShadow = true;
             scene.add(road);
 
             house = new THREE.Group();
             house.position.set(0, -1.2, -1.8); 
 
-            const stiltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
-            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
+            const stiltGeo = new THREE.CylinderGeometry(0.045, 0.05, 0.7, 12);
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 });
+            const footGeo = new THREE.BoxGeometry(0.16, 0.03, 0.16);
             const stiltCoords = [{x: -0.8, z: -0.5}, {x: 0.8, z: -0.5}, {x: -0.8, z: 0.5}, {x: 0.8, z: 0.5}];
             stiltCoords.forEach(c => {
                 const stilt = new THREE.Mesh(stiltGeo, woodMat);
                 stilt.position.set(c.x, 0.35, c.z);
+                stilt.castShadow = true; stilt.receiveShadow = true;
                 house.add(stilt);
+                const foot = new THREE.Mesh(footGeo, woodMat);
+                foot.position.set(c.x, 0.015, c.z);
+                foot.castShadow = true; foot.receiveShadow = true;
+                house.add(foot);
             });
 
             const floorGeo = new THREE.BoxGeometry(1.8, 0.08, 1.2);
-            const deckMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.5 });
+            const deckMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.65 });
             const floorDeck = new THREE.Mesh(floorGeo, deckMat);
             floorDeck.position.y = 0.7;
+            floorDeck.castShadow = true; floorDeck.receiveShadow = true;
             house.add(floorDeck);
 
-            const wallMat = new THREE.MeshStandardMaterial({ 
-                color: 0x38bdf8, 
-                roughness: 0.5,
-                side: THREE.DoubleSide
+            // Deck railing (posts + top rail) around the porch for a real stilt-house feel
+            const railPostGeo = new THREE.CylinderGeometry(0.014, 0.014, 0.26, 8);
+            const railTopGeoLong = new THREE.BoxGeometry(1.8, 0.025, 0.025);
+            const railTopGeoShort = new THREE.BoxGeometry(0.025, 0.025, 1.2);
+            const railY = 0.86;
+            [-0.88, -0.29, 0.29, 0.88].forEach(x => {
+                const p = new THREE.Mesh(railPostGeo, woodMat); p.position.set(x, railY - 0.13, -0.58);
+                p.castShadow = true; house.add(p);
             });
+            [-0.88, -0.29, 0.29, 0.88].forEach(x => {
+                const p = new THREE.Mesh(railPostGeo, woodMat); p.position.set(x, railY - 0.13, 0.58);
+                p.castShadow = true; house.add(p);
+            });
+            const railBack = new THREE.Mesh(railTopGeoLong, woodMat); railBack.position.set(0, railY, -0.58); railBack.castShadow = true; house.add(railBack);
+            const railLeft = new THREE.Mesh(railTopGeoShort, woodMat); railLeft.position.set(-0.88, railY, 0); railLeft.castShadow = true; house.add(railLeft);
+            const railRight = new THREE.Mesh(railTopGeoShort, woodMat); railRight.position.set(0.88, railY, 0); railRight.castShadow = true; house.add(railRight);
 
-            const sideWallGeo = new THREE.PlaneGeometry(1.2, 0.8);
-            const leftWall = new THREE.Mesh(sideWallGeo, wallMat); leftWall.rotation.y = Math.PI / 2; leftWall.position.set(-0.9, 1.1, 0); house.add(leftWall);
-            const rightWall = new THREE.Mesh(sideWallGeo, wallMat); rightWall.rotation.y = -Math.PI / 2; rightWall.position.set(0.9, 1.1, 0); house.add(rightWall);
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.75 });
+            const trimMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6 });
+            const glassMat = new THREE.MeshPhysicalMaterial({ color: 0xbae6fd, roughness: 0.1, metalness: 0, transparent: true, opacity: 0.55, clearcoat: 0.6 });
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.55 });
 
-            const backWallGeo = new THREE.PlaneGeometry(1.8, 0.8);
+            const wallThickness = 0.05;
+            const sideWallGeo = new THREE.BoxGeometry(wallThickness, 0.8, 1.2);
+            const leftWall = new THREE.Mesh(sideWallGeo, wallMat); leftWall.position.set(-0.9, 1.1, 0); leftWall.castShadow = true; leftWall.receiveShadow = true; house.add(leftWall);
+            const rightWall = new THREE.Mesh(sideWallGeo, wallMat); rightWall.position.set(0.9, 1.1, 0); rightWall.castShadow = true; rightWall.receiveShadow = true; house.add(rightWall);
+
+            const backWallGeo = new THREE.BoxGeometry(1.8, 0.8, wallThickness);
             const backWall = new THREE.Mesh(backWallGeo, wallMat);
             backWall.position.set(0, 1.1, -0.6);
+            backWall.castShadow = true; backWall.receiveShadow = true;
             house.add(backWall);
 
-            const frontWallGeoLeft = new THREE.PlaneGeometry(0.6, 0.8);
-            const frontWallLeft = new THREE.Mesh(frontWallGeoLeft, wallMat); frontWallLeft.position.set(-0.6, 1.1, 0.6); house.add(frontWallLeft);
-            const frontWallGeoRight = new THREE.PlaneGeometry(0.6, 0.8);
-            const frontWallRight = new THREE.Mesh(frontWallGeoRight, wallMat); frontWallRight.position.set(0.6, 1.1, 0.6); house.add(frontWallRight);
+            const frontWallGeoLeft = new THREE.BoxGeometry(0.6, 0.8, wallThickness);
+            const frontWallLeft = new THREE.Mesh(frontWallGeoLeft, wallMat); frontWallLeft.position.set(-0.6, 1.1, 0.6); frontWallLeft.castShadow = true; frontWallLeft.receiveShadow = true; house.add(frontWallLeft);
+            const frontWallGeoRight = new THREE.BoxGeometry(0.6, 0.8, wallThickness);
+            const frontWallRight = new THREE.Mesh(frontWallGeoRight, wallMat); frontWallRight.position.set(0.6, 1.1, 0.6); frontWallRight.castShadow = true; frontWallRight.receiveShadow = true; house.add(frontWallRight);
+
+            // Front door (between the two front wall segments, above the stairs)
+            const doorGeo = new THREE.BoxGeometry(0.32, 0.62, 0.04);
+            const door = new THREE.Mesh(doorGeo, doorMat);
+            door.position.set(0, 0.91, 0.62);
+            door.castShadow = true;
+            house.add(door);
+            const doorknobGeo = new THREE.SphereGeometry(0.014, 8, 8);
+            const doorknobMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3, metalness: 0.8 });
+            const doorknob = new THREE.Mesh(doorknobGeo, doorknobMat); doorknob.position.set(0.11, 0.9, 0.65); house.add(doorknob);
+
+            // Windows on the side walls with a white trim frame
+            function addWindow(x, y, z, rotY) {
+                const frame = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.3, 0.03), trimMat);
+                frame.position.set(x, y, z); frame.rotation.y = rotY; frame.castShadow = true;
+                house.add(frame);
+                const pane = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.015), glassMat);
+                pane.position.set(x + Math.sin(rotY) * 0.02, y, z + Math.cos(rotY) * 0.02);
+                pane.rotation.y = rotY;
+                house.add(pane);
+            }
+            addWindow(-0.895, 1.15, 0.15, Math.PI / 2);
+            addWindow(-0.895, 1.15, -0.25, Math.PI / 2);
+            addWindow(0.895, 1.15, 0, -Math.PI / 2);
 
             const stairStepGeo = new THREE.BoxGeometry(0.6, 0.1, 0.2);
             for (let i = 0; i < 3; i++) {
                 const step = new THREE.Mesh(stairStepGeo, woodMat);
                 step.position.set(0, 0.55 - (i * 0.15), 0.7 + (i * 0.18));
+                step.castShadow = true; step.receiveShadow = true;
                 house.add(step);
             }
 
+            // Roof with a slight overhang beyond the walls (real roofs eave out) plus a ridge cap
             const roofGeometry = new THREE.BufferGeometry();
-            const w = 0.9, d = 0.6, h = 0.55; 
+            const w = 0.98, d = 0.68, h = 0.55; 
             const vertices = new Float32Array([
                 -w, 1.5,  d,   w, 1.5,  d,   0, 1.5 + h, 0,
                  w, 1.5, -d,  -w, 1.5, -d,   0, 1.5 + h, 0,
@@ -320,32 +392,108 @@
             ]);
             roofGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
             roofGeometry.computeVertexNormals();
-            const roofMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4, side: THREE.DoubleSide });
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.55, side: THREE.DoubleSide });
             const roof = new THREE.Mesh(roofGeometry, roofMat);
+            roof.castShadow = true; roof.receiveShadow = true;
             house.add(roof);
+
+            // Small finial at the pyramid roof's apex (a sensible detail for this shape,
+            // since a 4-sided pyramid meets at a single point, not a ridge line)
+            const finialGeo = new THREE.SphereGeometry(0.035, 10, 10);
+            const finialMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.5 });
+            const finial = new THREE.Mesh(finialGeo, finialMat);
+            finial.position.set(0, 1.5 + h + 0.02, 0);
+            house.add(finial);
 
             scene.add(house);
 
+            // --- CAR ---
             car = new THREE.Group();
-            const bodyGeo = new THREE.BoxGeometry(0.5, 0.2, 0.28);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.2, metalness: 0.6 });
-            const mainBody = new THREE.Mesh(bodyGeo, bodyMat); mainBody.position.y = 0.12; car.add(mainBody);
 
-            const domeGeo = new THREE.BoxGeometry(0.28, 0.15, 0.24);
-            const domeMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
-            const dome = new THREE.Mesh(domeGeo, domeMat); dome.position.set(-0.04, 0.28, 0); car.add(dome);
+            const carPaint = new THREE.MeshPhysicalMaterial({ color: 0x2563eb, roughness: 0.25, metalness: 0.4, clearcoat: 0.9, clearcoatRoughness: 0.15 });
+            const bumperMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
+            const glassCarMat = new THREE.MeshPhysicalMaterial({ color: 0x0f172a, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.75, clearcoat: 1 });
+            const tireMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.95 });
+            const rimMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.3, metalness: 0.85 });
+            const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.9 });
 
-            const wheelGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.05, 12);
-            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-            const wheelCoords = [{x: -0.16, z: -0.15}, {x: 0.16, z: -0.15}, {x: -0.16, z: 0.15}, {x: 0.16, z: 0.15}];
+            // Lower chassis (widest part, sits low over the wheels)
+            const lowerBodyGeo = new THREE.BoxGeometry(0.5, 0.12, 0.3);
+            const lowerBody = new THREE.Mesh(lowerBodyGeo, carPaint); lowerBody.position.y = 0.1; lowerBody.castShadow = true; lowerBody.receiveShadow = true; car.add(lowerBody);
+
+            // Upper body / hood-trunk deck (slightly narrower, gives a stepped sedan silhouette)
+            const upperBodyGeo = new THREE.BoxGeometry(0.46, 0.09, 0.27);
+            const upperBody = new THREE.Mesh(upperBodyGeo, carPaint); upperBody.position.y = 0.195; upperBody.castShadow = true; car.add(upperBody);
+
+            // Cabin (glasshouse) - narrower still and set back slightly, tapered via scale on top
+            const cabinGeo = new THREE.BoxGeometry(0.26, 0.14, 0.24);
+            const cabin = new THREE.Mesh(cabinGeo, carPaint); cabin.position.set(-0.03, 0.31, 0); cabin.castShadow = true; car.add(cabin);
+            cabin.scale.set(1, 1, 0.92);
+
+            // Windshield + rear + side glass wrapped around the cabin
+            const windshieldGeo = new THREE.BoxGeometry(0.03, 0.12, 0.22);
+            const windshield = new THREE.Mesh(windshieldGeo, glassCarMat);
+            windshield.position.set(0.1, 0.3, 0);
+            windshield.rotation.z = -0.55;
+            car.add(windshield);
+            const rearWindowGeo = new THREE.BoxGeometry(0.03, 0.1, 0.22);
+            const rearWindow = new THREE.Mesh(rearWindowGeo, glassCarMat);
+            rearWindow.position.set(-0.16, 0.3, 0);
+            rearWindow.rotation.z = 0.5;
+            car.add(rearWindow);
+            const sideGlassGeo = new THREE.BoxGeometry(0.2, 0.09, 0.01);
+            const sideGlassL = new THREE.Mesh(sideGlassGeo, glassCarMat); sideGlassL.position.set(-0.03, 0.32, 0.125); car.add(sideGlassL);
+            const sideGlassR = new THREE.Mesh(sideGlassGeo, glassCarMat); sideGlassR.position.set(-0.03, 0.32, -0.125); car.add(sideGlassR);
+
+            // Bumpers front & rear
+            const bumperGeo = new THREE.BoxGeometry(0.06, 0.09, 0.3);
+            const frontBumper = new THREE.Mesh(bumperGeo, bumperMat); frontBumper.position.set(0.26, 0.09, 0); frontBumper.castShadow = true; car.add(frontBumper);
+            const rearBumper = new THREE.Mesh(bumperGeo, bumperMat); rearBumper.position.set(-0.26, 0.09, 0); rearBumper.castShadow = true; car.add(rearBumper);
+
+            // Grille
+            const grilleGeo = new THREE.BoxGeometry(0.02, 0.05, 0.18);
+            const grille = new THREE.Mesh(grilleGeo, bumperMat); grille.position.set(0.295, 0.12, 0); car.add(grille);
+
+            // Side mirrors
+            const mirrorGeo = new THREE.BoxGeometry(0.03, 0.025, 0.04);
+            const mirrorL = new THREE.Mesh(mirrorGeo, carPaint); mirrorL.position.set(0.06, 0.27, 0.15); car.add(mirrorL);
+            const mirrorR = new THREE.Mesh(mirrorGeo, carPaint); mirrorR.position.set(0.06, 0.27, -0.15); car.add(mirrorR);
+
+            // Wheels: tire (torus) + rim (cylinder hubcap) for real depth instead of a flat cylinder
+            const tireGeo = new THREE.TorusGeometry(0.075, 0.032, 10, 20);
+            const rimGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.05, 16);
+            const wheelCoords = [{x: -0.16, z: -0.16}, {x: 0.16, z: -0.16}, {x: -0.16, z: 0.16}, {x: 0.16, z: 0.16}];
             wheelCoords.forEach(c => {
-                const wheel = new THREE.Mesh(wheelGeo, wheelMat); wheel.rotation.x = Math.PI / 2; wheel.position.set(c.x, 0.08, c.z); car.add(wheel);
+                const tire = new THREE.Mesh(tireGeo, tireMat);
+                tire.position.set(c.x, 0.08, c.z);
+                // A torus's axle already points along Z by default - that's exactly the
+                // car's left-right axis, so no extra rotation is needed here (unlike the
+                // cylinder rim below, whose default axle points along Y and does need one).
+                tire.castShadow = true;
+                car.add(tire);
+
+                const rim = new THREE.Mesh(rimGeo, rimMat);
+                rim.position.set(c.x, 0.08, c.z);
+                rim.rotation.x = Math.PI / 2;
+                rim.castShadow = true;
+                car.add(rim);
             });
 
-            const lightGeo = new THREE.SphereGeometry(0.03, 8, 8);
-            const lightMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
-            const leftHeadlight = new THREE.Mesh(lightGeo, lightMat); leftHeadlight.position.set(0.25, 0.15, 0.08); car.add(leftHeadlight);
-            const rightHeadlight = new THREE.Mesh(lightGeo, lightMat); rightHeadlight.position.set(0.25, 0.15, -0.08); car.add(rightHeadlight);
+            // Headlights with a chrome bezel and a slight glow
+            const lightGeo = new THREE.SphereGeometry(0.03, 12, 12);
+            const lightMat = new THREE.MeshStandardMaterial({ color: 0xfef9c3, emissive: 0xfde047, emissiveIntensity: 0.6, roughness: 0.2 });
+            const bezelGeo = new THREE.TorusGeometry(0.035, 0.008, 8, 16);
+            [0.08, -0.08].forEach(z => {
+                const headlight = new THREE.Mesh(lightGeo, lightMat); headlight.position.set(0.25, 0.15, z); car.add(headlight);
+                const bezel = new THREE.Mesh(bezelGeo, chromeMat); bezel.position.set(0.25, 0.15, z); bezel.rotation.y = Math.PI / 2; car.add(bezel);
+            });
+
+            // Taillights
+            const tailLightGeo = new THREE.BoxGeometry(0.02, 0.03, 0.05);
+            const tailLightMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, emissive: 0x7f1d1d, emissiveIntensity: 0.4 });
+            [0.09, -0.09].forEach(z => {
+                const tail = new THREE.Mesh(tailLightGeo, tailLightMat); tail.position.set(-0.29, 0.15, z); car.add(tail);
+            });
 
             car.position.set(1.1, -1.0, -0.5);
             scene.add(car);
@@ -501,9 +649,9 @@
                     // instead of at a fixed offset.
                     const worldPoint = landmarkToWorldAtDepth(tip, targetZ);
 
-                    car.position.x += (worldPoint.x - car.position.x) * 0.25;
-                    car.position.y += (worldPoint.y - car.position.y) * 0.25;
-                    car.position.z += (targetZ - car.position.z) * 0.25;
+                    car.position.x += (worldPoint.x - car.position.x) * 0.55;
+                    car.position.y += (worldPoint.y - car.position.y) * 0.55;
+                    car.position.z += (targetZ - car.position.z) * 0.35;
 
                     // REAL-TIME WHEEL STEERING MODEL
                     // Twisting your wrist (like a steering wheel) rotates the hand around the

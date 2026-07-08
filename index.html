@@ -710,7 +710,40 @@
             const feedbackModal = document.getElementById('feedbackModal');
             if (event.target == markerModal) toggleMarkerModal(false);
             if (event.target == feedbackModal) toggleFeedbackModal(false);
+            if (event.target == document.getElementById('qrModal')) document.getElementById('qrModal').classList.remove('show');
         }
     </script>
+
+    <!-- QR button -->
+    <style>
+        #qr-btn{position:fixed;bottom:20px;right:20px;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--primary-gold);background:var(--primary-blue);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:all .2s;color:var(--primary-gold);}
+        #qr-btn:hover{background:#0d5c9e;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+        #qr-btn svg{width:22px;height:22px;}
+        #qrModal{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px;}
+        #qrModal.show{display:flex;}
+        #qrModal-box{background:#fff;border-radius:24px;padding:28px 24px 22px;text-align:center;position:relative;max-width:260px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+        #qrModal-box h3{font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;color:var(--primary-blue);text-transform:uppercase;margin-bottom:14px;font-weight:700;}
+        #qrModal-box img{width:168px;height:168px;border-radius:10px;border:2px solid #e8d5b0;display:block;margin:0 auto 12px;}
+        #qrModal-box p{font-size:9px;color:#888;letter-spacing:1px;word-break:break-all;line-height:1.7;}
+        #qrModal-close{position:absolute;top:10px;right:14px;background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;line-height:1;padding:2px 4px;}
+        #qrModal-close:hover{color:var(--primary-blue);}
+    </style>
+
+    <button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code" onclick="document.getElementById('qrModal').classList.add('show')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+            <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+        </svg>
+    </button>
+
+    <div id="qrModal">
+        <div id="qrModal-box">
+            <button id="qrModal-close" onclick="document.getElementById('qrModal').classList.remove('show')">&#x2715;</button>
+            <h3>Open on device</h3>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=0A4A7F&bgcolor=ffffff&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2F" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2F'" />
+            <p>darawa-io.github.io/ARLABS/</p>
+        </div>
+    </div>
 </body>
 </html>
