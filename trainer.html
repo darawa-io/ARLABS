@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TempoFlow - Lagree & Reformer Pilates Trainer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090A0C',
+                        cardBg: '#13151A',
+                        cardHover: '#1C1F26',
+                        neonGreen: '#00E676',
+                        neonGlow: 'rgba(0, 230, 118, 0.25)',
+                        darkBorder: '#232730',
+                        lagreePurple: '#A855F7',
+                        pilatesCyan: '#06B6D4'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: #090A0C;
+            color: #F3F4F6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Pulse Ring Glow Animation */
+        .pulse-ring {
+            transition: transform 0.08s ease-out, border-color 0.08s ease-out, box-shadow 0.08s ease-out;
+        }
+        
+        .pulse-active {
+            transform: scale(1.05);
+            border-color: #00E676 !important;
+            box-shadow: 0 0 35px rgba(0, 230, 118, 0.6), inset 0 0 15px rgba(0, 230, 118, 0.4);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090A0C;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232730;
+            border-radius: 4px;
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: #232730;
+            height: 8px;
+            border-radius: 4px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #00E676;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+            transition: transform 0.1s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        .safe-bottom {
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+
+        .btn-press:active {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between max-w-md mx-auto relative border-x border-darkBorder/40 shadow-2xl">
+
+    <!-- TOP HEADER -->
+    <header class="flex items-center justify-between px-5 pt-5 pb-3 sticky top-0 bg-darkBg/95 backdrop-blur-md z-30 border-b border-darkBorder/40">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-neonGreen/10 border border-neonGreen/40 flex items-center justify-center">
+                <svg class="w-4 h-4 text-neonGreen" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-gray-200 to-neonGreen bg-clip-text text-transparent leading-none">TempoFlow</h1>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Lagree & Reformer Engine</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="soundToggleBtn" class="p-2 rounded-xl bg-cardBg border border-darkBorder text-gray-300 hover:text-white btn-press" title="Mute/Unmute Audio">
+                <svg id="soundIcon" class="w-5 h-5 text-neonGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                </svg>
+            </button>
+            <button onclick="switchTab('library')" class="p-2 rounded-xl bg-cardBg border border-darkBorder text-gray-300 hover:text-white btn-press" title="Exercise Library">
+                <svg class="w-5 h-5 text-pilatesCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT VIEW AREA -->
+    <main class="flex-1 px-4 py-3 overflow-y-auto pb-24">
+
+        <!-- TAB 1: METRONOME ENGINE (DEFAULT) -->
+        <section id="tabMetronome" class="space-y-5">
+            
+            <!-- Tempo Mode Selector Badges -->
+            <div class="grid grid-cols-3 gap-1.5 bg-cardBg p-1.5 rounded-2xl border border-darkBorder">
+                <button onclick="setTempoPreset('standard')" id="btnPresetStandard" class="py-2 text-[11px] font-semibold rounded-xl bg-neonGreen text-black transition-all">
+                    Standard (120 BPM)
+                </button>
+                <button onclick="setTempoPreset('lagree44')" id="btnPresetLagree" class="py-2 text-[11px] font-semibold rounded-xl text-gray-400 hover:text-white transition-all">
+                    Lagree 4s/4s (60 BPM)
+                </button>
+                <button onclick="setTempoPreset('pilates100')" id="btnPresetPilates" class="py-2 text-[11px] font-semibold rounded-xl text-gray-400 hover:text-white transition-all">
+                    Pilates 100 (100 BPM)
+                </button>
+            </div>
+
+            <!-- Quick Routine Selector -->
+            <div class="bg-cardBg p-3 rounded-2xl border border-darkBorder flex items-center justify-between gap-2 shadow-md">
+                <label class="text-xs font-bold text-gray-300 flex items-center gap-1.5 whitespace-nowrap">
+                    <svg class="w-4 h-4 text-neonGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    Quick Flow:
+                </label>
+                <select id="quickWorkoutDropdown" onchange="handleQuickWorkoutSelect(this.value)" class="w-full bg-darkBg text-xs text-neonGreen font-semibold border border-darkBorder rounded-xl px-3 py-2 focus:outline-none focus:border-neonGreen cursor-pointer">
+                    <option value="">-- Launch Routine --</option>
+                </select>
+            </div>
+
+            <!-- Central Visual Ring Display -->
+            <div class="flex flex-col items-center justify-center my-2 relative">
+                <!-- Glowing Outer Pulse Ring -->
+                <div id="pulseRing" class="pulse-ring w-56 h-56 rounded-full border-4 border-darkBorder bg-cardBg/80 flex flex-col items-center justify-center relative shadow-xl">
+                    
+                    <!-- Sub-beat Indicator Dots -->
+                    <div id="beatDotsContainer" class="flex gap-2 absolute top-6">
+                        <!-- JS injected dots -->
+                    </div>
+
+                    <!-- BPM Readout -->
+                    <div class="text-center mt-2">
+                        <span id="bpmDisplay" class="text-6xl font-black tracking-tight text-white block">120</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-neonGreen">BPM</span>
+                    </div>
+
+                    <!-- Mode Info Subtext -->
+                    <div id="tempoDescriptor" class="text-[11px] text-gray-300 mt-2 font-medium bg-darkBg/90 px-3 py-1 rounded-full border border-darkBorder/60">
+                        4 Beats per Bar (4s Count)
+                    </div>
+                </div>
+            </div>
+
+            <!-- BPM Slider & Fine Controls -->
+            <div class="bg-cardBg p-4 rounded-2xl border border-darkBorder space-y-4 shadow-lg">
+                <div class="flex items-center justify-between text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                    <span>30 BPM</span>
+                    <span id="tempoLabel" class="text-white">120 BPM = 0.50s / beat</span>
+                    <span>240 BPM</span>
+                </div>
+
+                <input type="range" id="bpmSlider" min="30" max="240" value="120" class="w-full cursor-pointer">
+
+                <div class="flex items-center justify-between gap-2 pt-1">
+                    <button onclick="adjustBpm(-5)" class="flex-1 py-2 rounded-xl bg-darkBg border border-darkBorder text-xs font-bold text-gray-300 hover:text-white btn-press">-5</button>
+                    <button onclick="adjustBpm(-1)" class="flex-1 py-2 rounded-xl bg-darkBg border border-darkBorder text-xs font-bold text-gray-300 hover:text-white btn-press">-1</button>
+                    <button onclick="adjustBpm(+1)" class="flex-1 py-2 rounded-xl bg-darkBg border border-darkBorder text-xs font-bold text-gray-300 hover:text-white btn-press">+1</button>
+                    <button onclick="adjustBpm(+5)" class="flex-1 py-2 rounded-xl bg-darkBg border border-darkBorder text-xs font-bold text-gray-300 hover:text-white btn-press">+5</button>
+                </div>
+            </div>
+
+            <!-- Primary Action Buttons -->
+            <div class="grid grid-cols-2 gap-3">
+                <button id="togglePlayBtn" onclick="togglePlay()" class="py-4 px-6 rounded-2xl bg-neonGreen text-black font-extrabold text-lg flex items-center justify-center gap-2 shadow-lg shadow-neonGlow btn-press transition-all">
+                    <svg id="playIcon" class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <span id="playBtnText">START</span>
+                </button>
+
+                <button id="tapTempoBtn" class="py-4 px-6 rounded-2xl bg-cardBg border border-darkBorder text-white font-extrabold text-sm flex flex-col items-center justify-center btn-press hover:border-neonGreen/50 transition-all">
+                    <span>TAP TEMPO</span>
+                    <span class="text-[10px] text-gray-400 font-normal">Tap beat rhythm</span>
+                </button>
+            </div>
+
+            <!-- Time Signature & Accent Controls -->
+            <div class="bg-cardBg p-4 rounded-2xl border border-darkBorder space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">Time Signature</span>
+                    <div class="flex gap-1.5" id="timeSigContainer">
+                        <button onclick="setTimeSig(2)" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-darkBg border border-darkBorder text-gray-300">2/4</button>
+                        <button onclick="setTimeSig(3)" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-darkBg border border-darkBorder text-gray-300">3/4</button>
+                        <button onclick="setTimeSig(4)" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-neonGreen text-black">4/4</button>
+                        <button onclick="setTimeSig(5)" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-darkBg border border-darkBorder text-gray-300">5/4</button>
+                        <button onclick="setTimeSig(6)" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-darkBg border border-darkBorder text-gray-300">6/8</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-darkBorder/40">
+                    <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">Accent First Beat</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="accentToggle" checked class="sr-only peer" onchange="toggleAccent(this.checked)">
+                        <div class="w-11 h-6 bg-darkBg border border-darkBorder peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neonGreen peer-checked:after:bg-black"></div>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: COMPLETE EXERCISE LIBRARY -->
+        <section id="tabLibrary" class="space-y-4 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Exercise Library</h2>
+                    <p class="text-xs text-gray-400">Lagree & Reformer Pilates catalog</p>
+                </div>
+                <span id="libraryCountBadge" class="text-xs font-bold bg-pilatesCyan/10 text-pilatesCyan px-2.5 py-1 rounded-full border border-pilatesCyan/30">35+ Moves</span>
+            </div>
+
+            <!-- Search & Filter Controls -->
+            <div class="space-y-2">
+                <div class="relative">
+                    <input type="text" id="librarySearchInput" oninput="filterLibrary()" placeholder="Search exercise, muscle, or spring setup..." class="w-full bg-cardBg border border-darkBorder rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-neonGreen">
+                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+
+                <!-- Method Category Pills -->
+                <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <button onclick="setLibraryMethodFilter('all')" class="lib-method-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-neonGreen text-black whitespace-nowrap">All Methods</button>
+                    <button onclick="setLibraryMethodFilter('Lagree')" class="lib-method-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cardBg border border-darkBorder text-gray-300 whitespace-nowrap">Lagree Method</button>
+                    <button onclick="setLibraryMethodFilter('Pilates')" class="lib-method-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cardBg border border-darkBorder text-gray-300 whitespace-nowrap">Reformer Pilates</button>
+                </div>
+
+                <!-- Body Part Target Filter Pills -->
+                <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                    <button onclick="setLibraryBodyFilter('all')" class="lib-body-btn px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-darkBg border border-neonGreen text-neonGreen whitespace-nowrap">All Muscles</button>
+                    <button onclick="setLibraryBodyFilter('Core')" class="lib-body-btn px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-darkBg border border-darkBorder text-gray-400 whitespace-nowrap">Abs & Core</button>
+                    <button onclick="setLibraryBodyFilter('Obliques')" class="lib-body-btn px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-darkBg border border-darkBorder text-gray-400 whitespace-nowrap">Obliques</button>
+                    <button onclick="setLibraryBodyFilter('Lower Body')" class="lib-body-btn px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-darkBg border border-darkBorder text-gray-400 whitespace-nowrap">Legs & Glutes</button>
+                    <button onclick="setLibraryBodyFilter('Upper Body')" class="lib-body-btn px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-darkBg border border-darkBorder text-gray-400 whitespace-nowrap">Upper Body</button>
+                </div>
+            </div>
+
+            <!-- Library Items List -->
+            <div id="libraryContainer" class="space-y-3">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- TAB 3: GUIDED WORKOUT ROUTINES -->
+        <section id="tabWorkouts" class="space-y-4 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Guided Routines</h2>
+                    <p class="text-xs text-gray-400">Structured Lagree & Reformer flow sessions</p>
+                </div>
+                <span class="text-xs font-bold bg-neonGreen/10 text-neonGreen px-2.5 py-1 rounded-full border border-neonGreen/30">Preset & Custom</span>
+            </div>
+
+            <!-- Dropdown Workout Launcher -->
+            <div class="bg-cardBg p-3.5 rounded-2xl border border-darkBorder space-y-1.5 shadow-md">
+                <label for="workoutDropdown" class="text-xs font-bold text-gray-300 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-neonGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                    Quick Launch Routine:
+                </label>
+                <select id="workoutDropdown" onchange="handleDropdownWorkoutLaunch(this.value)" class="w-full bg-darkBg text-xs text-white font-medium border border-darkBorder rounded-xl px-3 py-2.5 focus:outline-none focus:border-neonGreen cursor-pointer">
+                    <option value="">-- Choose Routine to Launch --</option>
+                </select>
+            </div>
+
+            <!-- Category Filter Badges -->
+            <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                <button onclick="filterWorkouts('all')" class="workout-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-neonGreen text-black whitespace-nowrap">All Routines</button>
+                <button onclick="filterWorkouts('lagree')" class="workout-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cardBg border border-darkBorder text-gray-300 whitespace-nowrap">Lagree Method</button>
+                <button onclick="filterWorkouts('pilates')" class="workout-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cardBg border border-darkBorder text-gray-300 whitespace-nowrap">Reformer Pilates</button>
+            </div>
+
+            <!-- Workout Cards Container -->
+            <div id="workoutList" class="space-y-3">
+                <!-- Dynamically Populated by JS -->
+            </div>
+        </section>
+
+        <!-- ACTIVE WORKOUT PLAYER (OVERLAY FULLSCREEN) -->
+        <section id="workoutPlayerView" class="fixed inset-0 bg-darkBg z-50 p-5 flex flex-col justify-between hidden">
+            <!-- Top Workout Header -->
+            <div class="flex items-center justify-between border-b border-darkBorder/60 pb-3">
+                <button onclick="closeWorkoutPlayer()" class="p-2 rounded-xl bg-cardBg text-gray-400 hover:text-white btn-press">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <div class="text-center">
+                    <span id="playerWorkoutTitle" class="text-xs font-bold uppercase tracking-widest text-neonGreen">LAGREE FULL BODY</span>
+                    <div id="playerWorkoutProgress" class="text-xs text-gray-400">Move 1 of 6</div>
+                </div>
+                <div class="w-9"></div>
+            </div>
+
+            <!-- Main Exercise Display -->
+            <div class="flex flex-col items-center text-center space-y-3 my-auto">
+                <div id="playerEquipment" class="inline-flex items-center gap-1.5 bg-cardBg px-3.5 py-1.5 rounded-full border border-darkBorder text-xs font-semibold text-gray-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                    <span>Resistance: 1 Yellow Spring</span>
+                </div>
+
+                <h2 id="playerExerciseName" class="text-3xl font-extrabold text-white tracking-tight leading-tight">
+                    Megaformer Bear
+                </h2>
+
+                <p id="playerExerciseDesc" class="text-xs text-gray-300 max-w-xs leading-relaxed bg-cardBg/60 p-3 rounded-xl border border-darkBorder/60">
+                    Keep spine flat, pull knees under hips for 4 counts, extend slow for 4 counts.
+                </p>
+
+                <!-- Audio Visual Ring for Player -->
+                <div id="playerPulseRing" class="pulse-ring w-44 h-44 rounded-full border-4 border-neonGreen/30 bg-cardBg flex flex-col items-center justify-center my-2 shadow-2xl relative">
+                    <span id="playerTimer" class="text-5xl font-black text-white">01:00</span>
+                    <span id="playerBpmBadge" class="text-xs font-bold text-neonGreen mt-1">60 BPM (4s/4s)</span>
+                </div>
+
+                <div id="playerCue" class="text-xs font-bold text-yellow-400 bg-yellow-400/10 px-3 py-1 rounded-full border border-yellow-400/30 animate-pulse">
+                    Cue: Slow 4-second continuous tension!
+                </div>
+            </div>
+
+            <!-- Bottom Player Controls -->
+            <div class="space-y-4 pt-2">
+                <div class="w-full bg-cardBg h-2 rounded-full overflow-hidden border border-darkBorder">
+                    <div id="playerProgressBar" class="bg-neonGreen h-full transition-all duration-300" style="width: 15%"></div>
+                </div>
+
+                <div class="flex items-center justify-between gap-3">
+                    <button onclick="prevExercise()" class="flex-1 py-3.5 rounded-2xl bg-cardBg border border-darkBorder text-white font-bold text-xs btn-press">
+                        PREV
+                    </button>
+
+                    <button id="playerPlayPauseBtn" onclick="toggleWorkoutPause()" class="flex-2 py-4 px-8 rounded-2xl bg-neonGreen text-black font-extrabold text-base flex items-center justify-center gap-2 shadow-lg shadow-neonGlow btn-press">
+                        <span id="playerPlayText">PAUSE</span>
+                    </button>
+
+                    <button onclick="nextExercise()" class="flex-1 py-3.5 rounded-2xl bg-cardBg border border-darkBorder text-white font-bold text-xs btn-press">
+                        NEXT
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: CUSTOM WORKOUT BUILDER -->
+        <section id="tabBuilder" class="space-y-5 hidden">
+            <div>
+                <h2 class="text-lg font-bold text-white">Custom Workout Builder</h2>
+                <p class="text-xs text-gray-400">Design custom Lagree or Reformer sequences</p>
+            </div>
+
+            <!-- Load Preset Dropdown -->
+            <div class="bg-cardBg p-3.5 rounded-2xl border border-darkBorder space-y-2 shadow-md">
+                <label for="loadTemplateDropdown" class="text-xs font-bold text-neonGreen flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    Clone & Edit Routine Template
+                </label>
+                <select id="loadTemplateDropdown" onchange="loadWorkoutIntoBuilder(this.value)" class="w-full bg-darkBg text-xs text-gray-200 border border-darkBorder rounded-xl px-3 py-2 focus:outline-none focus:border-neonGreen cursor-pointer">
+                    <option value="">-- Choose Existing Routine Template --</option>
+                </select>
+            </div>
+
+            <form id="customWorkoutForm" onsubmit="saveCustomWorkout(event)" class="space-y-4">
+                <div class="bg-cardBg p-4 rounded-2xl border border-darkBorder space-y-3">
+                    <div>
+                        <label class="text-xs font-bold text-gray-300 block mb-1">Workout Name</label>
+                        <input type="text" id="customName" placeholder="e.g. Oblique & Core Burner 20" required class="w-full bg-darkBg border border-darkBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-neonGreen">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-gray-300 block mb-1">Category</label>
+                            <select id="customCategory" class="w-full bg-darkBg border border-darkBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-neonGreen">
+                                <option value="lagree">Lagree Method</option>
+                                <option value="pilates">Reformer Pilates</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-300 block mb-1">Default BPM</label>
+                            <input type="number" id="customDefaultBpm" value="60" min="30" max="180" class="w-full bg-darkBg border border-darkBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-neonGreen">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise List Builder -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">Exercise Move Order</span>
+                        <button type="button" onclick="addCustomMoveInput()" class="text-xs text-neonGreen font-bold hover:underline">+ Add Move</button>
+                    </div>
+
+                    <div id="customMovesList" class="space-y-3">
+                        <!-- JS inserted -->
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-2xl bg-neonGreen text-black font-extrabold text-sm shadow-lg shadow-neonGlow btn-press">
+                    SAVE WORKOUT ROUTINE
+                </button>
+            </form>
+        </section>
+
+        <!-- TAB 5: PROFILE & AUDIO SETTINGS -->
+        <section id="tabProfile" class="space-y-4 hidden">
+            <div class="bg-cardBg p-5 rounded-2xl border border-darkBorder flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-neonGreen/20 border-2 border-neonGreen flex items-center justify-center text-neonGreen font-black text-xl">
+                    TF
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-white">Tempoflow Athlete</h2>
+                    <p class="text-xs text-gray-400">Lagree & Pilates Enthusiast</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-cardBg p-4 rounded-2xl border border-darkBorder text-center">
+                    <span id="statWorkoutsCompleted" class="text-3xl font-extrabold text-neonGreen block">14</span>
+                    <span class="text-xs text-gray-400 font-medium">Workouts Completed</span>
+                </div>
+                <div class="bg-cardBg p-4 rounded-2xl border border-darkBorder text-center">
+                    <span id="statTotalMinutes" class="text-3xl font-extrabold text-white block">240m</span>
+                    <span class="text-xs text-gray-400 font-medium">Time in Slow Flow</span>
+                </div>
+            </div>
+
+            <!-- Audio Settings -->
+            <div class="bg-cardBg p-4 rounded-2xl border border-darkBorder space-y-3">
+                <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">Sound Synthesizer Settings</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-xs text-gray-300">
+                        <span>Click Sound Tone</span>
+                        <select id="soundTypeSelect" onchange="soundType = this.value" class="bg-darkBg border border-darkBorder text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-neonGreen">
+                            <option value="synthetic">Digital Pulse (Beep)</option>
+                            <option value="woodblock">Lagree Studio Woodblock</option>
+                            <option value="softTick">Soft Studio Click</option>
+                            <option value="bell">Chime Accent</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs text-gray-300 border-t border-darkBorder/40 pt-2">
+                        <span>Audio Feedback Volume</span>
+                        <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.8" onchange="masterVolume = parseFloat(this.value)" class="w-28 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Machine Setup Guide Badge -->
+            <div class="bg-cardBg p-4 rounded-2xl border border-darkBorder space-y-2">
+                <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">Spring Tension Quick Reference</h3>
+                <div class="grid grid-cols-2 gap-2 text-[11px]">
+                    <div class="bg-darkBg p-2 rounded-xl border border-darkBorder">
+                        <span class="font-bold text-yellow-400 block">Yellow Spring</span>
+                        <span class="text-gray-400">Super Light (~8-12 lbs)</span>
+                    </div>
+                    <div class="bg-darkBg p-2 rounded-xl border border-darkBorder">
+                        <span class="font-bold text-blue-400 block">Blue Spring</span>
+                        <span class="text-gray-400">Medium Light (~15-20 lbs)</span>
+                    </div>
+                    <div class="bg-darkBg p-2 rounded-xl border border-darkBorder">
+                        <span class="font-bold text-red-500 block">Red Spring</span>
+                        <span class="text-gray-400">Heavy Tension (~30-35 lbs)</span>
+                    </div>
+                    <div class="bg-darkBg p-2 rounded-xl border border-darkBorder">
+                        <span class="font-bold text-white block">White / Black</span>
+                        <span class="text-gray-400">Ultra Light / Heavy</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- EXERCISE DETAILS MODAL -->
+    <div id="exerciseModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-cardBg border border-darkBorder w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl relative">
+            <button onclick="closeExerciseModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <div>
+                <span id="modalCategoryBadge" class="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-neonGreen/10 text-neonGreen border border-neonGreen/30">Lagree Method</span>
+                <h3 id="modalTitle" class="text-xl font-extrabold text-white mt-1">Megaformer Bear</h3>
+                <p id="modalBodyTarget" class="text-xs text-pilatesCyan font-semibold mt-0.5">Target: Transverse Abdominis & Lower Abs</p>
+            </div>
+
+            <div class="space-y-2 text-xs">
+                <div class="bg-darkBg p-3 rounded-xl border border-darkBorder">
+                    <span class="font-bold text-gray-300 block mb-0.5">Recommended Resistance / Spring:</span>
+                    <span id="modalSprings" class="text-yellow-400 font-semibold">1 Yellow Spring</span>
+                </div>
+
+                <div class="bg-darkBg p-3 rounded-xl border border-darkBorder">
+                    <span class="font-bold text-gray-300 block mb-0.5">Tempo & Timing:</span>
+                    <span id="modalTempo" class="text-white">4 Seconds Extension / 4 Seconds Flexion (60 BPM)</span>
+                </div>
+
+                <div class="bg-darkBg p-3 rounded-xl border border-darkBorder">
+                    <span class="font-bold text-gray-300 block mb-0.5">Form Cues & Execution:</span>
+                    <p id="modalCue" class="text-gray-300 leading-relaxed">Keep spine flat, pull knees directly under hips without lifting pelvis, press carriage back smoothly with total control.</p>
+                </div>
+            </div>
+
+            <button onclick="closeExerciseModal()" class="w-full py-3 rounded-xl bg-neonGreen text-black font-extrabold text-xs shadow-md shadow-neonGlow btn-press">
+                GOT IT
+            </button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-cardBg/95 backdrop-blur-lg border-t border-darkBorder z-40 safe-bottom">
+        <div class="flex items-center justify-around py-2 px-1">
+            
+            <button onclick="switchTab('metronome')" id="navMetronome" class="nav-btn flex flex-col items-center gap-1 text-neonGreen transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-[10px] font-bold">Metronome</span>
+            </button>
+
+            <button onclick="switchTab('library')" id="navLibrary" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span class="text-[10px] font-bold">Exercises</span>
+            </button>
+
+            <button onclick="switchTab('workouts')" id="navWorkouts" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span class="text-[10px] font-bold">Routines</span>
+            </button>
+
+            <button onclick="switchTab('builder')" id="navBuilder" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span class="text-[10px] font-bold">Builder</span>
+            </button>
+
+            <button onclick="switchTab('profile')" id="navProfile" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="text-[10px] font-bold">Profile</span>
+            </button>
+
+        </div>
+    </nav>
+
+    <script>
+        /* ===================================================================
+           TEMPOFLOW APP ENGINE (Audio Lookahead & Exercise Database)
+           =================================================================== */
+
+        // Audio Context & State
+        let audioCtx = null;
+        let isPlaying = false;
+        let bpm = 120;
+        let beatsPerBar = 4;
+        let currentBeat = 0;
+        let accentEnabled = true;
+        let soundType = 'synthetic'; // 'synthetic', 'woodblock', 'softTick', 'bell'
+        let soundMuted = false;
+        let masterVolume = 0.8;
+
+        // Scheduler timing variables
+        const lookahead = 25.0; // How frequently to call scheduling function (ms)
+        const scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+        let nextNoteTime = 0.0; // When the next note is due
+        let timerID = null;
+
+        // Tap Tempo calculation array
+        let tapTimes = [];
+
+        /* ===================================================================
+           COMPLETE LAGREE & REFORMER PILATES SIGNATURE EXERCISES DATABASE
+           =================================================================== */
+        const signatureExercises = [
+            // --- LAGREE METHOD EXERCISES ---
+            { 
+                id: 'lagree-bear',
+                name: 'Bear', 
+                method: 'Lagree', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Hands on front platform, feet on carriage. Maintain flat spine, pull knees directly under hips for 4s, extend out 4s.' 
+            },
+            { 
+                id: 'lagree-wheelbarrow',
+                name: 'Wheelbarrow', 
+                method: 'Lagree', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Knees against carriage front pocket, hands on platform. Hinges strictly at shoulder joints for slow 4-count push and pull.' 
+            },
+            { 
+                id: 'lagree-catfish',
+                name: 'Catfish', 
+                method: 'Lagree', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '2 Yellow Springs', 
+                desc: 'High heels lifted on platform, hands on handlebars. Drag carriage forward with lower abdominals keeping hips tucked.' 
+            },
+            { 
+                id: 'lagree-saw',
+                name: 'Carriage Saw', 
+                method: 'Lagree', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Forearms on carriage, toes on platform in forearm plank. Press carriage back 4s using shoulders, pull back 4s.' 
+            },
+            { 
+                id: 'lagree-teaser',
+                name: 'Teaser Obliques', 
+                method: 'Lagree', 
+                bodyTarget: 'Obliques', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Cross feet on carriage, hands on platform handlebars. Pike hips upward using side waist obliques for 4 counts.' 
+            },
+            { 
+                id: 'lagree-mermaid',
+                name: 'Mermaid Twist', 
+                method: 'Lagree', 
+                bodyTarget: 'Obliques', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Kneeling sideways on carriage, hands on front handle. Pike hips up while twisting waist toward carriage.' 
+            },
+            { 
+                id: 'lagree-escalator-lunge',
+                name: 'Escalator Lunge', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 90, 
+                equipment: '1 Red Spring', 
+                desc: 'Front foot on platform, back foot on carriage. Bend front knee to 90 degrees in 4s glide, press up through heel in 4s.' 
+            },
+            { 
+                id: 'lagree-runners-lunge',
+                name: 'Runner\'s Lunge', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 90, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Front foot on platform, back foot against shoulder block. Drive carriage back with back leg while keeping front knee over ankle.' 
+            },
+            { 
+                id: 'lagree-spider-lunge',
+                name: 'Spider Lunge', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 90, 
+                equipment: '1 Black/Yellow', 
+                desc: 'Foot placed diagonally at 45 degrees on front platform pocket. Deep side glute engagement through low pulses.' 
+            },
+            { 
+                id: 'lagree-5th-ave-lunge',
+                name: 'Fifth Avenue Lunge', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 90, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Performed facing back platform with back foot elevated on carriage handle. Deep hamstring and glute burn.' 
+            },
+            { 
+                id: 'lagree-heavy-back-kick',
+                name: 'Heavy Back Kick', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Red + 1 Yellow', 
+                desc: 'Kneel on carriage, foot pressed against strap/platform. Drive heel back against heavy spring tension in 4s count.' 
+            },
+            { 
+                id: 'lagree-donkey-kick',
+                name: 'Donkey Kick', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Hands on platform, sole of foot on carriage strap. Squeeze glute max at peak extension without arching lumbar spine.' 
+            },
+            { 
+                id: 'lagree-bungee',
+                name: 'Bungee Glute Kick', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: 'Bungee Cord Attachment', 
+                desc: 'Kneel on carriage facing back, bungee around arch of foot. Lift leg against resistance keeping hips square.' 
+            },
+            { 
+                id: 'lagree-standing-inner-thigh',
+                name: 'Standing Inner Thigh Drag', 
+                method: 'Lagree', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'One foot on carriage, one on platform. Press carriage out 4s, pull carriage closed using adductors in 4s.' 
+            },
+            { 
+                id: 'lagree-sexy-back',
+                name: 'Sexy Back (Triceps)', 
+                method: 'Lagree', 
+                bodyTarget: 'Upper Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Kneeling on carriage holding cables. Extend elbows straight back targeting triceps with continuous slow tension.' 
+            },
+            { 
+                id: 'lagree-newspaper',
+                name: 'Newspaper Shoulder Press', 
+                method: 'Lagree', 
+                bodyTarget: 'Upper Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Kneeling on carriage holding handles, elbows bent 90 degrees. Open arms wide like opening a newspaper.' 
+            },
+            { 
+                id: 'lagree-chest-fly',
+                name: 'Chest Fly Glide', 
+                method: 'Lagree', 
+                bodyTarget: 'Upper Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '1 Yellow Spring', 
+                desc: 'Sit tall on carriage facing front, straps in hands. Hug a tree motion bringing handles together over 4 counts.' 
+            },
+
+            // --- REFORMER PILATES EXERCISES ---
+            { 
+                id: 'pilates-footwork-toes',
+                name: 'Footwork: Toes on Bar', 
+                method: 'Pilates', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 90, 
+                equipment: '3 Red + 1 Blue', 
+                desc: 'Toes and metatarsals on footbar, heels high in Pilates V. Extend legs fully over 4s without locking knees, return in 4s.' 
+            },
+            { 
+                id: 'pilates-footwork-arches',
+                name: 'Footwork: Arches on Bar', 
+                method: 'Pilates', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '3 Red + 1 Blue', 
+                desc: 'Wrap arches tightly over footbar, feet hip-width apart. Press carriage out with deep core and quad control.' 
+            },
+            { 
+                id: 'pilates-footwork-tendon',
+                name: 'Tendon Stretch Lower & Lift', 
+                method: 'Pilates', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '3 Red + 1 Blue', 
+                desc: 'Press carriage out straight, lower heels under footbar for 3 counts, lift heels up 3 counts, then return.' 
+            },
+            { 
+                id: 'pilates-hundred',
+                name: 'The Hundred', 
+                method: 'Pilates', 
+                bodyTarget: 'Core', 
+                bpm: 100, 
+                duration: 100, 
+                equipment: '2 Red Springs or 2 Blue', 
+                desc: 'Head/shoulders curled up, legs at 45 deg, pump arms up and down rhythmically. Inhale for 5 beats, exhale for 5 beats.' 
+            },
+            { 
+                id: 'pilates-coordination',
+                name: 'Coordination Series', 
+                method: 'Pilates', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '2 Blue Springs', 
+                desc: 'Elbows grounded, knees in tabletop. Press arms and legs straight out, open/close legs, pull knees in, bend elbows.' 
+            },
+            { 
+                id: 'pilates-leg-circles',
+                name: 'Leg Circles in Straps', 
+                method: 'Pilates', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 90, 
+                equipment: '2 Red Springs', 
+                desc: 'Feet in long straps. Lower legs to 45 deg, circle out and around up to 90 deg with pelvis completely stable.' 
+            },
+            { 
+                id: 'pilates-frogs',
+                name: 'Frogs in Straps', 
+                method: 'Pilates', 
+                bodyTarget: 'Lower Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '2 Red Springs', 
+                desc: 'Heels together, toes apart in straps. Press heels out at 45 degrees for 4s, bend knees back toward chest 4s.' 
+            },
+            { 
+                id: 'pilates-short-box-flat',
+                name: 'Short Box: Flat Back', 
+                method: 'Pilates', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: 'Box On + Safety Strap', 
+                desc: 'Feet under strap on short box. Maintain neutral flat spine, hinge back from hip joints 4s, lift up 4s.' 
+            },
+            { 
+                id: 'pilates-short-box-round',
+                name: 'Short Box: Round Back', 
+                method: 'Pilates', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: 'Box On + Safety Strap', 
+                desc: 'C-curve spine starting at tailbone. Roll back down toward box over 4 counts, scoop abdominals to return.' 
+            },
+            { 
+                id: 'pilates-short-box-tree',
+                name: 'Short Box: Climb a Tree', 
+                method: 'Pilates', 
+                bodyTarget: 'Full Body', 
+                bpm: 50, 
+                duration: 90, 
+                equipment: 'Box On + Safety Strap', 
+                desc: 'Hold back of one leg, walk hands up ankle, unroll spine back over box, climb hands back up leg.' 
+            },
+            { 
+                id: 'pilates-long-box-pulling-straps',
+                name: 'Long Box: Pulling Straps (I & T)', 
+                method: 'Pilates', 
+                bodyTarget: 'Upper Body', 
+                bpm: 50, 
+                duration: 90, 
+                equipment: '1 Red Spring or 1 Blue', 
+                desc: 'Prone on long box facing risers. Pull straps back along thighs into thoracic extension for 4s.' 
+            },
+            { 
+                id: 'pilates-elephant',
+                name: 'Elephant', 
+                method: 'Pilates', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '2 Red Springs', 
+                desc: 'Hands on footbar, heels against shoulder rests in flat-backed upside-down V. Press carriage out with heels 4s, drag in 4s.' 
+            },
+            { 
+                id: 'pilates-long-stretch',
+                name: 'Long Stretch Plank', 
+                method: 'Pilates', 
+                bodyTarget: 'Full Body', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '2 Red Springs', 
+                desc: 'High plank position with feet against shoulder rests and hands on footbar. Press carriage back with shoulders 4s.' 
+            },
+            { 
+                id: 'pilates-down-stretch',
+                name: 'Down Stretch', 
+                method: 'Pilates', 
+                bodyTarget: 'Upper Body', 
+                bpm: 50, 
+                duration: 60, 
+                equipment: '2 Red Springs', 
+                desc: 'Knees against shoulder rests, hands on footbar. Open chest in upper back extension, push carriage back smoothly.' 
+            },
+            { 
+                id: 'pilates-short-spine',
+                name: 'Short Spine Massage', 
+                method: 'Pilates', 
+                bodyTarget: 'Full Body', 
+                bpm: 50, 
+                duration: 90, 
+                equipment: '2 Red Springs', 
+                desc: 'Feet in straps. Lift legs overhead, peel spine off carriage, bend knees to ears, articulate spine back down link by link.' 
+            },
+            { 
+                id: 'pilates-long-spine',
+                name: 'Long Spine Massage', 
+                method: 'Pilates', 
+                bodyTarget: 'Full Body', 
+                bpm: 50, 
+                duration: 90, 
+                equipment: '2 Red Springs', 
+                desc: 'Continuous fluid leg roll-over in straps, reaching legs high into long diagonal bridge before rolling down.' 
+            },
+            { 
+                id: 'pilates-stomach-massage-round',
+                name: 'Stomach Massage: Round', 
+                method: 'Pilates', 
+                bodyTarget: 'Core', 
+                bpm: 60, 
+                duration: 60, 
+                equipment: '3 Red Springs', 
+                desc: 'Seated near front edge of carriage, balls of feet on bar. Deep C-curve spine, press carriage out 4s, lower heels, lift, return.' 
+            },
+            { 
+                id: 'pilates-mermaid',
+                name: 'Reformer Side Mermaid', 
+                method: 'Pilates', 
+                bodyTarget: 'Obliques', 
+                bpm: 50, 
+                duration: 60, 
+                equipment: '1 Red Spring or 1 Blue', 
+                desc: 'Z-sit on carriage, hand on footbar. Press carriage away lateral side stretch over 4s, lift up and counter stretch.' 
+            },
+            { 
+                id: 'pilates-snake-twist',
+                name: 'Snake & Twist', 
+                method: 'Pilates', 
+                bodyTarget: 'Obliques', 
+                bpm: 50, 
+                duration: 90, 
+                equipment: '1 Red Spring', 
+                desc: 'Advanced side plank on footbar and carriage. Press carriage out twisting hips down, lift hips into pike.' 
+            }
+        ];
+
+        /* ===================================================================
+           PRESET GUIDED WORKOUT ROUTINES
+           =================================================================== */
+        const defaultWorkouts = [
+            {
+                id: 'lagree-fullbody',
+                title: 'Lagree Megaformer Full Body',
+                category: 'lagree',
+                duration: '45 min',
+                target: 'Core, Obliques, Glutes & Legs',
+                springs: '1 Yellow / 1 Red',
+                exercises: [
+                    signatureExercises.find(e => e.id === 'lagree-wheelbarrow'),
+                    signatureExercises.find(e => e.id === 'lagree-bear'),
+                    signatureExercises.find(e => e.id === 'lagree-catfish'),
+                    signatureExercises.find(e => e.id === 'lagree-teaser'),
+                    signatureExercises.find(e => e.id === 'lagree-escalator-lunge'),
+                    signatureExercises.find(e => e.id === 'lagree-heavy-back-kick'),
+                    signatureExercises.find(e => e.id === 'lagree-sexy-back')
+                ]
+            },
+            {
+                id: 'lagree-booty-sculpt',
+                title: 'Lagree Booty & Hamstring Burn',
+                category: 'lagree',
+                duration: '25 min',
+                target: 'Glute Max, Medius & Hamstrings',
+                springs: '1 Heavy Red or 2 Yellow',
+                exercises: [
+                    signatureExercises.find(e => e.id === 'lagree-heavy-back-kick'),
+                    signatureExercises.find(e => e.id === 'lagree-spider-lunge'),
+                    signatureExercises.find(e => e.id === 'lagree-donkey-kick'),
+                    signatureExercises.find(e => e.id === 'lagree-standing-inner-thigh'),
+                    signatureExercises.find(e => e.id === 'lagree-5th-ave-lunge')
+                ]
+            },
+            {
+                id: 'pilates-reformer-essential',
+                title: 'Classical Reformer Essential Flow',
+                category: 'pilates',
+                duration: '35 min',
+                target: 'Full Body Alignment & Core',
+                springs: '3 Red / 2 Blue / 1 Yellow',
+                exercises: [
+                    signatureExercises.find(e => e.id === 'pilates-footwork-toes'),
+                    signatureExercises.find(e => e.id === 'pilates-hundred'),
+                    signatureExercises.find(e => e.id === 'pilates-coordination'),
+                    signatureExercises.find(e => e.id === 'pilates-leg-circles'),
+                    signatureExercises.find(e => e.id === 'pilates-short-box-flat'),
+                    signatureExercises.find(e => e.id === 'pilates-short-spine'),
+                    signatureExercises.find(e => e.id === 'pilates-elephant')
+                ]
+            },
+            {
+                id: 'lagree-oblique-fire',
+                title: 'Lagree Oblique & Waist Trimmer',
+                category: 'lagree',
+                duration: '20 min',
+                target: 'Internal & External Obliques',
+                springs: '1 Yellow Spring',
+                exercises: [
+                    signatureExercises.find(e => e.id === 'lagree-teaser'),
+                    signatureExercises.find(e => e.id === 'lagree-mermaid'),
+                    signatureExercises.find(e => e.id === 'lagree-saw'),
+                    signatureExercises.find(e => e.id === 'pilates-mermaid')
+                ]
+            }
+        ];
+
+        let workoutsList = [];
+        let activeWorkout = null;
+        let activeExerciseIdx = 0;
+        let workoutTimerID = null;
+        let exerciseSecondsLeft = 0;
+        let isWorkoutPaused = false;
+
+        // Filtering state for signature exercise library
+        let currentLibMethod = 'all';
+        let currentLibBody = 'all';
+
+        // DOM Elements Cache
+        let bpmDisplay, bpmSlider, pulseRing, beatDotsContainer, togglePlayBtn, playBtnText, tapTempoBtn, tempoDescriptor;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTone(freq, time, duration, isAccent) {
+            if (soundMuted || !audioCtx) return;
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                if (soundType === 'woodblock') {
+                    osc.type = 'triangle';
+                } else if (soundType === 'bell') {
+                    osc.type = 'sine';
+                } else {
+                    osc.type = 'sine';
+                }
+                
+                let pitch = freq;
+                if (isAccent && accentEnabled) {
+                    pitch = freq * 1.4;
+                }
+
+                osc.frequency.setValueAtTime(pitch, time);
+
+                const volume = (isAccent && accentEnabled ? 0.9 : 0.5) * masterVolume;
+                gain.gain.setValueAtTime(volume, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(time);
+                osc.stop(time + duration);
+            } catch(e) {
+                console.error("Audio playback error", e);
+            }
+        }
+
+        function scheduleNote(beatNumber, time) {
+            const isAccentBeat = (beatNumber === 0);
+            let baseFreq = 1000;
+
+            if (soundType === 'woodblock') baseFreq = 650;
+            else if (soundType === 'softTick') baseFreq = 850;
+            else if (soundType === 'bell') baseFreq = 1200;
+
+            playTone(baseFreq, time, 0.06, isAccentBeat);
+
+            const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+            setTimeout(() => {
+                updateBeatDots(beatNumber);
+                triggerVisualPulse(beatNumber);
+            }, delay);
+        }
+
+        function scheduler() {
+            while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+                scheduleNote(currentBeat, nextNoteTime);
+                nextBeat();
+            }
+            timerID = setTimeout(scheduler, lookahead);
+        }
+
+        function nextBeat() {
+            const secondsPerBeat = 60.0 / bpm;
+            nextNoteTime += secondsPerBeat;
+            currentBeat = (currentBeat + 1) % beatsPerBar;
+        }
+
+        function startMetronome() {
+            initAudioContext();
+            if (isPlaying) return;
+
+            isPlaying = true;
+            currentBeat = 0;
+            nextNoteTime = audioCtx.currentTime + 0.05;
+            scheduler();
+
+            updatePlayBtnUI(true);
+        }
+
+        function stopMetronome() {
+            isPlaying = false;
+            clearTimeout(timerID);
+            updatePlayBtnUI(false);
+            resetBeatDots();
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                stopMetronome();
+            } else {
+                startMetronome();
+            }
+        }
+
+        function updatePlayBtnUI(playing) {
+            const btn = document.getElementById('togglePlayBtn');
+            const text = document.getElementById('playBtnText');
+            const icon = document.getElementById('playIcon');
+
+            if (!btn || !text || !icon) return;
+
+            if (playing) {
+                text.innerText = 'STOP';
+                btn.classList.remove('bg-neonGreen', 'text-black', 'shadow-neonGlow');
+                btn.classList.add('bg-red-500', 'text-white', 'shadow-red-500/30');
+                icon.innerHTML = `<path d="M6 6h12v12H6z"/>`;
+            } else {
+                text.innerText = 'START';
+                btn.classList.remove('bg-red-500', 'text-white', 'shadow-red-500/30');
+                btn.classList.add('bg-neonGreen', 'text-black', 'shadow-neonGlow');
+                icon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+            }
+        }
+
+        function setBpm(newBpm) {
+            bpm = Math.min(240, Math.max(30, newBpm));
+            updateBpmDisplay(bpm);
+        }
+
+        function adjustBpm(delta) {
+            setBpm(bpm + delta);
+        }
+
+        function updateBpmDisplay(val) {
+            if (bpmDisplay) bpmDisplay.innerText = val;
+            if (bpmSlider) bpmSlider.value = val;
+
+            const tempoLabel = document.getElementById('tempoLabel');
+            if (tempoLabel) {
+                const secPerBeat = (60 / val).toFixed(2);
+                tempoLabel.innerText = `${val} BPM = ${secPerBeat}s / beat`;
+            }
+        }
+
+        function setTimeSig(beats) {
+            beatsPerBar = beats;
+            currentBeat = 0;
+
+            const container = document.getElementById('timeSigContainer');
+            if (container) {
+                const btns = container.querySelectorAll('button');
+                btns.forEach(btn => {
+                    if (btn.innerText.startsWith(`${beats}/`)) {
+                        btn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-neonGreen text-black';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-darkBg border border-darkBorder text-gray-300';
+                    }
+                });
+            }
+
+            const desc = document.getElementById('tempoDescriptor');
+            if (desc) {
+                desc.innerText = `${beats} Beats per Bar (${beats}s Count)`;
+            }
+
+            renderBeatDots();
+        }
+
+        function toggleAccent(val) {
+            accentEnabled = val;
+        }
+
+        function setTempoPreset(type) {
+            const btnStandard = document.getElementById('btnPresetStandard');
+            const btnLagree = document.getElementById('btnPresetLagree');
+            const btnPilates = document.getElementById('btnPresetPilates');
+
+            [btnStandard, btnLagree, btnPilates].forEach(b => {
+                if (b) b.className = 'py-2 text-[11px] font-semibold rounded-xl text-gray-400 hover:text-white transition-all';
+            });
+
+            if (type === 'standard') {
+                if (btnStandard) btnStandard.className = 'py-2 text-[11px] font-semibold rounded-xl bg-neonGreen text-black transition-all';
+                setBpm(120);
+                setTimeSig(4);
+            } else if (type === 'lagree44') {
+                if (btnLagree) btnLagree.className = 'py-2 text-[11px] font-semibold rounded-xl bg-neonGreen text-black transition-all';
+                setBpm(60);
+                setTimeSig(4);
+            } else if (type === 'pilates100') {
+                if (btnPilates) btnPilates.className = 'py-2 text-[11px] font-semibold rounded-xl bg-neonGreen text-black transition-all';
+                setBpm(100);
+                setTimeSig(5);
+            }
+        }
+
+        function renderBeatDots() {
+            const container = document.getElementById('beatDotsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            for (let i = 0; i < beatsPerBar; i++) {
+                const dot = document.createElement('div');
+                dot.id = `beatDot-${i}`;
+                dot.className = `w-2.5 h-2.5 rounded-full transition-all duration-75 ${i === 0 ? 'bg-neonGreen/40 scale-110' : 'bg-gray-700'}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function updateBeatDots(activeIdx) {
+            for (let i = 0; i < beatsPerBar; i++) {
+                const dot = document.getElementById(`beatDot-${i}`);
+                if (dot) {
+                    if (i === activeIdx) {
+                        dot.className = i === 0 
+                            ? 'w-3 h-3 rounded-full bg-neonGreen shadow-md shadow-neonGreen scale-125 transition-all duration-75' 
+                            : 'w-2.5 h-2.5 rounded-full bg-white scale-125 transition-all duration-75';
+                    } else {
+                        dot.className = i === 0 
+                            ? 'w-2.5 h-2.5 rounded-full bg-neonGreen/40' 
+                            : 'w-2.5 h-2.5 rounded-full bg-gray-700';
+                    }
+                }
+            }
+        }
+
+        function resetBeatDots() {
+            updateBeatDots(-1);
+        }
+
+        function triggerVisualPulse(beatIdx) {
+            const ring = document.getElementById('pulseRing');
+            const playerRing = document.getElementById('playerPulseRing');
+
+            if (ring) {
+                ring.classList.add('pulse-active');
+                setTimeout(() => ring.classList.remove('pulse-active'), 100);
+            }
+
+            if (playerRing) {
+                playerRing.classList.add('pulse-active');
+                setTimeout(() => playerRing.classList.remove('pulse-active'), 100);
+            }
+        }
+
+        function handleTapTempo() {
+            const now = Date.now();
+            
+            if (tapTimes.length > 0 && now - tapTimes[tapTimes.length - 1] > 2500) {
+                tapTimes = [];
+            }
+
+            tapTimes.push(now);
+
+            if (tapTimes.length > 1) {
+                const intervals = [];
+                for (let i = 1; i < tapTimes.length; i++) {
+                    intervals.push(tapTimes[i] - tapTimes[i - 1]);
+                }
+                
+                const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+                const calculatedBpm = Math.round(60000 / avgInterval);
+
+                if (calculatedBpm >= 30 && calculatedBpm <= 240) {
+                    setBpm(calculatedBpm);
+                }
+            }
+
+            const tapBtn = document.getElementById('tapTempoBtn');
+            if (tapBtn) {
+                tapBtn.classList.add('border-neonGreen', 'text-neonGreen');
+                setTimeout(() => tapBtn.classList.remove('border-neonGreen', 'text-neonGreen'), 150);
+            }
+        }
+
+        function renderExerciseLibrary() {
+            const container = document.getElementById('libraryContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const searchVal = (document.getElementById('librarySearchInput')?.value || '').toLowerCase();
+
+            const filtered = signatureExercises.filter(ex => {
+                const matchMethod = currentLibMethod === 'all' || ex.method.toLowerCase() === currentLibMethod.toLowerCase();
+                const matchBody = currentLibBody === 'all' || ex.bodyTarget.toLowerCase() === currentLibBody.toLowerCase();
+                const matchSearch = ex.name.toLowerCase().includes(searchVal) || 
+                                    ex.desc.toLowerCase().includes(searchVal) || 
+                                    ex.equipment.toLowerCase().includes(searchVal) ||
+                                    ex.bodyTarget.toLowerCase().includes(searchVal);
+                return matchMethod && matchBody && matchSearch;
+            });
+
+            const countBadge = document.getElementById('libraryCountBadge');
+            if (countBadge) countBadge.innerText = `${filtered.length} Moves`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-xs text-gray-500 bg-cardBg rounded-2xl border border-darkBorder">No matching exercises found. Try adjusting filters.</div>`;
+                return;
+            }
+
+            filtered.forEach(ex => {
+                const isLagree = ex.method === 'Lagree';
+                const badgeColor = isLagree ? 'bg-purple-500/10 text-lagreePurple border-purple-500/30' : 'bg-cyan-500/10 text-pilatesCyan border-cyan-500/30';
+                
+                const card = document.createElement('div');
+                card.className = 'bg-cardBg hover:bg-cardHover p-4 rounded-2xl border border-darkBorder transition-all space-y-2 shadow-md cursor-pointer';
+                card.onclick = () => openExerciseModal(ex.id);
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md border ${badgeColor}">${ex.method} • ${ex.bodyTarget}</span>
+                            <h3 class="text-sm font-bold text-white mt-1.5">${ex.name}</h3>
+                        </div>
+                        <button onclick="event.stopPropagation(); quickPlayExercise('${ex.id}')" class="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/30 text-neonGreen hover:bg-neonGreen hover:text-black transition-all" title="Test Metronome Tempo">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 line-clamp-2">${ex.desc}</p>
+                    <div class="flex items-center justify-between text-[11px] pt-1 text-gray-300 font-medium border-t border-darkBorder/30">
+                        <span class="text-yellow-400 font-semibold">⚙️ ${ex.equipment}</span>
+                        <span>⏱️ ${ex.bpm} BPM</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterLibrary() {
+            renderExerciseLibrary();
+        }
+
+        function setLibraryMethodFilter(method) {
+            currentLibMethod = method;
+            const btns = document.querySelectorAll('.lib-method-btn');
+            btns.forEach(btn => {
+                if (btn.innerText.includes(method) || (method === 'all' && btn.innerText === 'All Methods')) {
+                    btn.className = 'lib-method-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-neonGreen text-black whitespace-nowrap';
+                } else {
+                    btn.className = 'lib-method-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cardBg border border-darkBorder text-gray-300 whitespace-nowrap';
+                }
+            });
+            renderExerciseLibrary();
+        }
+
+        function setLibraryBodyFilter(bodyTarget) {
+            currentLibBody = bodyTarget;
+            const btns = document.querySelectorAll('.lib-body-btn');
+            btns.forEach(btn => {
+                if (btn.innerText.includes(bodyTarget) || (bodyTarget === 'all' && btn.innerText === 'All Muscles')) {
+                    btn.className = 'lib-body-btn px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-darkBg border border-neonGreen text-neonGreen whitespace-nowrap';
+                } else {
+                    btn.className = 'lib-body-btn px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-darkBg border border-darkBorder text-gray-400 whitespace-nowrap';
+                }
+            });
+            renderExerciseLibrary();
+        }
+
+        function openExerciseModal(exId) {
+            const ex = signatureExercises.find(e => e.id === exId);
+            if (!ex) return;
+
+            document.getElementById('modalCategoryBadge').innerText = `${ex.method} Method`;
+            document.getElementById('modalTitle').innerText = ex.name;
+            document.getElementById('modalBodyTarget').innerText = `Target: ${ex.bodyTarget}`;
+            document.getElementById('modalSprings').innerText = ex.equipment;
+            document.getElementById('modalTempo').innerText = `${Math.round(60/ex.bpm*4)}s Count Duration (${ex.bpm} BPM)`;
+            document.getElementById('modalCue').innerText = ex.desc;
+
+            document.getElementById('exerciseModal').classList.remove('hidden');
+        }
+
+        function closeExerciseModal() {
+            document.getElementById('exerciseModal').classList.add('hidden');
+        }
+
+        function quickPlayExercise(exId) {
+            const ex = signatureExercises.find(e => e.id === exId);
+            if (!ex) return;
+            switchTab('metronome');
+            setBpm(ex.bpm);
+            setTimeSig(4);
+            startMetronome();
+        }
+
+        function populateWorkoutDropdowns() {
+            const dropdowns = [
+                document.getElementById('quickWorkoutDropdown'),
+                document.getElementById('workoutDropdown'),
+                document.getElementById('loadTemplateDropdown')
+            ];
+
+            dropdowns.forEach((dd) => {
+                if (!dd) return;
+                
+                const firstOpt = dd.options[0];
+                dd.innerHTML = '';
+                dd.appendChild(firstOpt);
+
+                const lagreeWorkouts = workoutsList.filter(w => w.category === 'lagree');
+                const pilatesWorkouts = workoutsList.filter(w => w.category === 'pilates');
+
+                if (lagreeWorkouts.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = '⚡ Lagree Method Routines';
+                    lagreeWorkouts.forEach(w => {
+                        const opt = document.createElement('option');
+                        opt.value = w.id;
+                        opt.textContent = `${w.title} (${w.duration})`;
+                        group.appendChild(opt);
+                    });
+                    dd.appendChild(group);
+                }
+
+                if (pilatesWorkouts.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = '🧘 Reformer Pilates Routines';
+                    pilatesWorkouts.forEach(w => {
+                        const opt = document.createElement('option');
+                        opt.value = w.id;
+                        opt.textContent = `${w.title} (${w.duration})`;
+                        group.appendChild(opt);
+                    });
+                    dd.appendChild(group);
+                }
+            });
+        }
+
+        function handleQuickWorkoutSelect(workoutId) {
+            if (!workoutId) return;
+            startWorkoutPlayer(workoutId);
+            document.getElementById('quickWorkoutDropdown').value = '';
+        }
+
+        function handleDropdownWorkoutLaunch(workoutId) {
+            if (!workoutId) return;
+            startWorkoutPlayer(workoutId);
+            document.getElementById('workoutDropdown').value = '';
+        }
+
+        function loadWorkoutIntoBuilder(workoutId) {
+            if (!workoutId) return;
+            const workout = workoutsList.find(w => w.id === workoutId);
+            if (!workout) return;
+
+            document.getElementById('customName').value = `${workout.title} (Copy)`;
+            document.getElementById('customCategory').value = workout.category;
+            
+            const container = document.getElementById('customMovesList');
+            container.innerHTML = '';
+
+            workout.exercises.forEach(ex => {
+                addCustomMoveInput(ex);
+            });
+        }
+
+        function addCustomMoveInput(presetData = null) {
+            const container = document.getElementById('customMovesList');
+            if (!container) return;
+            const idx = container.children.length + 1;
+
+            const div = document.createElement('div');
+            div.className = 'bg-cardBg p-3 rounded-xl border border-darkBorder space-y-2 shadow-sm';
+            
+            let signatureOptions = `<option value="">-- Select Signature Move --</option>`;
+            signatureExercises.forEach((sig) => {
+                signatureOptions += `<option value="${sig.id}">${sig.method}: ${sig.name} (${sig.bodyTarget})</option>`;
+            });
+
+            div.innerHTML = `
+                <div class="flex items-center justify-between text-xs font-bold text-gray-300">
+                    <span>Move #${idx}</span>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400 hover:underline">Remove</button>
+                </div>
+
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-1">Pick from Exercise Library</label>
+                    <select onchange="prefillExerciseFromDropdown(this)" class="signature-dropdown w-full bg-darkBg border border-darkBorder rounded-lg px-2.5 py-1 text-xs text-neonGreen font-semibold focus:outline-none">
+                        ${signatureOptions}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-1">Exercise Name</label>
+                    <input type="text" value="${presetData ? presetData.name : ''}" placeholder="e.g. Carriage Lunge" required class="move-name w-full bg-darkBg border border-darkBorder rounded-lg px-2.5 py-1.5 text-xs text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] text-gray-400">Duration (sec)</label>
+                        <input type="number" value="${presetData ? presetData.duration : 60}" min="10" class="move-duration w-full bg-darkBg border border-darkBorder rounded-lg px-2 py-1 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-400">Target BPM</label>
+                        <input type="number" value="${presetData ? presetData.bpm : 60}" min="30" max="180" class="move-bpm w-full bg-darkBg border border-darkBorder rounded-lg px-2 py-1 text-xs text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] text-gray-400">Equipment / Spring</label>
+                    <input type="text" value="${presetData ? presetData.equipment || '' : '1 Yellow Spring'}" class="move-equipment w-full bg-darkBg border border-darkBorder rounded-lg px-2 py-1 text-xs text-white">
+                </div>
+
+                <div>
+                    <label class="text-[10px] text-gray-400">Technique Cue / Desc</label>
+                    <input type="text" value="${presetData ? presetData.desc || '' : ''}" placeholder="e.g. 4s out, 4s in slow continuous glide" class="move-desc w-full bg-darkBg border border-darkBorder rounded-lg px-2 py-1 text-xs text-white">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function prefillExerciseFromDropdown(selectElem) {
+            const exId = selectElem.value;
+            if (!exId) return;
+
+            const sig = signatureExercises.find(e => e.id === exId);
+            if (!sig) return;
+
+            const parentCard = selectElem.closest('.bg-cardBg');
+            if (parentCard) {
+                parentCard.querySelector('.move-name').value = sig.name;
+                parentCard.querySelector('.move-duration').value = sig.duration;
+                parentCard.querySelector('.move-bpm').value = sig.bpm;
+                parentCard.querySelector('.move-equipment').value = sig.equipment;
+                parentCard.querySelector('.move-desc').value = sig.desc;
+            }
+        }
+
+        function loadSavedWorkouts() {
+            const custom = localStorage.getItem('tempoflow_custom_workouts');
+            if (custom) {
+                try {
+                    const parsed = JSON.parse(custom);
+                    workoutsList = [...defaultWorkouts, ...parsed];
+                } catch(e) {
+                    workoutsList = [...defaultWorkouts];
+                }
+            } else {
+                workoutsList = [...defaultWorkouts];
+            }
+        }
+
+        function renderWorkoutsList(filter = 'all') {
+            const listContainer = document.getElementById('workoutList');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            const filtered = workoutsList.filter(w => filter === 'all' || w.category === filter);
+
+            filtered.forEach(w => {
+                const isLagree = w.category === 'lagree';
+                const card = document.createElement('div');
+                card.className = 'bg-cardBg hover:bg-cardHover p-4 rounded-2xl border border-darkBorder transition-all flex flex-col justify-between gap-3 shadow-md';
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest ${isLagree ? 'text-lagreePurple' : 'text-pilatesCyan'}">${isLagree ? 'LAGREE METHOD' : 'REFORMER PILATES'}</span>
+                            <h3 class="text-base font-bold text-white mt-0.5">${w.title}</h3>
+                            <p class="text-xs text-gray-400 mt-1">Target: ${w.target}</p>
+                        </div>
+                        <div class="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/30 text-neonGreen">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-darkBorder/40">
+                        <div class="text-xs text-gray-400">
+                            <span class="font-bold text-gray-200">${w.duration}</span> • ${w.exercises.length} moves
+                        </div>
+                        <button onclick="startWorkoutPlayer('${w.id}')" class="px-4 py-2 rounded-xl bg-neonGreen text-black font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-neonGlow btn-press">
+                            <span>START</span>
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function filterWorkouts(category) {
+            const btns = document.querySelectorAll('.workout-filter-btn');
+            btns.forEach(btn => {
+                if (btn.innerText.toLowerCase().includes(category)) {
+                    btn.className = 'workout-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-neonGreen text-black whitespace-nowrap';
+                } else if (category === 'all' && btn.innerText.includes('All')) {
+                    btn.className = 'workout-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-neonGreen text-black whitespace-nowrap';
+                } else {
+                    btn.className = 'workout-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cardBg border border-darkBorder text-gray-300 whitespace-nowrap';
+                }
+            });
+            renderWorkoutsList(category);
+        }
+
+        function startWorkoutPlayer(workoutId) {
+            stopMetronome();
+
+            activeWorkout = workoutsList.find(w => w.id === workoutId);
+            if (!activeWorkout) return;
+
+            activeExerciseIdx = 0;
+            isWorkoutPaused = false;
+
+            document.getElementById('workoutPlayerView').classList.remove('hidden');
+            document.getElementById('playerWorkoutTitle').innerText = activeWorkout.title.toUpperCase();
+
+            loadActiveExercise();
+        }
+
+        function loadActiveExercise() {
+            if (!activeWorkout) return;
+
+            const ex = activeWorkout.exercises[activeExerciseIdx];
+            document.getElementById('playerWorkoutProgress').innerText = `Move ${activeExerciseIdx + 1} of ${activeWorkout.exercises.length}`;
+            document.getElementById('playerExerciseName').innerText = ex.name;
+            document.getElementById('playerExerciseDesc').innerText = ex.desc || 'Maintain slow continuous tempo count throughout.';
+            document.getElementById('playerEquipment').innerHTML = `
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                <span>Resistance: ${ex.equipment || '1 Yellow Spring'}</span>
+            `;
+            document.getElementById('playerBpmBadge').innerText = `${ex.bpm} BPM (${Math.round(60/ex.bpm*4)}s count)`;
+
+            exerciseSecondsLeft = ex.duration;
+            updatePlayerTimerDisplay();
+
+            setBpm(ex.bpm);
+            startMetronome();
+
+            startWorkoutCountdown();
+        }
+
+        function startWorkoutCountdown() {
+            clearInterval(workoutTimerID);
+            workoutTimerID = setInterval(() => {
+                if (!isWorkoutPaused) {
+                    exerciseSecondsLeft--;
+                    updatePlayerTimerDisplay();
+
+                    if (exerciseSecondsLeft <= 0) {
+                        nextExercise();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updatePlayerTimerDisplay() {
+            const mins = Math.floor(exerciseSecondsLeft / 60);
+            const secs = exerciseSecondsLeft % 60;
+            document.getElementById('playerTimer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            const total = activeWorkout.exercises[activeExerciseIdx].duration;
+            const pct = Math.min(100, Math.max(0, ((total - exerciseSecondsLeft) / total) * 100));
+            document.getElementById('playerProgressBar').style.width = `${pct}%`;
+        }
+
+        function toggleWorkoutPause() {
+            isWorkoutPaused = !isWorkoutPaused;
+            const btnText = document.getElementById('playerPlayText');
+            if (isWorkoutPaused) {
+                btnText.innerText = 'RESUME';
+                stopMetronome();
+            } else {
+                btnText.innerText = 'PAUSE';
+                startMetronome();
+            }
+        }
+
+        function nextExercise() {
+            if (activeExerciseIdx < activeWorkout.exercises.length - 1) {
+                activeExerciseIdx++;
+                loadActiveExercise();
+            } else {
+                stopMetronome();
+                clearInterval(workoutTimerID);
+                closeWorkoutPlayer();
+                updateProfileStats(activeWorkout.duration);
+            }
+        }
+
+        function prevExercise() {
+            if (activeExerciseIdx > 0) {
+                activeExerciseIdx--;
+                loadActiveExercise();
+            }
+        }
+
+        function closeWorkoutPlayer() {
+            stopMetronome();
+            clearInterval(workoutTimerID);
+            document.getElementById('workoutPlayerView').classList.add('hidden');
+        }
+
+        function saveCustomWorkout(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('customName').value;
+            const category = document.getElementById('customCategory').value;
+            const defaultBpm = parseInt(document.getElementById('customDefaultBpm').value) || 60;
+
+            const moveCards = document.querySelectorAll('#customMovesList > div');
+            const exercises = [];
+
+            moveCards.forEach(card => {
+                const mName = card.querySelector('.move-name').value;
+                const mDur = parseInt(card.querySelector('.move-duration').value) || 60;
+                const mBpm = parseInt(card.querySelector('.move-bpm').value) || defaultBpm;
+
+                if (mName) {
+                    exercises.push({
+                        name: mName,
+                        duration: mDur,
+                        bpm: mBpm,
+                        equipment: card.querySelector('.move-equipment').value || '1 Yellow Spring',
+                        desc: card.querySelector('.move-desc').value || 'Custom exercise move.'
+                    });
+                }
+            });
+
+            if (exercises.length === 0) return;
+
+            const totalMins = Math.ceil(exercises.reduce((a, b) => a + b.duration, 0) / 60);
+
+            const newWorkout = {
+                id: 'custom-' + Date.now(),
+                title: name,
+                category: category,
+                duration: `${totalMins} min`,
+                target: 'Custom Sequence',
+                springs: 'User Specified',
+                exercises: exercises
+            };
+
+            const existingCustom = JSON.parse(localStorage.getItem('tempoflow_custom_workouts') || '[]');
+            existingCustom.push(newWorkout);
+            localStorage.setItem('tempoflow_custom_workouts', JSON.stringify(existingCustom));
+
+            loadSavedWorkouts();
+            renderWorkoutsList();
+            populateWorkoutDropdowns();
+            switchTab('workouts');
+
+            document.getElementById('customWorkoutForm').reset();
+            document.getElementById('customMovesList').innerHTML = '';
+            addCustomMoveInput();
+        }
+
+        function updateProfileStats(durStr) {
+            const minutes = parseInt(durStr) || 15;
+            let currentDone = parseInt(localStorage.getItem('tempoflow_stat_done') || '14');
+            let currentMins = parseInt(localStorage.getItem('tempoflow_stat_mins') || '240');
+
+            currentDone += 1;
+            currentMins += minutes;
+
+            localStorage.setItem('tempoflow_stat_done', currentDone);
+            localStorage.setItem('tempoflow_stat_mins', currentMins);
+
+            const elDone = document.getElementById('statWorkoutsCompleted');
+            const elMins = document.getElementById('statTotalMinutes');
+            if (elDone) elDone.innerText = currentDone;
+            if (elMins) elMins.innerText = `${currentMins}m`;
+        }
+
+        function switchTab(tabName) {
+            const tabs = ['metronome', 'library', 'workouts', 'builder', 'profile'];
+
+            tabs.forEach(t => {
+                const sec = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                const nav = document.getElementById(`nav${t.charAt(0).toUpperCase() + t.slice(1)}`);
+
+                if (t === tabName) {
+                    sec.classList.remove('hidden');
+                    if (nav) {
+                        nav.classList.add('text-neonGreen');
+                        nav.classList.remove('text-gray-400');
+                    }
+                } else {
+                    sec.classList.add('hidden');
+                    if (nav) {
+                        nav.classList.remove('text-neonGreen');
+                        nav.classList.add('text-gray-400');
+                    }
+                }
+            });
+
+            if (tabName === 'library') {
+                renderExerciseLibrary();
+            }
+        }
+
+        function setupEventListeners() {
+            bpmSlider = document.getElementById('bpmSlider');
+            bpmDisplay = document.getElementById('bpmDisplay');
+            pulseRing = document.getElementById('pulseRing');
+            beatDotsContainer = document.getElementById('beatDotsContainer');
+            togglePlayBtn = document.getElementById('togglePlayBtn');
+            playBtnText = document.getElementById('playBtnText');
+            tapTempoBtn = document.getElementById('tapTempoBtn');
+            tempoDescriptor = document.getElementById('tempoDescriptor');
+
+            if (bpmSlider) {
+                bpmSlider.addEventListener('input', (e) => {
+                    setBpm(parseInt(e.target.value));
+                });
+            }
+
+            if (tapTempoBtn) {
+                tapTempoBtn.addEventListener('click', handleTapTempo);
+            }
+
+            const soundToggleBtn = document.getElementById('soundToggleBtn');
+            if (soundToggleBtn) {
+                soundToggleBtn.addEventListener('click', () => {
+                    soundMuted = !soundMuted;
+                    const icon = document.getElementById('soundIcon');
+                    if (soundMuted) {
+                        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" stroke-dasharray="2 2"/>`;
+                    } else {
+                        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>`;
+                    }
+                });
+            }
+
+            addCustomMoveInput();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadSavedWorkouts();
+            renderBeatDots();
+            renderWorkoutsList();
+            renderExerciseLibrary();
+            populateWorkoutDropdowns();
+            updateBpmDisplay(bpm);
+        });
+    </script>
+</body>
+</html>
