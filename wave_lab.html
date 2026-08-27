@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Wave Lab | Transverse & Longitudinal Waves</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --pink:#ff6b81;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+
+#title{position:absolute;top:20px;left:20px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
+#title-text p{font-size:10px;color:rgba(180,200,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+
+#hud{
+  position:absolute;top:20px;right:20px;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:18px;
+  padding:18px;min-width:220px;z-index:10;
+}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
+.dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
+.dv.amber{color:var(--amber);}
+.dv.blue{color:var(--blue);}
+.dv.violet{color:var(--violet);}
+.dv.green{color:var(--green);}
+.hdiv{height:1px;background:var(--border);margin:10px 0;}
+#eq-box{padding:9px;border-radius:9px;background:rgba(91,200,255,0.06);border:1px solid rgba(91,200,255,0.18);font-size:11px;font-family:'Space Mono',monospace;color:rgba(160,210,255,0.85);line-height:1.8;text-align:center;}
+
+#controls{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;gap:8px;align-items:center;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:24px;
+  padding:10px 18px;z-index:10;justify-content:center;
+  max-width:calc(100vw - 40px);
+}
+.btn{padding:7px 16px;border-radius:30px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.amber.on{background:rgba(255,200,87,0.2);border-color:var(--amber);color:#1a1200;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.18);border-color:var(--green);color:#fff;}
+.btn.violet{border-color:rgba(181,122,255,0.4);color:var(--violet);background:rgba(181,122,255,0.06);}
+.btn.violet.on{background:rgba(181,122,255,0.22);border-color:var(--violet);color:#fff;}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;font-family:'Space Mono',monospace;white-space:nowrap;}
+.sw span.sw-lbl{display:inline-block;width:20px;text-align:left;}
+.sw span.sw-val{display:inline-block;width:56px;text-align:right;}
+.sw.pink span:first-child{color:var(--pink);}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:90px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:none;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+input[type=range].rng-pink::-webkit-slider-thumb{background:var(--pink);box-shadow:0 0 8px rgba(255,107,129,0.65);}
+input[type=range].rng-pink::-moz-range-thumb{background:var(--pink);box-shadow:0 0 8px rgba(255,107,129,0.65);}
+
+.chk-wrap{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;font-family:'Space Mono',monospace;white-space:nowrap;cursor:pointer;user-select:none;transition:opacity .2s;}
+.chk-wrap input[type=checkbox]{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:5px;border:1px solid rgba(180,200,255,0.35);background:rgba(180,200,255,0.06);cursor:pointer;position:relative;outline:none;flex-shrink:0;transition:all .15s;}
+.chk-wrap input[type=checkbox]:checked{background:var(--violet);border-color:var(--violet);box-shadow:0 0 8px rgba(181,122,255,0.5);}
+.chk-wrap input[type=checkbox]:checked::after{content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #0b0614;border-width:0 2px 2px 0;transform:rotate(45deg);}
+.hidden-ctl{display:none !important;}
+
+/* ── View panel (camera presets) ── */
+#viewPanel{
+  position:fixed;bottom:20px;left:20px;z-index:10;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:10px;display:flex;flex-direction:column;gap:8px;
+}
+#viewPanel h2{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;padding:0 2px;}
+#viewBtns{display:flex;gap:6px;}
+.vbtn{padding:7px 12px;border-radius:20px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.vbtn:hover{background:rgba(180,200,255,0.14);}
+.vbtn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+
+#hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+
+@media (max-width:640px){
+  #viewPanel{padding:8px;bottom:150px;}
+  .vbtn{padding:6px 9px;font-size:10px;}
+}
+
+/* ── Scope panel (2D wave graph) ── */
+#scopePanel{
+  position:fixed;top:78px;left:20px;width:246px;height:224px;z-index:16;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  box-shadow:0 8px 26px rgba(0,0,0,0.45);
+  cursor:pointer;
+  transition:top .38s cubic-bezier(.4,0,.2,1), left .38s cubic-bezier(.4,0,.2,1),
+             width .38s cubic-bezier(.4,0,.2,1), height .38s cubic-bezier(.4,0,.2,1),
+             transform .38s cubic-bezier(.4,0,.2,1), border-radius .38s ease;
+}
+#scopePanel:hover{border-color:rgba(180,200,255,0.28);}
+#scopePanel.expanded{
+  top:50%;left:50%;width:min(94vw,1120px);height:min(86vh,700px);
+  transform:translate(-50%,-50%);border-radius:20px;cursor:default;z-index:60;
+}
+#scopeHead{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);}
+#scopeHead span{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(180,200,255,0.5);text-transform:uppercase;}
+#scopeExpandHint{font-family:'Space Mono',monospace;font-size:8px;color:rgba(180,200,255,0.3);letter-spacing:1px;}
+#scopePanel.expanded #scopeExpandHint{display:none;}
+#scopeRestore{display:none;padding:5px 13px;border-radius:20px;border:1px solid rgba(180,200,255,0.3);background:rgba(180,200,255,0.08);color:var(--text);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;}
+#scopeRestore:hover{background:rgba(180,200,255,0.18);}
+#scopePanel.expanded #scopeRestore{display:block;}
+#scopeHeadRight{display:flex;align-items:center;gap:8px;}
+#scopePlayPause{display:none;padding:5px 13px;border-radius:20px;border:1px solid rgba(77,255,160,0.4);background:rgba(77,255,160,0.1);color:var(--green);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;}
+#scopePlayPause:hover{background:rgba(77,255,160,0.2);}
+#scopePlayPause.paused{border-color:rgba(180,200,255,0.3);background:rgba(180,200,255,0.08);color:var(--text);}
+#scopePanel.expanded #scopePlayPause{display:block;}
+#scopeStep{display:none;padding:5px 13px;border-radius:20px;border:1px solid rgba(91,200,255,0.4);background:rgba(91,200,255,0.1);color:var(--blue);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;}
+#scopeStep:hover{background:rgba(91,200,255,0.2);}
+#scopePanel.expanded #scopeStep{display:block;}
+#scopeCanvasWrap{position:absolute;top:32px;left:0;right:0;bottom:0;}
+#scopeCanvas{width:100%;height:100%;display:block;}
+#scopeBackdrop{display:none;position:fixed;inset:0;z-index:55;background:rgba(4,6,14,0.6);backdrop-filter:blur(6px);}
+#scopeBackdrop.show{display:block;}
+
+@media (max-width:640px){
+  #hud{min-width:170px;padding:14px;}
+  #scopePanel{width:170px;height:170px;top:74px;}
+}
+
+/* ── QR Button & Modal ── */
+#qrBtn{
+  display:flex;align-items:center;gap:6px;
+  margin-left:12px;padding:6px 14px;border-radius:20px;
+  border:1px solid rgba(180,200,255,0.25);background:rgba(10,14,28,0.7);
+  backdrop-filter:blur(10px);color:var(--blue);font-family:'Space Mono',monospace;
+  font-size:11px;cursor:pointer;transition:all .2s;outline:none;
+}
+#qrBtn:hover{background:rgba(91,200,255,0.18);border-color:var(--blue);color:#fff;}
+#qrBtn svg{flex-shrink:0;}
+
+#qrModal{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s ease;
+}
+#qrModal.show{opacity:1;pointer-events:auto;}
+#qrModalBackdrop{position:absolute;inset:0;background:rgba(4,6,14,0.75);backdrop-filter:blur(8px);}
+#qrModalBox{
+  position:relative;z-index:2;background:rgba(13,17,32,0.95);
+  border:1px solid rgba(180,200,255,0.2);border-radius:20px;
+  padding:24px;width:min(90vw, 320px);text-align:center;
+  box-shadow:0 12px 36px rgba(0,0,0,0.6);
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+#qrCloseBtn{
+  position:absolute;top:12px;right:14px;background:none;border:none;
+  color:var(--muted);font-size:22px;cursor:pointer;line-height:1;transition:color .2s;
+}
+#qrCloseBtn:hover{color:#fff;}
+#qrModalBox h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;}
+#qrModalBox p{font-size:11px;color:var(--muted);margin-top:-6px;}
+.qr-img-wrap{
+  background:#fff;padding:12px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(0,0,0,0.3);
+}
+.qr-img-wrap img{width:180px;height:180px;display:block;}
+.qr-link{
+  font-family:'Space Mono',monospace;font-size:9px;color:var(--blue);
+  text-decoration:none;word-break:break-all;opacity:0.8;transition:opacity .2s;
+}
+.qr-link:hover{opacity:1;text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div id="simWrap" style="position:absolute;inset:0;z-index:1;"><canvas id="mainCanvas"></canvas></div>
+
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+  <div id="title-text">
+    <h1>WAVE LAB</h1>
+    <p>Transverse &amp; Longitudinal Waves</p>
+  </div>
+  <button id="qrBtn" title="Scan QR Code for Mobile / AR Access">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"></rect>
+      <rect x="14" y="3" width="7" height="7"></rect>
+      <rect x="14" y="14" width="7" height="7"></rect>
+      <rect x="3" y="14" width="7" height="7"></rect>
+      <path d="M7 7h.01M18 7h.01M7 18h.01"></path>
+    </svg>
+    <span>QR</span>
+  </button>
+</div>
+
+<div id="qrModal">
+  <div id="qrModalBackdrop"></div>
+  <div id="qrModalBox">
+    <button id="qrCloseBtn" aria-label="Close">&times;</button>
+    <h3>Mobile / AR Access</h3>
+    <p>Scan to view Wave Lab on your device</p>
+    <div class="qr-img-wrap">
+      <img id="qrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://darawa-io.github.io/ARLABS/wave_lab.html" alt="Wave Lab QR Code">
+    </div>
+    <a href="https://darawa-io.github.io/ARLABS/wave_lab.html" target="_blank" rel="noopener noreferrer" class="qr-link">https://darawa-io.github.io/ARLABS/wave_lab.html</a>
+  </div>
+</div>
+
+<!-- Scope panel: 2D representation of the wave -->
+<div id="scopeBackdrop"></div>
+<div id="scopePanel">
+  <div id="scopeHead">
+    <span id="scopeTitle">y(x,t) — Waveform</span>
+    <span id="scopeExpandHint">tap to expand</span>
+    <div id="scopeHeadRight">
+      <button id="scopeStep">⏭ Step</button>
+      <button id="scopePlayPause">⏸ Pause</button>
+      <button id="scopeRestore">⤡ Restore</button>
+    </div>
+  </div>
+  <div id="scopeCanvasWrap"><canvas id="scopeCanvas"></canvas></div>
+</div>
+
+<div id="hud">
+  <h2>Wave Properties</h2>
+  <div class="dr"><span class="dl">Type</span><span class="dv violet" id="val-type">Transverse</span></div>
+  <div class="dr"><span class="dl">Frequency f</span><span class="dv amber" id="val-freq">0.80 Hz</span></div>
+  <div class="dr"><span class="dl">Wavelength λ</span><span class="dv blue" id="val-wave">4.00 m</span></div>
+  <div class="dr"><span class="dl">Amplitude A</span><span class="dv" id="val-amp" style="color:#fff;">1.00 m</span></div>
+  <div class="dr"><span class="dl">Period T</span><span class="dv" id="val-period" style="color:var(--muted);">1.25 s</span></div>
+  <div class="dr"><span class="dl">Speed v = fλ</span><span class="dv green" id="val-speed">3.20 m/s</span></div>
+</div>
+
+<div id="controls">
+  <!-- Transverse & Longitudinal buttons left-aligned, Challenge button right-aligned -->
+  <div style="display:flex;justify-space-between;justify-content:space-between;align-items:center;width:100%;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn on" id="btn-transverse" style="padding:5px 14px;font-size:12px;">〰️ Transverse</button>
+      <button class="btn amber" id="btn-longitudinal" style="padding:5px 14px;font-size:12px;">⠿ Longitudinal</button>
+    </div>
+    <button class="btn violet" id="btn-challenge" style="padding:5px 14px;font-size:12px;">🎯 Challenge</button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;width:100%;">
+    <!-- Sliders section (stacked rows for 1st & 2nd wave sources) -->
+    <div id="sliders-container" style="display:flex;flex-direction:column;gap:8px;">
+      <!-- Row 1: Source 1 Controls & 2nd Source toggle -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;">
+        <div class="sw"><span class="sw-lbl">f</span><input type="range" id="sl-freq" min="0.2" max="2.0" step="0.05" value="0.8"><span class="sw-val" id="lbl-freq">0.80 Hz</span></div>
+        <div class="sw"><span class="sw-lbl">A</span><input type="range" id="sl-amp" min="0.2" max="1.8" step="0.05" value="1.0"><span class="sw-val" id="lbl-amp">1.00 m</span></div>
+        <div class="sep" id="sep-src2"></div>
+        <label class="chk-wrap" id="chk-src2-wrap"><input type="checkbox" id="chk-source2">2nd Source</label>
+      </div>
+
+      <!-- Row 2: Source 2 Controls (aligned with Row 1 above) -->
+      <div id="src2-row" class="hidden-ctl" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;">
+        <div class="sw pink" id="freq2Wrap"><span class="sw-lbl">f₂</span><input class="rng-pink" type="range" id="sl-freq2" min="0.2" max="2.0" step="0.05" value="0.8"><span class="sw-val" id="lbl-freq2">0.80 Hz</span></div>
+        <div class="sw pink" id="amp2Wrap"><span class="sw-lbl">A₂</span><input class="rng-pink" type="range" id="sl-amp2" min="0.2" max="1.8" step="0.05" value="1.0"><span class="sw-val" id="lbl-amp2">1.00 m</span></div>
+        <div class="sep"></div>
+        <div class="sw" id="phase2Wrap"><span class="sw-lbl">Δφ</span><input type="range" id="sl-phase2" min="0" max="360" step="5" value="0"><span class="sw-val" id="lbl-phase2">0°</span></div>
+      </div>
+    </div>
+
+    <!-- Challenge answer inputs container -->
+    <div id="challenge-container" class="hidden-ctl" style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
+        <div style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+          <label for="input-ch-period">T (s):</label>
+          <input type="number" id="input-ch-period" step="0.01" min="0.1" max="10.0" placeholder="0.00" style="width:70px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+          <label for="input-ch-amp">A (m):</label>
+          <input type="number" id="input-ch-amp" step="0.01" min="0.1" max="5.0" placeholder="0.00" style="width:70px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+          <label for="input-ch-wave">λ (m):</label>
+          <input type="number" id="input-ch-wave" step="0.01" min="0.1" max="20.0" placeholder="0.00" style="width:70px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+        </div>
+        <button class="btn violet" id="btn-check-challenge" style="padding:5px 14px;">Check Answer</button>
+        <button class="btn" id="btn-new-challenge" style="padding:5px 12px;font-size:11px;">🎲 New Target</button>
+      </div>
+      <div id="challenge-feedback" style="font-family:'Space Mono',monospace;font-size:11px;min-height:16px;text-align:center;"></div>
+    </div>
+
+    <div class="sep"></div>
+    <!-- Action buttons to the right of sliders -->
+    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+      <button class="btn green" id="btn-play">⏸ Pause</button>
+      <button class="btn" id="btn-step">⏭ Step</button>
+      <button class="btn" id="btn-reset">↺ Restore</button>
+    </div>
+  </div>
+</div>
+
+<div id="viewPanel">
+  <h2>Camera View</h2>
+  <div id="viewBtns">
+    <button class="vbtn on" id="btn-view-free">◎ Free</button>
+    <button class="vbtn" id="btn-view-top">⬇ Top</button>
+    <button class="vbtn" id="btn-view-center">▭ Center</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+const WAVE_SPEED = 3.2; // m/s — fixed property of the medium; v = f·λ always holds
+const S = {
+  type: 'transverse',   // 'transverse' | 'longitudinal'
+  freq: 0.8,             // Hz
+  wavelength: WAVE_SPEED / 0.8, // m
+  amplitude: 1.0,         // m
+  playing: true,
+  t: 0,
+  source2: false,         // transverse-only: second source toggle
+  freq2: 0.8,              // Hz — 2nd source's own frequency
+  wavelength2: WAVE_SPEED / 0.8, // m — derived: λ2 = v / f2
+  amplitude2: 1.0,         // m — 2nd source's own amplitude
+  phase2: 0,               // rad — phase offset of the second source
+  challengeMode: false,
+  targetFreq: 0.8,
+  targetAmp: 1.0
+};
+const XMIN = -9, XMAX = 9;
+const Z2_POS = 3.2; // Z position for the 2nd wave ribbon so ribbons do not overlap
+
+function kOf(){ return 2*Math.PI / S.wavelength; }
+function wOf(){ return 2*Math.PI * S.freq; }
+function k2Of(){ return 2*Math.PI / S.wavelength2; }
+function w2Of(){ return 2*Math.PI * S.freq2; }
+function speedOf(){ return S.freq * S.wavelength; }
+function periodOf(){ return 1/S.freq; }
+
+// Wave 1 displacement ONLY (source 1)
+function disp(x0, t){ return S.amplitude * Math.sin(kOf()*x0 - wOf()*t); }
+// Wave 2 displacement ONLY (source 2)
+function disp2(x0, t){ return S.amplitude2 * Math.sin(k2Of()*x0 - w2Of()*t + S.phase2); }
+
+function strain(x0, t){ return -S.amplitude*kOf()*Math.cos(kOf()*x0 - wOf()*t); }
+
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.018);
+const cam3 = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w,h);
+  cam3.aspect = w/h; cam3.updateProjectionMatrix();
+}
+resize(); window.addEventListener('resize', resize);
+
+scene3.add(new THREE.AmbientLight(0xffffff, 2.2));
+const sun = new THREE.DirectionalLight(0xfff8f0, 1.1); sun.position.set(5,10,6); scene3.add(sun);
+const fill = new THREE.DirectionalLight(0x88aaff, 0.4); fill.position.set(-6,4,-4); scene3.add(fill);
+
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0x0d1020, roughness:0.95}));
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -2.6; scene3.add(floorM);
+const grid = new THREE.GridHelper(40,30,0x1a2540,0x121c30); grid.position.y = -2.58; scene3.add(grid);
+
+const root3 = new THREE.Group(); scene3.add(root3);
+
+// Baseline axis 1 (Z=0)
+{ const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(XMIN,0,0), new THREE.Vector3(XMAX,0,0)]);
+  root3.add(new THREE.Line(g, new THREE.LineBasicMaterial({color:0x3a6070}))); }
+
+// Baseline axis 2 (Z=3.2)
+const base2LineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(XMIN,0,Z2_POS), new THREE.Vector3(XMAX,0,Z2_POS)]);
+const base2LineMat = new THREE.LineBasicMaterial({color:0x703a50, transparent:true, opacity:0.6});
+const base2Line = new THREE.Line(base2LineGeo, base2LineMat);
+base2Line.visible = false;
+root3.add(base2Line);
+
+/* Wave-source housing 1 (Z = 0) */
+const sourceGrp = new THREE.Group(); sourceGrp.position.set(XMIN, 0, 0); root3.add(sourceGrp);
+const houseMat = new THREE.MeshStandardMaterial({color:0x223344, metalness:0.7, roughness:0.35});
+const house = new THREE.Mesh(new THREE.BoxGeometry(0.6,1.6,1.6), houseMat);
+house.position.set(-0.5,0,0); sourceGrp.add(house);
+const paddleMat = new THREE.MeshStandardMaterial({color:0xfffbe8, emissive:0xffc857, emissiveIntensity:1.4, metalness:0.3, roughness:0.4});
+const paddle = new THREE.Mesh(new THREE.BoxGeometry(0.14,1.4,1.4), paddleMat);
+sourceGrp.add(paddle);
+const stand1Mat = new THREE.MeshStandardMaterial({color:0x445566, metalness:0.7});
+const standBase = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.12,1.4), stand1Mat); standBase.position.set(-0.3,-1.86,0); sourceGrp.add(standBase);
+const standPost = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.66,6), stand1Mat); standPost.position.set(-0.3,-1.5,0); sourceGrp.add(standPost);
+
+/* Wave-source housing 2 (Z = 3.2) */
+const sourceGrp2 = new THREE.Group(); sourceGrp2.position.set(XMIN, 0, Z2_POS); root3.add(sourceGrp2);
+sourceGrp2.visible = false;
+const houseMat2 = new THREE.MeshStandardMaterial({color:0x3a2430, metalness:0.7, roughness:0.35});
+const house2 = new THREE.Mesh(new THREE.BoxGeometry(0.6,1.6,1.6), houseMat2);
+house2.position.set(-0.5,0,0); sourceGrp2.add(house2);
+const paddleMat2 = new THREE.MeshStandardMaterial({color:0xfff0f0, emissive:0xff6b81, emissiveIntensity:1.4, metalness:0.3, roughness:0.4});
+const paddle2 = new THREE.Mesh(new THREE.BoxGeometry(0.14,1.4,1.4), paddleMat2);
+sourceGrp2.add(paddle2);
+const stand2Mat = new THREE.MeshStandardMaterial({color:0x5a4048, metalness:0.7});
+const standBase2 = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.12,1.4), stand2Mat); standBase2.position.set(-0.3,-1.86,0); sourceGrp2.add(standBase2);
+const standPost2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.66,6), stand2Mat); standPost2.position.set(-0.3,-1.5,0); sourceGrp2.add(standPost2);
+
+/* End wall */
+const wallGrp = new THREE.Group(); wallGrp.position.set(XMAX, 0, 0); root3.add(wallGrp);
+const wallMat = new THREE.MeshStandardMaterial({color:0x223344, metalness:0.6, roughness:0.4});
+wallGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.3,1.8,1.8), wallMat));
+
+const NX = 60, NZ = 5, ZWIDTH = 2.2;
+
+function buildRibbonGrid(zCenter, colorR, colorG, colorB){
+  const positions = new Float32Array(NX*NZ*3);
+  const colors = new Float32Array(NX*NZ*3);
+  const base = [];
+  let idx = 0;
+  for(let j=0;j<NZ;j++){
+    const zOffset = -ZWIDTH/2 + (ZWIDTH)*j/(NZ-1);
+    const z0 = zCenter + zOffset;
+    for(let i=0;i<NX;i++){
+      const x0 = XMIN + (XMAX-XMIN)*i/(NX-1);
+      positions[idx*3]=x0; positions[idx*3+1]=0; positions[idx*3+2]=z0;
+      colors[idx*3]=colorR; colors[idx*3+1]=colorG; colors[idx*3+2]=colorB;
+      base.push({x0,z0});
+      idx++;
+    }
+  }
+  const indices = [];
+  for(let j=0;j<NZ-1;j++){
+    for(let i=0;i<NX-1;i++){
+      const a=j*NX+i, b=j*NX+i+1, c=(j+1)*NX+i, d=(j+1)*NX+i+1;
+      indices.push(a,b,c, b,d,c);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return {geo, base};
+}
+
+// Ribbon 1 for Wave 1 (Z center = 0)
+const gridData1 = buildRibbonGrid(0, 0.35, 0.75, 1.0);
+const ribbonMat1 = new THREE.MeshStandardMaterial({
+  vertexColors:true, transparent:true, opacity:0.82, side:THREE.DoubleSide,
+  roughness:0.45, metalness:0.15, emissive:0x0a1020, emissiveIntensity:0.6
+});
+const ribbon1 = new THREE.Mesh(gridData1.geo, ribbonMat1);
+root3.add(ribbon1);
+
+// Ribbon 2 for Wave 2 (Z center = 3.2) — no overlap with Ribbon 1
+const gridData2 = buildRibbonGrid(Z2_POS, 1.0, 0.42, 0.55);
+const ribbonMat2 = new THREE.MeshStandardMaterial({
+  vertexColors:true, transparent:true, opacity:0.82, side:THREE.DoubleSide,
+  roughness:0.45, metalness:0.15, emissive:0x200a14, emissiveIntensity:0.6
+});
+const ribbon2 = new THREE.Mesh(gridData2.geo, ribbonMat2);
+ribbon2.visible = false;
+root3.add(ribbon2);
+
+const N_MARKERS = 26;
+const markerBase = [];
+for(let i=0;i<N_MARKERS;i++){
+  markerBase.push(XMIN + (XMAX-XMIN)*i/(N_MARKERS-1));
+}
+
+// Wave 1 Markers & Connectors (Z = 0)
+const markers1 = [];
+const connLines1 = [];
+const markerGeo = new THREE.SphereGeometry(0.11, 10, 10);
+const connGroup1 = new THREE.Group(); root3.add(connGroup1);
+
+for(let i=0;i<N_MARKERS;i++){
+  const x0 = markerBase[i];
+  const mat = new THREE.MeshStandardMaterial({color:0x5bc8ff, emissive:0x5bc8ff, emissiveIntensity:1.1, roughness:0.3});
+  const m = new THREE.Mesh(markerGeo, mat);
+  m.position.set(x0,0,0);
+  root3.add(m);
+  markers1.push(m);
+
+  const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x0,0,0), new THREE.Vector3(x0,0,0)]);
+  const lMat = new THREE.LineDashedMaterial({color:0x3a6a90, dashSize:0.12, gapSize:0.08, transparent:true, opacity:0.6});
+  const l = new THREE.Line(g, lMat);
+  connGroup1.add(l);
+  connLines1.push(l);
+}
+
+// Wave 2 Markers & Connectors (Z = 3.2)
+const markers2 = [];
+const connLines2 = [];
+const connGroup2 = new THREE.Group(); root3.add(connGroup2);
+connGroup2.visible = false;
+
+for(let i=0;i<N_MARKERS;i++){
+  const x0 = markerBase[i];
+  const mat = new THREE.MeshStandardMaterial({color:0xff6b81, emissive:0xff6b81, emissiveIntensity:1.1, roughness:0.3});
+  const m = new THREE.Mesh(markerGeo, mat);
+  m.position.set(x0,0,Z2_POS);
+  m.visible = false;
+  root3.add(m);
+  markers2.push(m);
+
+  const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x0,0,Z2_POS), new THREE.Vector3(x0,0,Z2_POS)]);
+  const lMat = new THREE.LineDashedMaterial({color:0x903a55, dashSize:0.12, gapSize:0.08, transparent:true, opacity:0.6});
+  const l = new THREE.Line(g, lMat);
+  connGroup2.add(l);
+  connLines2.push(l);
+}
+
+const colorCompress = new THREE.Color(0xffc857);
+const colorRarefy  = new THREE.Color(0x5b7aff);
+const colorTrans   = new THREE.Color(0x5bc8ff);
+const colorTrans2  = new THREE.Color(0xff6b81);
+const colorAltBlue  = new THREE.Color(0x1f4e85);
+const colorWhite    = new THREE.Color(0xaab0ba);
+
+function updateWave(){
+  const t = S.t;
+  const isLong = (S.type === 'longitudinal');
+  const src2On = (!isLong && S.source2);
+
+  // 1. Update Wave 1 Ribbon (shows Wave 1 ONLY)
+  const pos1 = gridData1.geo.attributes.position.array;
+  const col1 = gridData1.geo.attributes.color.array;
+
+  for(let n=0;n<gridData1.base.length;n++){
+    const {x0,z0} = gridData1.base[n];
+    if(isLong){
+      const d = disp(x0,t);
+      pos1[n*3]   = x0 + d;
+      pos1[n*3+1] = 0;
+      pos1[n*3+2] = z0;
+      const st = strain(x0,t);
+      const c = Math.max(-1, Math.min(1, -st * 1.3));
+      const mixed = colorRarefy.clone().lerp(colorCompress, (c+1)/2);
+      col1[n*3]=mixed.r; col1[n*3+1]=mixed.g; col1[n*3+2]=mixed.b;
+    } else {
+      const d = disp(x0,t); // Strictly Wave 1
+      pos1[n*3]   = x0;
+      pos1[n*3+1] = d;
+      pos1[n*3+2] = z0;
+      col1[n*3]=colorTrans.r; col1[n*3+1]=colorTrans.g; col1[n*3+2]=colorTrans.b;
+    }
+  }
+  gridData1.geo.attributes.position.needsUpdate = true;
+  gridData1.geo.attributes.color.needsUpdate = true;
+  gridData1.geo.computeVertexNormals();
+
+  // 2. Update Wave 2 Ribbon (shows Wave 2 ONLY when active)
+  ribbon2.visible = src2On;
+  if(src2On){
+    const pos2 = gridData2.geo.attributes.position.array;
+    const col2 = gridData2.geo.attributes.color.array;
+    for(let n=0;n<gridData2.base.length;n++){
+      const {x0,z0} = gridData2.base[n];
+      const d2 = disp2(x0,t); // Strictly Wave 2
+      pos2[n*3]   = x0;
+      pos2[n*3+1] = d2;
+      pos2[n*3+2] = z0;
+      col2[n*3]=colorTrans2.r; col2[n*3+1]=colorTrans2.g; col2[n*3+2]=colorTrans2.b;
+    }
+    gridData2.geo.attributes.position.needsUpdate = true;
+    gridData2.geo.attributes.color.needsUpdate = true;
+    gridData2.geo.computeVertexNormals();
+  }
+
+  // 3. Update Markers & Connector Lines for Wave 1
+  for(let i=0;i<N_MARKERS;i++){
+    const x0 = markerBase[i];
+    const m = markers1[i];
+    if(isLong){
+      const d = disp(x0,t);
+      m.position.set(x0+d, 0, 0);
+      const c = (i%2===0) ? colorAltBlue : colorWhite;
+      m.material.color.copy(c);
+      m.material.emissive.copy(c);
+      m.material.emissiveIntensity = 0.3;
+    } else {
+      const d = disp(x0,t);
+      m.position.set(x0, d, 0);
+      m.material.color.copy(colorTrans);
+      m.material.emissive.copy(colorTrans);
+      m.material.emissiveIntensity = 1.1;
+    }
+    const ln = connLines1[i];
+    const p = ln.geometry.attributes.position.array;
+    if(isLong){
+      const d = disp(x0,t);
+      p[0]=x0; p[1]=0; p[2]=0; p[3]=x0+d; p[4]=0; p[5]=0;
+    } else {
+      const d = disp(x0,t);
+      p[0]=x0; p[1]=0; p[2]=0; p[3]=x0; p[4]=d; p[5]=0;
+    }
+    ln.geometry.attributes.position.needsUpdate = true;
+    ln.computeLineDistances();
+    ln.visible = true;
+  }
+
+  // 4. Update Markers & Connector Lines for Wave 2
+  connGroup2.visible = src2On;
+  base2Line.visible = src2On;
+  for(let i=0;i<N_MARKERS;i++){
+    const x0 = markerBase[i];
+    const m2 = markers2[i];
+    m2.visible = src2On;
+    if(src2On){
+      const d2 = disp2(x0,t);
+      m2.position.set(x0, d2, Z2_POS);
+      const ln2 = connLines2[i];
+      const p2 = ln2.geometry.attributes.position.array;
+      p2[0]=x0; p2[1]=0; p2[2]=Z2_POS; p2[3]=x0; p2[4]=d2; p2[5]=Z2_POS;
+      ln2.geometry.attributes.position.needsUpdate = true;
+      ln2.computeLineDistances();
+    }
+  }
+
+  // 5. Drive Source Paddles
+  const dSrc = disp(XMIN, t);
+  if(isLong){ paddle.position.set(dSrc, 0, 0); }
+  else { paddle.position.set(0, dSrc, 0); }
+
+  sourceGrp2.visible = src2On;
+  if(src2On) paddle2.position.set(0, disp2(XMIN, t), 0);
+}
+
+const orb = { theta: 0.35, phi: 0.22, radius: 18, cx: 0, cy: 0.2, cz: 0 };
+function applyOrbit(){
+  orb.phi = Math.max(-Math.PI/6, Math.min(1.48, orb.phi));
+  orb.radius = Math.max(7, Math.min(34, orb.radius));
+  const r=orb.radius, p=orb.phi, th=orb.theta;
+  cam3.position.set(orb.cx + r*Math.cos(p)*Math.sin(th), orb.cy + r*Math.sin(p), orb.cz + r*Math.cos(p)*Math.cos(th));
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
+}
+applyOrbit();
+
+let dragStart = null, pinchStartDist = 0, pinchStartRadius = orb.radius;
+canvas.addEventListener('touchstart', (e)=>{
+  e.preventDefault();
+  if(e.touches.length===1){ dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; }
+  else if(e.touches.length===2){
+    const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+    pinchStartDist=Math.hypot(dx,dy); pinchStartRadius=orb.radius; dragStart=null;
+  }
+}, {passive:false});
+canvas.addEventListener('touchmove', (e)=>{
+  e.preventDefault();
+  if(e.touches.length===1 && dragStart){
+    const dx=e.touches[0].clientX-dragStart.x, dy=e.touches[0].clientY-dragStart.y;
+    orb.theta -= dx*0.005; orb.phi += dy*0.005; applyOrbit();
+    dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  } else if(e.touches.length===2 && pinchStartDist>0){
+    const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+    const nd=Math.hypot(dx,dy); orb.radius=pinchStartRadius*(pinchStartDist/nd); applyOrbit();
+  }
+}, {passive:false});
+canvas.addEventListener('touchend',(e)=>{ if(e.touches.length===0){dragStart=null; pinchStartDist=0;} }, {passive:false});
+canvas.addEventListener('mousedown', (e)=>{ dragStart={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mousemove', (e)=>{
+  if(!dragStart) return;
+  const dx=e.clientX-dragStart.x, dy=e.clientY-dragStart.y;
+  orb.theta -= dx*0.005; orb.phi += dy*0.005; applyOrbit();
+  dragStart={x:e.clientX,y:e.clientY};
+});
+window.addEventListener('mouseup', ()=>{ dragStart=null; });
+canvas.addEventListener('wheel', (e)=>{ orb.radius += e.deltaY*0.015; applyOrbit(); e.preventDefault(); }, {passive:false});
+
+/* Camera view presets */
+const viewBtns = {
+  free:   document.getElementById('btn-view-free'),
+  top:    document.getElementById('btn-view-top'),
+  center: document.getElementById('btn-view-center')
+};
+function setView(mode){
+  if(mode==='top'){ orb.theta = 0.0001; orb.phi = 1.47; orb.radius = 15; }
+  else if(mode==='center'){ orb.theta = 0; orb.phi = 0; orb.radius = 13; }
+  else { orb.theta = 0.35; orb.phi = 0.22; orb.radius = 18; }
+  applyOrbit();
+  Object.entries(viewBtns).forEach(([k,b])=> b.classList.toggle('on', k===mode));
+}
+viewBtns.free.addEventListener('click', ()=> setView('free'));
+viewBtns.top.addEventListener('click', ()=> setView('top'));
+viewBtns.center.addEventListener('click', ()=> setView('center'));
+
+function clearViewPreset(){ Object.values(viewBtns).forEach(b=>b.classList.remove('on')); viewBtns.free.classList.add('on'); }
+canvas.addEventListener('mousedown', clearViewPreset);
+canvas.addEventListener('touchstart', clearViewPreset, {passive:true});
+canvas.addEventListener('wheel', clearViewPreset, {passive:true});
+
+const scopeCanvas = document.getElementById('scopeCanvas');
+const sctx = scopeCanvas.getContext('2d');
+const scopePanel = document.getElementById('scopePanel');
+let scopeDPR = 1;
+
+let activeInspectPoint = null; // Interactive tap/click coordinate state
+
+function handleScopePointer(e){
+  const rect = scopeCanvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const mx = (clientX - rect.left) * scopeDPR;
+  const my = (clientY - rect.top) * scopeDPR;
+
+  const w = scopeCanvas.width, h = scopeCanvas.height;
+  const big = scopePanel.classList.contains('expanded');
+  const dpr = scopeDPR;
+
+  const padX   = big? 14*dpr : 8*dpr;
+  const padTop = big? 10*dpr : 6*dpr;
+  const padBot = big? 8*dpr  : 5*dpr;
+  const marginL = big? 46*dpr : 26*dpr;
+  const marginR = big? 20*dpr : 8*dpr;
+  const capH    = big? 20*dpr : 12*dpr;
+  const xLabelH = big? 16*dpr : 0;
+  const gap     = big? 20*dpr : 10*dpr;
+
+  const usableH = h - padTop - padBot - capH*2 - xLabelH*2 - gap;
+  const topH = Math.max(10*dpr, Math.round(usableH*0.55));
+  const botH = Math.max(10*dpr, usableH - topH);
+  const plotW = Math.max(10*dpr, w - marginL - marginR - padX);
+
+  const topY0 = padTop + capH, topY1 = topY0+topH;
+  const botY0 = topY1+xLabelH+gap+capH, botY1 = botY0+botH;
+  const plotX0 = marginL;
+
+  const ampNow = (S.source2 && S.type==='transverse') ? Math.max(S.amplitude, S.amplitude2) : S.amplitude;
+  const Amax = Math.max(1.4, ampNow*1.22);
+  const yMidT = topY0 + topH*0.5;
+  const yScaleT = (topH*0.42)/Amax;
+  const yMidB = botY0 + botH*0.5;
+  const yScaleB = (botH*0.42)/Amax;
+
+  // Check if click was in top graph region
+  if(my >= topY0 - 10*dpr && my <= topY1 + 10*dpr && mx >= plotX0 && mx <= plotX0 + plotW){
+    const normX = Math.max(0, Math.min(1, (mx - plotX0) / plotW));
+    const xVal = XMIN + normX * (XMAX - XMIN);
+    const yCurve = disp(xVal, S.t);
+    const yVal = (yMidT - my) / yScaleT;
+    activeInspectPoint = { graph: 'top', xVal, yVal, yCurve, px: mx, py: my };
+    return;
+  }
+
+  // Check if click was in bottom graph region
+  if(my >= botY0 - 10*dpr && my <= botY1 + 10*dpr && mx >= plotX0 && mx <= plotX0 + plotW){
+    const T = periodOf();
+    const win = Math.max(6, 3.2*T);
+    const tNow = S.t, tStart = tNow - win;
+    const normX = Math.max(0, Math.min(1, (mx - plotX0) / plotW));
+    const tVal = tStart + normX * win;
+    const relT = tVal - tNow;
+    const yCurve = disp(0, tVal);
+    const yVal = (yMidB - my) / yScaleB;
+    activeInspectPoint = { graph: 'bot', tVal, relT, yVal, yCurve, px: mx, py: my };
+    return;
+  }
+}
+
+scopeCanvas.addEventListener('pointerdown', handleScopePointer);
+
+function resizeScope(){
+  const rect = scopeCanvas.getBoundingClientRect();
+  scopeDPR = Math.min(window.devicePixelRatio||1, 2);
+  const w = Math.max(1, Math.round(rect.width*scopeDPR));
+  const h = Math.max(1, Math.round(rect.height*scopeDPR));
+  if(scopeCanvas.width!==w) scopeCanvas.width = w;
+  if(scopeCanvas.height!==h) scopeCanvas.height = h;
+}
+if('ResizeObserver' in window){
+  new ResizeObserver(()=> resizeScope()).observe(document.getElementById('scopeCanvasWrap'));
+}
+
+const scopeHistory = [];
+function pushScopeSample(){
+  scopeHistory.push({t:S.t, y1:disp(0,S.t), y2:disp2(0,S.t)});
+  const win = Math.max(6, 3.2*periodOf()) + 1;
+  while(scopeHistory.length && scopeHistory[0].t < S.t - win) scopeHistory.shift();
+}
+
+function drawScope(){
+  const w = scopeCanvas.width, h = scopeCanvas.height;
+  if(w<2||h<2) return;
+  const big = scopePanel.classList.contains('expanded');
+  sctx.setTransform(1,0,0,1,0,0);
+  sctx.clearRect(0,0,w,h);
+  const isLong = S.type==='longitudinal';
+  const src2On = (!isLong && S.source2);
+  const dpr = scopeDPR;
+  const waveColor = isLong ? '#ffc857' : '#5bc8ff';
+  const wave2Color = '#ff6b81';
+
+  const padX   = big? 14*dpr : 8*dpr;
+  const padTop = big? 10*dpr : 6*dpr;
+  const padBot = big? 8*dpr  : 5*dpr;
+  const marginL = big? 46*dpr : 26*dpr;
+  const marginR = big? 20*dpr : 8*dpr;
+  const capH    = big? 20*dpr : 12*dpr;
+  const xLabelH = big? 16*dpr : 0;
+  const gap     = big? 20*dpr : 10*dpr;
+
+  const usableH = h - padTop - padBot - capH*2 - xLabelH*2 - gap;
+  const topH = Math.max(10*dpr, Math.round(usableH*0.55));
+  const botH = Math.max(10*dpr, usableH - topH);
+  const plotW = Math.max(10*dpr, w - marginL - marginR - padX);
+
+  const topY0 = padTop + capH, topY1 = topY0+topH;
+  const botY0 = topY1+xLabelH+gap+capH, botY1 = botY0+botH;
+  const plotX0 = marginL;
+
+  sctx.textBaseline = 'alphabetic';
+
+  /* ───── Top subplot: y(x) snapshot ───── */
+  sctx.font = (big?10.5*dpr:8*dpr)+'px "Space Mono",monospace';
+  sctx.fillStyle='rgba(220,235,255,0.55)'; sctx.textAlign='left';
+  sctx.fillText(big? `y(x) snapshot — tap/click graph for coordinates` : 'y(x) wave graph', plotX0, topY0-7*dpr);
+
+  const ampNow = src2On ? Math.max(S.amplitude, S.amplitude2) : S.amplitude;
+  const Amax = Math.max(1.4, ampNow*1.22);
+  const yMidT = topY0 + topH*0.5;
+  const yScaleT = (topH*0.42)/Amax;
+  const xToPx = (x)=> plotX0 + ((x-XMIN)/(XMAX-XMIN))*plotW;
+  const yToPxT = (y)=> yMidT - y*yScaleT;
+
+  sctx.strokeStyle='rgba(180,200,255,0.07)'; sctx.lineWidth=1*dpr;
+  const gridStepX = big?2:3;
+  for(let x=Math.ceil(XMIN/gridStepX)*gridStepX; x<=XMAX; x+=gridStepX){
+    sctx.beginPath(); sctx.moveTo(xToPx(x),topY0); sctx.lineTo(xToPx(x),topY1); sctx.stroke();
+  }
+  sctx.strokeStyle='rgba(180,200,255,0.32)';
+  sctx.beginPath(); sctx.moveTo(plotX0,yMidT); sctx.lineTo(plotX0+plotW,yMidT); sctx.stroke();
+  sctx.strokeStyle='rgba(180,200,255,0.18)';
+  sctx.beginPath(); sctx.moveTo(plotX0,topY0); sctx.lineTo(plotX0,topY1); sctx.stroke();
+
+  if(big){
+    sctx.fillStyle='rgba(180,200,255,0.5)'; sctx.textAlign='right'; sctx.font=(9*dpr)+'px "Space Mono",monospace';
+    const yTickStep = Amax>2.4 ? 1 : 0.5;
+    const yStart = -Math.floor(Amax/yTickStep)*yTickStep;
+    for(let yv=yStart; yv<=Amax+1e-6; yv+=yTickStep){
+      const py = yToPxT(yv);
+      if(py<topY0-2*dpr || py>topY1+2*dpr) continue;
+      sctx.fillText(yv.toFixed(yTickStep%1===0?0:1), plotX0-7*dpr, py+3*dpr);
+      if(Math.abs(yv)>1e-6){ sctx.strokeStyle='rgba(180,200,255,0.18)'; sctx.beginPath(); sctx.moveTo(plotX0-3*dpr,py); sctx.lineTo(plotX0,py); sctx.stroke(); }
+    }
+  }
+
+  sctx.fillStyle='rgba(180,200,255,0.45)'; sctx.textAlign='center'; sctx.font=(big?9.5*dpr:7.5*dpr)+'px "Space Mono",monospace';
+  const xTickStep = big?2:6;
+  for(let x=Math.ceil(XMIN/xTickStep)*xTickStep; x<=XMAX; x+=xTickStep){
+    sctx.fillText((big? x+'m' : x+''), xToPx(x), topY1+(big?12:9)*dpr);
+  }
+
+  if(isLong){
+    const N=160;
+    for(let i=0;i<N;i++){
+      const x0 = XMIN + (XMAX-XMIN)*i/N;
+      const st = strain(x0, S.t);
+      const c = Math.max(-1,Math.min(1,-st*1.3));
+      const x1 = xToPx(x0), x2 = xToPx(XMIN + (XMAX-XMIN)*(i+1)/N);
+      sctx.fillStyle = c>0 ? `rgba(255,200,87,${0.05+0.14*c})` : `rgba(91,122,255,${0.05+0.14*(-c)})`;
+      sctx.fillRect(x1, topY0, (x2-x1)+1, topH);
+    }
+  }
+
+  function drawWaveCurve(dispFn, color){
+    sctx.beginPath();
+    const N=200;
+    for(let i=0;i<=N;i++){
+      const x0 = XMIN + (XMAX-XMIN)*i/N;
+      const px=xToPx(x0), py=yToPxT(dispFn(x0,S.t));
+      if(i===0) sctx.moveTo(px,py); else sctx.lineTo(px,py);
+    }
+    sctx.strokeStyle = color; sctx.lineWidth=(big?2*dpr:1.5*dpr);
+    sctx.shadowColor=color; sctx.shadowBlur=big?7:3;
+    sctx.stroke(); sctx.shadowBlur=0;
+
+    const dotN = big?28:14;
+    for(let i=0;i<=dotN;i++){
+      const x0 = XMIN + (XMAX-XMIN)*i/dotN;
+      sctx.beginPath();
+      sctx.arc(xToPx(x0), yToPxT(dispFn(x0,S.t)), (big?3*dpr:1.8*dpr), 0, Math.PI*2);
+      sctx.fillStyle = color;
+      sctx.fill();
+    }
+  }
+  drawWaveCurve(disp, isLong ? '#fff3d6' : waveColor);
+  if(src2On) drawWaveCurve(disp2, wave2Color);
+
+  sctx.strokeStyle='rgba(180,200,255,0.08)'; sctx.lineWidth=1*dpr;
+  sctx.beginPath(); sctx.moveTo(plotX0-marginL*0.3, topY1+xLabelH+gap*0.5); sctx.lineTo(plotX0+plotW+marginR*0.5, topY1+xLabelH+gap*0.5); sctx.stroke();
+
+  /* ───── Bottom subplot: y(t) at x=0 ───── */
+  sctx.font=(big?10.5*dpr:8*dpr)+'px "Space Mono",monospace';
+  sctx.fillStyle='rgba(220,235,255,0.55)'; sctx.textAlign='left';
+  sctx.fillText(big? 'y(t) at x=0 — tap/click graph for coordinates' : 'y(t) time graph', plotX0, botY0-7*dpr);
+
+  const yMidB = botY0 + botH*0.5;
+  const yScaleB = (botH*0.42)/Amax;
+  const yToPxB = (y)=> yMidB - y*yScaleB;
+  const T = periodOf();
+  const win = Math.max(6, 3.2*T);
+  const tNow = S.t, tStart = tNow - win;
+  const tToPx = (tt)=> plotX0 + ((tt-tStart)/win)*plotW;
+
+  sctx.strokeStyle='rgba(180,200,255,0.18)';
+  sctx.beginPath(); sctx.moveTo(plotX0,botY0); sctx.lineTo(plotX0,botY1); sctx.stroke();
+  sctx.strokeStyle='rgba(180,200,255,0.32)';
+  sctx.beginPath(); sctx.moveTo(plotX0,yMidB); sctx.lineTo(plotX0+plotW,yMidB); sctx.stroke();
+
+  if(big){
+    sctx.fillStyle='rgba(180,200,255,0.5)'; sctx.textAlign='right'; sctx.font=(9*dpr)+'px "Space Mono",monospace';
+    const yTickStep = Amax>2.4 ? 1 : 0.5;
+    const yStart = -Math.floor(Amax/yTickStep)*yTickStep;
+    for(let yv=yStart; yv<=Amax+1e-6; yv+=yTickStep){
+      const py = yToPxB(yv);
+      if(py<botY0-2*dpr || py>botY1+2*dpr) continue;
+      sctx.fillText(yv.toFixed(yTickStep%1===0?0:1), plotX0-7*dpr, py+3*dpr);
+      if(Math.abs(yv)>1e-6){ sctx.strokeStyle='rgba(180,200,255,0.18)'; sctx.beginPath(); sctx.moveTo(plotX0-3*dpr,py); sctx.lineTo(plotX0,py); sctx.stroke(); }
+    }
+  }
+
+  sctx.strokeStyle='rgba(181,122,255,0.26)'; sctx.lineWidth=1*dpr;
+  const gridTimes=[];
+  for(let tt=tNow; tt>=tStart; tt-=T){ gridTimes.push(tt); sctx.beginPath(); sctx.moveTo(tToPx(tt),botY0); sctx.lineTo(tToPx(tt),botY1); sctx.stroke(); }
+  if(big){
+    sctx.fillStyle='rgba(180,200,255,0.45)'; sctx.textAlign='center'; sctx.font=(9.5*dpr)+'px "Space Mono",monospace';
+    for(let tt=Math.ceil(tStart); tt<=tNow; tt++){
+      sctx.fillText((tt-tNow).toFixed(0)+'s', tToPx(tt), botY1+12*dpr);
+    }
+  }
+
+  function drawTrace(key, color){
+    if(scopeHistory.length<2) return;
+    sctx.beginPath();
+    let started=false;
+    for(let i=0;i<scopeHistory.length;i++){
+      const p=scopeHistory[i];
+      if(p.t<tStart) continue;
+      const px=tToPx(p.t), py=yToPxB(p[key]);
+      if(!started){ sctx.moveTo(px,py); started=true; } else sctx.lineTo(px,py);
+    }
+    sctx.strokeStyle=color; sctx.lineWidth=(big?2*dpr:1.5*dpr);
+    sctx.shadowColor=color; sctx.shadowBlur=big?7:3;
+    sctx.stroke(); sctx.shadowBlur=0;
+  }
+  drawTrace('y1', waveColor);
+  if(src2On) drawTrace('y2', wave2Color);
+
+  sctx.beginPath(); sctx.arc(tToPx(tNow), yToPxB(disp(0,tNow)), (big?3.4*dpr:2.2*dpr), 0, Math.PI*2);
+  sctx.fillStyle=isLong?'#fff3d6':'#eaf7ff'; sctx.fill();
+  if(src2On){
+    sctx.beginPath(); sctx.arc(tToPx(tNow), yToPxB(disp2(0,tNow)), (big?3.4*dpr:2.2*dpr), 0, Math.PI*2);
+    sctx.fillStyle = wave2Color; sctx.fill();
+  }
+
+  if(activeInspectPoint){
+    const pt = activeInspectPoint;
+    if(pt.graph === 'top'){
+      const px = xToPx(pt.xVal);
+      const pyCurve = yToPxT(disp(pt.xVal, S.t));
+
+      // Crosshair lines
+      sctx.strokeStyle = 'rgba(255, 200, 87, 0.8)';
+      sctx.lineWidth = 1 * dpr;
+      sctx.setLineDash([3 * dpr, 3 * dpr]);
+      sctx.beginPath(); sctx.moveTo(px, topY0); sctx.lineTo(px, topY1); sctx.stroke();
+      sctx.beginPath(); sctx.moveTo(plotX0, pyCurve); sctx.lineTo(plotX0 + plotW, pyCurve); sctx.stroke();
+      sctx.setLineDash([]);
+
+      // Point on curve
+      sctx.beginPath();
+      sctx.arc(px, pyCurve, 4.5 * dpr, 0, Math.PI * 2);
+      sctx.fillStyle = '#ffc857';
+      sctx.fill();
+      sctx.strokeStyle = '#ffffff';
+      sctx.lineWidth = 1.5 * dpr;
+      sctx.stroke();
+
+      // Tooltip box
+      const text = `x: ${pt.xVal.toFixed(2)}m  y: ${disp(pt.xVal, S.t).toFixed(2)}m`;
+      sctx.font = (big ? 10 * dpr : 8 * dpr) + 'px "Space Mono",monospace';
+      const textW = sctx.measureText(text).width;
+      const boxW = textW + 12 * dpr;
+      const boxH = (big ? 18 : 14) * dpr;
+      let boxX = px - boxW / 2;
+      boxX = Math.max(plotX0, Math.min(plotX0 + plotW - boxW, boxX));
+      let boxY = pyCurve - boxH - 6 * dpr;
+      if (boxY < topY0) boxY = pyCurve + 6 * dpr;
+
+      sctx.fillStyle = 'rgba(10, 14, 28, 0.9)';
+      sctx.strokeStyle = 'rgba(255, 200, 87, 0.7)';
+      sctx.lineWidth = 1 * dpr;
+      sctx.beginPath();
+      sctx.roundRect ? sctx.roundRect(boxX, boxY, boxW, boxH, 4 * dpr) : sctx.rect(boxX, boxY, boxW, boxH);
+      sctx.fill();
+      sctx.stroke();
+
+      sctx.fillStyle = '#ffffff';
+      sctx.textAlign = 'center';
+      sctx.textBaseline = 'middle';
+      sctx.fillText(text, boxX + boxW / 2, boxY + boxH / 2);
+    } else if(pt.graph === 'bot'){
+      const px = tToPx(pt.tVal);
+      const pyCurve = yToPxB(disp(0, pt.tVal));
+
+      // Crosshair lines
+      sctx.strokeStyle = 'rgba(77, 255, 160, 0.8)';
+      sctx.lineWidth = 1 * dpr;
+      sctx.setLineDash([3 * dpr, 3 * dpr]);
+      sctx.beginPath(); sctx.moveTo(px, botY0); sctx.lineTo(px, botY1); sctx.stroke();
+      sctx.beginPath(); sctx.moveTo(plotX0, pyCurve); sctx.lineTo(plotX0 + plotW, pyCurve); sctx.stroke();
+      sctx.setLineDash([]);
+
+      // Point on curve
+      sctx.beginPath();
+      sctx.arc(px, pyCurve, 4.5 * dpr, 0, Math.PI * 2);
+      sctx.fillStyle = '#4dffa0';
+      sctx.fill();
+      sctx.strokeStyle = '#ffffff';
+      sctx.lineWidth = 1.5 * dpr;
+      sctx.stroke();
+
+      // Tooltip box
+      const relT = pt.tVal - tNow;
+      const text = `t: ${relT.toFixed(2)}s  y: ${disp(0, pt.tVal).toFixed(2)}m`;
+      sctx.font = (big ? 10 * dpr : 8 * dpr) + 'px "Space Mono",monospace';
+      const textW = sctx.measureText(text).width;
+      const boxW = textW + 12 * dpr;
+      const boxH = (big ? 18 : 14) * dpr;
+      let boxX = px - boxW / 2;
+      boxX = Math.max(plotX0, Math.min(plotX0 + plotW - boxW, boxX));
+      let boxY = pyCurve - boxH - 6 * dpr;
+      if (boxY < botY0) boxY = pyCurve + 6 * dpr;
+
+      sctx.fillStyle = 'rgba(10, 14, 28, 0.9)';
+      sctx.strokeStyle = 'rgba(77, 255, 160, 0.7)';
+      sctx.lineWidth = 1 * dpr;
+      sctx.beginPath();
+      sctx.roundRect ? sctx.roundRect(boxX, boxY, boxW, boxH, 4 * dpr) : sctx.rect(boxX, boxY, boxW, boxH);
+      sctx.fill();
+      sctx.stroke();
+
+      sctx.fillStyle = '#ffffff';
+      sctx.textAlign = 'center';
+      sctx.textBaseline = 'middle';
+      sctx.fillText(text, boxX + boxW / 2, boxY + boxH / 2);
+    }
+  }
+}
+
+document.getElementById('scopePanel').addEventListener('click', function(e){
+  if(this.classList.contains('expanded')) return;
+  if(e.target.id==='scopeRestore' || e.target.id==='scopePlayPause' || e.target.id==='scopeStep') return;
+  this.classList.add('expanded');
+  document.getElementById('scopeBackdrop').classList.add('show');
+  setTimeout(resizeScope, 60);
+});
+document.getElementById('scopeRestore').addEventListener('click', function(e){
+  e.stopPropagation();
+  scopePanel.classList.remove('expanded');
+  document.getElementById('scopeBackdrop').classList.remove('show');
+  setTimeout(resizeScope, 60);
+});
+document.getElementById('scopePlayPause').addEventListener('click', function(e){
+  e.stopPropagation();
+  togglePlay();
+});
+document.getElementById('scopeStep').addEventListener('click', function(e){
+  e.stopPropagation();
+  stepSim();
+});
+window.addEventListener('resize', ()=> resizeScope());
+resizeScope();
+
+function fullUpdate(){
+  document.getElementById('val-type').textContent = S.type==='longitudinal' ? 'Longitudinal' : 'Transverse';
+  document.getElementById('val-freq').textContent = S.freq.toFixed(2)+' Hz';
+  document.getElementById('val-wave').textContent = S.wavelength.toFixed(2)+' m';
+  document.getElementById('val-amp').textContent = S.amplitude.toFixed(2)+' m';
+  document.getElementById('val-period').textContent = periodOf().toFixed(2)+' s';
+  document.getElementById('val-speed').textContent = speedOf().toFixed(2)+' m/s';
+  document.getElementById('scopeTitle').textContent = S.type==='longitudinal' ? 's(x,t) — Compression Wave' : 'y(x,t) — Waveform';
+
+  connLines1.forEach(l => l.visible = true);
+  ribbonMat1.opacity = S.type==='longitudinal' ? 0.55 : 0.82;
+
+  // Challenge mode visibility rules
+  const hud = document.getElementById('hud');
+  const slidersContainer = document.getElementById('sliders-container');
+  const challengeContainer = document.getElementById('challenge-container');
+  const btnChallenge = document.getElementById('btn-challenge');
+
+  if(S.challengeMode){
+    hud.style.display = 'none';
+    slidersContainer.classList.add('hidden-ctl');
+    challengeContainer.classList.remove('hidden-ctl');
+    btnChallenge.classList.add('on');
+    btnChallenge.textContent = '🎯 Exit Challenge';
+  } else {
+    hud.style.display = 'block';
+    slidersContainer.classList.remove('hidden-ctl');
+    challengeContainer.classList.add('hidden-ctl');
+    btnChallenge.classList.remove('on');
+    btnChallenge.textContent = '🎯 Challenge';
+
+    const isTrans = S.type!=='longitudinal';
+    document.getElementById('chk-src2-wrap').classList.toggle('hidden-ctl', !isTrans);
+    document.getElementById('sep-src2').style.display = isTrans ? '' : 'none';
+
+    const showSrc2 = isTrans && S.source2;
+    document.getElementById('src2-row').classList.toggle('hidden-ctl', !showSrc2);
+    sourceGrp2.visible = showSrc2;
+  }
+}
+
+/* Challenge Mode handlers */
+function startNewChallenge(){
+  // Random frequency between 0.2 and 2.0 Hz (rounded to 2 decimal places)
+  S.freq = Math.round((0.2 + Math.random() * 1.8) * 100) / 100;
+  S.wavelength = WAVE_SPEED / S.freq;
+  // Random amplitude between 0.2 and 1.8 m (rounded to 2 decimal places)
+  S.amplitude = Math.round((0.2 + Math.random() * 1.6) * 100) / 100;
+
+  S.targetFreq = S.freq;
+  S.targetAmp = S.amplitude;
+  S.source2 = false; // Disable 2nd source in challenge mode for clarity
+
+  document.getElementById('input-ch-period').value = '';
+  document.getElementById('input-ch-amp').value = '';
+  document.getElementById('input-ch-wave').value = '';
+  const fb = document.getElementById('challenge-feedback');
+  fb.textContent = 'Analyze the waveform graph to find T, A, & λ!';
+  fb.style.color = 'var(--muted)';
+  fullUpdate();
+}
+
+function checkChallengeAnswer(){
+  const userPeriod = parseFloat(document.getElementById('input-ch-period').value);
+  const userAmp = parseFloat(document.getElementById('input-ch-amp').value);
+  const userWave = parseFloat(document.getElementById('input-ch-wave').value);
+  const fb = document.getElementById('challenge-feedback');
+
+  if(isNaN(userPeriod) || isNaN(userAmp) || isNaN(userWave)){
+    fb.textContent = 'Please enter numeric values for T, A, and λ.';
+    fb.style.color = 'var(--amber)';
+    return;
+  }
+
+  const targetPeriod = 1 / S.targetFreq;
+  const targetWave = WAVE_SPEED / S.targetFreq;
+  const errPeriod = Math.abs(userPeriod - targetPeriod) / targetPeriod;
+  const errAmp = Math.abs(userAmp - S.targetAmp) / S.targetAmp;
+  const errWave = Math.abs(userWave - targetWave) / targetWave;
+  const maxErr = Math.max(errPeriod, errAmp, errWave);
+
+  if(maxErr <= 0.025){
+    fb.textContent = `🎉 Correct! T = ${targetPeriod.toFixed(2)} s, A = ${S.targetAmp.toFixed(2)} m, λ = ${targetWave.toFixed(2)} m (Max error: ${(maxErr*100).toFixed(1)}%)`;
+    fb.style.color = 'var(--green)';
+  } else if(maxErr <= 0.05){
+    fb.textContent = `Close but not enough! (Max error: ${(maxErr*100).toFixed(1)}%)`;
+    fb.style.color = 'var(--amber)';
+  } else {
+    fb.textContent = `Incorrect, try again! Tip: Measure T on y(t) graph, λ on y(x) graph, and A from peak height.`;
+    fb.style.color = 'var(--red)';
+  }
+}
+
+document.getElementById('btn-challenge').addEventListener('click', ()=>{
+  S.challengeMode = !S.challengeMode;
+  if(S.challengeMode){
+    startNewChallenge();
+  } else {
+    fullUpdate();
+  }
+});
+
+document.getElementById('btn-check-challenge').addEventListener('click', checkChallengeAnswer);
+document.getElementById('btn-new-challenge').addEventListener('click', startNewChallenge);
+
+// Control event listeners
+document.getElementById('btn-transverse').addEventListener('click', ()=>{
+  S.type = 'transverse';
+  document.getElementById('btn-transverse').classList.add('on');
+  document.getElementById('btn-longitudinal').classList.remove('on');
+  fullUpdate();
+});
+
+document.getElementById('btn-longitudinal').addEventListener('click', ()=>{
+  S.type = 'longitudinal';
+  document.getElementById('btn-longitudinal').classList.add('on');
+  document.getElementById('btn-transverse').classList.remove('on');
+  fullUpdate();
+});
+
+const playBtn = document.getElementById('btn-play');
+const scopePlayPauseBtn = document.getElementById('scopePlayPause');
+
+function updatePlayPauseUI(){
+  const text = S.playing ? '⏸ Pause' : '▶ Play';
+  playBtn.textContent = text;
+  scopePlayPauseBtn.textContent = text;
+  playBtn.classList.toggle('green', S.playing);
+  scopePlayPauseBtn.classList.toggle('paused', !S.playing);
+}
+
+function togglePlay(){
+  S.playing = !S.playing;
+  updatePlayPauseUI();
+}
+
+function stepSim(){
+  S.t += 0.05;
+  updateWave();
+  pushScopeSample();
+  drawScope();
+  renderer.render(scene3, cam3);
+}
+
+playBtn.addEventListener('click', togglePlay);
+document.getElementById('btn-step').addEventListener('click', stepSim);
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  S.t = 0;
+  scopeHistory.length = 0;
+  updateWave();
+  pushScopeSample();
+  drawScope();
+  renderer.render(scene3, cam3);
+});
+
+document.getElementById('sl-freq').addEventListener('input', (e)=>{
+  S.freq = parseFloat(e.target.value);
+  S.wavelength = WAVE_SPEED / S.freq;
+  document.getElementById('lbl-freq').textContent = S.freq.toFixed(2)+' Hz';
+  fullUpdate();
+});
+
+document.getElementById('sl-amp').addEventListener('input', (e)=>{
+  S.amplitude = parseFloat(e.target.value);
+  document.getElementById('lbl-amp').textContent = S.amplitude.toFixed(2)+' m';
+  fullUpdate();
+});
+
+document.getElementById('chk-source2').addEventListener('change', (e)=>{
+  S.source2 = e.target.checked;
+  fullUpdate();
+});
+
+document.getElementById('sl-freq2').addEventListener('input', (e)=>{
+  S.freq2 = parseFloat(e.target.value);
+  S.wavelength2 = WAVE_SPEED / S.freq2;
+  document.getElementById('lbl-freq2').textContent = S.freq2.toFixed(2)+' Hz';
+  fullUpdate();
+});
+
+document.getElementById('sl-amp2').addEventListener('input', (e)=>{
+  S.amplitude2 = parseFloat(e.target.value);
+  document.getElementById('lbl-amp2').textContent = S.amplitude2.toFixed(2)+' m';
+  fullUpdate();
+});
+
+document.getElementById('sl-phase2').addEventListener('input', (e)=>{
+  const deg = parseFloat(e.target.value);
+  S.phase2 = deg * Math.PI / 180;
+  document.getElementById('lbl-phase2').textContent = deg + '°';
+  fullUpdate();
+});
+
+let lastTime = 0;
+function animate(now){
+  requestAnimationFrame(animate);
+  if(S.playing){
+    const dt = Math.min((now - (lastTime || now)) / 1000, 0.1);
+    S.t += dt;
+  }
+  lastTime = now;
+
+  updateWave();
+  pushScopeSample();
+  drawScope();
+  renderer.render(scene3, cam3);
+}
+
+fullUpdate();
+requestAnimationFrame(animate);
+
+const qrBtn = document.getElementById('qrBtn');
+const qrModal = document.getElementById('qrModal');
+const qrCloseBtn = document.getElementById('qrCloseBtn');
+const qrModalBackdrop = document.getElementById('qrModalBackdrop');
+
+function openQRModal(){ qrModal.classList.add('show'); }
+function closeQRModal(){ qrModal.classList.remove('show'); }
+
+if(qrBtn) qrBtn.addEventListener('click', openQRModal);
+if(qrCloseBtn) qrCloseBtn.addEventListener('click', closeQRModal);
+if(qrModalBackdrop) qrModalBackdrop.addEventListener('click', closeQRModal);
+window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeQRModal(); });
+</script>
+</body>
+</html>
