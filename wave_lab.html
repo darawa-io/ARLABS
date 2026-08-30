@@ -31,13 +31,16 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 #title-text h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
 #title-text p{font-size:10px;color:rgba(180,200,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
 
-#hud{
+#hud, #challenge-setup{
   position:absolute;top:20px;right:20px;
   background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
   border:1px solid var(--border);border-radius:18px;
   padding:18px;min-width:220px;z-index:10;
 }
-#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+#hud h2, #challenge-setup h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+#challenge-setup .chk-wrap{padding:6px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
+#challenge-setup-list{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+#btn-challenge{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:11;padding:8px 20px;font-size:12px;}
 .dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
 .dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,210,255,0.6);}
 .dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
@@ -72,6 +75,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 .sw.pink span:first-child{color:var(--pink);}
 input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:90px;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+.btn:disabled, input[type=number]:disabled{opacity:0.38;cursor:not-allowed;filter:grayscale(0.4);}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:none;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
 input[type=range].rng-pink::-webkit-slider-thumb{background:var(--pink);box-shadow:0 0 8px rgba(255,107,129,0.65);}
 input[type=range].rng-pink::-moz-range-thumb{background:var(--pink);box-shadow:0 0 8px rgba(255,107,129,0.65);}
@@ -139,8 +143,9 @@ input[type=range].rng-pink::-moz-range-thumb{background:var(--pink);box-shadow:0
 #scopeBackdrop.show{display:block;}
 
 @media (max-width:640px){
-  #hud{min-width:170px;padding:14px;}
+  #hud, #challenge-setup{min-width:170px;padding:14px;}
   #scopePanel{width:170px;height:170px;top:74px;}
+  #btn-challenge{padding:6px 14px;font-size:11px;}
 }
 
 /* ── QR Button & Modal ── */
@@ -246,14 +251,55 @@ input[type=range].rng-pink::-moz-range-thumb{background:var(--pink);box-shadow:0
   <div class="dr"><span class="dl">Speed v = fλ</span><span class="dv green" id="val-speed">3.20 m/s</span></div>
 </div>
 
-<div id="controls">
-  <!-- Transverse & Longitudinal buttons left-aligned, Challenge button right-aligned -->
-  <div style="display:flex;justify-space-between;justify-content:space-between;align-items:center;width:100%;margin-bottom:4px;">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button class="btn on" id="btn-transverse" style="padding:5px 14px;font-size:12px;">〰️ Transverse</button>
-      <button class="btn amber" id="btn-longitudinal" style="padding:5px 14px;font-size:12px;">⠿ Longitudinal</button>
+<!-- Challenge setup panel: appears in the HUD's spot while challenge mode is active -->
+<div id="challenge-setup" class="hidden-ctl">
+  <h2>Challenge Setup</h2>
+  <div id="challenge-setup-list">
+    <label class="chk-wrap"><input type="checkbox" id="chk-prop-T" checked>Period (T)</label>
+    <label class="chk-wrap"><input type="checkbox" id="chk-prop-wave" checked>Wavelength (λ)</label>
+    <label class="chk-wrap"><input type="checkbox" id="chk-prop-amp" checked>Amplitude (A)</label>
+    <label class="chk-wrap"><input type="checkbox" id="chk-prop-freq">Frequency (f)</label>
+    <label class="chk-wrap"><input type="checkbox" id="chk-prop-vel">Velocity (v)</label>
+  </div>
+  <button class="btn violet" id="btn-run-challenge" style="width:100%;justify-content:center;">▶ Run Challenge</button>
+
+  <!-- Challenge answer / validation boxes -->
+  <div id="challenge-container" class="hidden-ctl" style="display:flex;flex-direction:column;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+    <div class="ch-field" id="ch-field-T" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+      <label for="input-ch-period">T (s)</label>
+      <input type="number" id="input-ch-period" step="0.01" min="0.1" max="10.0" placeholder="0.00" style="width:84px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
     </div>
-    <button class="btn violet" id="btn-challenge" style="padding:5px 14px;font-size:12px;">🎯 Challenge</button>
+    <div class="ch-field" id="ch-field-wave" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+      <label for="input-ch-wave">λ (m)</label>
+      <input type="number" id="input-ch-wave" step="0.01" min="0.1" max="20.0" placeholder="0.00" style="width:84px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+    </div>
+    <div class="ch-field" id="ch-field-amp" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+      <label for="input-ch-amp">A (m)</label>
+      <input type="number" id="input-ch-amp" step="0.01" min="0.1" max="5.0" placeholder="0.00" style="width:84px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+    </div>
+    <div class="ch-field" id="ch-field-freq" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+      <label for="input-ch-freq">f (Hz)</label>
+      <input type="number" id="input-ch-freq" step="0.01" min="0.1" max="5.0" placeholder="0.00" style="width:84px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+    </div>
+    <div class="ch-field" id="ch-field-vel" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
+      <label for="input-ch-vel">v (m/s)</label>
+      <input type="number" id="input-ch-vel" step="0.01" min="0.1" max="20.0" placeholder="0.00" style="width:84px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:2px;">
+      <button class="btn violet" id="btn-check-challenge" style="flex:1;padding:6px 0;text-align:center;">Check</button>
+      <button class="btn" id="btn-new-challenge" style="flex:1;padding:6px 0;font-size:11px;text-align:center;">🎲 New</button>
+    </div>
+    <div id="challenge-feedback" style="font-family:'Space Mono',monospace;font-size:10.5px;line-height:1.45;text-align:center;"></div>
+  </div>
+</div>
+
+<button class="btn violet" id="btn-challenge">🎯 Challenge</button>
+
+<div id="controls">
+  <!-- Transverse & Longitudinal buttons -->
+  <div style="display:flex;align-items:center;gap:8px;width:100%;margin-bottom:4px;">
+    <button class="btn on" id="btn-transverse" style="padding:5px 14px;font-size:12px;">〰️ Transverse</button>
+    <button class="btn amber" id="btn-longitudinal" style="padding:5px 14px;font-size:12px;">⠿ Longitudinal</button>
   </div>
 
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;width:100%;">
@@ -274,27 +320,6 @@ input[type=range].rng-pink::-moz-range-thumb{background:var(--pink);box-shadow:0
         <div class="sep"></div>
         <div class="sw" id="phase2Wrap"><span class="sw-lbl">Δφ</span><input type="range" id="sl-phase2" min="0" max="360" step="5" value="0"><span class="sw-val" id="lbl-phase2">0°</span></div>
       </div>
-    </div>
-
-    <!-- Challenge answer inputs container -->
-    <div id="challenge-container" class="hidden-ctl" style="display:flex;flex-direction:column;gap:8px;align-items:center;">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
-        <div style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
-          <label for="input-ch-period">T (s):</label>
-          <input type="number" id="input-ch-period" step="0.01" min="0.1" max="10.0" placeholder="0.00" style="width:70px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
-          <label for="input-ch-amp">A (m):</label>
-          <input type="number" id="input-ch-amp" step="0.01" min="0.1" max="5.0" placeholder="0.00" style="width:70px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);">
-          <label for="input-ch-wave">λ (m):</label>
-          <input type="number" id="input-ch-wave" step="0.01" min="0.1" max="20.0" placeholder="0.00" style="width:70px;background:rgba(180,200,255,0.08);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:#fff;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
-        </div>
-        <button class="btn violet" id="btn-check-challenge" style="padding:5px 14px;">Check Answer</button>
-        <button class="btn" id="btn-new-challenge" style="padding:5px 12px;font-size:11px;">🎲 New Target</button>
-      </div>
-      <div id="challenge-feedback" style="font-family:'Space Mono',monospace;font-size:11px;min-height:16px;text-align:center;"></div>
     </div>
 
     <div class="sep"></div>
@@ -334,6 +359,8 @@ const S = {
   amplitude2: 1.0,         // m — 2nd source's own amplitude
   phase2: 0,               // rad — phase offset of the second source
   challengeMode: false,
+  challengeRunning: false,
+  challengeProps: { T:true, wave:true, amp:true, freq:false, vel:false },
   targetFreq: 0.8,
   targetAmp: 1.0
 };
@@ -756,8 +783,9 @@ function handleScopePointer(e){
   // Check if click was in bottom graph region
   if(my >= botY0 - 10*dpr && my <= botY1 + 10*dpr && mx >= plotX0 && mx <= plotX0 + plotW){
     const T = periodOf();
-    const win = Math.max(6, 3.2*T);
-    const tNow = S.t, tStart = tNow - win;
+    const winFull = Math.max(6, 3.2*T);
+    const tNow = S.t, tStart = Math.max(0, tNow - winFull);
+    const win = Math.max(0.001, tNow - tStart) || winFull;
     const normX = Math.max(0, Math.min(1, (mx - plotX0) / plotW));
     const tVal = tStart + normX * win;
     const relT = tVal - tNow;
@@ -909,8 +937,9 @@ function drawScope(){
   const yScaleB = (botH*0.42)/Amax;
   const yToPxB = (y)=> yMidB - y*yScaleB;
   const T = periodOf();
-  const win = Math.max(6, 3.2*T);
-  const tNow = S.t, tStart = tNow - win;
+  const winFull = Math.max(6, 3.2*T);
+  const tNow = S.t, tStart = Math.max(0, tNow - winFull);
+  const win = Math.max(0.001, tNow - tStart) || winFull;
   const tToPx = (tt)=> plotX0 + ((tt-tStart)/win)*plotW;
 
   sctx.strokeStyle='rgba(180,200,255,0.18)';
@@ -936,7 +965,7 @@ function drawScope(){
   if(big){
     sctx.fillStyle='rgba(180,200,255,0.45)'; sctx.textAlign='center'; sctx.font=(9.5*dpr)+'px "Space Mono",monospace';
     for(let tt=Math.ceil(tStart); tt<=tNow; tt++){
-      sctx.fillText((tt-tNow).toFixed(0)+'s', tToPx(tt), botY1+12*dpr);
+      sctx.fillText(tt.toFixed(0)+'s', tToPx(tt), botY1+12*dpr);
     }
   }
 
@@ -1032,8 +1061,7 @@ function drawScope(){
       sctx.stroke();
 
       // Tooltip box
-      const relT = pt.tVal - tNow;
-      const text = `t: ${relT.toFixed(2)}s  y: ${disp(0, pt.tVal).toFixed(2)}m`;
+      const text = `t: ${pt.tVal.toFixed(2)}s  y: ${disp(0, pt.tVal).toFixed(2)}m`;
       sctx.font = (big ? 10 * dpr : 8 * dpr) + 'px "Space Mono",monospace';
       const textW = sctx.measureText(text).width;
       const boxW = textW + 12 * dpr;
@@ -1097,22 +1125,28 @@ function fullUpdate(){
 
   // Challenge mode visibility rules
   const hud = document.getElementById('hud');
+  const challengeSetup = document.getElementById('challenge-setup');
   const slidersContainer = document.getElementById('sliders-container');
   const challengeContainer = document.getElementById('challenge-container');
   const btnChallenge = document.getElementById('btn-challenge');
+  const btnReset = document.getElementById('btn-reset');
 
   if(S.challengeMode){
     hud.style.display = 'none';
+    challengeSetup.classList.remove('hidden-ctl');
     slidersContainer.classList.add('hidden-ctl');
-    challengeContainer.classList.remove('hidden-ctl');
+    challengeContainer.classList.toggle('hidden-ctl', !S.challengeRunning);
     btnChallenge.classList.add('on');
     btnChallenge.textContent = '🎯 Exit Challenge';
+    btnReset.classList.add('hidden-ctl');
   } else {
     hud.style.display = 'block';
+    challengeSetup.classList.add('hidden-ctl');
     slidersContainer.classList.remove('hidden-ctl');
     challengeContainer.classList.add('hidden-ctl');
     btnChallenge.classList.remove('on');
     btnChallenge.textContent = '🎯 Challenge';
+    btnReset.classList.remove('hidden-ctl');
 
     const isTrans = S.type!=='longitudinal';
     document.getElementById('chk-src2-wrap').classList.toggle('hidden-ctl', !isTrans);
@@ -1125,7 +1159,35 @@ function fullUpdate(){
 }
 
 /* Challenge Mode handlers */
-function startNewChallenge(){
+const CH_FIELDS = {
+  T:    { chk:'chk-prop-T',    field:'ch-field-T',    input:'input-ch-period' },
+  wave: { chk:'chk-prop-wave', field:'ch-field-wave', input:'input-ch-wave' },
+  amp:  { chk:'chk-prop-amp',  field:'ch-field-amp',  input:'input-ch-amp' },
+  freq: { chk:'chk-prop-freq', field:'ch-field-freq', input:'input-ch-freq' },
+  vel:  { chk:'chk-prop-vel',  field:'ch-field-vel',  input:'input-ch-vel' }
+};
+
+function readChallengeProps(){
+  Object.keys(CH_FIELDS).forEach(key=>{
+    S.challengeProps[key] = document.getElementById(CH_FIELDS[key].chk).checked;
+  });
+}
+
+function applyChallengeFieldVisibility(){
+  Object.keys(CH_FIELDS).forEach(key=>{
+    document.getElementById(CH_FIELDS[key].field).classList.toggle('hidden-ctl', !S.challengeProps[key]);
+  });
+}
+
+function runChallenge(){
+  readChallengeProps();
+  if(!Object.values(S.challengeProps).some(v=>v)){
+    const fb = document.getElementById('challenge-feedback');
+    fb.textContent = 'Tick at least one property to validate first.';
+    fb.style.color = 'var(--amber)';
+    return;
+  }
+
   // Random frequency between 0.2 and 2.0 Hz (rounded to 2 decimal places)
   S.freq = Math.round((0.2 + Math.random() * 1.8) * 100) / 100;
   S.wavelength = WAVE_SPEED / S.freq;
@@ -1135,58 +1197,84 @@ function startNewChallenge(){
   S.targetFreq = S.freq;
   S.targetAmp = S.amplitude;
   S.source2 = false; // Disable 2nd source in challenge mode for clarity
+  S.challengeRunning = true;
 
-  document.getElementById('input-ch-period').value = '';
-  document.getElementById('input-ch-amp').value = '';
-  document.getElementById('input-ch-wave').value = '';
+  applyChallengeFieldVisibility();
+  ['input-ch-period','input-ch-amp','input-ch-wave','input-ch-freq','input-ch-vel'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.value = '';
+    el.disabled = false;
+  });
+  document.getElementById('btn-check-challenge').disabled = false;
   const fb = document.getElementById('challenge-feedback');
-  fb.textContent = 'Analyze the waveform graph to find T, A, & λ!';
+  fb.textContent = 'Analyze the waveform graph to find the ticked properties!';
   fb.style.color = 'var(--muted)';
+
+  S.playing = true;
+  updatePlayPauseUI();
+
   fullUpdate();
 }
 
 function checkChallengeAnswer(){
-  const userPeriod = parseFloat(document.getElementById('input-ch-period').value);
-  const userAmp = parseFloat(document.getElementById('input-ch-amp').value);
-  const userWave = parseFloat(document.getElementById('input-ch-wave').value);
   const fb = document.getElementById('challenge-feedback');
+  const targetPeriod = 1 / S.targetFreq;
+  const targetWave = WAVE_SPEED / S.targetFreq;
+  const targets = { T: targetPeriod, wave: targetWave, amp: S.targetAmp, freq: S.targetFreq, vel: WAVE_SPEED };
 
-  if(isNaN(userPeriod) || isNaN(userAmp) || isNaN(userWave)){
-    fb.textContent = 'Please enter numeric values for T, A, and λ.';
+  const activeKeys = Object.keys(CH_FIELDS).filter(key=>S.challengeProps[key]);
+  if(activeKeys.length===0){
+    fb.textContent = 'No properties selected — go back and tick at least one.';
     fb.style.color = 'var(--amber)';
     return;
   }
 
-  const targetPeriod = 1 / S.targetFreq;
-  const targetWave = WAVE_SPEED / S.targetFreq;
-  const errPeriod = Math.abs(userPeriod - targetPeriod) / targetPeriod;
-  const errAmp = Math.abs(userAmp - S.targetAmp) / S.targetAmp;
-  const errWave = Math.abs(userWave - targetWave) / targetWave;
-  const maxErr = Math.max(errPeriod, errAmp, errWave);
+  let maxErr = 0;
+  for(const key of activeKeys){
+    const val = parseFloat(document.getElementById(CH_FIELDS[key].input).value);
+    if(isNaN(val)){
+      fb.textContent = 'Please enter numeric values for every ticked property.';
+      fb.style.color = 'var(--amber)';
+      return;
+    }
+    const err = Math.abs(val - targets[key]) / targets[key];
+    maxErr = Math.max(maxErr, err);
+  }
+
+  const summary = activeKeys.map(key=>{
+    const labels = { T:'T', wave:'λ', amp:'A', freq:'f', vel:'v' };
+    const units = { T:'s', wave:'m', amp:'m', freq:'Hz', vel:'m/s' };
+    return `${labels[key]} = ${targets[key].toFixed(2)} ${units[key]}`;
+  }).join(', ');
 
   if(maxErr <= 0.025){
-    fb.textContent = `🎉 Correct! T = ${targetPeriod.toFixed(2)} s, A = ${S.targetAmp.toFixed(2)} m, λ = ${targetWave.toFixed(2)} m (Max error: ${(maxErr*100).toFixed(1)}%)`;
+    fb.textContent = `🎉 Correct! ${summary} (Max error: ${(maxErr*100).toFixed(1)}%)`;
     fb.style.color = 'var(--green)';
   } else if(maxErr <= 0.05){
-    fb.textContent = `Close but not enough! (Max error: ${(maxErr*100).toFixed(1)}%)`;
+    fb.textContent = `Close! Correct values: ${summary} (Max error: ${(maxErr*100).toFixed(1)}%)`;
     fb.style.color = 'var(--amber)';
   } else {
-    fb.textContent = `Incorrect, try again! Tip: Measure T on y(t) graph, λ on y(x) graph, and A from peak height.`;
+    fb.textContent = `Incorrect. Correct values: ${summary}`;
     fb.style.color = 'var(--red)';
   }
+
+  // Lock the answer once revealed, so it can't be re-entered after seeing it —
+  // only starting a new challenge re-enables checking.
+  activeKeys.forEach(key=>{ document.getElementById(CH_FIELDS[key].input).disabled = true; });
+  document.getElementById('btn-check-challenge').disabled = true;
 }
 
 document.getElementById('btn-challenge').addEventListener('click', ()=>{
   S.challengeMode = !S.challengeMode;
-  if(S.challengeMode){
-    startNewChallenge();
-  } else {
-    fullUpdate();
+  if(!S.challengeMode){
+    S.challengeRunning = false;
   }
+  fullUpdate();
 });
 
+document.getElementById('btn-run-challenge').addEventListener('click', runChallenge);
 document.getElementById('btn-check-challenge').addEventListener('click', checkChallengeAnswer);
-document.getElementById('btn-new-challenge').addEventListener('click', startNewChallenge);
+document.getElementById('btn-new-challenge').addEventListener('click', runChallenge);
 
 // Control event listeners
 document.getElementById('btn-transverse').addEventListener('click', ()=>{
