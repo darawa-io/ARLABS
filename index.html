@@ -412,6 +412,18 @@
                     </div>
                 </div>
 
+                <div class="category-header collapsed-header" onclick="toggleCategory('waves-content')">
+                    <span>Waves</span>
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                
+                <div id="waves-content" class="category-content collapsed">
+                    <div class="gallery-card" onclick="loadSimulation('Wave Properties', 'https://darawa-io.github.io/ARLABS/wave_lab.html', [])">
+                        <img src="https://darawa-io.github.io/ARLABS/assets/wave.png" alt="Wave Properties Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Wave+Properties'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Wave Properties</span>
+                    </div>
+                </div>
+
                 <div class="category-header collapsed-header" onclick="toggleCategory('elec-content')">
                     <span>Electricity & Magnetism</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
