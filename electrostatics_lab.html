@@ -222,7 +222,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <div id="info-charges" class="info-block">
     <h3>Types of Charge &amp; Coulomb's Law</h3>
     <p>There are exactly <b>two kinds</b> of electric charge: <span class="pos">positive (+)</span> and <span class="neg">negative (−)</span>. The SI unit of charge is the <b>coulomb (C)</b>.</p>
-    <p><b>Like charges repel; unlike charges attract.</b> Change the signs, separation and size of the charges below and watch the field lines, the force reading and the charges' own motion respond. A positive charge is drawn as a red "+" symbol and a negative charge as a blue sphere; either shape grows or shrinks with the charge magnitude (q).</p>
+    <p><b>Like charges repel; unlike charges attract.</b> Change the signs, separation and size of the charges below and watch the field lines, the force reading and the charges' own motion respond. A positive charge is drawn as a red sphere and a negative charge as a blue sphere; either sphere grows or shrinks with the charge magnitude (q).</p>
     <button class="atom-toggle-btn" id="btn-atom-toggle">▸ What's inside an atom?</button>
     <div id="atom-panel-body" style="display:none;">
       <p>Every atom is built from three particles: <b>protons</b> (<span class="pos">positive</span>), <b>neutrons</b> (neutral — no charge at all), and <b>electrons</b> (<span class="neg">negative</span>). Protons and neutrons are bound tightly together in a tiny, dense <b>nucleus</b> at the centre; electrons occupy the much larger space around it.</p>
@@ -289,7 +289,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
   <div id="ctrl-polarization" class="ctrl-block" style="display:none;">
     <button class="btn" id="btn-rod-sign">Rod: −</button>
-    <span class="sw">dist=<input type="range" id="sl-pol-dist" min="0.6" max="6" step="0.1" value="3.0"><span id="lbl-pol-dist">3.0</span></span>
+    <span class="sw">dist=<input type="range" id="sl-pol-dist" min="1.2" max="6" step="0.1" value="3.0"><span id="lbl-pol-dist">3.0</span></span>
     <div class="sep"></div>
     <button class="btn" id="btn-reset-pol">Reset</button>
   </div>
@@ -305,7 +305,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
   <div id="ctrl-induction" class="ctrl-block" style="display:none;">
     <button class="btn" id="btn-ind-sign">Rod: −</button>
-    <span class="sw">dist=<input type="range" id="sl-ind-dist" min="0.15" max="5" step="0.1" value="2.5"><span id="lbl-ind-dist">2.50</span></span>
+    <span class="sw">dist=<input type="range" id="sl-ind-dist" min="0.6" max="5" step="0.1" value="2.5"><span id="lbl-ind-dist">2.50</span></span>
     <div class="sep"></div>
     <button class="btn" id="btn-ind-prev">← Prev</button>
     <button class="btn green" id="btn-ind-next">Next →</button>
@@ -576,7 +576,7 @@ const grpCharges = new THREE.Group(); root3.add(grpCharges);
 const state1 = { signA:1, signB:-1, dist:5, mag:5 };
 const METER_SCALE = 0.15;
 
-// Positive charges are shown as a 3D "+" symbol instead of a sphere; negative charges stay as a sphere.
+// Small "+" markers (used elsewhere, e.g. as fixed proton markers / conduction charge markers).
 function makePlusMesh(armSpan, thickness, material){
   const grp = new THREE.Group();
   const barX = new THREE.Mesh(new THREE.BoxGeometry(armSpan, thickness, thickness), material);
@@ -586,17 +586,14 @@ function makePlusMesh(armSpan, thickness, material){
   return grp;
 }
 
+// Both positive and negative point charges are shown as spheres, colored by sign.
 function makePointChargeMesh(sign){
   const color = sign>0 ? COL_POS : COL_NEG;
   const mat = new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
   return new THREE.Mesh(new THREE.SphereGeometry(0.55,32,32), mat);
 }
-const sphereA = makePointChargeMesh(-1); grpCharges.add(sphereA);
+const sphereA = makePointChargeMesh(1); grpCharges.add(sphereA);
 const sphereB = makePointChargeMesh(-1); grpCharges.add(sphereB);
-const plusMatA = new THREE.MeshStandardMaterial({color:COL_POS, emissive:COL_POS, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
-const plusA = makePlusMesh(0.92, 0.3, plusMatA); grpCharges.add(plusA);
-const plusMatB = new THREE.MeshStandardMaterial({color:COL_POS, emissive:COL_POS, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
-const plusB = makePlusMesh(0.92, 0.3, plusMatB); grpCharges.add(plusB);
 // bigger sphere = bigger charge magnitude, so the q slider has a visible on-screen effect
 function chargeVisualScale(mag){ return 0.72 + (mag-1)/9*0.55; }
 const fieldLineGroup1 = new THREE.Group(); grpCharges.add(fieldLineGroup1);
@@ -635,13 +632,15 @@ function rebuildFieldLines1(){
 function updateCharges1(){
   const ax = state1.dist/2;
   const posA = new THREE.Vector3(-ax,0.4,0), posB = new THREE.Vector3(ax,0.4,0);
-  sphereA.position.copy(posA); plusA.position.copy(posA);
-  sphereB.position.copy(posB); plusB.position.copy(posB);
-  sphereA.visible = state1.signA<0; plusA.visible = state1.signA>0;
-  sphereB.visible = state1.signB<0; plusB.visible = state1.signB>0;
+  sphereA.position.copy(posA);
+  sphereB.position.copy(posB);
+  const colA = state1.signA>0 ? COL_POS : COL_NEG;
+  sphereA.material.color.setHex(colA); sphereA.material.emissive.setHex(colA);
+  const colB = state1.signB>0 ? COL_POS : COL_NEG;
+  sphereB.material.color.setHex(colB); sphereB.material.emissive.setHex(colB);
   const vscale = chargeVisualScale(state1.mag);
-  sphereA.scale.setScalar(vscale); plusA.scale.setScalar(vscale);
-  sphereB.scale.setScalar(vscale); plusB.scale.setScalar(vscale);
+  sphereA.scale.setScalar(vscale);
+  sphereB.scale.setScalar(vscale);
   rebuildFieldLines1();
 
   const qA_C = state1.signA*state1.mag*1e-6, qB_C = state1.signB*state1.mag*1e-6;
@@ -675,9 +674,9 @@ function labelsCharges(){
     {p:new THREE.Vector3(-ax,-0.45,0), t:'A', c:'#ffffff', size:9},
     {p:new THREE.Vector3(ax,-0.45,0), t:'B', c:'#ffffff', size:9}
   ];
-  // the "+" shape is self-evident, so only the sphere (negative) gets an explicit sign glyph
-  if(state1.signA<0) L.push({p:new THREE.Vector3(-ax,0.4,0), t:'−', c:'#8fd4ff', size:16});
-  if(state1.signB<0) L.push({p:new THREE.Vector3(ax,0.4,0), t:'−', c:'#8fd4ff', size:16});
+  // both charges are spheres now, so each needs its own explicit sign glyph
+  L.push({p:new THREE.Vector3(-ax,0.4,0), t:(state1.signA>0?'+':'−'), c: state1.signA>0?'#ff8f9c':'#8fd4ff', size:16});
+  L.push({p:new THREE.Vector3(ax,0.4,0), t:(state1.signB>0?'+':'−'), c: state1.signB>0?'#ff8f9c':'#8fd4ff', size:16});
   return L;
 }
 const MIN_DIST1 = 2.0, MAX_DIST1 = 9;
@@ -796,21 +795,32 @@ const grpCharging = new THREE.Group(); grpCharging.visible=false; root3.add(grpC
 const MAXQ2 = 8;
 const state2 = { pair:'poly', n:0 }; // n = electrons transferred (0..MAXQ2), sign of who gains depends on pair
 
-const rodMat2 = new THREE.MeshStandardMaterial({color:0x8fa2c0, roughness:0.35, metalness:0.4});
-const rodMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,3.0,20), rodMat2);
-const rodHome2 = new THREE.Vector3(-1.6,0.5,0);
-rodMesh2.rotation.z = Math.PI/2; rodMesh2.position.copy(rodHome2); grpCharging.add(rodMesh2);
-
 const clothMat2 = new THREE.MeshStandardMaterial({color:0x8fa2c0, roughness:0.85});
 const clothMesh2 = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.28,1.5), clothMat2);
 clothMesh2.position.set(1.8,0.1,0); grpCharging.add(clothMesh2);
 
+// The rod (and its electron cloud) live inside one movable assembly group, so the whole thing can be
+// slid onto the cloth for the rub and pulled back away from it afterwards, while its children stay
+// at local (0,0,0) and just ride along.
+const rodAssembly2 = new THREE.Group();
+const rodHome2 = new THREE.Vector3(-2.6,0.5,0); // resting position, well clear of the cloth
+rodAssembly2.position.copy(rodHome2);
+grpCharging.add(rodAssembly2);
+
+const rodMat2 = new THREE.MeshStandardMaterial({color:0x8fa2c0, roughness:0.35, metalness:0.4});
+const rodMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,3.0,20), rodMat2);
+rodMesh2.rotation.z = Math.PI/2; rodAssembly2.add(rodMesh2);
+
+// the rod's on-cloth position: centered over the cloth, resting on its top surface
+const clothTopY2 = clothMesh2.position.y + 0.14;
+const rodOnClothPos2 = new THREE.Vector3(clothMesh2.position.x, clothTopY2+0.22, clothMesh2.position.z);
+
 // electron dot clouds - genuinely spherical on both objects (no non-uniform squashing), and their
 // meshes are actually handed over from one group to the other during a rub, so the count on each
-// object visibly changes.
+// object visibly changes. The rod's cloud rides inside rodAssembly2 (local origin), so it always
+// tracks the rod wherever the assembly moves.
 const rodDots2 = makeElectronCloud(8, 0.24, COL_NEUTRAL);
-rodDots2.group.position.copy(rodMesh2.position);
-grpCharging.add(rodDots2.group);
+rodAssembly2.add(rodDots2.group);
 const clothDots2 = makeElectronCloud(8, 0.42, COL_NEUTRAL);
 clothDots2.group.position.copy(clothMesh2.position).add(new THREE.Vector3(0,0.08,0));
 grpCharging.add(clothDots2.group);
@@ -860,11 +870,11 @@ function labelsCharging(){
   const rodSign = dir>0 ? -1 : 1;
   const clothSign = -rodSign;
   const L = [
-    {p:rodMesh2.position.clone().add(new THREE.Vector3(0,0.65,0)), t:'ROD', c:'#ffffff', size:9},
+    {p:rodAssembly2.position.clone().add(new THREE.Vector3(0,0.65,0)), t:'ROD', c:'#ffffff', size:9},
     {p:new THREE.Vector3(1.8,0.75,0), t:'CLOTH', c:'#ffffff', size:9}
   ];
   if(state2.n>0){
-    L.push({p:rodMesh2.position.clone().add(new THREE.Vector3(0,0.9,0)), t:(rodSign>0?'net +':'net −'), c: rodSign>0?'#ff8f9c':'#8fd4ff', size:10});
+    L.push({p:rodAssembly2.position.clone().add(new THREE.Vector3(0,0.9,0)), t:(rodSign>0?'net +':'net −'), c: rodSign>0?'#ff8f9c':'#8fd4ff', size:10});
     L.push({p:new THREE.Vector3(1.8,1.0,0), t:(clothSign>0?'net +':'net −'), c: clothSign>0?'#ff8f9c':'#8fd4ff', size:10});
   }
   return L;
@@ -877,18 +887,21 @@ function doRub(){
   if(rubbing2 || state2.n >= MAXQ2) return;
   rubbing2 = true;
   document.getElementById('btn-rub').disabled = true;
-  // physically rub the rod back and forth against the cloth
-  const cycles = 3; let cycle = 0;
-  function doCycle(){
-    tween(220, e=>{ rodMesh2.position.x = lerp(rodHome2.x-0.35, rodHome2.x+0.35, e); }, ()=>{
-      tween(220, e2=>{ rodMesh2.position.x = lerp(rodHome2.x+0.35, rodHome2.x-0.35, e2); }, ()=>{
-        cycle++;
-        if(cycle < cycles) doCycle();
-        else { rodMesh2.position.copy(rodHome2); afterRub(); }
+  // slide the rod from its resting spot onto the cloth first
+  tween(500, e=>{ rodAssembly2.position.lerpVectors(rodHome2, rodOnClothPos2, e); }, ()=>{
+    // physically rub the rod back and forth on top of the cloth
+    const cycles = 3; let cycle = 0;
+    function doCycle(){
+      tween(220, e=>{ rodAssembly2.position.x = lerp(rodOnClothPos2.x-0.5, rodOnClothPos2.x+0.5, e); }, ()=>{
+        tween(220, e2=>{ rodAssembly2.position.x = lerp(rodOnClothPos2.x+0.5, rodOnClothPos2.x-0.5, e2); }, ()=>{
+          cycle++;
+          if(cycle < cycles) doCycle();
+          else { rodAssembly2.position.copy(rodOnClothPos2); afterRub(); }
+        });
       });
-    });
-  }
-  doCycle();
+    }
+    doCycle();
+  });
 
   function afterRub(){
     const dir = pairDirection();
@@ -899,14 +912,18 @@ function doRub(){
       const idx = Math.floor(Math.random()*sourceCloud.dots.length);
       const dotObj = sourceCloud.dots.splice(idx,1)[0];
       const mesh = dotObj.mesh;
-      const worldFrom = mesh.position.clone().add(sourceCloud.group.position);
+      // group positions may now be local to a moving parent (rodAssembly2), so read the true world
+      // position rather than assuming group.position is already in world space.
+      const srcWorldPos = sourceCloud.group.getWorldPosition(new THREE.Vector3());
+      const worldFrom = mesh.position.clone().add(srcWorldPos);
       sourceCloud.group.remove(mesh);
       mesh.position.copy(worldFrom);
       grpCharging.add(mesh);
       const destRadius = destCloud===rodDots2 ? 0.24 : 0.42;
       const destDir = fibonacciSphereDirs(24)[Math.floor(Math.random()*24)];
       const destLocal = destDir.clone().multiplyScalar(destRadius*1.03);
-      const worldTo = destCloud.group.position.clone().add(destLocal);
+      const destWorldPos = destCloud.group.getWorldPosition(new THREE.Vector3());
+      const worldTo = destWorldPos.clone().add(destLocal);
       const o = {mesh, from:worldFrom.clone(), to:worldTo.clone(), tt:0};
       flying2.push(o);
       tween(550+i*130, (e,t)=>{ o.tt=t; }, ()=>{
@@ -918,8 +935,14 @@ function doRub(){
       });
     }
     state2.n = Math.min(MAXQ2, state2.n+nBatch);
-    rubbing2 = false;
     updateCharging2();
+    // once the electrons have transferred, pull the rod back away from the cloth
+    setTimeout(()=>{
+      tween(600, e=>{ rodAssembly2.position.lerpVectors(rodOnClothPos2, rodHome2, e); }, ()=>{
+        rubbing2 = false;
+        updateCharging2();
+      });
+    }, 550+nBatch*130);
   }
 }
 
@@ -935,7 +958,7 @@ document.getElementById('btn-pair-glass').addEventListener('click', function(){
   updateCharging2();
 });
 document.getElementById('btn-reset-charging').addEventListener('click', ()=>{
-  state2.n=0; rubbing2=false; resetClouds2(); rodMesh2.position.copy(rodHome2); updateCharging2();
+  state2.n=0; rubbing2=false; resetClouds2(); rodAssembly2.position.copy(rodHome2); updateCharging2();
 });
 updateCharging2();
 
@@ -955,6 +978,19 @@ const standMesh3 = makeStand(1.9); standMesh3.position.x = SPHERE3_X; grpPolariz
 const electronCloud3 = makeElectronCloud(20, sphereRadius3, COL_NEUTRAL);
 electronCloud3.group.position.copy(sphereMesh3.position);
 grpPolarization.add(electronCloud3.group);
+
+// Fixed "+" markers (one per electron) sitting at the SAME lattice directions the electrons start
+// from, representing the sphere's protons, which don't move. When electrons migrate toward or away
+// from the rod, the plus signs they uncover are left visibly unbalanced on the opposite side.
+const protonMat3 = new THREE.MeshStandardMaterial({color:COL_POS, emissive:COL_POS, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
+const protonGroup3 = new THREE.Group();
+fibonacciSphereDirs(20).forEach(d=>{
+  const marker = makePlusMesh(0.16, 0.05, protonMat3);
+  marker.position.copy(d.clone().multiplyScalar(sphereRadius3*1.0));
+  protonGroup3.add(marker);
+});
+protonGroup3.position.copy(sphereMesh3.position);
+grpPolarization.add(protonGroup3);
 
 function patchDisc(){
   const geo = new THREE.CircleGeometry(0.4,24);
@@ -977,7 +1013,7 @@ function updatePolarization(){
   const farPos = spherePos.clone().addScaledVector(toRod, -sphereRadius3*1.02);
 
   // proximity factor: stronger polarization when rod is closer (dist can now range almost to contact)
-  const proximity = THREE.MathUtils.clamp(1 - (state3.dist-0.6)/5.4, 0.08, 1);
+  const proximity = THREE.MathUtils.clamp(1 - (state3.dist-1.2)/4.8, 0.08, 1);
   const nearSign = -state3.rodSign, farSign = state3.rodSign;
   const nearColor = nearSign>0?COL_POS:COL_NEG, farColor = farSign>0?COL_POS:COL_NEG;
 
@@ -1111,7 +1147,17 @@ function labelsConduction(){
     {p:sphereMeshB4.position.clone().add(new THREE.Vector3(0,1.0,0)), t:'SPHERE B: '+conductionLabel(state4.qB).toUpperCase(), c: state4.qB===0?'#ffffff':(state4.qB>0?'#ff8f9c':'#8fd4ff'), size:9}
   ];
 }
-function updateActive4(t){ flying4.forEach(o=>{ o.mesh.position.lerpVectors(o.from,o.to,ease(o.tt)); }); }
+function quadBezier3(p0,p1,p2,t){
+  const a = p0.clone().lerp(p1,t);
+  const b = p1.clone().lerp(p2,t);
+  return a.lerp(b,t);
+}
+function updateActive4(t){
+  flying4.forEach(o=>{
+    if(o.ctrl) o.mesh.position.copy(quadBezier3(o.from, o.ctrl, o.to, ease(o.tt)));
+    else o.mesh.position.lerpVectors(o.from, o.to, ease(o.tt));
+  });
+}
 
 function doConTouch(){
   if(state4.contact) return;
@@ -1129,14 +1175,22 @@ function doConTouch(){
     const toMesh = sourceIsA ? sphereMeshB4 : sphereMeshA4;
     const moveAmount = Math.abs(avg - state4.qA);
     const nSparks = Math.min(6, Math.max(1, Math.round(moveAmount/2)));
+    // Route each electron along a visible arc above the two spheres rather than straight between
+    // their centers - a straight line through the middle spends most of its flight hidden inside
+    // the opaque sphere geometry, so the transfer was effectively invisible before.
+    const fromSurface = fromMesh.position.clone().add(new THREE.Vector3(0, CON_R*0.85, 0));
+    const toSurface = toMesh.position.clone().add(new THREE.Vector3(0, CON_R*0.85, 0));
+    const peak = fromSurface.clone().lerp(toSurface, 0.5).add(new THREE.Vector3(0, 0.6, 0));
     for(let i=0;i<nSparks;i++){
       const mat = new THREE.MeshBasicMaterial({color:ELECTRON_COLOR});
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.07,8,8), mat);
-      const fromPos = fromMesh.position.clone(), toPos = toMesh.position.clone();
+      const jitterEnds = ()=> new THREE.Vector3((Math.random()-0.5)*0.18,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.18);
+      const fromPos = fromSurface.clone().add(jitterEnds());
+      const toPos = toSurface.clone().add(jitterEnds());
+      const ctrlPos = peak.clone().add(new THREE.Vector3((Math.random()-0.5)*0.3, (Math.random()-0.5)*0.25, (Math.random()-0.5)*0.3));
       mesh.position.copy(fromPos);
       grpConduction.add(mesh);
-      const jitter = new THREE.Vector3((Math.random()-0.5)*0.3,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.3);
-      const o = {mesh, from:fromPos.clone(), to:toPos.clone().add(jitter), tt:0};
+      const o = {mesh, from:fromPos, ctrl:ctrlPos, to:toPos, tt:0};
       flying4.push(o);
       tween(500+i*90, (e2,t2)=>{ o.tt=t2; }, ()=>{ grpConduction.remove(mesh); flying4=flying4.filter(x=>x!==o); });
     }
@@ -1171,7 +1225,7 @@ const IND_R = 0.65;
 const state5 = { rodSign:-1, step:0, playing:false, dist:2.5, netCharge:0 };
 const SPHERE5_X = 0.6;
 function indRodX(dist){ return (SPHERE5_X-IND_R) - 1.5 - dist; } // rod tip approaches the sphere's left edge
-function indProximity(dist){ return THREE.MathUtils.clamp(1-(dist-0.15)/4.85, 0.08, 1); }
+function indProximity(dist){ return THREE.MathUtils.clamp(1-(dist-0.6)/4.4, 0.08, 1); }
 
 const INDUCTION_STEPS = [
   { name:'Neutral sphere', text:'A neutral conducting sphere sits on an insulating stand. Positive and negative charge is spread evenly through it, so its net charge is zero.' },
@@ -1188,6 +1242,17 @@ const sphereMesh5 = new THREE.Mesh(new THREE.SphereGeometry(IND_R,32,32), new TH
 sphereMesh5.position.set(SPHERE5_X,0.4,0); grpInduction.add(sphereMesh5);
 const standMesh5 = makeStand(1.9); standMesh5.position.x = SPHERE5_X; grpInduction.add(standMesh5);
 const cloud5 = makeElectronCloud(20, IND_R, COL_NEUTRAL); cloud5.group.position.copy(sphereMesh5.position); grpInduction.add(cloud5.group);
+// Fixed "+" markers, one per electron, at the same lattice directions - representing the sphere's
+// protons, which stay put while the electron cloud migrates under the rod's influence.
+const protonMat5 = new THREE.MeshStandardMaterial({color:COL_POS, emissive:COL_POS, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
+const protonGroup5 = new THREE.Group();
+fibonacciSphereDirs(20).forEach(d=>{
+  const marker = makePlusMesh(0.16, 0.05, protonMat5);
+  marker.position.copy(d.clone().multiplyScalar(IND_R*1.0));
+  protonGroup5.add(marker);
+});
+protonGroup5.position.copy(sphereMesh5.position);
+grpInduction.add(protonGroup5);
 const nearPatch5 = patchDisc(), farPatch5 = patchDisc(); grpInduction.add(nearPatch5, farPatch5);
 
 const earthWireGroup5 = new THREE.Group(); grpInduction.add(earthWireGroup5);
