@@ -499,7 +499,12 @@ function remapHemisphere(homeDir, axis, targetSign, amount){
   const c = homeDir.dot(axis);
   const perp = homeDir.clone().addScaledVector(axis, -c);
   const perpLen = perp.length();
-  const newC = THREE.MathUtils.lerp(c, targetSign*0.97, amount);
+  // Cap the migration itself (not the caller's `amount`, which still drives patches/field strength):
+  // driving newC all the way to ~0.97 at full amount collapses ~20 points into a tiny cap where they
+  // visibly overlap. Capping the blend keeps them spread over a wider - but still clearly lopsided -
+  // patch of the sphere.
+  const cappedAmount = Math.min(amount, 0.6);
+  const newC = THREE.MathUtils.lerp(c, targetSign*0.97, cappedAmount);
   const newPerpScale = Math.sqrt(Math.max(0, 1-newC*newC));
   if(perpLen > 1e-5){
     return axis.clone().multiplyScalar(newC).add(perp.multiplyScalar(newPerpScale/perpLen)).normalize();
