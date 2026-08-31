@@ -289,7 +289,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
   <div id="ctrl-polarization" class="ctrl-block" style="display:none;">
     <button class="btn" id="btn-rod-sign">Rod: −</button>
-    <span class="sw">dist=<input type="range" id="sl-pol-dist" min="1.2" max="6" step="0.1" value="3.0"><span id="lbl-pol-dist">3.0</span></span>
+    <span class="sw">dist=<input type="range" id="sl-pol-dist" min="1.6" max="6" step="0.1" value="3.0"><span id="lbl-pol-dist">3.0</span></span>
     <div class="sep"></div>
     <button class="btn" id="btn-reset-pol">Reset</button>
   </div>
@@ -305,7 +305,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
   <div id="ctrl-induction" class="ctrl-block" style="display:none;">
     <button class="btn" id="btn-ind-sign">Rod: −</button>
-    <span class="sw">dist=<input type="range" id="sl-ind-dist" min="0.6" max="5" step="0.1" value="2.5"><span id="lbl-ind-dist">2.50</span></span>
+    <span class="sw">dist=<input type="range" id="sl-ind-dist" min="1.0" max="5" step="0.1" value="2.5"><span id="lbl-ind-dist">2.50</span></span>
     <div class="sep"></div>
     <button class="btn" id="btn-ind-prev">← Prev</button>
     <button class="btn green" id="btn-ind-next">Next →</button>
@@ -1013,7 +1013,7 @@ function updatePolarization(){
   const farPos = spherePos.clone().addScaledVector(toRod, -sphereRadius3*1.02);
 
   // proximity factor: stronger polarization when rod is closer (dist can now range almost to contact)
-  const proximity = THREE.MathUtils.clamp(1 - (state3.dist-1.2)/4.8, 0.08, 1);
+  const proximity = THREE.MathUtils.clamp(1 - (state3.dist-1.6)/4.4, 0.08, 1);
   const nearSign = -state3.rodSign, farSign = state3.rodSign;
   const nearColor = nearSign>0?COL_POS:COL_NEG, farColor = farSign>0?COL_POS:COL_NEG;
 
@@ -1222,10 +1222,10 @@ updateConduction();
 /* ============================== MODULE 5: CHARGING BY INDUCTION ============================== */
 const grpInduction = new THREE.Group(); grpInduction.visible=false; root3.add(grpInduction);
 const IND_R = 0.65;
-const state5 = { rodSign:-1, step:0, playing:false, dist:2.5, netCharge:0 };
+const state5 = { rodSign:-1, step:0, playing:false, dist:2.5, netCharge:0, transferApplied:false, transferN:0 };
 const SPHERE5_X = 0.6;
 function indRodX(dist){ return (SPHERE5_X-IND_R) - 1.5 - dist; } // rod tip approaches the sphere's left edge
-function indProximity(dist){ return THREE.MathUtils.clamp(1-(dist-0.6)/4.4, 0.08, 1); }
+function indProximity(dist){ return THREE.MathUtils.clamp(1-(dist-1.0)/4.0, 0.08, 1); }
 
 const INDUCTION_STEPS = [
   { name:'Neutral sphere', text:'A neutral conducting sphere sits on an insulating stand. Positive and negative charge is spread evenly through it, so its net charge is zero.' },
@@ -1253,6 +1253,45 @@ fibonacciSphereDirs(20).forEach(d=>{
 });
 protonGroup5.position.copy(sphereMesh5.position);
 grpInduction.add(protonGroup5);
+
+// When earthed, the sphere genuinely gains or loses electrons (not just a repositioning) - these
+// helpers add/remove dots from the live pool so a permanently-charged sphere ends up with a real
+// mismatch against the fixed proton markers, instead of always settling back to a matched, neutral-
+// looking 20-and-20.
+function addElectrons5(n){
+  const dirs20 = fibonacciSphereDirs(20);
+  for(let i=0;i<n;i++){
+    const baseDir = dirs20[Math.floor(Math.random()*20)];
+    const jitter = new THREE.Vector3((Math.random()-0.5)*0.14,(Math.random()-0.5)*0.14,(Math.random()-0.5)*0.14);
+    const homeDir = baseDir.clone().add(jitter).normalize();
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.075,10,10), new THREE.MeshBasicMaterial({color:ELECTRON_COLOR}));
+    mesh.position.copy(homeDir.clone().multiplyScalar(IND_R*1.03));
+    cloud5.group.add(mesh);
+    cloud5.dots.push({mesh, homeDir});
+  }
+}
+function removeElectrons5(n){
+  const count = Math.min(n, cloud5.dots.length);
+  for(let i=0;i<count;i++){
+    const idx = Math.floor(Math.random()*cloud5.dots.length);
+    const dotObj = cloud5.dots.splice(idx,1)[0];
+    cloud5.group.remove(dotObj.mesh);
+  }
+}
+function resetElectronPool5(){
+  while(cloud5.group.children.length) cloud5.group.remove(cloud5.group.children[0]);
+  const fresh = makeElectronCloud(20, IND_R, COL_NEUTRAL);
+  cloud5.dots = fresh.dots;
+  fresh.dots.forEach(o=>cloud5.group.add(o.mesh));
+  state5.transferApplied = false; state5.transferN = 0;
+}
+function applyEarthTransfer5(entering, proximity){
+  if(state5.transferApplied) return;
+  const n = Math.max(1, Math.round(1.5+proximity*4.5)); // same scale as the flying-electron count
+  state5.transferN = n;
+  state5.transferApplied = true;
+  if(entering) addElectrons5(n); else removeElectrons5(n);
+}
 const nearPatch5 = patchDisc(), farPatch5 = patchDisc(); grpInduction.add(nearPatch5, farPatch5);
 
 const earthWireGroup5 = new THREE.Group(); grpInduction.add(earthWireGroup5);
@@ -1352,6 +1391,7 @@ function updateInduction(){
   document.getElementById('btn-ind-next').disabled = st===4;
   document.getElementById('btn-ind-sign').textContent = 'Rod: '+(state5.rodSign>0?'+':'−');
   document.getElementById('btn-ind-sign').style.color = state5.rodSign>0?'var(--red)':'var(--blue)';
+  document.getElementById('btn-ind-sign').disabled = state5.transferApplied;
   document.getElementById('sl-ind-dist').disabled = !rodPresent;
 }
 
@@ -1380,6 +1420,14 @@ function updateActive5(t){
 function gotoIndStep(i){
   const prev = state5.step;
   state5.step = Math.max(0, Math.min(4, i));
+  if(state5.step < 2 && prev >= 2){
+    // stepping back before the earthing point undoes the permanent transfer
+    resetElectronPool5();
+  }
+  if(state5.step === 2 && prev !== 2){
+    const proximity = indProximity(state5.dist);
+    applyEarthTransfer5(state5.rodSign > 0, proximity);
+  }
   updateInduction();
   if(state5.step === 2 && prev !== 2){
     const proximity = indProximity(state5.dist);
@@ -1404,7 +1452,7 @@ document.getElementById('btn-ind-play').addEventListener('click', function(){
     gotoIndStep(i);
   }, 1600);
 });
-document.getElementById('btn-reset-ind').addEventListener('click', ()=>{ state5.rodSign=-1; state5.dist=2.5; document.getElementById('sl-ind-dist').value=2.5; document.getElementById('lbl-ind-dist').textContent='2.50'; gotoIndStep(0); });
+document.getElementById('btn-reset-ind').addEventListener('click', ()=>{ state5.rodSign=-1; state5.dist=2.5; document.getElementById('sl-ind-dist').value=2.5; document.getElementById('lbl-ind-dist').textContent='2.50'; resetElectronPool5(); gotoIndStep(0); });
 updateInduction();
 
 /* ============================== MODULE 6: EXPERIMENTS (PRODUCTION & DETECTION) ============================== */
