@@ -407,6 +407,37 @@ function makeElectronCloud(n, radius, colorHex){
   return {group:grp, dots};
 }
 
+// Deterministic flat grid of points across a rectangle - for charges that sit on a flat surface
+// (like the cloth) where a spherical shell would float unnaturally off the object instead of
+// resting on it.
+function flatGridPositions(n, halfW, halfD){
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n/cols);
+  const pts = [];
+  let i=0;
+  for(let r=0;r<rows && i<n;r++){
+    for(let c=0;c<cols && i<n;c++){
+      const fx = cols>1 ? (c/(cols-1))*2-1 : 0;
+      const fz = rows>1 ? (r/(rows-1))*2-1 : 0;
+      pts.push(new THREE.Vector3(fx*halfW, 0, fz*halfD));
+      i++;
+    }
+  }
+  return pts;
+}
+// A flat cloud of electron dots lying on a rectangle (local y=0), instead of a spherical shell.
+function makeFlatElectronCloud(n, halfW, halfD){
+  const grp = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({color:ELECTRON_COLOR});
+  const dots = flatGridPositions(n, halfW, halfD).map(p=>{
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.075,10,10), mat.clone());
+    dot.position.copy(p);
+    grp.add(dot);
+    return {mesh:dot, homeDir:p.clone()};
+  });
+  return {group:grp, dots};
+}
+
 function makeStand(height){
   const g = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({color:COL_STAND, metalness:0.5, roughness:0.5});
@@ -816,19 +847,45 @@ const rodMat2 = new THREE.MeshStandardMaterial({color:0x8fa2c0, roughness:0.35, 
 const rodMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,3.0,20), rodMat2);
 rodMesh2.rotation.z = Math.PI/2; rodAssembly2.add(rodMesh2);
 
-// the rod's on-cloth position: centered over the cloth, resting on its top surface
+// the rod's on-cloth position: centered over the cloth, hovering a little above its top surface
+// (not flush against it) so the transferring electrons are visible in the gap rather than hidden
+// where the two objects would otherwise overlap.
 const clothTopY2 = clothMesh2.position.y + 0.14;
-const rodOnClothPos2 = new THREE.Vector3(clothMesh2.position.x, clothTopY2+0.22, clothMesh2.position.z);
+const rodOnClothPos2 = new THREE.Vector3(clothMesh2.position.x, clothTopY2+0.22+0.55, clothMesh2.position.z);
 
-// electron dot clouds - genuinely spherical on both objects (no non-uniform squashing), and their
-// meshes are actually handed over from one group to the other during a rub, so the count on each
-// object visibly changes. The rod's cloud rides inside rodAssembly2 (local origin), so it always
-// tracks the rod wherever the assembly moves.
+// electron dot clouds - the rod's stays a spherical shell (appropriate for a round rod), but the
+// cloth's charges lie flat on its actual top surface instead of floating in a spherical cloud that
+// mostly hangs off in empty space above a flat object. Meshes are handed over from one group to the
+// other during a rub, so the count on each object visibly changes. The rod's cloud rides inside
+// rodAssembly2 (local origin), so it always tracks the rod wherever the assembly moves.
+const CLOTH_HALF_W = 0.85, CLOTH_HALF_D = 0.55;
+const CLOTH_ELECTRON_Y = 0.14 + 0.07; // a hair above the cloth's own top surface
+const CLOTH_PROTON_Y = 0.14 + 0.05;   // just under the electrons, so they're covered until one leaves
 const rodDots2 = makeElectronCloud(8, 0.24, COL_NEUTRAL);
 rodAssembly2.add(rodDots2.group);
-const clothDots2 = makeElectronCloud(8, 0.42, COL_NEUTRAL);
-clothDots2.group.position.copy(clothMesh2.position).add(new THREE.Vector3(0,0.08,0));
+const clothDots2 = makeFlatElectronCloud(8, CLOTH_HALF_W, CLOTH_HALF_D);
+clothDots2.group.position.copy(clothMesh2.position).add(new THREE.Vector3(0,CLOTH_ELECTRON_Y,0));
 grpCharging.add(clothDots2.group);
+
+// Fixed "+" markers, one per electron, sitting at the SAME lattice positions the electrons start
+// from. They represent the protons, which never move - so once a specific electron migrates away,
+// the plus sign it used to sit on top of is left exposed in its place.
+const protonMatCharge2 = new THREE.MeshStandardMaterial({color:COL_POS, emissive:COL_POS, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
+const rodProtons2 = new THREE.Group();
+fibonacciSphereDirs(8).forEach(d=>{
+  const marker = makePlusMesh(0.1, 0.032, protonMatCharge2);
+  marker.position.copy(d.clone().multiplyScalar(0.24*0.96));
+  rodProtons2.add(marker);
+});
+rodAssembly2.add(rodProtons2);
+const clothProtons2 = new THREE.Group();
+flatGridPositions(8, CLOTH_HALF_W, CLOTH_HALF_D).forEach(p=>{
+  const marker = makePlusMesh(0.14, 0.045, protonMatCharge2);
+  marker.position.copy(p);
+  clothProtons2.add(marker);
+});
+clothProtons2.position.copy(clothMesh2.position).add(new THREE.Vector3(0,CLOTH_PROTON_Y,0));
+grpCharging.add(clothProtons2);
 
 let flying2 = [], rubbing2 = false;
 function pairDirection(){ return state2.pair==='poly' ? 1 : -1; } // +1: cloth->rod (rod ends negative); -1: rod->cloth (rod ends positive)
@@ -844,7 +901,7 @@ function resetClouds2(){
   while(rodDots2.group.children.length) rodDots2.group.remove(rodDots2.group.children[0]);
   while(clothDots2.group.children.length) clothDots2.group.remove(clothDots2.group.children[0]);
   const freshRod = makeElectronCloud(8, 0.24, COL_NEUTRAL);
-  const freshCloth = makeElectronCloud(8, 0.42, COL_NEUTRAL);
+  const freshCloth = makeFlatElectronCloud(8, CLOTH_HALF_W, CLOTH_HALF_D);
   rodDots2.dots = freshRod.dots; freshRod.dots.forEach(o=>rodDots2.group.add(o.mesh));
   clothDots2.dots = freshCloth.dots; freshCloth.dots.forEach(o=>clothDots2.group.add(o.mesh));
 }
@@ -924,9 +981,15 @@ function doRub(){
       sourceCloud.group.remove(mesh);
       mesh.position.copy(worldFrom);
       grpCharging.add(mesh);
-      const destRadius = destCloud===rodDots2 ? 0.24 : 0.42;
-      const destDir = fibonacciSphereDirs(24)[Math.floor(Math.random()*24)];
-      const destLocal = destDir.clone().multiplyScalar(destRadius*1.03);
+      let destLocal, destHomeDir;
+      if(destCloud === rodDots2){
+        const destDir = fibonacciSphereDirs(24)[Math.floor(Math.random()*24)];
+        destLocal = destDir.clone().multiplyScalar(0.24*1.03);
+        destHomeDir = destDir;
+      } else {
+        destLocal = new THREE.Vector3((Math.random()*2-1)*CLOTH_HALF_W, 0, (Math.random()*2-1)*CLOTH_HALF_D);
+        destHomeDir = destLocal;
+      }
       const destWorldPos = destCloud.group.getWorldPosition(new THREE.Vector3());
       const worldTo = destWorldPos.clone().add(destLocal);
       const o = {mesh, from:worldFrom.clone(), to:worldTo.clone(), tt:0};
@@ -935,7 +998,7 @@ function doRub(){
         grpCharging.remove(mesh);
         mesh.position.copy(destLocal);
         destCloud.group.add(mesh);
-        destCloud.dots.push({mesh, homeDir:destDir.clone()});
+        destCloud.dots.push({mesh, homeDir:destHomeDir.clone()});
         flying2 = flying2.filter(x=>x!==o);
       });
     }
