@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Density Lab | Measurement, Density, Floating & Layering</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:9px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.4px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.4);letter-spacing:1.6px;text-transform:uppercase;margin-top:2px;font-family:'Space Mono',monospace;}
+
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,200,87,.3);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;color:rgba(255,200,87,.55);}
+#qr-btn:hover{border-color:rgba(255,200,87,.6);background:rgba(255,200,87,.12);color:#ffc857;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,6,18,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,8,20,.97);border:1px solid rgba(255,200,87,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(255,200,87,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(255,200,87,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(255,200,87,.35);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(255,200,87,.35);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#ffc857;}
+
+#tabbar{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;z-index:10;max-width:calc(100vw - 200px);overflow-x:auto;}
+#tabbar::-webkit-scrollbar{height:0;}
+.tab-btn{padding:8px 11px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;transition:all .18s;}
+.tab-btn:hover{color:#fff;}
+.tab-btn.on{background:rgba(91,200,255,0.20);color:#fff;}
+
+#hud{
+  position:absolute;top:70px;right:14px;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:15px;width:236px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;
+}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+#hud h3{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--amber);margin:8px 0 6px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:6px;}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-align:right;}
+.dv.amber{color:var(--amber);}
+.dv.blue{color:var(--blue);}
+.dv.violet{color:var(--violet);}
+.dv.green{color:var(--green);}
+.dv.red{color:var(--red);}
+.hdiv{height:1px;background:var(--border);margin:9px 0;}
+#legend{display:flex;flex-wrap:wrap;gap:6px 10px;font-family:'Space Mono',monospace;font-size:9px;}
+.legchip{display:flex;align-items:center;gap:4px;color:rgba(200,215,255,.65);}
+.legdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.note-box{padding:8px 9px;border-radius:9px;background:rgba(180,120,255,0.06);border:1px solid rgba(180,120,255,0.18);font-size:10px;font-family:'Space Mono',monospace;color:rgba(210,220,255,0.8);line-height:1.7;}
+
+#infoPanel{position:absolute;top:70px;left:14px;width:270px;max-width:calc(100vw - 320px);
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;
+  padding:15px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;}
+#infoPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.info-block h3{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:8px;}
+.info-block p{font-size:11.5px;line-height:1.65;color:rgba(210,222,250,0.82);margin-bottom:8px;}
+.info-block p:last-child{margin-bottom:0;}
+.info-block b{color:#fff;}
+.info-block .pos{color:var(--amber);font-weight:700;}
+.info-block .neg{color:var(--blue);font-weight:700;}
+.info-block .step-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--green);background:rgba(77,255,160,.08);border:1px solid rgba(77,255,160,.25);border-radius:6px;padding:2px 7px;margin-bottom:7px;letter-spacing:.5px;}
+.formula-box{font-family:'Space Mono',monospace;font-size:12.5px;color:var(--amber);background:rgba(255,200,87,0.06);border:1px solid rgba(255,200,87,0.2);border-radius:9px;padding:8px 10px;margin:8px 0;text-align:center;}
+
+/* Challenge / validating input */
+.challenge-box{background:rgba(180,120,255,0.05);border:1px solid rgba(180,120,255,0.2);border-radius:10px;padding:10px;margin-top:8px;}
+.challenge-box h4{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:1.5px;color:var(--violet);text-transform:uppercase;margin-bottom:8px;}
+.answer-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+.answer-row label{font-size:10.5px;color:rgba(210,222,250,0.75);flex:1;font-family:'Space Mono',monospace;}
+.answer-row input{width:64px;background:rgba(4,6,14,0.6);border:1px solid rgba(180,200,255,0.25);border-radius:7px;color:#fff;font-family:'Space Mono',monospace;font-size:11.5px;padding:5px 6px;text-align:right;}
+.answer-row input:focus{outline:none;border-color:var(--blue);}
+.answer-row .unit{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--muted);width:38px;}
+.feedback-msg{font-family:'Space Mono',monospace;font-size:10.5px;border-radius:8px;padding:7px 9px;margin-top:6px;display:none;}
+.feedback-msg.ok{display:block;background:rgba(77,255,160,0.08);border:1px solid rgba(77,255,160,0.3);color:var(--green);}
+.feedback-msg.bad{display:block;background:rgba(255,94,114,0.08);border:1px solid rgba(255,94,114,0.3);color:var(--red);}
+.score-chip{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--muted);margin-top:6px;}
+
+#panel2d-wrap{width:100%;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 30%,#0d1428,#05070d);margin:8px 0;border:1px solid var(--border);}
+#panel2d{width:100%;display:block;touch-action:none;}
+
+#controls{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;align-items:center;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:40px;
+  padding:8px 14px;z-index:10;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 24px);
+}
+.ctrl-block{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:26px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.red{border-color:rgba(255,94,114,0.4);color:var(--red);background:rgba(255,94,114,0.06);}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.violet{border-color:rgba(181,122,255,0.4);color:var(--violet);background:rgba(181,122,255,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:80px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+
+#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);font-size:8.5px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+
+@media (max-width:820px){
+  #infoPanel{display:none;}
+  #hud{width:190px;top:66px;}
+  #tabbar{max-width:calc(100vw - 20px);top:60px;left:14px;transform:none;}
+  #title{position:absolute;}
+}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+  <div id="title-text">
+    <h1>DENSITY LAB</h1>
+    <p>Measurement · Density · Floating · Layering</p>
+  </div>
+</div>
+
+<!-- QR button -->
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=ffc857&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fdensity_lab.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fdensity_lab.html'"/>
+    <p>darawa-io.github.io/ARLABS/density_lab.html</p>
+  </div>
+</div>
+
+<div id="tabbar">
+  <button class="tab-btn on" data-mod="measure">1 · MEASURE</button>
+  <button class="tab-btn" data-mod="basics">2 · DENSITY</button>
+  <button class="tab-btn" data-mod="displacement">3 · DISPLACEMENT</button>
+  <button class="tab-btn" data-mod="floatsink">4 · FLOAT/SINK</button>
+  <button class="tab-btn" data-mod="layers">5 · LAYERS</button>
+</div>
+
+<div id="hud">
+  <h2>Readings</h2>
+  <div id="legend">
+    <span class="legchip"><span class="legdot" style="background:var(--amber);"></span>solid</span>
+    <span class="legchip"><span class="legdot" style="background:var(--blue);"></span>liquid</span>
+    <span class="legchip"><span class="legdot" style="background:var(--green);"></span>correct</span>
+    <span class="legchip"><span class="legdot" style="background:var(--red);"></span>check again</span>
+  </div>
+  <div class="hdiv"></div>
+
+  <div id="hud-measure" class="hud-block">
+    <div class="dr"><span class="dl">Block length</span><span class="dv amber" id="val-m-blocklen">8.0 cm</span></div>
+    <div class="dr"><span class="dl">Liquid volume</span><span class="dv blue" id="val-m-liqvol">40 cm³</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Practice score</span><span class="dv green" id="val-m-score">0 / 0</span></div>
+  </div>
+
+  <div id="hud-basics" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Material</span><span class="dv" id="val-b-material">Aluminium</span></div>
+    <div class="dr"><span class="dl">Length (L)</span><span class="dv amber" id="val-b-L">5.0 cm</span></div>
+    <div class="dr"><span class="dl">Width (W)</span><span class="dv amber" id="val-b-W">4.0 cm</span></div>
+    <div class="dr"><span class="dl">Height (H)</span><span class="dv amber" id="val-b-H">3.0 cm</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Volume V = L×W×H</span><span class="dv blue" id="val-b-V">60.0 cm³</span></div>
+    <div class="dr"><span class="dl">Mass (scale)</span><span class="dv blue" id="val-b-m">162.0 g</span></div>
+    <div class="dr"><span class="dl">Density ρ = m/V</span><span class="dv green" id="val-b-rho">2.70 g/cm³</span></div>
+  </div>
+
+  <div id="hud-displacement" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Mode</span><span class="dv amber" id="val-d-mode">Practice</span></div>
+    <div class="dr"><span class="dl">Water level V₁</span><span class="dv blue" id="val-d-v1">50.0 cm³</span></div>
+    <div class="dr"><span class="dl">Water+rock V₂</span><span class="dv blue" id="val-d-v2">— cm³</span></div>
+    <div class="dr"><span class="dl">Rock volume</span><span class="dv amber" id="val-d-vol">— cm³</span></div>
+    <div class="dr"><span class="dl">Rock mass</span><span class="dv" id="val-d-mass">— g</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Density</span><span class="dv green" id="val-d-rho">— g/cm³</span></div>
+    <div class="dr"><span class="dl">Challenge score</span><span class="dv" id="val-d-score">0 / 0</span></div>
+  </div>
+
+  <div id="hud-floatsink" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Liquid</span><span class="dv blue" id="val-f-liquid">Water (1.00 g/cm³)</span></div>
+    <div class="dr"><span class="dl">Object</span><span class="dv" id="val-f-object">—</span></div>
+    <div class="dr"><span class="dl">Object density</span><span class="dv amber" id="val-f-density">— g/cm³</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Result</span><span class="dv green" id="val-f-result">—</span></div>
+    <div class="dr"><span class="dl">% submerged</span><span class="dv" id="val-f-submerged">—</span></div>
+  </div>
+
+  <div id="hud-layers" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Liquids poured</span><span class="dv amber" id="val-l-count">0 / 4</span></div>
+    <div class="hdiv"></div>
+    <div class="note-box" id="val-l-order">Pour order (top → bottom) will appear here once settled.</div>
+  </div>
+</div>
+
+<div id="infoPanel">
+  <h2>Concept</h2>
+
+  <div id="info-measure" class="info-block">
+    <h3>Reading Rulers &amp; Measuring Cylinders</h3>
+    <p>A <b>ruler</b> measures length. Line up the zero mark exactly with one end of the object, look straight down at the scale (avoid <b>parallax error</b>), and read where the other end lines up — estimating to half of the smallest division.</p>
+    <p>A <b>measuring cylinder</b> measures volume. Liquid surfaces curve into a <b>meniscus</b>; for water and most liquids, read the scale at eye level at the <b>bottom</b> of the curve.</p>
+    <p>Adjust the block and the liquid level below, then try the practice reading — type in what you measure and check your answer.</p>
+    <div class="challenge-box">
+      <h4>▸ Practice a reading</h4>
+      <button class="btn violet" id="btn-m-new" style="width:100%;margin-bottom:8px;">🎲 New hidden reading</button>
+      <div class="answer-row"><label for="in-m-ruler">Block length</label><input type="number" step="0.1" id="in-m-ruler" placeholder="?"><span class="unit">cm</span></div>
+      <div class="answer-row"><label for="in-m-cyl">Liquid volume</label><input type="number" step="1" id="in-m-cyl" placeholder="?"><span class="unit">cm³</span></div>
+      <button class="btn amber" id="btn-m-check" style="width:100%;">Check my readings</button>
+      <div class="feedback-msg" id="fb-m"></div>
+      <div class="score-chip" id="score-m">No attempts yet.</div>
+    </div>
+  </div>
+
+  <div id="info-basics" class="info-block" style="display:none;">
+    <h3>Density = Mass ÷ Volume</h3>
+    <p><b>Density</b> is defined as mass per unit volume:</p>
+    <div class="formula-box">ρ = m / V</div>
+    <p>where ρ is density (g/cm³ or kg/m³), m is mass (measured with a balance), and V is volume.</p>
+    <p>For a <b>regular solid</b> like this block, volume is found from its measured dimensions: V = L × W × H. For a <b>liquid</b>, volume is simply read straight off a measuring cylinder.</p>
+    <p>Pick a material, resize the block, and watch V, m and ρ update. Then try to identify a hidden material purely from its density.</p>
+    <div class="challenge-box">
+      <h4>▸ Identify the mystery material</h4>
+      <button class="btn violet" id="btn-b-mystery" style="width:100%;margin-bottom:8px;">🎲 Pick a mystery block</button>
+      <p style="font-size:11px;margin-bottom:6px;">Computed density: <b id="val-b-mysteryrho" style="color:var(--amber);">— g/cm³</b></p>
+      <div id="b-mystery-options" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div class="feedback-msg" id="fb-b"></div>
+    </div>
+  </div>
+
+  <div id="info-displacement" class="info-block" style="display:none;">
+    <h3>Irregular Solids: The Displacement Method</h3>
+    <p>An irregularly shaped solid that sinks has no simple length × width × height. Instead, its volume is found by <b>displacement</b>:</p>
+    <p>1. Record the water volume, <b>V₁</b>.<br>2. Lower the object in completely — it pushes water up to a new level, <b>V₂</b>.<br>3. The object's volume is the difference:</p>
+    <div class="formula-box">V<sub>object</sub> = V₂ − V₁</div>
+    <p>Once you know the volume and the mass (from a balance), density follows from ρ = m / V, exactly as before.</p>
+    <p>Switch to <b>Challenge</b> mode: a rock of secret volume is dropped in. Read the two levels off the 2D scale panel, work out the volume and density yourself, and enter them to check.</p>
+    <div class="challenge-box" id="d-challenge-box" style="display:none;">
+      <h4>▸ Frontal view — read the levels</h4>
+      <div id="panel2d-wrap"><canvas id="panel2d" width="260" height="230"></canvas></div>
+      <p style="font-size:10.5px;color:rgba(210,222,250,.7);margin-bottom:6px;">Balance reading: <b id="val-d-massgiven" style="color:#fff;">— g</b></p>
+      <div class="answer-row"><label for="in-d-vol">Rock volume (V₂−V₁)</label><input type="number" step="0.1" id="in-d-vol" placeholder="?"><span class="unit">cm³</span></div>
+      <div class="answer-row"><label for="in-d-rho">Density ρ = m/V</label><input type="number" step="0.01" id="in-d-rho" placeholder="?"><span class="unit">g/cm³</span></div>
+      <button class="btn amber" id="btn-d-check" style="width:100%;">Check my answer</button>
+      <div class="feedback-msg" id="fb-d"></div>
+      <div class="score-chip" id="score-d">No attempts yet.</div>
+    </div>
+  </div>
+
+  <div id="info-floatsink" class="info-block" style="display:none;">
+    <h3>Floating &amp; Sinking</h3>
+    <p>Whether an object floats or sinks in a liquid depends only on comparing two densities:</p>
+    <p>• If the object's density is <b>less than</b> the liquid's density, it <b>floats</b>.<br>• If it's <b>greater than</b> the liquid's density, it <b>sinks</b>.<br>• If the two are <b>equal</b>, it hovers, neither rising nor sinking.</p>
+    <p>A floating object sinks in only far enough that the fraction submerged equals the ratio of the two densities: %submerged = ρ<sub>object</sub> / ρ<sub>liquid</sub> × 100.</p>
+    <p>Choose an object and a liquid, predict the outcome, then drop it in to check.</p>
+    <div class="challenge-box">
+      <h4>▸ Predict before you drop</h4>
+      <div style="display:flex;gap:6px;">
+        <button class="btn" id="btn-f-predict-float" style="flex:1;">It will float</button>
+        <button class="btn" id="btn-f-predict-sink" style="flex:1;">It will sink</button>
+      </div>
+      <div class="feedback-msg" id="fb-f"></div>
+      <div class="score-chip" id="score-f">No attempts yet.</div>
+    </div>
+  </div>
+
+  <div id="info-layers" class="info-block" style="display:none;">
+    <h3>Layering Immiscible Liquids</h3>
+    <p>When liquids that don't mix (are <b>immiscible</b>) are poured into the same container, they don't stay in the order you poured them. They settle into layers ordered <b>purely by density</b>: the densest liquid ends up at the bottom, the least dense at the top.</p>
+    <p>This works the same way as floating and sinking — each liquid layer "floats" on anything denser beneath it.</p>
+    <p>Pour up to four liquids in any order you like, then watch them settle — and check whether your predicted stacking order matches.</p>
+    <div class="challenge-box">
+      <h4>▸ Predict the settled order</h4>
+      <p style="font-size:10.5px;color:rgba(210,222,250,.7);margin-bottom:6px;">Once you've poured your liquids, type the settled order from <b>top to bottom</b> (e.g. "oil, water, honey") before pressing Settle.</p>
+      <input type="text" id="in-l-predict" placeholder="e.g. oil, water, honey" style="width:100%;background:rgba(4,6,14,0.6);border:1px solid rgba(180,200,255,0.25);border-radius:7px;color:#fff;font-family:'Space Mono',monospace;font-size:10.5px;padding:6px 8px;margin-bottom:7px;">
+      <div class="feedback-msg" id="fb-l"></div>
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <div id="ctrl-measure" class="ctrl-block" style="display:flex;">
+    <span class="sw">block=<input type="range" id="sl-blocklen" min="2" max="18" step="0.5" value="8"><span id="lbl-blocklen">8.0cm</span></span>
+    <span class="sw">liquid=<input type="range" id="sl-liqvol" min="10" max="90" step="1" value="40"><span id="lbl-liqvol">40cm³</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-measure">Reset</button>
+  </div>
+
+  <div id="ctrl-basics" class="ctrl-block" style="display:none;">
+    <button class="btn on" id="btn-mode-solid">Solid</button>
+    <button class="btn" id="btn-mode-liquid">Liquid</button>
+    <div class="sep"></div>
+    <span id="basics-solid-ctrls" style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
+      <button class="btn amber" id="btn-mat-cycle">Material: Aluminium ▸</button>
+      <span class="sw">L=<input type="range" id="sl-bL" min="1" max="10" step="0.5" value="5"><span id="lbl-bL">5.0</span></span>
+      <span class="sw">W=<input type="range" id="sl-bW" min="1" max="10" step="0.5" value="4"><span id="lbl-bW">4.0</span></span>
+      <span class="sw">H=<input type="range" id="sl-bH" min="1" max="10" step="0.5" value="3"><span id="lbl-bH">3.0</span></span>
+    </span>
+    <span id="basics-liquid-ctrls" style="display:none;gap:7px;align-items:center;flex-wrap:wrap;">
+      <button class="btn amber" id="btn-liq-cycle">Liquid: Water ▸</button>
+      <span class="sw">V=<input type="range" id="sl-bLiqV" min="10" max="90" step="1" value="50"><span id="lbl-bLiqV">50</span></span>
+    </span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-basics">Reset</button>
+  </div>
+
+  <div id="ctrl-displacement" class="ctrl-block" style="display:none;">
+    <button class="btn on" id="btn-d-mode-practice">Practice</button>
+    <button class="btn" id="btn-d-mode-challenge">Challenge</button>
+    <div class="sep"></div>
+    <span class="sw" id="d-v1-ctrl">V₁=<input type="range" id="sl-dv1" min="20" max="60" step="5" value="50"><span id="lbl-dv1">50</span></span>
+    <span class="sw" id="d-rockvol-ctrl">rock=<input type="range" id="sl-drockvol" min="8" max="40" step="1" value="20"><span id="lbl-drockvol">20</span></span>
+    <button class="btn amber" id="btn-d-newrock">🎲 New Rock</button>
+    <button class="btn green" id="btn-d-drop">💧 Drop into Water</button>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-displacement">Reset</button>
+  </div>
+
+  <div id="ctrl-floatsink" class="ctrl-block" style="display:none;">
+    <button class="btn on" id="btn-liq-water">Water</button>
+    <button class="btn" id="btn-liq-salt">Salt water</button>
+    <button class="btn" id="btn-liq-oil">Oil</button>
+    <div class="sep"></div>
+    <button class="btn amber" id="btn-obj-cycle">Object: Cork ▸</button>
+    <button class="btn green" id="btn-f-drop">⬇ Drop object</button>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-float">Reset</button>
+  </div>
+
+  <div id="ctrl-layers" class="ctrl-block" style="display:none;">
+    <button class="btn" id="btn-pour-honey">+ Honey</button>
+    <button class="btn" id="btn-pour-syrup">+ Syrup</button>
+    <button class="btn" id="btn-pour-soap">+ Soap</button>
+    <button class="btn" id="btn-pour-water">+ Water</button>
+    <button class="btn" id="btn-pour-oil">+ Oil</button>
+    <button class="btn" id="btn-pour-alcohol">+ Alcohol</button>
+    <div class="sep"></div>
+    <button class="btn green" id="btn-l-settle">⇅ Settle</button>
+    <button class="btn" id="btn-reset-layers">Reset</button>
+  </div>
+
+  <div class="sep"></div>
+  <button class="btn" id="btn-camreset">⟲ View</button>
+</div>
+
+<div id="hint">🖐️ drag: rotate view · scroll / pinch: zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+/* ============================== CORE SETUP ============================== */
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.018);
+const cam3 = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  cam3.aspect = w / h; cam3.updateProjectionMatrix();
+  labelCanvas.width = w; labelCanvas.height = h;
+}
+resize(); window.addEventListener('resize', resize);
+
+scene3.add(new THREE.AmbientLight(0xffffff, 2.2));
+const sun = new THREE.DirectionalLight(0xfff8f0, 1.1); sun.position.set(5,10,6); scene3.add(sun);
+const rim = new THREE.DirectionalLight(0x6688ff, 0.5); rim.position.set(-6,4,-4); scene3.add(rim);
+
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0x0d1020, roughness:0.95}));
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -2.3; scene3.add(floorM);
+const grid = new THREE.GridHelper(40,30,0x1a2540,0x121c30); grid.position.y = -2.28; scene3.add(grid);
+const root3 = new THREE.Group(); scene3.add(root3);
+
+/* ============================== SHARED HELPERS ============================== */
+const COL_GLASS = 0x8fb8d8, COL_WATER = 0x3f8fd6, COL_METAL_STAND = 0x3a4560;
+
+function ease(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+function lerp(a,b,t){ return a + (b-a)*t; }
+function tween(duration, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now-start)/duration);
+    onUpdate(ease(t), t);
+    if(t < 1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+function rand(a,b){ return a + Math.random()*(b-a); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function round1(x){ return Math.round(x*10)/10; }
+function round2(x){ return Math.round(x*100)/100; }
+
+// Small digital-display factory: a plane mesh with a live-updatable canvas texture, used for
+// balance/scale readouts across modules 2 and 3.
+function createDigitalDisplay(w, h, planeW, planeH){
+  const cnv = document.createElement('canvas'); cnv.width=w; cnv.height=h;
+  const ctx = cnv.getContext('2d');
+  const texture = new THREE.CanvasTexture(cnv);
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), new THREE.MeshBasicMaterial({map:texture, transparent:true}));
+  function setText(text, sub){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#08150e'; ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle = 'rgba(77,255,160,0.4)'; ctx.lineWidth = 4; ctx.strokeRect(2,2,w-4,h-4);
+    ctx.fillStyle = '#4dffa0';
+    ctx.font = '700 '+Math.floor(h*0.42)+'px "Space Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowBlur = 10; ctx.shadowColor = '#4dffa0';
+    ctx.fillText(text, w/2, h*0.42);
+    if(sub){
+      ctx.font = '400 '+Math.floor(h*0.2)+'px "Space Mono", monospace';
+      ctx.fillStyle = 'rgba(77,255,160,0.55)'; ctx.shadowBlur = 0;
+      ctx.fillText(sub, w/2, h*0.78);
+    }
+    texture.needsUpdate = true;
+  }
+  setText('0.0','g');
+  return {mesh, setText};
+}
+
+function worldToScreen(v){
+  const c = v.clone().project(cam3);
+  return {x:(c.x*.5+.5)*window.innerWidth, y:(-.5*c.y+.5)*window.innerHeight};
+}
+function drawLabelChip(p, t, c, size){
+  const s = worldToScreen(p);
+  const fs = size || 11;
+  lctx.font = '700 '+fs+'px "Space Mono", monospace';
+  lctx.textAlign = 'center';
+  const tw = lctx.measureText(t).width;
+  lctx.fillStyle = 'rgba(4,7,15,0.72)';
+  lctx.fillRect(s.x-tw/2-5, s.y-fs-1, tw+10, fs+8);
+  lctx.fillStyle = c || '#ffffff';
+  lctx.shadowBlur = 6; lctx.shadowColor = c || '#fff';
+  lctx.fillText(t, s.x, s.y+4);
+  lctx.shadowBlur = 0;
+}
+
+/* ============================== ORBIT CONTROL ============================== */
+const orb = { theta:0.35, phi:0.20, radius:9, cx:0, cy:0.3, cz:0 };
+function applyOrbit(){
+  orb.phi = Math.max(-Math.PI/5, Math.min(Math.PI/3.2, orb.phi));
+  orb.radius = Math.max(3.0, Math.min(30, orb.radius));
+  const r=orb.radius, p=orb.phi, t=orb.theta;
+  cam3.position.set(orb.cx + r*Math.cos(p)*Math.sin(t), orb.cy + r*Math.sin(p), orb.cz + r*Math.cos(p)*Math.cos(t));
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
+}
+applyOrbit();
+
+let dragStart=null, pinchStartDist=0, pinchStartRadius=orb.radius;
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  if(e.touches.length===1){ dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; }
+  else if(e.touches.length===2){
+    const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+    pinchStartDist=Math.hypot(dx,dy); pinchStartRadius=orb.radius; dragStart=null;
+  }
+},{passive:false});
+canvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  if(e.touches.length===1 && dragStart){
+    const dx=e.touches[0].clientX-dragStart.x, dy=e.touches[0].clientY-dragStart.y;
+    orb.theta -= dx*0.005; orb.phi += dy*0.005; applyOrbit();
+    dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  } else if(e.touches.length===2 && pinchStartDist>0){
+    const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+    const nd=Math.hypot(dx,dy);
+    orb.radius = Math.max(3.0, Math.min(30, pinchStartRadius*(pinchStartDist/nd)));
+    applyOrbit();
+  }
+},{passive:false});
+canvas.addEventListener('touchend', e=>{ if(e.touches.length===0){ dragStart=null; pinchStartDist=0; } },{passive:false});
+canvas.addEventListener('mousedown', e=>{ dragStart={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mousemove', e=>{
+  if(!dragStart) return;
+  const dx=e.clientX-dragStart.x, dy=e.clientY-dragStart.y;
+  orb.theta -= dx*0.005; orb.phi += dy*0.005; applyOrbit();
+  dragStart={x:e.clientX,y:e.clientY};
+});
+window.addEventListener('mouseup', ()=>{ dragStart=null; });
+canvas.addEventListener('wheel', e=>{ orb.radius += e.deltaY*0.01; applyOrbit(); e.preventDefault(); }, {passive:false});
+
+/* ============================== MODULE 1: MEASURE (rulers & measuring cylinders) ============================== */
+const grpMeasure = new THREE.Group(); root3.add(grpMeasure);
+const CM = 0.16; // 3D units per cm, module 1
+const state1 = { blockLen:8.0, liqVol:40, challenge:false, revealed:true, scoreCorrect:0, scoreTotal:0 };
+
+// --- Ruler ---
+const rulerGroup = new THREE.Group();
+rulerGroup.position.set(-3.6, -1.55, 0.9);
+grpMeasure.add(rulerGroup);
+const rulerBody = new THREE.Mesh(new THREE.BoxGeometry(20*CM+0.3, 0.06, 1.0), new THREE.MeshStandardMaterial({color:0xeef2fb, roughness:0.5}));
+rulerBody.position.set(20*CM/2, 0, 0);
+rulerGroup.add(rulerBody);
+for(let cm=0; cm<=20; cm++){
+  const major = cm % 5 === 0;
+  const tick = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.03, major?0.55:0.3), new THREE.MeshBasicMaterial({color:0x0d1428}));
+  tick.position.set(cm*CM, 0.035, major? -0.05 : 0.05);
+  rulerGroup.add(tick);
+}
+// --- Block on ruler ---
+const blockMat = new THREE.MeshStandardMaterial({color:0xd9a15c, roughness:0.65});
+const blockMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.55, 0.55), blockMat);
+rulerGroup.add(blockMesh);
+const blockEdgeMarker = new THREE.Mesh(new THREE.ConeGeometry(0.05,0.14,10), new THREE.MeshBasicMaterial({color:0xffc857}));
+blockEdgeMarker.rotation.z = Math.PI;
+rulerGroup.add(blockEdgeMarker);
+
+// --- Measuring cylinder ---
+const cylGroup = new THREE.Group();
+cylGroup.position.set(2.6, -1.5, 0);
+grpMeasure.add(cylGroup);
+const CYL_R = 0.55, CYL_H = 3.0, CYL_MAXVOL = 100;
+const glassMat = new THREE.MeshPhysicalMaterial({color:COL_GLASS, transparent:true, opacity:0.22, roughness:0.08, metalness:0, transmission:0.4, side:THREE.DoubleSide});
+const cylGlass = new THREE.Mesh(new THREE.CylinderGeometry(CYL_R, CYL_R*0.92, CYL_H, 32, 1, true), glassMat);
+cylGlass.position.y = CYL_H/2;
+cylGroup.add(cylGlass);
+const cylBase = new THREE.Mesh(new THREE.CylinderGeometry(CYL_R*0.92, CYL_R*0.98, 0.08, 32), new THREE.MeshStandardMaterial({color:COL_GLASS, transparent:true, opacity:0.5}));
+cylGroup.add(cylBase);
+const liquidMat1 = new THREE.MeshPhysicalMaterial({color:COL_WATER, transparent:true, opacity:0.85, roughness:0.15, transmission:0.15});
+const liquidMesh1 = new THREE.Mesh(new THREE.CylinderGeometry(CYL_R*0.9, CYL_R*0.9, 1, 32), liquidMat1);
+cylGroup.add(liquidMesh1);
+for(let v=0; v<=CYL_MAXVOL; v+=10){
+  const major = v % 20 === 0;
+  const y = (v/CYL_MAXVOL)*CYL_H;
+  const tick = new THREE.Mesh(new THREE.BoxGeometry(major?0.22:0.12, 0.012, 0.012), new THREE.MeshBasicMaterial({color:0x0d1428}));
+  tick.position.set(CYL_R*0.94, y, CYL_R*0.94*0.7);
+  cylGroup.add(tick);
+}
+
+function updateMeasureVisuals(){
+  const bl = state1.blockLen;
+  blockMesh.scale.x = bl*CM;
+  blockMesh.position.set(bl*CM/2, 0.30, 0);
+  blockEdgeMarker.position.set(bl*CM, 0.55, 0);
+  const lv = state1.liqVol;
+  const h = Math.max(0.06,(lv/CYL_MAXVOL)*CYL_H);
+  liquidMesh1.scale.y = h;
+  liquidMesh1.position.y = h/2;
+}
+updateMeasureVisuals();
+
+function fmtOrHidden(val, unit, dec){
+  return state1.challenge && !state1.revealed ? '?' : val.toFixed(dec===undefined?1:dec)+' '+unit;
+}
+function refreshMeasureHud(){
+  document.getElementById('val-m-blocklen').textContent = fmtOrHidden(state1.blockLen,'cm',1);
+  document.getElementById('val-m-liqvol').textContent = fmtOrHidden(state1.liqVol,'cm³',0);
+  document.getElementById('val-m-score').textContent = state1.scoreCorrect+' / '+state1.scoreTotal;
+}
+refreshMeasureHud();
+
+document.getElementById('sl-blocklen').addEventListener('input', e=>{
+  state1.challenge=false; state1.revealed=true;
+  state1.blockLen = parseFloat(e.target.value);
+  document.getElementById('lbl-blocklen').textContent = state1.blockLen.toFixed(1)+'cm';
+  updateMeasureVisuals(); refreshMeasureHud();
+});
+document.getElementById('sl-liqvol').addEventListener('input', e=>{
+  state1.challenge=false; state1.revealed=true;
+  state1.liqVol = parseFloat(e.target.value);
+  document.getElementById('lbl-liqvol').textContent = state1.liqVol+'cm³';
+  updateMeasureVisuals(); refreshMeasureHud();
+});
+document.getElementById('btn-reset-measure').addEventListener('click', ()=>{
+  state1.challenge=false; state1.revealed=true; state1.blockLen=8; state1.liqVol=40;
+  document.getElementById('sl-blocklen').value=8; document.getElementById('lbl-blocklen').textContent='8.0cm';
+  document.getElementById('sl-liqvol').value=40; document.getElementById('lbl-liqvol').textContent='40cm³';
+  updateMeasureVisuals(); refreshMeasureHud();
+});
+document.getElementById('btn-m-new').addEventListener('click', ()=>{
+  state1.challenge = true; state1.revealed = false;
+  state1.blockLen = round1(rand(2,18));
+  state1.liqVol = Math.round(rand(10,90));
+  updateMeasureVisuals(); refreshMeasureHud();
+  document.getElementById('in-m-ruler').value=''; document.getElementById('in-m-cyl').value='';
+  const fb = document.getElementById('fb-m'); fb.className='feedback-msg'; fb.textContent='';
+});
+document.getElementById('btn-m-check').addEventListener('click', ()=>{
+  const fb = document.getElementById('fb-m');
+  if(!state1.challenge){ fb.className='feedback-msg bad'; fb.textContent='Click "New hidden reading" first.'; return; }
+  const ansRuler = parseFloat(document.getElementById('in-m-ruler').value);
+  const ansCyl = parseFloat(document.getElementById('in-m-cyl').value);
+  const okRuler = Math.abs(ansRuler - state1.blockLen) <= 0.3;
+  const okCyl = Math.abs(ansCyl - state1.liqVol) <= 3;
+  state1.revealed = true; state1.scoreTotal++;
+  if(okRuler && okCyl) state1.scoreCorrect++;
+  refreshMeasureHud();
+  fb.className = 'feedback-msg ' + (okRuler&&okCyl ? 'ok':'bad');
+  fb.textContent = (okRuler?'✓ Ruler correct. ':'✗ Ruler was '+state1.blockLen.toFixed(1)+' cm. ') + (okCyl?'✓ Cylinder correct.':'✗ Cylinder was '+state1.liqVol+' cm³.');
+  document.getElementById('score-m').textContent = 'Score: '+state1.scoreCorrect+' / '+state1.scoreTotal;
+});
+
+function labelsMeasure(){
+  const L = [];
+  for(let cm=0; cm<=20; cm+=5){
+    const p = rulerGroup.localToWorld(new THREE.Vector3(cm*CM, 0.06, 0.05));
+    L.push({p, t:String(cm), c:'rgba(220,230,255,0.85)', size:9});
+  }
+  if(!state1.challenge || state1.revealed){
+    const p = rulerGroup.localToWorld(new THREE.Vector3(state1.blockLen*CM, 0.62, 0));
+    L.push({p, t:state1.blockLen.toFixed(1)+' cm', c:'#ffc857', size:12});
+  }
+  for(let v=0; v<=CYL_MAXVOL; v+=20){
+    const y = (v/CYL_MAXVOL)*CYL_H;
+    const p = cylGroup.localToWorld(new THREE.Vector3(CYL_R*1.1, y, CYL_R*0.7));
+    L.push({p, t:String(v), c:'rgba(220,230,255,0.85)', size:9});
+  }
+  if(!state1.challenge || state1.revealed){
+    const y = (state1.liqVol/CYL_MAXVOL)*CYL_H;
+    const p = cylGroup.localToWorld(new THREE.Vector3(0, y+0.15, CYL_R*0.9));
+    L.push({p, t:state1.liqVol+' cm³', c:'#5bc8ff', size:12});
+  }
+  return L;
+}
+function updateActive1(t){ blockEdgeMarker.position.y = 0.55 + Math.sin(t*2)*0.03; }
+
+/* ============================== MODULE 2: DENSITY BASICS (m/V) ============================== */
+const grpBasics = new THREE.Group(); root3.add(grpBasics);
+const CM2 = 0.16;
+const MATERIALS = [
+  {name:'Aluminium', density:2.70, color:0xC7CDD3},
+  {name:'Iron',      density:7.87, color:0x8b8f94},
+  {name:'Copper',    density:8.96, color:0xd08a52},
+  {name:'Wood (oak)',density:0.75, color:0xa5723f},
+  {name:'Glass',     density:2.50, color:0xbfe4ec},
+  {name:'Gold',      density:19.30,color:0xe8c34a}
+];
+const LIQUIDS2 = [
+  {name:'Water',          density:1.00, color:0x3f8fd6},
+  {name:'Vegetable oil',  density:0.92, color:0xdcb24a},
+  {name:'Glycerin',       density:1.26, color:0xcfe0ee},
+  {name:'Seawater',       density:1.03, color:0x2f7fc0},
+  {name:'Honey',          density:1.42, color:0xcf9a2e}
+];
+const state2 = { mode:'solid', matIdx:0, L:5, W:4, H:3, liqIdx:0, liqVol:50 };
+
+// --- Scale platform (shared visual base) ---
+const scaleGroup2 = new THREE.Group();
+scaleGroup2.position.set(0,-1.85,0);
+grpBasics.add(scaleGroup2);
+const scaleBase2 = new THREE.Mesh(new THREE.BoxGeometry(2.6,0.35,1.9), new THREE.MeshStandardMaterial({color:0x1c2233, roughness:0.5, metalness:0.3}));
+scaleGroup2.add(scaleBase2);
+const scaleTop2 = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.06,1.6), new THREE.MeshStandardMaterial({color:0x2a3244, roughness:0.35, metalness:0.5}));
+scaleTop2.position.y = 0.205;
+scaleGroup2.add(scaleTop2);
+const display2 = createDigitalDisplay(256,96,1.1,0.42);
+display2.mesh.position.set(0,0.05,1.05);
+display2.mesh.rotation.x = -0.35;
+scaleGroup2.add(display2.mesh);
+
+// --- Solid block ---
+const blockMat2 = new THREE.MeshStandardMaterial({color:MATERIALS[0].color, roughness:0.45, metalness:0.25});
+const blockMesh2 = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), blockMat2);
+grpBasics.add(blockMesh2);
+
+// --- Liquid cylinder ---
+const liqGroup2 = new THREE.Group();
+grpBasics.add(liqGroup2);
+const B2_CYL_R = 0.55, B2_CYL_H = 2.6, B2_MAXVOL = 100;
+const liqGlass2 = new THREE.Mesh(new THREE.CylinderGeometry(B2_CYL_R,B2_CYL_R*0.92,B2_CYL_H,32,1,true), new THREE.MeshPhysicalMaterial({color:COL_GLASS, transparent:true, opacity:0.22, transmission:0.4, roughness:0.08, side:THREE.DoubleSide}));
+liqGlass2.position.y = B2_CYL_H/2;
+liqGroup2.add(liqGlass2);
+const liquidMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(B2_CYL_R*0.9,B2_CYL_R*0.9,1,32), new THREE.MeshPhysicalMaterial({color:LIQUIDS2[0].color, transparent:true, opacity:0.85, roughness:0.15, transmission:0.15}));
+liqGroup2.add(liquidMesh2);
+
+function currentMat(){ return MATERIALS[state2.matIdx]; }
+function currentLiq(){ return LIQUIDS2[state2.liqIdx]; }
+
+function computeBasics(){
+  if(state2.mode==='solid'){
+    const V = state2.L*state2.W*state2.H;
+    const m = V*currentMat().density;
+    return {V,m,rho:currentMat().density, label:currentMat().name};
+  } else {
+    const V = state2.liqVol;
+    const m = V*currentLiq().density;
+    return {V,m,rho:currentLiq().density, label:currentLiq().name};
+  }
+}
+
+function updateBasicsVisuals(){
+  const solidMode = state2.mode==='solid';
+  blockMesh2.visible = solidMode;
+  liqGroup2.visible = !solidMode;
+  if(solidMode){
+    blockMesh2.scale.set(state2.L*CM2, state2.H*CM2, state2.W*CM2);
+    blockMesh2.position.set(0, 0.205+ (state2.H*CM2)/2, 0);
+    blockMat2.color.setHex(currentMat().color);
+  } else {
+    const h = Math.max(0.08,(state2.liqVol/B2_MAXVOL)*B2_CYL_H);
+    liquidMesh2.scale.y = h;
+    liquidMesh2.position.set(0, 0.235+h/2, 0);
+    liqGlass2.position.set(0,0.235+B2_CYL_H/2,0);
+    liquidMesh2.material.color.setHex(currentLiq().color);
+  }
+  const r = computeBasics();
+  display2.setText(r.m.toFixed(1), 'grams');
+}
+
+function refreshBasicsHud(){
+  const r = computeBasics();
+  document.getElementById('val-b-material').textContent = r.label;
+  if(state2.mode==='solid'){
+    document.getElementById('val-b-L').textContent = state2.L.toFixed(1)+' cm';
+    document.getElementById('val-b-W').textContent = state2.W.toFixed(1)+' cm';
+    document.getElementById('val-b-H').textContent = state2.H.toFixed(1)+' cm';
+  } else {
+    document.getElementById('val-b-L').textContent = '—';
+    document.getElementById('val-b-W').textContent = '—';
+    document.getElementById('val-b-H').textContent = 'liquid vol.';
+  }
+  document.getElementById('val-b-V').textContent = r.V.toFixed(1)+' cm³';
+  document.getElementById('val-b-m').textContent = r.m.toFixed(1)+' g';
+  document.getElementById('val-b-rho').textContent = r.rho.toFixed(2)+' g/cm³';
+}
+updateBasicsVisuals(); refreshBasicsHud();
+
+document.getElementById('btn-mode-solid').addEventListener('click', ()=>{
+  state2.mode='solid';
+  document.getElementById('btn-mode-solid').classList.add('on');
+  document.getElementById('btn-mode-liquid').classList.remove('on');
+  document.getElementById('basics-solid-ctrls').style.display='flex';
+  document.getElementById('basics-liquid-ctrls').style.display='none';
+  updateBasicsVisuals(); refreshBasicsHud();
+});
+document.getElementById('btn-mode-liquid').addEventListener('click', ()=>{
+  state2.mode='liquid';
+  document.getElementById('btn-mode-liquid').classList.add('on');
+  document.getElementById('btn-mode-solid').classList.remove('on');
+  document.getElementById('basics-solid-ctrls').style.display='none';
+  document.getElementById('basics-liquid-ctrls').style.display='flex';
+  updateBasicsVisuals(); refreshBasicsHud();
+});
+document.getElementById('btn-mat-cycle').addEventListener('click', ()=>{
+  state2.matIdx = (state2.matIdx+1)%MATERIALS.length;
+  document.getElementById('btn-mat-cycle').textContent = 'Material: '+currentMat().name+' ▸';
+  updateBasicsVisuals(); refreshBasicsHud();
+});
+document.getElementById('btn-liq-cycle').addEventListener('click', ()=>{
+  state2.liqIdx = (state2.liqIdx+1)%LIQUIDS2.length;
+  document.getElementById('btn-liq-cycle').textContent = 'Liquid: '+currentLiq().name+' ▸';
+  updateBasicsVisuals(); refreshBasicsHud();
+});
+['bL','bW','bH'].forEach(key=>{
+  document.getElementById('sl-'+key).addEventListener('input', e=>{
+    state2[key.slice(1)] = parseFloat(e.target.value);
+    document.getElementById('lbl-'+key).textContent = parseFloat(e.target.value).toFixed(1);
+    updateBasicsVisuals(); refreshBasicsHud();
+  });
+});
+document.getElementById('sl-bLiqV').addEventListener('input', e=>{
+  state2.liqVol = parseFloat(e.target.value);
+  document.getElementById('lbl-bLiqV').textContent = e.target.value;
+  updateBasicsVisuals(); refreshBasicsHud();
+});
+document.getElementById('btn-reset-basics').addEventListener('click', ()=>{
+  state2.matIdx=0; state2.liqIdx=0; state2.L=5; state2.W=4; state2.H=3; state2.liqVol=50; state2.mode='solid';
+  document.getElementById('btn-mode-solid').click();
+  document.getElementById('btn-mat-cycle').textContent = 'Material: '+MATERIALS[0].name+' ▸';
+  document.getElementById('btn-liq-cycle').textContent = 'Liquid: '+LIQUIDS2[0].name+' ▸';
+  document.getElementById('sl-bL').value=5; document.getElementById('lbl-bL').textContent='5.0';
+  document.getElementById('sl-bW').value=4; document.getElementById('lbl-bW').textContent='4.0';
+  document.getElementById('sl-bH').value=3; document.getElementById('lbl-bH').textContent='3.0';
+  document.getElementById('sl-bLiqV').value=50; document.getElementById('lbl-bLiqV').textContent='50';
+  updateBasicsVisuals(); refreshBasicsHud();
+});
+
+// --- Mystery material mini-quiz ---
+let mysteryAnswer = null;
+function newMysteryBlock(){
+  const mat = pick(MATERIALS);
+  mysteryAnswer = mat.name;
+  const V = round1(rand(20,80));
+  const rho = mat.density;
+  document.getElementById('val-b-mysteryrho').textContent = rho.toFixed(2)+' g/cm³ (V='+V+' cm³, m='+(V*rho).toFixed(1)+' g)';
+  const opts = document.getElementById('b-mystery-options');
+  opts.innerHTML = '';
+  const choices = [mat, ...MATERIALS.filter(m=>m.name!==mat.name).sort(()=>Math.random()-0.5).slice(0,3)].sort(()=>Math.random()-0.5);
+  choices.forEach(c=>{
+    const b = document.createElement('button');
+    b.className='btn'; b.style.fontSize='10.5px'; b.textContent=c.name;
+    b.addEventListener('click', ()=>{
+      const fb = document.getElementById('fb-b');
+      if(c.name===mysteryAnswer){ fb.className='feedback-msg ok'; fb.textContent='✓ Correct — that density matches '+mysteryAnswer+'.'; }
+      else { fb.className='feedback-msg bad'; fb.textContent='✗ Not quite — it was '+mysteryAnswer+' (ρ='+mat.density.toFixed(2)+' g/cm³).'; }
+      Array.from(opts.children).forEach(el=>el.disabled=true);
+    });
+    opts.appendChild(b);
+  });
+  document.getElementById('fb-b').className='feedback-msg'; document.getElementById('fb-b').textContent='';
+}
+document.getElementById('btn-b-mystery').addEventListener('click', newMysteryBlock);
+
+function labelsBasics(){
+  const L = [];
+  const r = computeBasics();
+  const p = new THREE.Vector3(0, (state2.mode==='solid'? blockMesh2.position.y + (state2.H*CM2)/2 + 0.2 : liquidMesh2.position.y + liquidMesh2.scale.y/2 + 0.25), 0).add(scaleGroup2.position);
+  L.push({p, t:'V='+r.V.toFixed(1)+' cm³', c:'#5bc8ff', size:11});
+  return L;
+}
+function updateActive2(t){}
+
+/* ============================== MODULE 3: DISPLACEMENT METHOD + CHALLENGE ============================== */
+const grpDisplacement = new THREE.Group(); root3.add(grpDisplacement);
+const ROCK_DENSITIES = [
+  {name:'Granite', density:2.75}, {name:'Basalt', density:3.00}, {name:'Marble', density:2.71},
+  {name:'Slate', density:2.80}, {name:'Quartzite', density:2.65}, {name:'Iron ore', density:5.00}, {name:'Hematite', density:5.30}
+];
+const PRACTICE_ROCK_DENSITY = 2.70;
+const state3 = {
+  mode:'practice', v1:50, rockVol:20, rockDensity:PRACTICE_ROCK_DENSITY, rockMass:54.0,
+  dropped:false, animating:false, scoreCorrect:0, scoreTotal:0
+};
+
+const D3_CYL_R = 0.62, D3_CYL_H = 3.3, D3_MAXVOL = 100;
+const cylGroup3 = new THREE.Group();
+cylGroup3.position.set(0.6,-1.5,0);
+grpDisplacement.add(cylGroup3);
+const cylGlass3 = new THREE.Mesh(new THREE.CylinderGeometry(D3_CYL_R,D3_CYL_R*0.92,D3_CYL_H,32,1,true), new THREE.MeshPhysicalMaterial({color:COL_GLASS, transparent:true, opacity:0.22, transmission:0.4, roughness:0.08, side:THREE.DoubleSide}));
+cylGlass3.position.y = D3_CYL_H/2;
+cylGroup3.add(cylGlass3);
+const liquidMesh3 = new THREE.Mesh(new THREE.CylinderGeometry(D3_CYL_R*0.9,D3_CYL_R*0.9,1,32), new THREE.MeshPhysicalMaterial({color:COL_WATER, transparent:true, opacity:0.82, roughness:0.15, transmission:0.15}));
+cylGroup3.add(liquidMesh3);
+for(let v=0; v<=D3_MAXVOL; v+=10){
+  const major = v % 20 === 0;
+  const y = (v/D3_MAXVOL)*D3_CYL_H;
+  const tick = new THREE.Mesh(new THREE.BoxGeometry(major?0.24:0.13, 0.012, 0.012), new THREE.MeshBasicMaterial({color:0x0d1428}));
+  tick.position.set(D3_CYL_R*0.94, y, D3_CYL_R*0.94*0.7);
+  cylGroup3.add(tick);
+}
+// bumpy rock mesh
+function makeRockMesh(){
+  const geo = new THREE.IcosahedronGeometry(0.4,1);
+  const pos = geo.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    const v = new THREE.Vector3(pos.getX(i),pos.getY(i),pos.getZ(i));
+    const n = v.clone().normalize();
+    const bump = 0.85 + 0.3*Math.abs(Math.sin(n.x*5.1)*Math.cos(n.y*4.3)*Math.sin(n.z*3.7));
+    v.multiplyScalar(bump);
+    pos.setXYZ(i,v.x,v.y,v.z);
+  }
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0x8a7f6e, roughness:0.95}));
+}
+const rockMesh3 = makeRockMesh();
+grpDisplacement.add(rockMesh3);
+const rockHoverPos = new THREE.Vector3(-1.3,0.9,0);
+
+const display3 = createDigitalDisplay(256,96,0.9,0.36);
+display3.mesh.position.set(-1.3,-1.05,0.55);
+display3.mesh.rotation.x = -0.3;
+grpDisplacement.add(display3.mesh);
+
+function rockScaleFromVolume(vol){ return Math.cbrt(vol/20) * 0.85; }
+
+function updateDisplacementWaterLevel(vol){
+  const h = Math.max(0.06,(vol/D3_MAXVOL)*D3_CYL_H);
+  liquidMesh3.scale.y = h;
+  liquidMesh3.position.y = h/2;
+}
+function positionRockHover(vol){
+  rockMesh3.scale.setScalar(rockScaleFromVolume(vol));
+  rockMesh3.position.copy(rockHoverPos);
+  rockMesh3.visible = true;
+}
+function resetDisplacementScene(){
+  state3.dropped = false; state3.animating = false;
+  updateDisplacementWaterLevel(state3.v1);
+  positionRockHover(state3.rockVol);
+  display3.setText(state3.rockMass.toFixed(1),'grams');
+}
+
+function refreshDisplacementHud(){
+  document.getElementById('val-d-mode').textContent = state3.mode==='practice' ? 'Practice':'Challenge';
+  document.getElementById('val-d-v1').textContent = state3.v1.toFixed(1)+' cm³';
+  const v2 = state3.v1 + state3.rockVol;
+  document.getElementById('val-d-v2').textContent = state3.dropped ? v2.toFixed(1)+' cm³' : '— cm³';
+  document.getElementById('val-d-mass').textContent = state3.rockMass.toFixed(1)+' g';
+  if(state3.mode==='practice'){
+    document.getElementById('val-d-vol').textContent = state3.dropped ? state3.rockVol.toFixed(1)+' cm³' : '— cm³';
+    document.getElementById('val-d-rho').textContent = state3.dropped ? state3.rockDensity.toFixed(2)+' g/cm³' : '— g/cm³';
+  } else {
+    document.getElementById('val-d-vol').textContent = '?';
+    document.getElementById('val-d-rho').textContent = '?';
+  }
+  document.getElementById('val-d-score').textContent = state3.scoreCorrect+' / '+state3.scoreTotal;
+}
+
+// --- 2D frontal reading panel ---
+const p2dCanvas = document.getElementById('panel2d');
+const p2dCtx = p2dCanvas.getContext('2d');
+function drawPanel2D(){
+  const ctx = p2dCtx, W = p2dCanvas.width, H = p2dCanvas.height;
+  ctx.clearRect(0,0,W,H);
+  const vmax = 100;
+  const cylTop = 18, cylBot = H-22, cylH = cylBot-cylTop;
+  function yFor(v){ return cylBot - (v/vmax)*cylH; }
+  function drawCyl(cx, w, levelVol, labelTop){
+    const x0 = cx-w/2, x1 = cx+w/2;
+    // glass outline
+    ctx.strokeStyle = 'rgba(200,220,255,0.55)'; ctx.lineWidth = 2;
+    ctx.strokeRect(x0, cylTop, w, cylH);
+    // ticks every 20
+    ctx.font = '9px "Space Mono", monospace'; ctx.fillStyle='rgba(200,220,255,0.5)';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(let v=0; v<=vmax; v+=20){
+      const y = yFor(v);
+      ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x0+6,y); ctx.stroke();
+      ctx.fillText(String(v), x0-3, y);
+    }
+    // liquid
+    const ly = yFor(levelVol);
+    ctx.fillStyle = 'rgba(63,143,214,0.55)';
+    ctx.fillRect(x0+2, ly, w-4, cylBot-ly);
+    ctx.strokeStyle = 'rgba(120,190,255,0.9)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x0+2,ly); ctx.lineTo(x1-2,ly); ctx.stroke();
+    return {x0,x1,ly};
+  }
+  // left cylinder: before (always v1)
+  const left = drawCyl(70, 46, state3.v1);
+  ctx.fillStyle = 'rgba(220,230,255,0.75)'; ctx.font='9px "Space Mono", monospace'; ctx.textAlign='center';
+  ctx.fillText('BEFORE', 70, H-8);
+  // right cylinder: after (v1 or v2 depending on dropped)
+  const rightLevel = state3.dropped ? state3.v1+state3.rockVol : state3.v1;
+  const right = drawCyl(190, 46, rightLevel);
+  ctx.fillText('AFTER', 190, H-8);
+  if(state3.dropped){
+    // draw submerged rock at bottom of right cylinder
+    ctx.fillStyle = '#8a7f6e';
+    ctx.beginPath(); ctx.ellipse(190, cylBot-10, 16, 10, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.stroke();
+    // bracket for object volume between v1 line and v2 line
+    const yA = yFor(state3.v1), yB = yFor(rightLevel);
+    ctx.strokeStyle = 'rgba(255,200,87,0.85)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(right.x1+6,yA); ctx.lineTo(right.x1+12,yA); ctx.lineTo(right.x1+12,yB); ctx.lineTo(right.x1+6,yB); ctx.stroke();
+    ctx.fillStyle='#ffc857'; ctx.font='8px "Space Mono", monospace'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('object', right.x1+15, (yA+yB)/2-4);
+    ctx.fillText('volume', right.x1+15, (yA+yB)/2+5);
+  } else {
+    // rock waiting beside, not yet submerged
+    ctx.fillStyle = '#8a7f6e';
+    ctx.beginPath(); ctx.ellipse(30, cylTop+14, 12, 9, 0.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(220,230,255,0.6)'; ctx.font='8px "Space Mono", monospace'; ctx.textAlign='center';
+    ctx.fillText('object', 30, cylTop+34);
+  }
+}
+
+function setDisplacementMode(mode){
+  state3.mode = mode;
+  document.getElementById('btn-d-mode-practice').classList.toggle('on', mode==='practice');
+  document.getElementById('btn-d-mode-challenge').classList.toggle('on', mode==='challenge');
+  document.getElementById('d-v1-ctrl').style.display = mode==='practice' ? 'flex':'none';
+  document.getElementById('d-rockvol-ctrl').style.display = mode==='practice' ? 'flex':'none';
+  document.getElementById('d-challenge-box').style.display = mode==='challenge' ? 'block':'none';
+  if(mode==='practice'){
+    state3.v1 = 50; state3.rockVol = 20; state3.rockDensity = PRACTICE_ROCK_DENSITY;
+    state3.rockMass = state3.rockVol*state3.rockDensity;
+    document.getElementById('sl-dv1').value=50; document.getElementById('lbl-dv1').textContent='50';
+    document.getElementById('sl-drockvol').value=20; document.getElementById('lbl-drockvol').textContent='20';
+  } else {
+    generateChallenge();
+  }
+  resetDisplacementScene(); refreshDisplacementHud(); drawPanel2D();
+}
+function generateChallenge(){
+  const rock = pick(ROCK_DENSITIES);
+  state3.v1 = pick([30,40,50,60]);
+  const maxVol = Math.min(45, 90-state3.v1);
+  state3.rockVol = Math.round(rand(10, maxVol)/0.5)*0.5;
+  state3.rockDensity = rock.density;
+  state3.rockMass = round1(state3.rockVol*rock.density);
+  state3.dropped = false;
+  document.getElementById('val-d-massgiven').textContent = state3.rockMass.toFixed(1)+' g';
+  document.getElementById('in-d-vol').value=''; document.getElementById('in-d-rho').value='';
+  const fb = document.getElementById('fb-d'); fb.className='feedback-msg'; fb.textContent='';
+}
+
+document.getElementById('btn-d-mode-practice').addEventListener('click', ()=>setDisplacementMode('practice'));
+document.getElementById('btn-d-mode-challenge').addEventListener('click', ()=>setDisplacementMode('challenge'));
+document.getElementById('sl-dv1').addEventListener('input', e=>{
+  state3.v1 = parseFloat(e.target.value); document.getElementById('lbl-dv1').textContent=e.target.value;
+  state3.dropped=false; resetDisplacementScene(); refreshDisplacementHud(); drawPanel2D();
+});
+document.getElementById('sl-drockvol').addEventListener('input', e=>{
+  state3.rockVol = parseFloat(e.target.value); document.getElementById('lbl-drockvol').textContent=e.target.value;
+  state3.rockMass = state3.rockVol*state3.rockDensity;
+  state3.dropped=false; resetDisplacementScene(); refreshDisplacementHud(); drawPanel2D();
+});
+document.getElementById('btn-d-newrock').addEventListener('click', ()=>{
+  if(state3.mode==='practice'){
+    state3.rockVol = round1(rand(8,40)); state3.v1 = pick([20,30,40,50]);
+    state3.rockMass = state3.rockVol*state3.rockDensity;
+    document.getElementById('sl-drockvol').value=state3.rockVol; document.getElementById('lbl-drockvol').textContent=state3.rockVol;
+    document.getElementById('sl-dv1').value=state3.v1; document.getElementById('lbl-dv1').textContent=state3.v1;
+    state3.dropped=false; resetDisplacementScene(); refreshDisplacementHud(); drawPanel2D();
+  } else {
+    generateChallenge(); resetDisplacementScene(); refreshDisplacementHud(); drawPanel2D();
+  }
+});
+document.getElementById('btn-d-drop').addEventListener('click', ()=>{
+  if(state3.animating || state3.dropped) return;
+  state3.animating = true;
+  const startPos = rockHoverPos.clone();
+  const endPos = new THREE.Vector3(0, -0.5, 0);
+  const v1 = state3.v1, v2 = state3.v1+state3.rockVol;
+  tween(1100, e=>{
+    rockMesh3.position.lerpVectors(startPos, endPos, e);
+    updateDisplacementWaterLevel(lerp(v1,v2,Math.min(1,e*1.15)));
+  }, ()=>{
+    state3.dropped = true; state3.animating = false;
+    updateDisplacementWaterLevel(v2);
+    refreshDisplacementHud(); drawPanel2D();
+  });
+});
+document.getElementById('btn-d-check').addEventListener('click', ()=>{
+  const fb = document.getElementById('fb-d');
+  if(!state3.dropped){ fb.className='feedback-msg bad'; fb.textContent='Drop the rock into the water first.'; return; }
+  const ansVol = parseFloat(document.getElementById('in-d-vol').value);
+  const ansRho = parseFloat(document.getElementById('in-d-rho').value);
+  const okVol = Math.abs(ansVol - state3.rockVol) <= 0.5;
+  const okRho = Math.abs(ansRho - state3.rockDensity) <= 0.1;
+  state3.scoreTotal++;
+  if(okVol && okRho) state3.scoreCorrect++;
+  refreshDisplacementHud();
+  fb.className = 'feedback-msg ' + (okVol&&okRho?'ok':'bad');
+  fb.textContent = (okVol?'✓ Volume correct. ':'✗ Volume was V₂−V₁ = '+(state3.v1+state3.rockVol).toFixed(1)+'−'+state3.v1.toFixed(1)+' = '+state3.rockVol.toFixed(1)+' cm³. ')
+                  + (okRho?'✓ Density correct.':'✗ Density was '+state3.rockMass.toFixed(1)+'g ÷ '+state3.rockVol.toFixed(1)+'cm³ = '+state3.rockDensity.toFixed(2)+' g/cm³.');
+  document.getElementById('score-d').textContent = 'Score: '+state3.scoreCorrect+' / '+state3.scoreTotal;
+});
+document.getElementById('btn-reset-displacement').addEventListener('click', ()=>setDisplacementMode(state3.mode));
+
+resetDisplacementScene(); refreshDisplacementHud(); drawPanel2D();
+
+function labelsDisplacement(){
+  const L = [];
+  for(let v=0; v<=D3_MAXVOL; v+=20){
+    const y = (v/D3_MAXVOL)*D3_CYL_H;
+    const p = cylGroup3.localToWorld(new THREE.Vector3(D3_CYL_R*1.15, y, D3_CYL_R*0.7));
+    L.push({p, t:String(v), c:'rgba(220,230,255,0.85)', size:9});
+  }
+  const curVol = state3.dropped ? state3.v1+state3.rockVol : state3.v1;
+  const y = (curVol/D3_MAXVOL)*D3_CYL_H;
+  const p = cylGroup3.localToWorld(new THREE.Vector3(0, y+0.16, D3_CYL_R*0.9));
+  L.push({p, t: (state3.dropped? 'V₂ = ':'V₁ = ')+curVol.toFixed(1)+' cm³', c:'#5bc8ff', size:11});
+  return L;
+}
+function updateActive3(t){
+  if(!state3.animating && !state3.dropped) rockMesh3.position.y = rockHoverPos.y + Math.sin(t*1.6)*0.08;
+  rockMesh3.rotation.y = t*0.3;
+}
+
+/* ============================== MODULE 4: FLOAT OR SINK ============================== */
+const grpFloat = new THREE.Group(); root3.add(grpFloat);
+const LIQUIDS4 = [
+  {name:'Water', density:1.00, color:0x3f8fd6},
+  {name:'Salt water', density:1.03, color:0x2fa0a8},
+  {name:'Oil', density:0.92, color:0xd6a83f}
+];
+const OBJECTS4 = [
+  {name:'Cork', density:0.24, color:0xc9925a},
+  {name:'Pine wood', density:0.50, color:0xb98a52},
+  {name:'Ice', density:0.92, color:0xdcf1fb},
+  {name:'Apple', density:0.90, color:0xd6483f},
+  {name:'Plastic', density:0.95, color:0xe0e0e0},
+  {name:'Rubber ball', density:1.20, color:0x333333},
+  {name:'Glass marble', density:2.50, color:0x8fe0ee},
+  {name:'Aluminium', density:2.70, color:0xC7CDD3},
+  {name:'Steel', density:7.80, color:0x9aa0a6},
+  {name:'Gold nugget', density:19.30, color:0xe8c34a}
+];
+const state4 = { liqIdx:0, objIdx:0, prediction:null, dropped:false, scoreCorrect:0, scoreTotal:0 };
+
+const TANK_W=2.6, TANK_D=1.8, TANK_H=2.0, TANK_BOTY=-1.9;
+const tankGroup = new THREE.Group();
+grpFloat.add(tankGroup);
+const tankGlassMat = new THREE.MeshPhysicalMaterial({color:0x9fc4e0, transparent:true, opacity:0.15, roughness:0.05, transmission:0.6, side:THREE.DoubleSide});
+const tankGlass = new THREE.Mesh(new THREE.BoxGeometry(TANK_W,TANK_H,TANK_D), tankGlassMat);
+tankGlass.position.set(0, TANK_BOTY+TANK_H/2, 0);
+tankGroup.add(tankGlass);
+const tankFloorMesh = new THREE.Mesh(new THREE.BoxGeometry(TANK_W,0.06,TANK_D), new THREE.MeshStandardMaterial({color:0x1c2233}));
+tankFloorMesh.position.set(0,TANK_BOTY,0);
+tankGroup.add(tankFloorMesh);
+const LIQUID4_LEVEL = TANK_H*0.82;
+const liquidMesh4 = new THREE.Mesh(new THREE.BoxGeometry(TANK_W*0.97,LIQUID4_LEVEL,TANK_D*0.97), new THREE.MeshPhysicalMaterial({color:LIQUIDS4[0].color, transparent:true, opacity:0.55, roughness:0.1, transmission:0.2}));
+liquidMesh4.position.set(0, TANK_BOTY+LIQUID4_LEVEL/2, 0);
+tankGroup.add(liquidMesh4);
+const LIQUID4_SURFACE_Y = TANK_BOTY+LIQUID4_LEVEL;
+
+const OBJ4_H = 0.55;
+const objMesh4 = new THREE.Mesh(new THREE.SphereGeometry(0.32,20,20), new THREE.MeshStandardMaterial({color:OBJECTS4[0].color, roughness:0.55}));
+grpFloat.add(objMesh4);
+const objHoverPos4 = new THREE.Vector3(0, 1.7, 0);
+
+function currentLiq4(){ return LIQUIDS4[state4.liqIdx]; }
+function currentObj4(){ return OBJECTS4[state4.objIdx]; }
+
+function computeFloatResult(){
+  const dO = currentObj4().density, dL = currentLiq4().density;
+  const floats = dO < dL;
+  const frac = Math.min(1, dO/dL);
+  return {floats, frac};
+}
+
+function resetFloatObject(){
+  state4.dropped = false;
+  objMesh4.position.copy(objHoverPos4);
+  objMesh4.material.color.setHex(currentObj4().color);
+}
+function refreshFloatHud(){
+  const liq = currentLiq4(), obj = currentObj4();
+  document.getElementById('val-f-liquid').textContent = liq.name+' ('+liq.density.toFixed(2)+' g/cm³)';
+  document.getElementById('val-f-object').textContent = obj.name;
+  document.getElementById('val-f-density').textContent = obj.density.toFixed(2)+' g/cm³';
+  if(state4.dropped){
+    const r = computeFloatResult();
+    document.getElementById('val-f-result').textContent = r.floats?'FLOATS':'SINKS';
+    document.getElementById('val-f-submerged').textContent = r.floats ? (r.frac*100).toFixed(0)+'%' : '100% (rests on bottom)';
+  } else {
+    document.getElementById('val-f-result').textContent = '— drop to test —';
+    document.getElementById('val-f-submerged').textContent = '—';
+  }
+}
+resetFloatObject(); refreshFloatHud();
+
+function setLiquid4(idx){
+  state4.liqIdx = idx;
+  liquidMesh4.material.color.setHex(currentLiq4().color);
+  ['btn-liq-water','btn-liq-salt','btn-liq-oil'].forEach((id,i)=>document.getElementById(id).classList.toggle('on', i===idx));
+  if(state4.dropped){ dropObject4(); } else refreshFloatHud();
+}
+document.getElementById('btn-liq-water').addEventListener('click', ()=>setLiquid4(0));
+document.getElementById('btn-liq-salt').addEventListener('click', ()=>setLiquid4(1));
+document.getElementById('btn-liq-oil').addEventListener('click', ()=>setLiquid4(2));
+document.getElementById('btn-obj-cycle').addEventListener('click', ()=>{
+  state4.objIdx = (state4.objIdx+1)%OBJECTS4.length;
+  document.getElementById('btn-obj-cycle').textContent = 'Object: '+currentObj4().name+' ▸';
+  state4.prediction=null;
+  document.getElementById('fb-f').className='feedback-msg'; document.getElementById('fb-f').textContent='';
+  resetFloatObject(); refreshFloatHud();
+});
+document.getElementById('btn-f-predict-float').addEventListener('click', ()=>{ state4.prediction='float'; markPrediction(); });
+document.getElementById('btn-f-predict-sink').addEventListener('click', ()=>{ state4.prediction='sink'; markPrediction(); });
+function markPrediction(){
+  document.getElementById('btn-f-predict-float').classList.toggle('on', state4.prediction==='float');
+  document.getElementById('btn-f-predict-sink').classList.toggle('on', state4.prediction==='sink');
+}
+function dropObject4(){
+  const r = computeFloatResult();
+  const startY = objHoverPos4.y;
+  const restY = r.floats ? (LIQUID4_SURFACE_Y + OBJ4_H*(0.5-r.frac)) : (TANK_BOTY + OBJ4_H*0.5);
+  tween(1000, e=>{
+    objMesh4.position.y = lerp(startY, restY, e);
+  }, ()=>{
+    state4.dropped = true;
+    refreshFloatHud();
+    const fb = document.getElementById('fb-f');
+    if(state4.prediction){
+      const correct = state4.prediction === (r.floats?'float':'sink');
+      state4.scoreTotal++; if(correct) state4.scoreCorrect++;
+      fb.className='feedback-msg '+(correct?'ok':'bad');
+      fb.textContent = correct ? '✓ Correct — it '+(r.floats?'floats':'sinks')+'.' : '✗ It actually '+(r.floats?'floats':'sinks')+' since '+currentObj4().density.toFixed(2)+(r.floats?' < ':' > ')+currentLiq4().density.toFixed(2)+'.';
+      document.getElementById('score-f').textContent = 'Score: '+state4.scoreCorrect+' / '+state4.scoreTotal;
+      state4.prediction = null; markPrediction();
+    }
+  });
+}
+document.getElementById('btn-f-drop').addEventListener('click', ()=>{
+  objMesh4.position.copy(objHoverPos4);
+  dropObject4();
+});
+document.getElementById('btn-reset-float').addEventListener('click', ()=>{
+  state4.liqIdx=0; state4.objIdx=0; state4.prediction=null;
+  document.getElementById('btn-obj-cycle').textContent = 'Object: '+OBJECTS4[0].name+' ▸';
+  setLiquid4(0); resetFloatObject(); refreshFloatHud(); markPrediction();
+  document.getElementById('fb-f').className='feedback-msg'; document.getElementById('fb-f').textContent='';
+});
+
+function labelsFloat(){
+  const L = [];
+  const p = objMesh4.position.clone().add(new THREE.Vector3(0,0.45,0));
+  L.push({p, t:currentObj4().name+' ('+currentObj4().density.toFixed(2)+')', c:'#ffc857', size:10});
+  return L;
+}
+function updateActive4(t){}
+
+/* ============================== MODULE 5: LAYERED LIQUIDS ============================== */
+const grpLayers = new THREE.Group(); root3.add(grpLayers);
+const LIQUIDS5 = {
+  honey:   {name:'Honey',            density:1.42, color:0xd79a1e},
+  syrup:   {name:'Corn syrup',       density:1.33, color:0xc98a3a},
+  soap:    {name:'Dish soap',        density:1.06, color:0x4dd6a0},
+  water:   {name:'Water',            density:1.00, color:0x3f8fd6},
+  oil:     {name:'Vegetable oil',    density:0.92, color:0xe8d060},
+  alcohol: {name:'Rubbing alcohol',  density:0.79, color:0xd6e8f5}
+};
+const LAYER5_H = 0.55, LAYER5_R = 0.62, LAYER5_MAX = 4;
+const cylGroup5 = new THREE.Group();
+cylGroup5.position.set(0,-1.9,0);
+grpLayers.add(cylGroup5);
+const cylGlass5 = new THREE.Mesh(new THREE.CylinderGeometry(LAYER5_R,LAYER5_R*0.94,LAYER5_H*LAYER5_MAX+0.3,32,1,true), new THREE.MeshPhysicalMaterial({color:COL_GLASS, transparent:true, opacity:0.2, transmission:0.4, roughness:0.08, side:THREE.DoubleSide}));
+cylGlass5.position.y = (LAYER5_H*LAYER5_MAX+0.3)/2;
+cylGroup5.add(cylGlass5);
+
+const state5 = { poured:[], settled:false };
+
+function addLiquidLayer5(key){
+  if(state5.poured.length >= LAYER5_MAX) return;
+  if(state5.poured.find(p=>p.key===key)){ return; }
+  const liq = LIQUIDS5[key];
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(LAYER5_R*0.9,LAYER5_R*0.9,LAYER5_H,32), new THREE.MeshPhysicalMaterial({color:liq.color, transparent:true, opacity:0.82, roughness:0.2, transmission:0.1}));
+  const slot = state5.poured.length;
+  mesh.position.set(0, slot*LAYER5_H, 0);
+  mesh.scale.y = 0.001;
+  cylGroup5.add(mesh);
+  const entry = {key, liq, mesh};
+  state5.poured.push(entry);
+  tween(500, e=>{ mesh.scale.y = Math.max(0.02,e); mesh.position.y = slot*LAYER5_H + LAYER5_H*(1-e)/2; }, ()=>{ mesh.position.y = slot*LAYER5_H + LAYER5_H/2; mesh.scale.y=1; });
+  state5.settled = false;
+  document.getElementById(pourBtnId(key)).disabled = true;
+  refreshLayersHud();
+}
+function pourBtnId(key){ return {honey:'btn-pour-honey',syrup:'btn-pour-syrup',soap:'btn-pour-soap',water:'btn-pour-water',oil:'btn-pour-oil',alcohol:'btn-pour-alcohol'}[key]; }
+
+function settleLayers5(){
+  if(state5.poured.length===0) return;
+  const sorted = [...state5.poured].sort((a,b)=>b.liq.density-a.liq.density);
+  sorted.forEach((entry,i)=>{
+    const targetY = i*LAYER5_H + LAYER5_H/2;
+    const startY = entry.mesh.position.y;
+    tween(900, e=>{ entry.mesh.position.y = lerp(startY,targetY,e); }, ()=>{});
+  });
+  state5.settled = true;
+  setTimeout(()=>{
+    const orderTopToBottom = sorted.slice().reverse().map(e=>e.liq.name);
+    document.getElementById('val-l-order').textContent = 'Settled order (top → bottom): '+orderTopToBottom.join(' → ');
+    const fb = document.getElementById('fb-l');
+    const pred = document.getElementById('in-l-predict').value.trim().toLowerCase();
+    if(pred){
+      const predNames = pred.split(',').map(s=>s.trim());
+      const actualNames = orderTopToBottom.map(n=>n.toLowerCase());
+      const match = predNames.length===actualNames.length && predNames.every((n,i)=> actualNames[i].includes(n) || n.includes(actualNames[i].split(' ')[0]));
+      fb.className = 'feedback-msg '+(match?'ok':'bad');
+      fb.textContent = match ? '✓ Your predicted order matches!' : '✗ Not quite — actual order top→bottom: '+orderTopToBottom.join(' → ');
+    }
+  }, 950);
+}
+function refreshLayersHud(){
+  document.getElementById('val-l-count').textContent = state5.poured.length+' / '+LAYER5_MAX;
+}
+document.getElementById('btn-pour-honey').addEventListener('click', ()=>addLiquidLayer5('honey'));
+document.getElementById('btn-pour-syrup').addEventListener('click', ()=>addLiquidLayer5('syrup'));
+document.getElementById('btn-pour-soap').addEventListener('click', ()=>addLiquidLayer5('soap'));
+document.getElementById('btn-pour-water').addEventListener('click', ()=>addLiquidLayer5('water'));
+document.getElementById('btn-pour-oil').addEventListener('click', ()=>addLiquidLayer5('oil'));
+document.getElementById('btn-pour-alcohol').addEventListener('click', ()=>addLiquidLayer5('alcohol'));
+document.getElementById('btn-l-settle').addEventListener('click', settleLayers5);
+document.getElementById('btn-reset-layers').addEventListener('click', ()=>{
+  state5.poured.forEach(e=>cylGroup5.remove(e.mesh));
+  state5.poured = []; state5.settled=false;
+  Object.keys(LIQUIDS5).forEach(k=>{ document.getElementById(pourBtnId(k)).disabled=false; });
+  document.getElementById('val-l-order').textContent = 'Pour order (top → bottom) will appear here once settled.';
+  document.getElementById('in-l-predict').value='';
+  document.getElementById('fb-l').className='feedback-msg'; document.getElementById('fb-l').textContent='';
+  refreshLayersHud();
+});
+refreshLayersHud();
+
+function labelsLayers(){
+  const L = [];
+  state5.poured.forEach(e=>{
+    const p = cylGroup5.localToWorld(new THREE.Vector3(LAYER5_R*1.2, e.mesh.position.y, 0));
+    L.push({p, t:e.liq.name, c:'#'+e.liq.color.toString(16).padStart(6,'0'), size:9});
+  });
+  return L;
+}
+function updateActive5(t){}
+
+/* ============================== TAB SWITCHING ============================== */
+const moduleGroups = { measure:grpMeasure, basics:grpBasics, displacement:grpDisplacement, floatsink:grpFloat, layers:grpLayers };
+const moduleCams = {
+  measure:{theta:0.28,phi:0.16,radius:8.5,cx:-0.4,cy:0.0,cz:0},
+  basics:{theta:0.35,phi:0.18,radius:6.5,cx:0,cy:0.1,cz:0},
+  displacement:{theta:0.35,phi:0.18,radius:7.5,cx:0.2,cy:0.1,cz:0},
+  floatsink:{theta:0.4,phi:0.16,radius:8,cx:0,cy:0,cz:0},
+  layers:{theta:0.3,phi:0.15,radius:7,cx:0,cy:-0.4,cz:0}
+};
+const moduleLabelFns = { measure:labelsMeasure, basics:labelsBasics, displacement:labelsDisplacement, floatsink:labelsFloat, layers:labelsLayers };
+const moduleUpdateFns = { measure:updateActive1, basics:updateActive2, displacement:updateActive3, floatsink:updateActive4, layers:updateActive5 };
+
+let activeModule = 'measure';
+function setActiveModule(id){
+  if(!moduleGroups[id]) return;
+  Object.keys(moduleGroups).forEach(k=>{ moduleGroups[k].visible = (k===id); });
+  activeModule = id;
+  const c = moduleCams[id];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.mod===id));
+  document.querySelectorAll('.hud-block').forEach(el=>{ el.style.display = (el.id==='hud-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.info-block').forEach(el=>{ el.style.display = (el.id==='info-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.ctrl-block').forEach(el=>{ el.style.display = (el.id==='ctrl-'+id) ? 'flex' : 'none'; });
+  if(id==='displacement') drawPanel2D();
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setActiveModule(btn.dataset.mod));
+});
+document.getElementById('btn-camreset').addEventListener('click', ()=>{
+  const c = moduleCams[activeModule];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+});
+setActiveModule('measure');
+
+/* ============================== MAIN LOOP ============================== */
+function drawLabels(){
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  const fn = moduleLabelFns[activeModule];
+  if(!fn) return;
+  fn().forEach(l=> drawLabelChip(l.p, l.t, l.c, l.size));
+}
+
+let lastRender = 0;
+const clock0 = performance.now();
+function animate(ts){
+  requestAnimationFrame(animate);
+  if(ts - lastRender < 33) return;
+  lastRender = ts;
+  const t = (performance.now()-clock0)/1000;
+  const fn = moduleUpdateFns[activeModule];
+  if(fn) fn(t);
+  drawLabels();
+  renderer.render(scene3, cam3);
+}
+animate();
+
+// QR button
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+</script>
+</body>
+</html>
