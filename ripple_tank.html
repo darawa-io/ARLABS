@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ripple Tank Simulator | Reflection · Diffraction · Refraction</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f; --surface:#0d1120; --border:rgba(180,200,255,0.10);
+  --amber:#ffc857; --blue:#5bc8ff; --violet:#b57aff; --green:#4dffa0; --sand:#e0b877;
+  --text:#ddeeff; --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas,#labelCanvas,#canvas2d{position:absolute;inset:0;z-index:1;touch-action:none;cursor:grab;}
+#labelCanvas{z-index:3;pointer-events:none;}
+#canvas2d{z-index:2;display:none;}
+
+#title{position:absolute;top:20px;left:20px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:34px;flex-shrink:0;opacity:0.9;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:.5px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+
+#hud{position:absolute;top:20px;right:20px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:18px;min-width:220px;z-index:10;}
+#hud h2,#setup h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);}
+.dl{font-family:'Space Mono',monospace;font-size:11px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
+.dv.amber{color:var(--amber);} .dv.blue{color:var(--blue);} .dv.violet{color:var(--violet);}
+.hdiv{height:1px;background:var(--border);margin:10px 0;}
+#formula-box{padding:9px;border-radius:9px;background:rgba(91,200,255,0.06);border:1px solid rgba(91,200,255,0.18);font-size:11px;font-family:'Space Mono',monospace;color:rgba(180,220,255,0.85);line-height:1.8;text-align:center;}
+
+#setup{position:absolute;top:96px;left:20px;z-index:10;width:264px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:16px;max-height:calc(100vh - 130px);overflow-y:auto;}
+#setup::-webkit-scrollbar{width:4px;} #setup::-webkit-scrollbar-thumb{background:rgba(180,200,255,0.2);border-radius:2px;}
+
+.lesson-btn{display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px;border-radius:10px;border:1px solid rgba(180,200,255,0.14);background:rgba(180,200,255,0.04);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.lesson-btn .code{display:block;font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.5px;margin-bottom:2px;}
+.lesson-btn .title{font-size:11.5px;color:var(--text);}
+.lesson-btn.on{border-color:var(--blue);background:rgba(91,200,255,0.14);}
+.lesson-btn:hover{background:rgba(180,200,255,0.09);}
+
+#lesson-caption{display:none;padding:10px;border-radius:10px;background:rgba(77,255,160,0.06);border:1px solid rgba(77,255,160,0.2);margin-bottom:10px;}
+#lesson-caption.show{display:block;}
+#lesson-caption-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--green);letter-spacing:.5px;margin-bottom:5px;}
+#lesson-caption-text{font-size:11px;line-height:1.55;color:rgba(200,225,255,0.85);}
+#lesson-extra{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+
+.cfg-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px;}
+.cfg-label{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--muted);letter-spacing:.5px;}
+.cfg-val{font-family:'Space Mono',monospace;font-size:10px;color:var(--text);min-width:32px;text-align:right;}
+.btnrow{display:flex;gap:4px;}
+select{background:rgba(180,200,255,0.08);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:5px 6px;font-family:'DM Sans',sans-serif;font-size:11px;outline:none;width:100%;margin-top:2px;}
+
+#controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:50px;padding:8px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px);}
+.btn{padding:7px 15px;border-radius:30px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.18);border-color:var(--green);color:#fff;}
+.btn.small{padding:5px 12px;font-size:11px;}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:88px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;border:none;}
+
+#hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.25);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;text-align:center;}
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(91,200,255,.25);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;color:rgba(91,200,255,.55);}
+#qr-btn:hover{border-color:rgba(91,200,255,.6);background:rgba(91,200,255,.12);color:#5bc8ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(91,200,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(91,200,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(91,200,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(91,200,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(91,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#5bc8ff;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+<canvas id="canvas2d"></canvas>
+
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+  <div id="title-text"><h1>RIPPLE TANK</h1><p>Reflection · Diffraction · Refraction</p></div>
+</div>
+
+<div id="hud">
+  <h2>Wave Measurements</h2>
+  <div class="dr"><span class="dl">Source</span><span class="dv blue" id="val-src">Point</span></div>
+  <div class="dr"><span class="dl">f (frequency)</span><span class="dv amber" id="val-freq">0.50 Hz</span></div>
+  <div class="dr"><span class="dl">T (period)</span><span class="dv" id="val-T">2.00 s</span></div>
+  <div class="dr"><span class="dl">c (wave speed)</span><span class="dv violet" id="val-c">2.40 u/s</span></div>
+  <div class="dr"><span class="dl">λ (wavelength)</span><span class="dv" id="val-lambda" style="color:var(--green);">4.80 u</span></div>
+  <div class="dr" id="row-lambda2" style="display:none;"><span class="dl">λ in shallow</span><span class="dv" id="val-lambda2" style="color:var(--sand);">—</span></div>
+  <div class="hdiv"></div>
+  <div id="formula-box">λ = c / f&nbsp;&nbsp;·&nbsp;&nbsp;c ∝ √(depth)</div>
+</div>
+
+<div id="setup">
+  <h2>Lessons</h2>
+  <div id="lessons-list"></div>
+  <div id="lesson-caption">
+    <div id="lesson-caption-title"></div>
+    <div id="lesson-caption-text"></div>
+    <div id="lesson-extra"></div>
+  </div>
+
+  <h2 style="margin-top:14px;">Manual Setup</h2>
+  <div class="cfg-row"><span class="cfg-label">SOURCE TYPE</span>
+    <div class="btnrow"><button class="btn small on" id="btn-src-point">Point</button><button class="btn small" id="btn-src-plane">Plane</button></div>
+  </div>
+  <div class="cfg-row" id="row-twosrc"><span class="cfg-label">SECOND SOURCE</span><button class="btn small green" id="btn-twosrc">Off</button></div>
+  <div class="hdiv"></div>
+  <div class="cfg-row" style="flex-direction:column;align-items:stretch;"><span class="cfg-label">BARRIER</span>
+    <select id="sl-barrier">
+      <option value="none">None</option>
+      <option value="wall">Straight Wall</option>
+      <option value="single">Single Slit</option>
+      <option value="double">Double Slit</option>
+      <option value="edge">Single Edge</option>
+      <option value="angled">Angled Wall</option>
+    </select>
+  </div>
+  <div class="cfg-row" id="row-slitw" style="display:none;"><span class="cfg-label">Slit Width</span><input type="range" id="sl-slitw" min="0.3" max="2.5" step="0.05" value="0.8"><span class="cfg-val" id="lbl-slitw">0.80</span></div>
+  <div class="cfg-row" id="row-slitsp" style="display:none;"><span class="cfg-label">Slit Spacing</span><input type="range" id="sl-slitsp" min="1.0" max="4.5" step="0.05" value="2.4"><span class="cfg-val" id="lbl-slitsp">2.40</span></div>
+  <div class="hdiv"></div>
+  <div class="cfg-row"><span class="cfg-label">SHALLOW SHELF</span><button class="btn small green" id="btn-shallow">Off</button></div>
+  <div class="cfg-row" id="row-shallowd" style="display:none;"><span class="cfg-label">Depth</span><input type="range" id="sl-shallowd" min="0.15" max="0.85" step="0.01" value="0.35"><span class="cfg-val" id="lbl-shallowd">0.35</span></div>
+  <div class="cfg-row" id="row-shallowa" style="display:none;"><span class="cfg-label">Angle</span><input type="range" id="sl-shallowa" min="-85" max="85" step="1" value="25"><span class="cfg-val" id="lbl-shallowa">25°</span></div>
+</div>
+
+<div id="controls">
+  <div class="sw"><span>freq</span><input type="range" id="sl-freq" min="0.5" max="2.6" step="0.02" value="1.0"><span id="lbl-freq">1.00</span></div>
+  <div class="sw"><span>amp</span><input type="range" id="sl-amp" min="0.05" max="0.35" step="0.01" value="0.18"><span id="lbl-amp">0.18</span></div>
+  <div class="sw"><span>damping</span><input type="range" id="sl-damping" min="0" max="1.2" step="0.01" value="0.03"><span id="lbl-damping">0.03</span></div>
+  <div class="sep"></div>
+  <button class="btn on" id="btn-mode-3d">◱ 3D</button>
+  <button class="btn" id="btn-mode-2d">▦ 2D</button>
+  <div class="sep"></div>
+  <button class="btn green on" id="btn-play">⏸ Pause</button>
+  <button class="btn" id="btn-reset">Reset</button>
+</div>
+
+<div id="hint">drag any glowing element (source · barrier · shelf) to move it &nbsp;·&nbsp; 3D: drag empty water to rotate</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+/* ============================= GRID / FIELD SETUP ============================= */
+const N = 150, N1 = N + 1;
+const TANK = 12, HALF = TANK / 2;
+const dx = TANK / N, invDx2 = 1 / (dx * dx);
+const C0 = 2.4;
+const DT = 0.012;
+const MUR_K = (C0 * DT - dx) / (C0 * DT + dx); // 1st-order Mur radiating boundary coefficient:
+                                                // lets outgoing waves leave the grid at full,
+                                                // undiminished amplitude right up to the very
+                                                // edge (no artificial fade zone at all), rather
+                                                // than a finite-width absorbing "sponge" band —
+                                                // verified to remove the pre-wall dead spots and
+                                                // large angle-dependent reflection a sponge left.
+const FLOOR_Y = -0.55;
+const PLANE_MARGIN = 2.2; // keeps the plane-source line's ends away from the corners (cosmetic only)
+const WALL_THICK = 0.14, WALL_HALFLEN = HALF - 0.05; // barrier segments now run to the tank walls
+let shelfAngleRad = 0.44; // now user-rotatable — see "Shelf Angle" slider
+const SHELF_HALFLEN = 2.4, SHELF_HALFWIDTH = 1.7;
+
+// movable anchors (draggable in both 2D and 3D views)
+let srcA = { x: -3.7, z: 0 };
+let srcB = { x: -3.7, z: -2.0 };
+let planeSrc = { x: -3.8 };
+let barrierAnchor = { x: 1.0, z: 0 };
+let shelfAnchor = { x: 2.3, z: -0.6 };
+
+function idx(i, j) { return j * N1 + i; }
+function worldX(i) { return -HALF + i * dx; }
+function worldZ(j) { return -HALF + j * dx; }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function smoothstep(e0, e1, x) { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); }
+
+const h = new Float32Array(N1 * N1);
+const v = new Float32Array(N1 * N1);
+const lapBuf = new Float32Array(N1 * N1);
+const leftAdjOld = new Float32Array(N1), rightAdjOld = new Float32Array(N1);
+const botAdjOld = new Float32Array(N1), topAdjOld = new Float32Array(N1);
+const c2arr = new Float32Array(N1 * N1);
+const dampArr = new Float32Array(N1 * N1);
+const barrier = new Uint8Array(N1 * N1);
+
+let simTime = 0;
+
+const state = {
+  sourceType: 'point', secondSource: false,
+  freq: 1.0, amp: 0.18, damping: 0.03,
+  barrierPreset: 'none', slitWidth: 0.8, slitSpacing: 2.4,
+  shallow: false, shallowDepth: 0.35,
+  playing: true, viewMode: '3d'
+};
+
+function getBarrierSegments() {
+  const segs = [];
+  const p = state.barrierPreset;
+  const ax = barrierAnchor.x, az = barrierAnchor.z;
+  const addZ = (z0, z1) => { if (z1 - z0 < 0.03) return; segs.push({ cx: ax, cz: az + (z0 + z1) / 2, angle: Math.PI / 2, halfLen: (z1 - z0) / 2, halfThick: WALL_THICK }); };
+  if (p === 'wall') addZ(-WALL_HALFLEN, WALL_HALFLEN);
+  else if (p === 'single') { const g = state.slitWidth / 2; addZ(-WALL_HALFLEN, -g); addZ(g, WALL_HALFLEN); }
+  else if (p === 'double') { const s = state.slitSpacing / 2, w = state.slitWidth / 2; addZ(-WALL_HALFLEN, -s - w); addZ(-s + w, s - w); addZ(s + w, WALL_HALFLEN); }
+  else if (p === 'edge') addZ(0, WALL_HALFLEN);
+  else if (p === 'angled') segs.push({ cx: ax, cz: az, angle: 55 * Math.PI / 180, halfLen: 6.5, halfThick: WALL_THICK }); // long enough to reach the walls from most anchor positions
+  return segs;
+}
+function segContains(s, x, z) {
+  const dx_ = x - s.cx, dz_ = z - s.cz;
+  const ca = Math.cos(s.angle), sa = Math.sin(s.angle);
+  const u = dx_ * ca + dz_ * sa, w = -dx_ * sa + dz_ * ca;
+  return Math.abs(u) <= s.halfLen && Math.abs(w) <= s.halfThick;
+}
+function sampleShelfDepth(x, z) {
+  const dx_ = x - shelfAnchor.x, dz_ = z - shelfAnchor.z;
+  const ca = Math.cos(shelfAngleRad), sa = Math.sin(shelfAngleRad);
+  const u = dx_ * ca + dz_ * sa, w = -dx_ * sa + dz_ * ca;
+  const outDist = Math.max(Math.abs(u) - SHELF_HALFLEN, Math.abs(w) - SHELF_HALFWIDTH);
+  const t = smoothstep(0.5, -0.5, outDist);
+  return 1 - t * (1 - state.shallowDepth);
+}
+
+function buildFields() {
+  const segs = getBarrierSegments();
+  for (let j = 0; j <= N; j++) {
+    const z = worldZ(j);
+    for (let i = 0; i <= N; i++) {
+      const x = worldX(i);
+      const k = idx(i, j);
+      const depthFactor = state.shallow ? sampleShelfDepth(x, z) : 1;
+      const cLocal = C0 * Math.sqrt(depthFactor);
+      c2arr[k] = cLocal * cLocal;
+      dampArr[k] = state.damping; // uniform everywhere now — walls are handled by the Mur
+                                   // radiating boundary in stepSim, not by extra damping here.
+      let isBar = false;
+      for (let s = 0; s < segs.length; s++) { if (segContains(segs[s], x, z)) { isBar = true; break; } }
+      barrier[k] = isBar ? 1 : 0;
+    }
+  }
+}
+
+function stepSim() {
+  // Snapshot the pre-update boundary-adjacent rows/columns — the Mur boundary formula below
+  // needs both the old and new value of the neighbor just inside each edge.
+  for (let j = 0; j <= N; j++) { leftAdjOld[j] = h[idx(1, j)]; rightAdjOld[j] = h[idx(N - 1, j)]; }
+  for (let i = 0; i <= N; i++) { botAdjOld[i] = h[idx(i, 1)]; topAdjOld[i] = h[idx(i, N - 1)]; }
+  // PASS 1: Laplacian from a consistent, unmutated snapshot of h (critical for stability —
+  // in-place updates that mix already-updated neighbors destabilize the integrator).
+  // Uses the isotropic 9-point stencil (axis + diagonal neighbors) rather than the plain
+  // 5-point one: the 5-point stencil propagates waves faster along the grid axes than along
+  // the diagonals, which visibly deforms circular wavefronts into a faceted/star shape as
+  // they travel — the 9-point version is the standard fix for that grid-anisotropy artifact.
+  for (let j = 1; j < N; j++) {
+    const rowBase = j * N1, rowUp = (j + 1) * N1, rowDn = (j - 1) * N1;
+    for (let i = 1; i < N; i++) {
+      const k = rowBase + i;
+      if (barrier[k]) { lapBuf[k] = 0; continue; }
+      lapBuf[k] = (0.5 * (h[rowBase + i + 1] + h[rowBase + i - 1] + h[rowUp + i] + h[rowDn + i])
+                 + 0.25 * (h[rowUp + i + 1] + h[rowUp + i - 1] + h[rowDn + i + 1] + h[rowDn + i - 1])
+                 - 3 * h[k]) * invDx2;
+    }
+  }
+  // PASS 2: apply update from lapBuf only.
+  for (let j = 1; j < N; j++) {
+    const rowBase = j * N1;
+    for (let i = 1; i < N; i++) {
+      const k = rowBase + i;
+      if (barrier[k]) { h[k] = 0; v[k] = 0; continue; }
+      const acc = c2arr[k] * lapBuf[k];
+      v[k] += DT * (acc - dampArr[k] * v[k]);
+      h[k] += DT * v[k];
+    }
+  }
+  // Mur 1st-order radiating boundary on all four edges: outgoing waves leave the grid instead
+  // of reflecting, with no premature fade beforehand (unlike a finite-width sponge).
+  for (let j = 0; j <= N; j++) {
+    const leftOld = h[idx(0, j)], rightOld = h[idx(N, j)];
+    h[idx(0, j)] = leftAdjOld[j] + MUR_K * (h[idx(1, j)] - leftOld);
+    h[idx(N, j)] = rightAdjOld[j] + MUR_K * (h[idx(N - 1, j)] - rightOld);
+  }
+  for (let i = 0; i <= N; i++) {
+    const botOld = h[idx(i, 0)], topOld = h[idx(i, N)];
+    h[idx(i, 0)] = botAdjOld[i] + MUR_K * (h[idx(i, 1)] - botOld);
+    h[idx(i, N)] = topAdjOld[i] + MUR_K * (h[idx(i, N - 1)] - topOld);
+  }
+  simTime += DT;
+  driveSources();
+}
+
+function stampGaussianSource(x0, z0, val) {
+  const R = 2;
+  const i0 = Math.round((x0 + HALF) / dx), j0 = Math.round((z0 + HALF) / dx);
+  for (let dj = -R; dj <= R; dj++) {
+    for (let di = -R; di <= R; di++) {
+      const i = i0 + di, j = j0 + dj;
+      if (i < 1 || i >= N || j < 1 || j >= N) continue;
+      const k = idx(i, j);
+      if (barrier[k]) continue;
+      const r2 = di * di + dj * dj;
+      const wgt = Math.exp(-r2 / (R * 0.9));
+      h[k] = lerp(h[k], val, wgt);
+      v[k] = 0;
+    }
+  }
+}
+function driveSources() {
+  const s = Math.sin(2 * Math.PI * state.freq * simTime) * state.amp;
+  if (state.sourceType === 'point') {
+    stampGaussianSource(srcA.x, srcA.z, s);
+    if (state.secondSource) stampGaussianSource(srcB.x, srcB.z, s);
+  } else {
+    const i0 = Math.round((planeSrc.x + HALF) / dx);
+    const jLo = Math.round((-(HALF - PLANE_MARGIN) + HALF) / dx);
+    const jHi = Math.round(((HALF - PLANE_MARGIN) + HALF) / dx);
+    for (let j = jLo; j <= jHi; j++) { const k = idx(i0, j); if (!barrier[k]) { h[k] = s; v[k] = 0; } }
+  }
+}
+
+/* ============================= SHARED WAVE COLORMAP ============================= */
+// Height -> color, with gamma compression so ripples stay visible far from the source
+// (mimics the strong bright/dark banding seen in real ripple-tank light shadowgraphs).
+const COL_NEUTRAL = [20, 92, 92], COL_BRIGHT = [215, 252, 250], COL_DARK = [2, 10, 14];
+const COLOR_K = 95; // tanh saturation gain: makes even small, far-travelled ripples snap to
+                     // strong bright/dark bands, matching the high-contrast look of a real
+                     // ripple-tank light shadowgraph (rather than fading out with distance).
+                     // Note: a point source's amplitude naturally falls off with distance
+                     // (energy spreading over a larger circle — true in a real ripple tank
+                     // too), so this compensates visually; a plane wave shows no such falloff.
+function heightToColor(hv) {
+  const t = Math.tanh(hv * COLOR_K);
+  if (t >= 0) return [lerp(COL_NEUTRAL[0], COL_BRIGHT[0], t), lerp(COL_NEUTRAL[1], COL_BRIGHT[1], t), lerp(COL_NEUTRAL[2], COL_BRIGHT[2], t)];
+  const u = -t;
+  return [lerp(COL_NEUTRAL[0], COL_DARK[0], u), lerp(COL_NEUTRAL[1], COL_DARK[1], u), lerp(COL_NEUTRAL[2], COL_DARK[2], u)];
+}
+
+/* ============================= THREE.JS (3D MODE) ============================= */
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.018);
+const cam3 = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resize3D() {
+  const w = window.innerWidth, hh = window.innerHeight;
+  renderer.setSize(w, hh);
+  cam3.aspect = w / hh; cam3.updateProjectionMatrix();
+  labelCanvas.width = w; labelCanvas.height = hh;
+}
+
+scene3.add(new THREE.AmbientLight(0xffffff, 1.3));
+const sun = new THREE.DirectionalLight(0xfff8f0, 1.1); sun.position.set(6, 12, 5); scene3.add(sun);
+const glow = new THREE.PointLight(0x88ccff, 0.6, 20); glow.position.set(0, 4, 0); scene3.add(glow);
+
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x0a0d18, roughness: 0.95 }));
+floorM.rotation.x = -Math.PI / 2; floorM.position.y = -2.4; scene3.add(floorM);
+const gridHelper = new THREE.GridHelper(40, 30, 0x1a2540, 0x121c30); gridHelper.position.y = -2.38; scene3.add(gridHelper);
+const root3 = new THREE.Group(); scene3.add(root3);
+
+const tankFloor = new THREE.Mesh(new THREE.BoxGeometry(TANK + 0.3, 0.1, TANK + 0.3), new THREE.MeshStandardMaterial({ color: 0x121a2c, roughness: 0.9 }));
+tankFloor.position.y = FLOOR_Y - 0.05; root3.add(tankFloor);
+const rimMat = new THREE.MeshPhysicalMaterial({ color: 0x9fc6ff, transparent: true, opacity: 0.16, roughness: 0.05, transmission: 0.55, side: THREE.DoubleSide });
+[[TANK + 0.14, 0.5, 0.14, 0, HALF + 0.07], [TANK + 0.14, 0.5, 0.14, 0, -HALF - 0.07], [0.14, 0.5, TANK, HALF + 0.07, 0], [0.14, 0.5, TANK, -HALF - 0.07, 0]].forEach(([w2, hh2, d2, px, pz]) => {
+  const rim = new THREE.Mesh(new THREE.BoxGeometry(w2, hh2, d2), rimMat); rim.position.set(px, -0.05, pz); root3.add(rim);
+});
+
+const positions = new Float32Array(N1 * N1 * 3);
+const colorsArr = new Float32Array(N1 * N1 * 3);
+for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) {
+  const k = idx(i, j);
+  positions[k * 3] = worldX(i); positions[k * 3 + 1] = 0; positions[k * 3 + 2] = worldZ(j);
+  colorsArr[k * 3] = COL_NEUTRAL[0] / 255; colorsArr[k * 3 + 1] = COL_NEUTRAL[1] / 255; colorsArr[k * 3 + 2] = COL_NEUTRAL[2] / 255;
+}
+const waterIndices = [];
+for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+  const a = j * N1 + i, b = a + 1, c = a + N1, d = c + 1;
+  waterIndices.push(a, c, b, b, c, d);
+}
+const waterGeo = new THREE.BufferGeometry();
+waterGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+waterGeo.setAttribute('color', new THREE.BufferAttribute(colorsArr, 3));
+waterGeo.setIndex(waterIndices);
+waterGeo.computeVertexNormals();
+const waterMat = new THREE.MeshPhysicalMaterial({ vertexColors: true, transparent: true, opacity: 0.95, roughness: 0.28, metalness: 0.02, clearcoat: 0.45, clearcoatRoughness: 0.25, transmission: 0.06, side: THREE.DoubleSide });
+const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+root3.add(waterMesh);
+
+const HEIGHT_SCALE = 3.2;
+function updateMeshFromField() {
+  const posA = waterGeo.attributes.position.array;
+  const colA = waterGeo.attributes.color.array;
+  for (let k = 0; k < N1 * N1; k++) {
+    const hv = h[k];
+    posA[k * 3 + 1] = hv * HEIGHT_SCALE;
+    if (barrier[k]) { colA[k * 3] = 0.10; colA[k * 3 + 1] = 0.12; colA[k * 3 + 2] = 0.16; continue; }
+    const c = heightToColor(hv);
+    colA[k * 3] = c[0] / 255; colA[k * 3 + 1] = c[1] / 255; colA[k * 3 + 2] = c[2] / 255;
+  }
+  waterGeo.attributes.position.needsUpdate = true;
+  waterGeo.attributes.color.needsUpdate = true;
+  waterGeo.computeVertexNormals();
+}
+
+const barrierGroup = new THREE.Group(); root3.add(barrierGroup);
+const barrierMat = new THREE.MeshStandardMaterial({ color: 0x8fa3c0, metalness: 0.5, roughness: 0.4, emissive: 0x141c30, emissiveIntensity: 0.4 });
+const BAR_HEIGHT = 1.0, BAR_Y = -0.05;
+function buildBarrierMeshes() {
+  while (barrierGroup.children.length) barrierGroup.remove(barrierGroup.children[0]);
+  getBarrierSegments().forEach(s => {
+    const geo = new THREE.BoxGeometry(s.halfThick * 2, BAR_HEIGHT, s.halfLen * 2);
+    const mesh = new THREE.Mesh(geo, barrierMat);
+    mesh.position.set(s.cx, BAR_Y, s.cz);
+    mesh.rotation.y = Math.PI / 2 - s.angle;
+    barrierGroup.add(mesh);
+  });
+}
+
+const shelfGroup = new THREE.Group(); root3.add(shelfGroup);
+const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdcb87c, roughness: 0.95, metalness: 0 });
+function buildShelfMesh() {
+  while (shelfGroup.children.length) shelfGroup.remove(shelfGroup.children[0]);
+  if (!state.shallow) return;
+  const topY = FLOOR_Y + (1 - state.shallowDepth) * 0.5;
+  const hgt = topY - FLOOR_Y;
+  const geo = new THREE.BoxGeometry(SHELF_HALFWIDTH * 2, hgt, SHELF_HALFLEN * 2);
+  const mesh = new THREE.Mesh(geo, shelfMat);
+  mesh.position.set(shelfAnchor.x, FLOOR_Y + hgt / 2, shelfAnchor.z);
+  mesh.rotation.y = Math.PI / 2 - shelfAngleRad;
+  shelfGroup.add(mesh);
+}
+
+const sourceGroup = new THREE.Group(); root3.add(sourceGroup);
+let sourceMarkers = [];
+function rebuildSourceMarkers() {
+  sourceMarkers.forEach(m => sourceGroup.remove(m)); sourceMarkers = [];
+  if (state.sourceType === 'point') {
+    const mkSphere = (x, z) => {
+      const mat = new THREE.MeshStandardMaterial({ color: 0xfff2c0, emissive: 0xffcc55, emissiveIntensity: 1.4 });
+      const s = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), mat);
+      s.position.set(x, 0.15, z); sourceGroup.add(s); sourceMarkers.push(s);
+    };
+    mkSphere(srcA.x, srcA.z);
+    if (state.secondSource) mkSphere(srcB.x, srcB.z);
+  } else {
+    const mat = new THREE.MeshStandardMaterial({ color: 0xfff2c0, emissive: 0xffcc55, emissiveIntensity: 1.2 });
+    const barLen = (HALF - PLANE_MARGIN) * 2 * 0.96;
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.22, barLen), mat);
+    bar.position.set(planeSrc.x, 0.1, 0); sourceGroup.add(bar); sourceMarkers.push(bar);
+  }
+}
+function pulseSourceMarkers() {
+  const g = 0.8 + 0.6 * Math.abs(Math.sin(2 * Math.PI * state.freq * simTime));
+  sourceMarkers.forEach(m => { m.material.emissiveIntensity = g * 1.3; });
+}
+
+/* ============================= HUD / 3D LABELS ============================= */
+const el = id => document.getElementById(id);
+function updateHUD() {
+  const lambda = C0 / state.freq;
+  el('val-src').textContent = state.sourceType === 'point' ? (state.secondSource ? '2× Point' : 'Point') : 'Plane';
+  el('val-freq').textContent = state.freq.toFixed(2) + ' Hz';
+  el('val-T').textContent = (1 / state.freq).toFixed(2) + ' s';
+  el('val-c').textContent = C0.toFixed(2) + ' u/s';
+  el('val-lambda').textContent = lambda.toFixed(2) + ' u';
+  if (state.shallow) { const cs = C0 * Math.sqrt(state.shallowDepth); el('val-lambda2').textContent = (cs / state.freq).toFixed(2) + ' u'; }
+}
+function w2s(p) { const c = p.clone().project(cam3); return { x: (c.x * 0.5 + 0.5) * window.innerWidth, y: (-0.5 * c.y + 0.5) * window.innerHeight }; }
+function drawLabels() {
+  lctx.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
+  lctx.textAlign = 'center';
+  const labels = [];
+  if (state.sourceType === 'point') labels.push({ p: new THREE.Vector3(srcA.x, 1.1, srcA.z), t: 'SOURCE', c: '#ffcc55' });
+  else labels.push({ p: new THREE.Vector3(planeSrc.x, 1.1, 0), t: 'PLANE SOURCE', c: '#ffcc55' });
+  if (state.barrierPreset !== 'none') {
+    const names = { wall: 'STRAIGHT WALL', single: 'SINGLE SLIT', double: 'DOUBLE SLIT', angled: 'ANGLED WALL', edge: 'SINGLE EDGE' };
+    labels.push({ p: new THREE.Vector3(barrierAnchor.x, 1.1, barrierAnchor.z), t: names[state.barrierPreset] || '', c: '#8fa3c0' });
+  }
+  if (state.shallow) labels.push({ p: new THREE.Vector3(shelfAnchor.x, 1.1, shelfAnchor.z), t: 'SHALLOW WATER', c: '#e0b877' });
+  labels.forEach(({ p, t, c }) => {
+    const s = w2s(p);
+    lctx.font = '500 10px "Space Mono",monospace';
+    const tw = lctx.measureText(t).width;
+    lctx.fillStyle = 'rgba(4,7,15,0.7)'; lctx.fillRect(s.x - tw / 2 - 4, s.y - 12, tw + 8, 16);
+    lctx.fillStyle = c; lctx.shadowBlur = 6; lctx.fillText(t, s.x, s.y); lctx.shadowBlur = 0;
+  });
+}
+
+/* ============================= CAMERA ORBIT (3D) ============================= */
+const orb = { theta: 0.45, phi: 0.55, radius: 15, cx: 0, cy: 0, cz: 0 };
+function applyOrbit() {
+  orb.phi = clamp(orb.phi, -0.2, 1.2);
+  const r = orb.radius, p = orb.phi, t = orb.theta;
+  cam3.position.set(orb.cx + r * Math.cos(p) * Math.sin(t), orb.cy + r * Math.sin(p), orb.cz + r * Math.cos(p) * Math.cos(t));
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
+}
+
+/* ============================= 2D CANVAS MODE ============================= */
+const canvas2d = document.getElementById('canvas2d');
+const ctx2d = canvas2d.getContext('2d');
+const offCanvas = document.createElement('canvas'); offCanvas.width = N1; offCanvas.height = N1;
+const offCtx = offCanvas.getContext('2d');
+const imgData = offCtx.createImageData(N1, N1);
+let map2D = { originX: 0, originY: 0, scale: 1, dpr: 1 };
+
+function resize2D() {
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  map2D.dpr = dpr;
+  canvas2d.width = window.innerWidth * dpr;
+  canvas2d.height = window.innerHeight * dpr;
+  canvas2d.style.width = window.innerWidth + 'px';
+  canvas2d.style.height = window.innerHeight + 'px';
+  ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const size = Math.min(window.innerWidth, window.innerHeight) * 0.86;
+  map2D.scale = size / TANK;
+  map2D.originX = window.innerWidth / 2;
+  map2D.originY = window.innerHeight / 2;
+}
+function w2p(x, z) { return { px: map2D.originX + x * map2D.scale, py: map2D.originY + z * map2D.scale }; }
+function p2w(px, py) { return { x: (px - map2D.originX) / map2D.scale, z: (py - map2D.originY) / map2D.scale }; }
+
+function update2DImageData() {
+  const data = imgData.data;
+  for (let k = 0; k < N1 * N1; k++) {
+    let r, g, b;
+    if (barrier[k]) { r = 32; g = 37; b = 50; }
+    else { const c = heightToColor(h[k]); r = c[0]; g = c[1]; b = c[2]; }
+    const p = k * 4;
+    data[p] = r; data[p + 1] = g; data[p + 2] = b; data[p + 3] = 255;
+  }
+  offCtx.putImageData(imgData, 0, 0);
+}
+
+function drawSegRect2D(s, fillStyle, strokeStyle) {
+  const c = w2p(s.cx, s.cz);
+  ctx2d.save();
+  ctx2d.translate(c.px, c.py);
+  ctx2d.rotate(s.angle !== undefined ? s.angle : 0);
+  const wpx = s.halfThick * 2 * map2D.scale, lpx = s.halfLen * 2 * map2D.scale;
+  ctx2d.fillStyle = fillStyle; ctx2d.fillRect(-wpx / 2, -lpx / 2, wpx, lpx);
+  if (strokeStyle) { ctx2d.strokeStyle = strokeStyle; ctx2d.lineWidth = 1.5; ctx2d.strokeRect(-wpx / 2, -lpx / 2, wpx, lpx); }
+  ctx2d.restore();
+}
+
+function draw2DFrame() {
+  const w = window.innerWidth, hh = window.innerHeight;
+  ctx2d.clearRect(0, 0, w, hh);
+  ctx2d.fillStyle = '#07090f'; ctx2d.fillRect(0, 0, w, hh);
+
+  const topLeft = w2p(-HALF, -HALF), size = TANK * map2D.scale;
+  ctx2d.save();
+  ctx2d.beginPath(); ctx2d.rect(topLeft.px, topLeft.py, size, size); ctx2d.clip();
+  ctx2d.filter = 'blur(0.8px)';
+  ctx2d.imageSmoothingEnabled = true; ctx2d.imageSmoothingQuality = 'high';
+  ctx2d.drawImage(offCanvas, topLeft.px, topLeft.py, size, size);
+  ctx2d.filter = 'none';
+  ctx2d.restore();
+
+  ctx2d.strokeStyle = 'rgba(159,198,255,0.5)'; ctx2d.lineWidth = 2;
+  ctx2d.strokeRect(topLeft.px, topLeft.py, size, size);
+
+  // shallow shelf overlay
+  if (state.shallow) {
+    drawSegRect2D({ cx: shelfAnchor.x, cz: shelfAnchor.z, angle: shelfAngleRad, halfThick: SHELF_HALFWIDTH, halfLen: SHELF_HALFLEN },
+      'rgba(220,184,124,0.28)', 'rgba(220,184,124,0.7)');
+  }
+  // barrier segments
+  getBarrierSegments().forEach(s => drawSegRect2D(s, 'rgba(143,163,192,0.9)', 'rgba(210,224,245,0.6)'));
+
+  // draggable handle rings + source glow
+  ctx2d.lineWidth = 1.5;
+  function drawHandleRing(x, z, r, color) {
+    const p = w2p(x, z);
+    ctx2d.beginPath(); ctx2d.arc(p.px, p.py, r * map2D.scale, 0, Math.PI * 2);
+    ctx2d.strokeStyle = color; ctx2d.setLineDash([4, 4]); ctx2d.stroke(); ctx2d.setLineDash([]);
+  }
+  if (state.barrierPreset !== 'none') drawHandleRing(barrierAnchor.x, barrierAnchor.z, 0.5, 'rgba(143,163,192,0.55)');
+  if (state.shallow) drawHandleRing(shelfAnchor.x, shelfAnchor.z, 0.7, 'rgba(220,184,124,0.55)');
+
+  function drawSource(x, z) {
+    const p = w2p(x, z);
+    const pulse = 0.7 + 0.5 * Math.abs(Math.sin(2 * Math.PI * state.freq * simTime));
+    ctx2d.beginPath(); ctx2d.arc(p.px, p.py, 9 * pulse, 0, Math.PI * 2);
+    ctx2d.fillStyle = 'rgba(255,204,85,0.95)'; ctx2d.shadowColor = '#ffcc55'; ctx2d.shadowBlur = 14 * pulse;
+    ctx2d.fill(); ctx2d.shadowBlur = 0;
+  }
+  if (state.sourceType === 'point') { drawSource(srcA.x, srcA.z); if (state.secondSource) drawSource(srcB.x, srcB.z); }
+  else {
+    const zLo = -(HALF - PLANE_MARGIN) * 0.96, zHi = (HALF - PLANE_MARGIN) * 0.96;
+    const p1 = w2p(planeSrc.x, zLo), p2 = w2p(planeSrc.x, zHi);
+    ctx2d.strokeStyle = '#ffcc55'; ctx2d.lineWidth = 5; ctx2d.shadowColor = '#ffcc55'; ctx2d.shadowBlur = 10;
+    ctx2d.beginPath(); ctx2d.moveTo(p1.px, p1.py); ctx2d.lineTo(p2.px, p2.py); ctx2d.stroke(); ctx2d.shadowBlur = 0;
+  }
+}
+
+/* ============================= VIEW MODE SWITCH ============================= */
+function setViewMode(mode) {
+  state.viewMode = mode;
+  el('btn-mode-3d').classList.toggle('on', mode === '3d');
+  el('btn-mode-2d').classList.toggle('on', mode === '2d');
+  document.getElementById('mainCanvas').style.display = mode === '3d' ? 'block' : 'none';
+  document.getElementById('labelCanvas').style.display = mode === '3d' ? 'block' : 'none';
+  canvas2d.style.display = mode === '2d' ? 'block' : 'none';
+}
+el('btn-mode-3d').onclick = () => setViewMode('3d');
+el('btn-mode-2d').onclick = () => setViewMode('2d');
+
+/* ============================= DRAG SYSTEM (shared 2D/3D) ============================= */
+const raycaster = new THREE.Raycaster();
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function screenToWorld3D(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+  raycaster.setFromCamera(ndc, cam3);
+  const pt = new THREE.Vector3();
+  const hit = raycaster.ray.intersectPlane(groundPlane, pt);
+  return hit ? { x: pt.x, z: pt.z } : null;
+}
+function screenToWorld2D(clientX, clientY) {
+  const rect = canvas2d.getBoundingClientRect();
+  return p2w(clientX - rect.left, clientY - rect.top);
+}
+function screenToWorld(clientX, clientY) { return state.viewMode === '2d' ? screenToWorld2D(clientX, clientY) : screenToWorld3D(clientX, clientY); }
+
+function getHandles() {
+  const list = [];
+  if (state.sourceType === 'point') {
+    list.push({ type: 'srcA', x: srcA.x, z: srcA.z, r: 0.6 });
+    if (state.secondSource) list.push({ type: 'srcB', x: srcB.x, z: srcB.z, r: 0.6 });
+  } else list.push({ type: 'plane', x: planeSrc.x, z: 0, r: 0.6, lineZ: true });
+  if (state.barrierPreset !== 'none') list.push({ type: 'barrier', x: barrierAnchor.x, z: barrierAnchor.z, r: 0.75 });
+  if (state.shallow) list.push({ type: 'shelf', x: shelfAnchor.x, z: shelfAnchor.z, r: 0.95 });
+  return list;
+}
+function findHandleAt(x, z, extra) {
+  let best = null, bestD = Infinity;
+  getHandles().forEach(hobj => {
+    const d = hobj.lineZ ? Math.abs(x - hobj.x) : Math.hypot(x - hobj.x, z - hobj.z);
+    if (d < hobj.r + extra && d < bestD) { bestD = d; best = hobj.type; }
+  });
+  return best;
+}
+let lastFieldBuild = 0;
+function throttledBuildFields() { const now = performance.now(); if (now - lastFieldBuild < 16) return; lastFieldBuild = now; buildFields(); }
+function moveHandle(type, x, z) {
+  const cl = val => clamp(val, -HALF + 0.4, HALF - 0.4);
+  x = cl(x); z = cl(z);
+  if (type === 'srcA') { srcA.x = x; srcA.z = z; rebuildSourceMarkers(); }
+  else if (type === 'srcB') { srcB.x = x; srcB.z = z; rebuildSourceMarkers(); }
+  else if (type === 'plane') { planeSrc.x = x; rebuildSourceMarkers(); }
+  else if (type === 'barrier') { barrierAnchor.x = x; barrierAnchor.z = z; throttledBuildFields(); buildBarrierMeshes(); }
+  else if (type === 'shelf') { shelfAnchor.x = x; shelfAnchor.z = z; throttledBuildFields(); buildShelfMesh(); }
+}
+
+let activeDrag = null, orbitDrag = null, pinchStartDist = 0, pinchStartRadius = orb.radius;
+
+function pointerDown(clientX, clientY) {
+  const wpt = screenToWorld(clientX, clientY);
+  if (wpt) {
+    const hitType = findHandleAt(wpt.x, wpt.z, 0.15);
+    if (hitType) { activeDrag = hitType; setCursor('grabbing'); return true; }
+  }
+  return false;
+}
+function pointerMove(clientX, clientY) {
+  if (!activeDrag) return false;
+  const wpt = screenToWorld(clientX, clientY);
+  if (wpt) moveHandle(activeDrag, wpt.x, wpt.z);
+  return true;
+}
+function pointerUp() { if (activeDrag) { activeDrag = null; setCursor('grab'); return true; } return false; }
+function setCursor(c) { canvas.style.cursor = c; canvas2d.style.cursor = c; }
+
+// --- 3D canvas: handle drag first, else orbit ---
+canvas.addEventListener('mousedown', e => { if (!pointerDown(e.clientX, e.clientY)) orbitDrag = { x: e.clientX, y: e.clientY }; });
+window.addEventListener('mousemove', e => {
+  if (pointerMove(e.clientX, e.clientY)) return;
+  if (!orbitDrag) return;
+  const dx_ = e.clientX - orbitDrag.x, dy_ = e.clientY - orbitDrag.y;
+  orb.theta -= dx_ * 0.005; orb.phi += dy_ * 0.005; applyOrbit();
+  orbitDrag = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mouseup', () => { pointerUp(); orbitDrag = null; });
+canvas.addEventListener('wheel', e => { orb.radius = clamp(orb.radius + e.deltaY * 0.015, 6, 40); applyOrbit(); e.preventDefault(); }, { passive: false });
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    if (!pointerDown(e.touches[0].clientX, e.touches[0].clientY)) orbitDrag = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  } else if (e.touches.length === 2) {
+    const ddx = e.touches[0].clientX - e.touches[1].clientX, ddy = e.touches[0].clientY - e.touches[1].clientY;
+    pinchStartDist = Math.hypot(ddx, ddy); pinchStartRadius = orb.radius; orbitDrag = null;
+  }
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    if (pointerMove(e.touches[0].clientX, e.touches[0].clientY)) return;
+    if (orbitDrag) {
+      const ddx = e.touches[0].clientX - orbitDrag.x, ddy = e.touches[0].clientY - orbitDrag.y;
+      orb.theta -= ddx * 0.005; orb.phi += ddy * 0.005; applyOrbit();
+      orbitDrag = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  } else if (e.touches.length === 2 && pinchStartDist > 0) {
+    const ddx = e.touches[0].clientX - e.touches[1].clientX, ddy = e.touches[0].clientY - e.touches[1].clientY;
+    const scale = pinchStartDist / Math.hypot(ddx, ddy);
+    orb.radius = clamp(pinchStartRadius * scale, 6, 40); applyOrbit();
+  }
+}, { passive: false });
+canvas.addEventListener('touchend', e => { if (e.touches.length === 0) { pointerUp(); orbitDrag = null; pinchStartDist = 0; } }, { passive: false });
+
+// --- 2D canvas: drag only, no camera ---
+canvas2d.addEventListener('mousedown', e => pointerDown(e.clientX, e.clientY));
+window.addEventListener('mousemove', e => { if (state.viewMode === '2d') pointerMove(e.clientX, e.clientY); });
+canvas2d.addEventListener('touchstart', e => { e.preventDefault(); pointerDown(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+canvas2d.addEventListener('touchmove', e => { e.preventDefault(); pointerMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+canvas2d.addEventListener('touchend', () => pointerUp(), { passive: false });
+
+window.addEventListener('resize', () => { resize3D(); resize2D(); });
+
+/* ============================= LESSONS (KPI-DRIVEN) ============================= */
+function setSrc(type) {
+  state.sourceType = type;
+  el('btn-src-point').classList.toggle('on', type === 'point');
+  el('btn-src-plane').classList.toggle('on', type === 'plane');
+  el('row-twosrc').style.display = type === 'point' ? 'flex' : 'none';
+  rebuildSourceMarkers(); updateHUD();
+}
+function setSecondSource(on) {
+  state.secondSource = on;
+  el('btn-twosrc').classList.toggle('on', on); el('btn-twosrc').textContent = on ? 'On' : 'Off';
+  rebuildSourceMarkers();
+}
+function setBarrierPreset(preset) {
+  state.barrierPreset = preset;
+  el('sl-barrier').value = preset;
+  el('row-slitw').style.display = (preset === 'single' || preset === 'double') ? 'flex' : 'none';
+  el('row-slitsp').style.display = (preset === 'double') ? 'flex' : 'none';
+  buildFields(); buildBarrierMeshes();
+}
+function setSlitWidth(val) {
+  state.slitWidth = val;
+  el('sl-slitw').value = val; el('lbl-slitw').textContent = val.toFixed(2);
+  if (state.barrierPreset === 'double' && state.slitSpacing < val + 0.3) {
+    state.slitSpacing = val + 0.3; el('sl-slitsp').value = state.slitSpacing; el('lbl-slitsp').textContent = state.slitSpacing.toFixed(2);
+  }
+  buildFields(); buildBarrierMeshes();
+}
+function setShallow(on) {
+  state.shallow = on;
+  el('btn-shallow').classList.toggle('on', on); el('btn-shallow').textContent = on ? 'On' : 'Off';
+  el('row-shallowd').style.display = on ? 'flex' : 'none';
+  el('row-shallowa').style.display = on ? 'flex' : 'none';
+  el('row-lambda2').style.display = on ? 'flex' : 'none';
+  buildFields(); buildShelfMesh(); updateHUD();
+}
+function setShelfAngle(deg) {
+  shelfAngleRad = deg * Math.PI / 180;
+  el('sl-shallowa').value = deg; el('lbl-shallowa').textContent = Math.round(deg) + '°';
+  buildFields(); buildShelfMesh();
+}
+function clearWaves() { h.fill(0); v.fill(0); simTime = 0; }
+
+const LESSONS = [
+  { id: 'refl', code: '1.7(a) · 1.9(a)', title: 'Reflection at a plane surface',
+    apply: () => { setSrc('plane'); setBarrierPreset('wall'); setShallow(false); },
+    caption: 'A flat wavefront reflects off the straight wall: angle of incidence = angle of reflection. Drag the wall, or switch to a point source, to explore other reflection geometries.' },
+  { id: 'refr', code: '1.7(b) · 1.9(b)', title: 'Refraction — change of depth', 
+    apply: () => { setSrc('plane'); setBarrierPreset('none'); setShallow(true); setShelfAngle(25); },
+    caption: 'Wave speed depends on depth (c ∝ √depth). Crossing into the shallow shelf, the waves slow down, bunch closer together (shorter λ) and bend — just like light refracting into glass. Try the shelf\'s Angle slider to change how obliquely the wave meets the boundary, or drag the shelf itself to reposition it.' },
+  { id: 'diffgap', code: '1.7(c) · 1.9(c)', title: 'Diffraction through a gap',
+    apply: () => { setSrc('plane'); setBarrierPreset('single'); setSlitWidth(0.6); setShallow(false); },
+    caption: 'When the gap is close to the size of the wavelength, the wave spreads out into circular wavefronts filling the "shadow" behind the barrier.' },
+  { id: 'gapwave', code: '1.8', title: 'Wavelength & gap size', extra: true,
+    apply: () => { setSrc('plane'); setBarrierPreset('single'); setSlitWidth(0.6); setShallow(false); },
+    caption: 'Diffraction is strongest when the gap is similar to, or smaller than, the wavelength. Try the presets below, or drag the frequency slider yourself.' },
+  { id: 'diffedge', code: '1.9(d) · 1.10', title: 'Diffraction at an edge',
+    apply: () => { setSrc('plane'); setBarrierPreset('edge'); setShallow(false); },
+    caption: 'Even a single straight edge bends waves into its shadow region. Lower the frequency (longer wavelength) to see the bending increase — a longer wavelength diffracts more.' }
+];
+function selectLesson(id) {
+  const lesson = LESSONS.find(l => l.id === id);
+  lesson.apply();
+  el('lesson-caption').classList.add('show');
+  el('lesson-caption-title').textContent = lesson.code + ' — ' + lesson.title;
+  el('lesson-caption-text').textContent = lesson.caption;
+  const extra = el('lesson-extra'); extra.innerHTML = '';
+  if (lesson.id === 'gapwave') {
+    const mk = (label, val) => { const b = document.createElement('button'); b.className = 'btn small'; b.textContent = label; b.onclick = () => setSlitWidth(val); return b; };
+    extra.appendChild(mk('Narrow gap', 0.35)); extra.appendChild(mk('Wide gap', 2.0));
+  }
+  document.querySelectorAll('.lesson-btn').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+  clearWaves();
+}
+const lessonsList = el('lessons-list');
+LESSONS.forEach(l => {
+  const b = document.createElement('div');
+  b.className = 'lesson-btn'; b.dataset.id = l.id;
+  b.innerHTML = '<span class="code">' + l.code + '</span><span class="title">' + l.title + '</span>';
+  b.onclick = () => selectLesson(l.id);
+  lessonsList.appendChild(b);
+});
+
+/* ============================= REMAINING UI WIRING ============================= */
+el('btn-src-point').onclick = () => setSrc('point');
+el('btn-src-plane').onclick = () => setSrc('plane');
+el('btn-twosrc').onclick = () => setSecondSource(!state.secondSource);
+el('sl-freq').oninput = function () { state.freq = parseFloat(this.value); el('lbl-freq').textContent = state.freq.toFixed(2); updateHUD(); };
+el('sl-amp').oninput = function () { state.amp = parseFloat(this.value); el('lbl-amp').textContent = state.amp.toFixed(2); };
+el('sl-damping').oninput = function () { state.damping = parseFloat(this.value); el('lbl-damping').textContent = state.damping.toFixed(2); throttledBuildFields(); };
+el('sl-barrier').onchange = function () { setBarrierPreset(this.value); };
+el('sl-slitw').oninput = function () { setSlitWidth(parseFloat(this.value)); };
+el('sl-slitsp').oninput = function () {
+  state.slitSpacing = Math.max(parseFloat(this.value), state.slitWidth + 0.3);
+  this.value = state.slitSpacing; el('lbl-slitsp').textContent = state.slitSpacing.toFixed(2);
+  buildFields(); buildBarrierMeshes();
+};
+el('btn-shallow').onclick = () => setShallow(!state.shallow);
+el('sl-shallowd').oninput = function () { state.shallowDepth = parseFloat(this.value); el('lbl-shallowd').textContent = state.shallowDepth.toFixed(2); buildFields(); buildShelfMesh(); updateHUD(); };
+el('sl-shallowa').oninput = function () { setShelfAngle(parseFloat(this.value)); };
+el('btn-play').onclick = () => { state.playing = !state.playing; el('btn-play').textContent = state.playing ? '⏸ Pause' : '▶ Play'; el('btn-play').classList.toggle('on', state.playing); };
+el('btn-reset').onclick = () => clearWaves();
+
+/* ============================= MAIN LOOP ============================= */
+resize3D(); resize2D(); applyOrbit();
+buildFields(); buildBarrierMeshes(); buildShelfMesh(); rebuildSourceMarkers(); updateHUD();
+
+let lastTime = performance.now(), acc = 0, lastMeshUpdate = 0;
+function animate(ts) {
+  requestAnimationFrame(animate);
+  const now = ts || performance.now();
+  let frameDt = (now - lastTime) / 1000; lastTime = now;
+  if (frameDt > 0.1) frameDt = 0.1;
+  if (state.playing) {
+    acc += frameDt;
+    let iter = 0;
+    while (acc >= DT && iter < 8) { stepSim(); acc -= DT; iter++; }
+  }
+  pulseSourceMarkers();
+  if (state.viewMode === '3d') {
+    if (now - lastMeshUpdate > 28) { lastMeshUpdate = now; updateMeshFromField(); }
+    drawLabels();
+    renderer.render(scene3, cam3);
+  } else {
+    if (now - lastMeshUpdate > 40) { lastMeshUpdate = now; update2DImageData(); }
+    draw2DFrame();
+  }
+}
+requestAnimationFrame(animate);
+
+// QR button
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+</script>
+
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=5bc8ff&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fripple_tank.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fripple_tank.html'"/>
+    <p>darawa-io.github.io/ARLABS/ripple_tank.html</p>
+  </div>
+</div>
+</body>
+</html>
