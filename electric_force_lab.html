@@ -1607,11 +1607,6 @@ function animate(){
   renderer.render(scene3, cam3);
 }
 animate();
-
-// QR button
-document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
-document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
-document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
 </script>
 
 <button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
@@ -1629,5 +1624,12 @@ document.getElementById('qr-modal-close').addEventListener('click',()=>document.
     <p>darawa-io.github.io/ARLABS/electric_force_lab.html</p>
   </div>
 </div>
+
+<script>
+// QR button
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+</script>
 </body>
 </html>
