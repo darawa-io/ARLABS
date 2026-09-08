@@ -9,15 +9,15 @@
 	
 	<link rel="icon" type="image/png" href="assets/logo1.png">
 
-    <meta name="description" content="Explore DARAWA, an advanced virtual laboratory offering high-precision, interactive physics simulations and AR-ready experiments across optics, kinematics, electricity, and nuclear physics.">
-    <meta name="keywords" content="physics simulations, virtual laboratory, interactive physics labs, AR physics, online physics experiments, optics lab, kinematics, UAE physics teacher, STEM education">
+    <meta name="description" content="Explore DARAWA, an advanced virtual laboratory offering high-precision, interactive physics simulations and AR-ready experiments across optics, kinematics, electricity, fluids, and nuclear physics.">
+    <meta name="keywords" content="physics simulations, virtual laboratory, interactive physics labs, AR physics, online physics experiments, optics lab, kinematics, density lab, UAE physics teacher, STEM education">
     <meta name="author" content="DARAWA LAB">
     <meta name="robots" content="index, follow">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://darawa-io.github.io/ARLABS/index.html">
     <meta property="og:title" content="DARAWA | Interactive Physics Simulations & AR Labs">
-    <meta property="og:description" content="Step into a high-precision virtual physics laboratory. Run live interactive simulations for mechanics, optics, and electricity directly in your browser.">
+    <meta property="og:description" content="Step into a high-precision virtual physics laboratory. Run live interactive simulations for mechanics, optics, electricity, and fluids directly in your browser.">
     <meta property="og:image" content="https://darawa-io.github.io/ARLABS/assets/logo1.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -374,7 +374,7 @@
                 OF EVERYDAY PHYSICS
             </h1>
             <p class="text-lg text-gray-600 max-w-lg font-medium leading-relaxed">
-                Step into a high-precision virtual laboratory ecosystem. Run production-ready physics simulations built for exploring optics, kinematics, and nuclear science.
+                Step into a high-precision virtual laboratory ecosystem. Run production-ready physics simulations built for exploring optics, kinematics, fluids, and nuclear science.
             </p>
         </div>
         <div class="hero-image-underlay">
@@ -450,6 +450,19 @@
                     <div class="gallery-card" onclick="loadSimulation('Electric Force', 'https://darawa-io.github.io/ARLABS/electric_force_lab.html', [])">
                         <img src="https://darawa-io.github.io/ARLABS/assets/electricforce.png" alt="Electric Force Physics Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Electric+Force'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Electric Force</span>
+                    </div>
+                </div>
+
+                <!-- Fluids & Matter Category -->
+                <div class="category-header collapsed-header" onclick="toggleCategory('fluids-content')">
+                    <span>Fluids & Matter</span>
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                
+                <div id="fluids-content" class="category-content collapsed">
+                    <div class="gallery-card" onclick="loadSimulation('Density Lab', 'https://darawa-io.github.io/ARLABS/density_lab.html', [])">
+                        <img src="https://darawa-io.github.io/ARLABS/assets/density.png" alt="Density Virtual Lab Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Density+Lab'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Density Lab</span>
                     </div>
                 </div>
 
