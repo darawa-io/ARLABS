@@ -74,8 +74,13 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 
 #infoPanel{position:absolute;top:70px;left:14px;width:270px;max-width:calc(100vw - 320px);
   background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;
-  padding:15px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;}
+  padding:15px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;transition:max-height .1s;}
 #infoPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+#infoPanelHeader{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+#infoPanelToggle{background:none;border:none;color:rgba(180,200,255,0.5);font-size:13px;cursor:pointer;padding:2px 6px;transition:transform .25s;line-height:1;}
+#infoPanel.collapsed{max-height:52px;overflow:hidden;}
+#infoPanel.collapsed #infoPanelToggle{transform:rotate(-90deg);}
+#infoPanel.collapsed #infoPanelDivider,#infoPanel.collapsed #infoPanelBody{display:none;}
 .info-block h3{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:8px;}
 .info-block p{font-size:11.5px;line-height:1.65;color:rgba(210,222,250,0.82);margin-bottom:8px;}
 .info-block p:last-child{margin-bottom:0;}
@@ -119,6 +124,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overf
 .btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
 .btn.violet{border-color:rgba(181,122,255,0.4);color:var(--violet);background:rgba(181,122,255,0.06);}
 .sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.rv-pair{display:flex;gap:7px;flex-wrap:nowrap;flex-shrink:0;}
 .sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
 input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:80px;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
@@ -226,7 +232,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 </div>
 
 <div id="infoPanel">
-  <h2>Concept</h2>
+  <div id="infoPanelHeader">
+    <h2 style="margin-bottom:0;border-bottom:none;padding-bottom:0;">Concept</h2>
+    <button id="infoPanelToggle" aria-label="Collapse concept panel">▾</button>
+  </div>
+  <div class="hdiv" id="infoPanelDivider"></div>
+  <div id="infoPanelBody">
 
   <div id="info-measure" class="info-block">
     <h3>Reading Rulers &amp; Measuring Cylinders</h3>
@@ -308,6 +319,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="feedback-msg" id="fb-l"></div>
     </div>
   </div>
+
+  </div>
 </div>
 
 <div id="controls">
@@ -315,7 +328,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <span class="sw">block=<input type="range" id="sl-blocklen" min="2" max="18" step="0.5" value="8"><span id="lbl-blocklen">8.0cm</span></span>
     <span class="sw">liquid=<input type="range" id="sl-liqvol" min="10" max="90" step="1" value="40"><span id="lbl-liqvol">40cm³</span></span>
     <div class="sep"></div>
-    <button class="btn" id="btn-reset-measure">Reset</button>
+    <span class="rv-pair"><button class="btn" id="btn-reset-measure">Reset</button><button class="btn camreset-btn">⟲ View</button></span>
   </div>
 
   <div id="ctrl-basics" class="ctrl-block" style="display:none;">
@@ -333,7 +346,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <span class="sw">V=<input type="range" id="sl-bLiqV" min="10" max="90" step="1" value="50"><span id="lbl-bLiqV">50</span></span>
     </span>
     <div class="sep"></div>
-    <button class="btn" id="btn-reset-basics">Reset</button>
+    <span class="rv-pair"><button class="btn" id="btn-reset-basics">Reset</button><button class="btn camreset-btn">⟲ View</button></span>
   </div>
 
   <div id="ctrl-displacement" class="ctrl-block" style="display:none;">
@@ -345,7 +358,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="btn amber" id="btn-d-newrock">🎲 New Rock</button>
     <button class="btn green" id="btn-d-drop">💧 Drop into Water</button>
     <div class="sep"></div>
-    <button class="btn" id="btn-reset-displacement">Reset</button>
+    <span class="rv-pair"><button class="btn" id="btn-reset-displacement">Reset</button><button class="btn camreset-btn">⟲ View</button></span>
   </div>
 
   <div id="ctrl-floatsink" class="ctrl-block" style="display:none;">
@@ -356,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="btn amber" id="btn-obj-cycle">Object: Cork ▸</button>
     <button class="btn green" id="btn-f-drop">⬇ Drop object</button>
     <div class="sep"></div>
-    <button class="btn" id="btn-reset-float">Reset</button>
+    <span class="rv-pair"><button class="btn" id="btn-reset-float">Reset</button><button class="btn camreset-btn">⟲ View</button></span>
   </div>
 
   <div id="ctrl-layers" class="ctrl-block" style="display:none;">
@@ -368,12 +381,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="btn" id="btn-pour-alcohol">+ Alcohol</button>
     <div class="sep"></div>
     <button class="btn green" id="btn-l-settle">⇅ Settle</button>
-    <button class="btn" id="btn-reset-layers">Reset</button>
+    <span class="rv-pair"><button class="btn" id="btn-reset-layers">Reset</button><button class="btn camreset-btn">⟲ View</button></span>
   </div>
-
-  <div class="sep"></div>
-  <button class="btn" id="btn-camreset">⟲ View</button>
 </div>
+
 
 <div id="hint">🖐️ drag: rotate view · scroll / pinch: zoom</div>
 
@@ -1041,15 +1052,23 @@ document.getElementById('btn-d-drop').addEventListener('click', ()=>{
   if(state3.animating || state3.dropped) return;
   state3.animating = true;
   const startPos = rockHoverPos.clone();
-  const endPos = new THREE.Vector3(0.6, -1.85, 0);
+  const cylX = cylGroup3.position.x, cylZ = cylGroup3.position.z;
+  const abovePos = new THREE.Vector3(cylX, 1.55, cylZ);
+  const endPos = new THREE.Vector3(cylX, -1.85, cylZ);
   const v1 = state3.v1, v2 = state3.v1+state3.rockVol;
-  tween(1100, e=>{
-    rockMesh3.position.lerpVectors(startPos, endPos, e);
-    updateDisplacementWaterLevel(lerp(v1,v2,Math.min(1,e*1.15)));
+  // Phase 1: move horizontally to above the cylinder mouth (water unchanged)
+  tween(550, e=>{
+    rockMesh3.position.lerpVectors(startPos, abovePos, e);
   }, ()=>{
-    state3.dropped = true; state3.animating = false;
-    updateDisplacementWaterLevel(v2);
-    refreshDisplacementHud(); drawPanel2D();
+    // Phase 2: drop straight down into the cylinder while the water level rises
+    tween(950, e=>{
+      rockMesh3.position.lerpVectors(abovePos, endPos, e);
+      updateDisplacementWaterLevel(lerp(v1,v2,Math.min(1,e*1.15)));
+    }, ()=>{
+      state3.dropped = true; state3.animating = false;
+      updateDisplacementWaterLevel(v2);
+      refreshDisplacementHud(); drawPanel2D();
+    });
   });
 });
 document.getElementById('btn-d-check').addEventListener('click', ()=>{
@@ -1320,11 +1339,11 @@ function updateActive5(t){}
 /* ============================== TAB SWITCHING ============================== */
 const moduleGroups = { measure:grpMeasure, basics:grpBasics, displacement:grpDisplacement, floatsink:grpFloat, layers:grpLayers };
 const moduleCams = {
-  measure:{theta:0.28,phi:0.16,radius:8.5,cx:-0.4,cy:0.0,cz:0},
-  basics:{theta:0.35,phi:0.18,radius:6.5,cx:0,cy:0.1,cz:0},
-  displacement:{theta:0.35,phi:0.18,radius:7.5,cx:0.2,cy:0.1,cz:0},
-  floatsink:{theta:0.4,phi:0.16,radius:8,cx:0,cy:0,cz:0},
-  layers:{theta:0.3,phi:0.15,radius:7,cx:0,cy:-0.4,cz:0}
+  measure:{theta:0.28,phi:0.16,radius:7.8,cx:-0.4,cy:-0.5,cz:0},
+  basics:{theta:0.35,phi:0.18,radius:5.6,cx:0,cy:-1.85,cz:0},
+  displacement:{theta:0.35,phi:0.18,radius:6.6,cx:0.4,cy:-1.15,cz:0},
+  floatsink:{theta:0.4,phi:0.16,radius:7,cx:0,cy:-1.15,cz:0},
+  layers:{theta:0.3,phi:0.15,radius:6.3,cx:0,cy:-1.15,cz:0}
 };
 const moduleLabelFns = { measure:labelsMeasure, basics:labelsBasics, displacement:labelsDisplacement, floatsink:labelsFloat, layers:labelsLayers };
 const moduleUpdateFns = { measure:updateActive1, basics:updateActive2, displacement:updateActive3, floatsink:updateActive4, layers:updateActive5 };
@@ -1346,10 +1365,12 @@ function setActiveModule(id){
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> setActiveModule(btn.dataset.mod));
 });
-document.getElementById('btn-camreset').addEventListener('click', ()=>{
-  const c = moduleCams[activeModule];
-  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
-  applyOrbit();
+document.querySelectorAll('.camreset-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const c = moduleCams[activeModule];
+    orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+    applyOrbit();
+  });
 });
 setActiveModule('measure');
 
@@ -1374,6 +1395,11 @@ function animate(ts){
   renderer.render(scene3, cam3);
 }
 animate();
+
+// Info panel fold/unfold
+document.getElementById('infoPanelHeader').addEventListener('click', ()=>{
+  document.getElementById('infoPanel').classList.toggle('collapsed');
+});
 
 // QR button
 document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
