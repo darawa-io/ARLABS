@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Key Concept 2 | The Electromagnetic Spectrum</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --surface2:#10152a;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --orange:#ff8a5e;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.5);
+  --gamma:#ff5e72;
+  --xray:#ff8a5e;
+  --uv:#b57aff;
+  --infrared:#ff9f4d;
+  --microwave:#5bc8ff;
+  --radio:#4dffa0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(91,200,255,0.08), transparent),
+    radial-gradient(ellipse 900px 600px at 100% 10%, rgba(181,122,255,0.07), transparent),
+    var(--bg);
+  font-family:'DM Sans',sans-serif;font-weight:300;color:var(--text);
+  min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ===== HEADER / TABS ===== */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(7,9,15,0.86);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  padding:14px 18px;
+}
+.header-inner{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand img{width:34px;height:37px;flex-shrink:0;opacity:0.9;}
+.brand .brand-text{display:flex;flex-direction:column;gap:2px;}
+.brand .kc{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:2.2px;color:rgba(180,200,255,0.45);text-transform:uppercase;}
+.brand h1{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;letter-spacing:.2px;}
+#tabbar{display:flex;gap:5px;background:rgba(180,200,255,0.05);border:1px solid var(--border);border-radius:14px;padding:5px;overflow-x:auto;}
+#tabbar::-webkit-scrollbar{height:0;}
+.tab-btn{padding:9px 15px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.4px;white-space:nowrap;cursor:pointer;transition:all .18s;}
+.tab-btn:hover{color:#fff;}
+.tab-btn.on{background:rgba(91,200,255,0.18);color:#fff;}
+
+main{max-width:1180px;margin:0 auto;padding:28px 18px 80px;}
+.view{display:none;animation:fadeIn .35s ease;}
+.view.on{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.section-head{margin-bottom:20px;}
+.section-head .eyebrow{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,200,255,0.45);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.section-head h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;}
+.section-head p{font-size:13.5px;color:rgba(210,222,250,0.72);line-height:1.65;max-width:680px;}
+
+.card{
+  background:rgba(180,200,255,0.035);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+}
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+@media(max-width:900px){.grid2{grid-template-columns:1fr;} .grid3{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.grid3{grid-template-columns:1fr;}}
+
+/* ===== SPECTRUM TAB ===== */
+#spectrumBarWrap{position:relative;padding:10px 4px 30px;}
+#spectrumSvg{width:100%;height:64px;display:block;border-radius:10px;overflow:visible;}
+#spectrumSlider{width:100%;margin-top:6px;-webkit-appearance:none;height:6px;border-radius:3px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;}
+#spectrumSlider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;box-shadow:0 0 12px rgba(91,200,255,0.6);}
+#spectrumSlider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;}
+.band-labels{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,0.4);margin-top:4px;letter-spacing:.3px;}
+.band-labels span{flex:1;text-align:center;}
+.band-labels span:first-child{text-align:left;}
+.band-labels span:last-child{text-align:right;}
+.freq-wave-arrows{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.5px;margin-top:16px;padding-top:14px;border-top:1px dashed rgba(180,200,255,0.12);}
+.freq-wave-arrows .arrow-left{color:var(--red);}
+.freq-wave-arrows .arrow-right{color:var(--green);}
+
+.readout-tag{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green);background:rgba(77,255,160,.08);border:1px solid rgba(77,255,160,.25);border-radius:6px;padding:3px 9px;margin-bottom:10px;letter-spacing:.4px;}
+.readout-tag .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;}
+#bandName{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:10px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:8px;background:rgba(180,200,255,0.04);margin-bottom:6px;}
+.stat-row .l{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.6);}
+.stat-row .v{font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700;color:#fff;}
+#waveCanvas{width:100%;height:130px;display:block;border-radius:10px;background:rgba(180,200,255,0.03);border:1px solid var(--border);margin-top:8px;}
+.wave-legend{display:flex;gap:16px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,210,255,0.55);margin-top:6px;}
+.wave-legend span{display:flex;align-items:center;gap:5px;}
+.wave-legend i{width:14px;height:2px;display:inline-block;}
+
+.prop-list{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+.prop-item{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:rgba(210,222,250,0.85);}
+.prop-item .chk{flex-shrink:0;width:18px;height:18px;border-radius:5px;background:rgba(77,255,160,.12);border:1px solid rgba(77,255,160,.35);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:1px;}
+
+/* ===== USES TAB ===== */
+.band-card{
+  background:rgba(180,200,255,0.035);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all .2s;
+}
+.band-card:hover{background:rgba(180,200,255,0.06);}
+.band-card .bc-top{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.band-card .bc-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.band-card h3{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700;color:#fff;}
+.band-card .bc-arrow{margin-left:auto;color:rgba(180,200,255,0.4);font-size:12px;transition:transform .2s;}
+.band-card.open .bc-arrow{transform:rotate(90deg);}
+.band-card .bc-body{display:none;padding-top:8px;border-top:1px solid var(--border);margin-top:4px;}
+.band-card.open .bc-body{display:block;}
+.bc-body h4{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,200,255,0.45);margin:8px 0 5px;}
+.bc-body ul{padding-left:16px;}
+.bc-body li{font-size:12px;line-height:1.6;color:rgba(210,222,250,0.82);margin-bottom:2px;}
+.bc-body .hazard-txt{font-size:12px;line-height:1.6;color:rgba(255,150,160,0.85);}
+
+/* matching game */
+#matchGame{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px;}
+@media(max-width:700px){#matchGame{grid-template-columns:1fr;}}
+.match-col h4{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,200,255,0.45);margin-bottom:10px;}
+.match-item{padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(180,200,255,0.04);margin-bottom:7px;font-size:12.5px;cursor:pointer;transition:all .15s;user-select:none;}
+.match-item:hover{background:rgba(180,200,255,0.08);}
+.match-item.selected{border-color:var(--blue);background:rgba(91,200,255,0.14);color:#fff;}
+.match-item.correct{border-color:var(--green);background:rgba(77,255,160,0.14);color:#fff;}
+.match-item.wrong{border-color:var(--red);background:rgba(255,94,114,0.14);animation:shake .3s;}
+.match-item.done{opacity:.45;cursor:default;pointer-events:none;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+#matchStatus{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px;}
+.reset-btn{margin-top:10px;padding:8px 16px;border-radius:22px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;}
+.reset-btn:hover{background:rgba(180,200,255,0.14);}
+
+/* ===== SATELLITES TAB ===== */
+#satGlobeWrap{position:relative;background:radial-gradient(ellipse at 50% 25%, rgba(91,200,255,0.07), transparent), #060810;}
+#satCanvas{width:100%;height:440px;display:block;touch-action:none;cursor:grab;}
+#satCanvas:active{cursor:grabbing;}
+#satLabelCanvas{position:absolute;top:0;left:0;pointer-events:none;}
+#satHint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.4);letter-spacing:.5px;pointer-events:none;}
+.sat-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:12px 14px;font-family:'Space Mono',monospace;font-size:9.5px;color:rgba(180,210,255,.6);border-top:1px solid var(--border);}
+.sat-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.sat-legend span{display:flex;align-items:center;gap:6px;}
+.sat-check{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+.sat-check input{cursor:pointer;accent-color:#5bc8ff;width:12px;height:12px;}
+
+#walkOverlay{
+  position:absolute;top:12px;right:12px;width:196px;max-width:44%;
+  background:rgba(10,14,28,0.88);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:12px;
+  padding:10px 11px;z-index:6;
+}
+.walk-eyebrow{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:rgba(180,200,255,.45);margin-bottom:8px;}
+.walk-options{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;}
+.walk-opt{display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(210,222,250,.85);cursor:pointer;line-height:1.3;}
+.walk-opt input{cursor:pointer;accent-color:#ffc857;width:11px;height:11px;flex-shrink:0;}
+.walk-title{font-family:'Syne',sans-serif;font-size:11.5px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3;}
+.walk-text{font-size:9.8px;line-height:1.5;color:rgba(210,222,250,.78);margin-bottom:9px;}
+.walk-btns{display:flex;gap:6px;}
+.wbtn{padding:4px 10px;border-radius:16px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.08);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;line-height:1.4;}
+.wbtn:hover{background:rgba(180,200,255,0.16);}
+.wbtn.amber{border-color:rgba(255,200,87,.45);color:var(--amber);background:rgba(255,200,87,.1);}
+.wbtn.green{border-color:rgba(77,255,160,.45);color:var(--green);background:rgba(77,255,160,.1);}
+.wbtn:disabled{opacity:.35;cursor:not-allowed;}
+@media(max-width:640px){
+  #walkOverlay{max-width:58%;width:170px;padding:8px 9px;}
+  .walk-text{font-size:9.2px;}
+}
+.btn{padding:9px 16px;border-radius:22px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.green{border-color:rgba(77,255,160,.4);color:var(--green);background:rgba(77,255,160,.06);}
+.btn.amber{border-color:rgba(255,200,87,.4);color:var(--amber);background:rgba(255,200,87,.06);}
+.step-dots{display:flex;gap:6px;margin-bottom:12px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:rgba(180,200,255,.18);}
+.step-dot.active{background:var(--amber);}
+.step-dot.done{background:var(--green);}
+
+/* ===== SIGNALS TAB ===== */
+.mode-toggle{display:flex;gap:6px;margin-bottom:14px;}
+.mode-btn{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(180,200,255,0.18);background:rgba(180,200,255,0.04);color:var(--muted);font-family:'Space Mono',monospace;font-size:10.5px;cursor:pointer;text-align:center;transition:all .15s;}
+.mode-btn.on{background:rgba(77,255,160,0.14);border-color:var(--green);color:var(--green);}
+#signalCanvas{width:100%;height:200px;display:block;border-radius:10px;background:rgba(180,200,255,0.03);border:1px solid var(--border);}
+.slider-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
+.slider-row label{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap;}
+.slider-row input[type=range]{flex:1;-webkit-appearance:none;height:5px;border-radius:3px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;border:2px solid var(--violet);cursor:pointer;}
+.slider-row .val{font-family:'Space Mono',monospace;font-size:11px;color:#fff;width:34px;text-align:right;}
+.benefit-box{margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(255,200,87,0.06);border:1px solid rgba(255,200,87,0.2);font-size:12px;line-height:1.65;color:rgba(220,225,255,0.85);}
+.benefit-box b{color:var(--amber);}
+
+/* ===== CHALLENGE TAB ===== */
+#quizWrap{max-width:680px;margin:0 auto;}
+#quizProgress{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+#quizProgressBar{flex:1;height:6px;border-radius:3px;background:rgba(180,200,255,0.1);overflow:hidden;}
+#quizProgressFill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));width:0%;transition:width .3s;}
+#quizScoreTag{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap;}
+#quizCard{background:rgba(180,200,255,0.035);border:1px solid var(--border);border-radius:16px;padding:24px;}
+#quizQ{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff;line-height:1.5;margin-bottom:18px;}
+.quiz-opt{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(180,200,255,0.04);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-bottom:9px;transition:all .15s;}
+.quiz-opt:hover{background:rgba(180,200,255,0.09);}
+.quiz-opt.correct{border-color:var(--green);background:rgba(77,255,160,0.14);color:#fff;}
+.quiz-opt.wrong{border-color:var(--red);background:rgba(255,94,114,0.14);color:#fff;}
+.quiz-opt:disabled{cursor:default;}
+#quizExplain{display:none;margin-top:12px;padding:12px 14px;border-radius:10px;background:rgba(91,200,255,0.06);border:1px solid rgba(91,200,255,0.2);font-size:12.5px;line-height:1.6;color:rgba(220,230,255,0.88);}
+#quizNextBtn{display:none;margin-top:16px;padding:10px 20px;border-radius:22px;border:1px solid rgba(77,255,160,0.4);background:rgba(77,255,160,0.1);color:var(--green);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+#quizNextBtn:hover{background:rgba(77,255,160,0.18);}
+#quizResult{display:none;text-align:center;padding:40px 20px;}
+#quizResult .big{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:#fff;margin-bottom:6px;}
+#quizResult p{font-size:13px;color:rgba(210,222,250,0.75);margin-bottom:20px;}
+#quizRestartBtn{padding:11px 24px;border-radius:24px;border:1px solid rgba(91,200,255,0.4);background:rgba(91,200,255,0.12);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+#quizRestartBtn:hover{background:rgba(91,200,255,0.2);}
+
+.tag-pill{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);background:rgba(180,200,255,0.06);border:1px solid var(--border);border-radius:20px;padding:3px 10px;margin-right:5px;margin-bottom:5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <img src="assets/logo1.png" alt="Logo">
+      <div class="brand-text">
+        <span class="kc">PHY51 · Key Concept 2</span>
+        <h1>The Electromagnetic Spectrum</h1>
+      </div>
+    </div>
+    <div id="tabbar">
+      <button class="tab-btn on" data-tab="spectrum">Spectrum Explorer</button>
+      <button class="tab-btn" data-tab="uses">Behaviour &amp; Uses</button>
+      <button class="tab-btn" data-tab="satellites">Satellite Comms</button>
+      <button class="tab-btn" data-tab="signals">Digital vs Analogue</button>
+      <button class="tab-btn" data-tab="challenge">Challenge Mode</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= SPECTRUM TAB ================= -->
+<section class="view on" id="view-spectrum">
+  <div class="section-head">
+    <div class="eyebrow">Main Idea · Properties of Electromagnetic Waves</div>
+    <h2>One family, seven regions</h2>
+    <p>Electromagnetic waves are transverse waves — oscillations in electric and magnetic fields at right angles to the direction of travel. They form a continuous spectrum split into seven regions. Drag the marker below to explore how wavelength, frequency and energy change across the spectrum.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div id="spectrumBarWrap">
+      <svg id="spectrumSvg" viewBox="0 0 700 64" preserveAspectRatio="none"></svg>
+      <input type="range" id="spectrumSlider" min="0" max="1000" value="850">
+      <div class="band-labels">
+        <span>Gamma</span><span>X-ray</span><span>UV</span><span>Visible</span><span>Infrared</span><span>Microwave</span><span>Radio</span>
+      </div>
+      <div class="freq-wave-arrows">
+        <span class="arrow-left">&larr;&#8212;&#8212;&#8212; Increasing frequency</span>
+        <span class="arrow-right">Increasing wavelength &#8212;&#8212;&#8212;&rarr;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="readout-tag"><span class="dot" id="readoutDot"></span> Currently viewing</div>
+      <div id="bandName">Radio Waves</div>
+      <div class="stat-row"><span class="l">WAVELENGTH</span><span class="v" id="statWave">&gt; 1 m</span></div>
+      <div class="stat-row"><span class="l">FREQUENCY</span><span class="v" id="statFreq">&lt; 10&#8313; Hz</span></div>
+      <div class="stat-row"><span class="l">RELATIVE ENERGY</span><span class="v" id="statEnergy">Lowest</span></div>
+      <canvas id="waveCanvas"></canvas>
+      <div class="wave-legend">
+        <span><i style="background:var(--muted);"></i> Long-wave reference</span>
+        <span><i style="background:#fff;" id="legendCurrent"></i> Selected band</span>
+      </div>
+    </div>
+    <div class="card">
+      <h4 style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,200,255,0.45);margin-bottom:10px;">Shared by every EM wave</h4>
+      <div class="prop-list">
+        <div class="prop-item"><span class="chk">&#10003;</span> Transverse waves — oscillations in the electric and magnetic field are at right angles to the direction of travel.</div>
+        <div class="prop-item"><span class="chk">&#10003;</span> Transfer energy as radiation, from a source to an absorber.</div>
+        <div class="prop-item"><span class="chk">&#10003;</span> Can travel through a vacuum, such as the vacuum of space.</div>
+        <div class="prop-item"><span class="chk">&#10003;</span> All travel at the same speed through a vacuum (or air): <b style="color:#fff;">3 &times; 10&#8312; m/s</b>.</div>
+        <div class="prop-item"><span class="chk">&#10003;</span> Together they form one continuous spectrum, split into 7 regions by wavelength/frequency.</div>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:rgba(181,122,255,0.06);border:1px solid rgba(181,122,255,0.18);font-size:11.5px;line-height:1.6;color:rgba(220,225,255,0.85);">
+        Within visible light, red has the <b style="color:#fff;">lowest</b> frequency and violet the <b style="color:#fff;">highest</b> — that ordering (red&rarr;violet) continues the pattern of the whole spectrum (low freq&rarr;high freq).
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= USES & HAZARDS TAB ================= -->
+<section class="view" id="view-uses">
+  <div class="section-head">
+    <div class="eyebrow">Main Idea · Behaviour and Uses of EM Waves</div>
+    <h2>Why each region is used the way it is</h2>
+    <p>How an EM wave behaves in a substance depends on its frequency — which is why each region suits different jobs, and why some carry real hazards at high exposure. Tap a band to open it.</p>
+  </div>
+
+  <div class="grid3" id="bandCards"></div>
+
+  <div class="card" style="margin-top:22px;">
+    <div class="section-head" style="margin-bottom:8px;">
+      <div class="eyebrow">Interactive Activity</div>
+      <h2 style="font-size:19px;">Match the wave to its use</h2>
+      <p style="font-size:12.5px;">Select a wave on the left, then its correct use on the right. Get all seven to finish.</p>
+    </div>
+    <div id="matchGame">
+      <div class="match-col">
+        <h4>Wave</h4>
+        <div id="matchWaves"></div>
+      </div>
+      <div class="match-col">
+        <h4>Typical use</h4>
+        <div id="matchUses"></div>
+      </div>
+    </div>
+    <div id="matchStatus">0 / 7 matched</div>
+    <button class="reset-btn" id="matchReset">Reset activity</button>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="section-head" style="margin-bottom:6px;">
+      <h2 style="font-size:17px;">Communication systems rely on EM radiation</h2>
+    </div>
+    <div class="prop-list">
+      <div class="prop-item"><span class="chk" style="background:rgba(91,200,255,.12);border-color:rgba(91,200,255,.35);color:var(--blue);">&#8226;</span> Mobile phones &amp; wireless internet use <b style="color:#fff;">microwaves</b> — they penetrate some walls and only need a short aerial.</div>
+        <div class="prop-item"><span class="chk" style="background:rgba(77,255,160,.12);border-color:rgba(77,255,160,.35);color:var(--green);">&#8226;</span> Bluetooth uses <b style="color:#fff;">radio waves</b> — they pass through walls, though the signal weakens doing so.</div>
+        <div class="prop-item"><span class="chk" style="background:rgba(255,159,77,.12);border-color:rgba(255,159,77,.35);color:var(--infrared);">&#8226;</span> Optical fibres use <b style="color:#fff;">visible light or infrared</b> — glass is transparent to them, and they can carry very high data rates.</div>
+        <div class="prop-item"><span class="chk" style="background:rgba(91,200,255,.12);border-color:rgba(91,200,255,.35);color:var(--blue);">&#8226;</span> Satellite communication is mainly by <b style="color:#fff;">microwaves</b>: low-orbit satellites for some satellite phones; geostationary satellites for some satellite phones and direct broadcast TV.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SATELLITES TAB ================= -->
+<section class="view" id="view-satellites">
+  <div class="section-head">
+    <div class="eyebrow">Application · Communicating Using Satellites</div>
+    <h2>Two ways to bounce a signal off space</h2>
+    <p>Communication with artificial satellites is mainly by microwaves. A <b style="color:#fff;">geostationary</b> satellite stays above one point on Earth's surface and covers a large area; <b style="color:#fff;">low Earth orbit</b> satellites move around the Earth and cover a much smaller area, so several are needed to relay a signal on. Drag the globe to rotate it, and scroll to zoom.</p>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div id="satGlobeWrap">
+      <canvas id="satCanvas"></canvas>
+      <canvas id="satLabelCanvas"></canvas>
+
+      <div id="walkOverlay">
+        <div class="walk-eyebrow">Send a signal &middot; A &rarr; B</div>
+        <div class="walk-options">
+          <label class="walk-opt"><input type="radio" name="walkScenario" value="geo" checked> Geostationary route</label>
+          <label class="walk-opt"><input type="radio" name="walkScenario" value="leo"> Low orbit route</label>
+        </div>
+        <div id="walkDots" class="step-dots"></div>
+        <div id="walkTitle" class="walk-title"></div>
+        <div id="walkText" class="walk-text"></div>
+        <div class="walk-btns">
+          <button class="wbtn amber" id="walkPlay" title="Play">&#9654;</button>
+          <button class="wbtn" id="walkPrev" title="Back">&larr;</button>
+          <button class="wbtn green" id="walkNext" title="Next">&rarr;</button>
+        </div>
+      </div>
+
+      <div id="satHint">drag to rotate &middot; scroll / pinch to zoom</div>
+    </div>
+    <div class="sat-legend">
+      <span><i style="background:#ffc857;"></i> Ground station</span>
+      <label class="sat-check"><input type="checkbox" id="chkGeo" checked><i style="background:#b57aff;"></i> Geostationary</label>
+      <label class="sat-check"><input type="checkbox" id="chkLeo" checked><i style="background:#5bc8ff;"></i> Low orbit</label>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SIGNALS TAB ================= -->
+<section class="view" id="view-signals">
+  <div class="section-head">
+    <div class="eyebrow">Other Idea · Digital and Analogue Signals</div>
+    <h2>Two ways to carry the same information</h2>
+    <p>A sound, image or any other information can be carried as an analogue signal (continuous in value and time) or a digital signal (discrete — on/off, represented by binary numbers).</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="mode-toggle">
+        <button class="mode-btn on" id="btnAnalogue">Analogue</button>
+        <button class="mode-btn" id="btnDigital">Digital</button>
+      </div>
+      <canvas id="signalCanvas"></canvas>
+      <div class="slider-row">
+        <label>NOISE</label>
+        <input type="range" id="noiseSlider" min="0" max="100" value="0">
+        <span class="val" id="noiseVal">0%</span>
+      </div>
+      <div class="benefit-box" id="signalBenefit"></div>
+    </div>
+    <div class="card">
+      <h4 style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,200,255,0.45);margin-bottom:10px;">Definitions</h4>
+      <p style="font-size:12.5px;line-height:1.7;color:rgba(210,222,250,0.85);margin-bottom:12px;"><b style="color:#fff;">Analogue:</b> a signal that is continuous in both value and time. All naturally-occurring signals are analogue.</p>
+      <p style="font-size:12.5px;line-height:1.7;color:rgba(210,222,250,0.85);margin-bottom:16px;"><b style="color:#fff;">Digital:</b> a signal that is discrete in both value and time — either on or off — represented using binary numbers.</p>
+      <h4 style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,200,255,0.45);margin-bottom:10px;">Why digital wins for data</h4>
+      <div class="prop-list">
+        <div class="prop-item"><span class="chk">&#10003;</span> Higher rate of transmission — more data, faster and more accurately.</div>
+        <div class="prop-item"><span class="chk">&#10003;</span> Longer range — a digital signal can be regenerated accurately, even after noise has been picked up.</div>
+        <div class="prop-item"><span class="chk">&#10003;</span> Digital signals over optical fibre carry more data than a copper cable.</div>
+      </div>
+      <p style="font-size:11.5px;line-height:1.6;color:rgba(180,200,255,0.55);margin-top:14px;">Try the noise slider: an analogue wave gets permanently distorted, but a digital signal can still be read correctly and regenerated cleanly — until the noise is severe enough to flip a bit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHALLENGE TAB ================= -->
+<section class="view" id="view-challenge">
+  <div class="section-head">
+    <div class="eyebrow">Challenge Mode</div>
+    <h2>Test yourself</h2>
+    <p>Twelve questions covering the whole of Key Concept 2. Pick an answer to see if you're right.</p>
+  </div>
+
+  <div id="quizWrap">
+    <div id="quizProgress">
+      <div id="quizProgressBar"><div id="quizProgressFill"></div></div>
+      <div id="quizScoreTag">Score 0 / 0</div>
+    </div>
+    <div id="quizCard">
+      <div id="quizQ"></div>
+      <div id="quizOpts"></div>
+      <div id="quizExplain"></div>
+      <button id="quizNextBtn">Next question &#8594;</button>
+    </div>
+    <div id="quizResult">
+      <div class="big" id="quizFinalScore">0/0</div>
+      <p id="quizFinalMsg">Nice work.</p>
+      <button id="quizRestartBtn">Try again</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ============================== DATA ============================== */
+const bands = [
+  {id:'gamma', name:'Gamma Rays', color:'#ff5e72', pos:[0,120], wave:'&lt; 10 pm', freq:'&gt; 10&sup3;&sup2; Hz (very high)', energy:'Highest',
+    uses:['Sterilizing food and medical equipment','Detection and treatment of cancer'],
+    hazard:'Mutation or damage to cells in the body.'},
+  {id:'xray', name:'X-Rays', color:'#ff8a5e', pos:[120,240], wave:'10 pm &ndash; 10 nm', freq:'very high', energy:'Very high',
+    uses:['Medical scanning','Security scanners'],
+    hazard:'Mutation or damage to cells in the body.'},
+  {id:'uv', name:'Ultraviolet', color:'#b57aff', pos:[240,360], wave:'10 &ndash; 400 nm', freq:'high', energy:'High',
+    uses:['Security marking','Detecting fake bank notes','Sterilizing water'],
+    hazard:'Damage to surface cells and eyes &mdash; skin cancer, eye conditions.'},
+  {id:'visible', name:'Visible Light', color:'visgrad', pos:[360,430], wave:'400 &ndash; 700 nm', freq:'medium', energy:'Medium',
+    uses:['Vision','Photography','Illumination'],
+    hazard:'&mdash;'},
+  {id:'infrared', name:'Infrared', color:'#ff9f4d', pos:[430,600], wave:'700 nm &ndash; 1 mm', freq:'medium-low', energy:'Medium-low',
+    uses:['Electric grills','Remote controllers for TVs','Intruder alarms','Thermal imaging','Optical fibres'],
+    hazard:'Skin burns.'},
+  {id:'microwave', name:'Microwaves', color:'#5bc8ff', pos:[600,820], wave:'1 mm &ndash; 1 m', freq:'low', energy:'Low',
+    uses:['Satellite television','Mobile phones (cell phones)','Microwave ovens'],
+    hazard:'Internal heating of body cells.'},
+  {id:'radio', name:'Radio Waves', color:'#4dffa0', pos:[820,1000], wave:'&gt; 1 m', freq:'lowest', energy:'Lowest',
+    uses:['Radio and television transmissions','Astronomy','Radio frequency identification (RFID)','Bluetooth'],
+    hazard:'&mdash;'}
+];
+function bandAt(v){
+  for(const b of bands){ if(v>=b.pos[0] && v<=b.pos[1]) return b; }
+  return bands[bands.length-1];
+}
+function bandColor(b){
+  if(b.color==='visgrad') return '#9bffb0';
+  return b.color;
+}
+
+/* ============================== TAB SWITCHING ============================== */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on', b===btn));
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.id==='view-'+btn.dataset.tab));
+    if(btn.dataset.tab==='satellites' && window.__resizeSatGlobe) requestAnimationFrame(window.__resizeSatGlobe);
+  });
+});
+
+/* ============================== SPECTRUM BAR (SVG) ============================== */
+const svg = document.getElementById('spectrumSvg');
+(function buildSpectrumSvg(){
+  const defs = `<defs>
+    <linearGradient id="visRainbow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff5e72"/><stop offset="20%" stop-color="#ff9f4d"/>
+      <stop offset="40%" stop-color="#ffe45e"/><stop offset="60%" stop-color="#4dffa0"/>
+      <stop offset="80%" stop-color="#5bc8ff"/><stop offset="100%" stop-color="#b57aff"/>
+    </linearGradient>
+  </defs>`;
+  let rects = '';
+  bands.forEach(b=>{
+    const x0 = b.pos[0]*0.7, x1 = b.pos[1]*0.7;
+    const fill = b.color==='visgrad' ? 'url(#visRainbow)' : b.color;
+    rects += `<rect x="${x0}" y="10" width="${x1-x0}" height="44" rx="6" fill="${fill}" opacity="0.85"></rect>`;
+  });
+  svg.innerHTML = defs + rects;
+})();
+
+const slider = document.getElementById('spectrumSlider');
+const waveCanvas = document.getElementById('waveCanvas');
+const wctx = waveCanvas.getContext('2d');
+function sizeCanvas(cv){
+  const r = cv.getBoundingClientRect();
+  cv.width = r.width * devicePixelRatio; cv.height = r.height * devicePixelRatio;
+  const ctx = cv.getContext('2d'); ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  return {w:r.width,h:r.height};
+}
+
+function drawWave(freqFactor, color){
+  const {w,h} = sizeCanvas(waveCanvas);
+  return {w,h};
+}
+
+let waveTime = 0;
+function renderSpectrum(){
+  const v = +slider.value;
+  const b = bandAt(v);
+  document.getElementById('bandName').innerHTML = b.name;
+  document.getElementById('statWave').innerHTML = b.wave;
+  document.getElementById('statFreq').innerHTML = b.freq.replace(/^\w/,c=>c);
+  document.getElementById('statEnergy').textContent = b.energy;
+  const col = bandColor(b);
+  document.getElementById('readoutDot').style.background = col;
+  document.getElementById('readoutDot').style.color = col;
+  document.getElementById('legendCurrent').style.background = col;
+
+  // draw two waves: long reference (radio-like) vs current band, log-scaled for illustration
+  const {w,h} = sizeCanvas(waveCanvas);
+  wctx.clearRect(0,0,w,h);
+  const midY = h/2;
+  // reference wave - long wavelength (few cycles)
+  wctx.strokeStyle = 'rgba(180,200,255,0.35)';
+  wctx.lineWidth = 1.5;
+  wctx.beginPath();
+  const refCycles = 1.5;
+  for(let x=0;x<=w;x++){
+    const y = midY + Math.sin((x/w)*refCycles*Math.PI*2) * (h*0.28);
+    if(x===0) wctx.moveTo(x,y); else wctx.lineTo(x,y);
+  }
+  wctx.stroke();
+  // current band wave - cycles scaled inversely with pos (higher pos value = lower freq = fewer cycles)
+  // map v (0..1000, 0=gamma high freq) to cycles between 2 (radio) and 18 (gamma)
+  const cycles = 2 + (1000 - v)/1000 * 16;
+  wctx.strokeStyle = col === 'visgrad' ? '#9bffb0' : col;
+  wctx.lineWidth = 2.4;
+  wctx.shadowColor = col === 'visgrad' ? '#9bffb0' : col;
+  wctx.shadowBlur = 6;
+  wctx.beginPath();
+  for(let x=0;x<=w;x++){
+    const y = midY + Math.sin((x/w)*cycles*Math.PI*2) * (h*0.28);
+    if(x===0) wctx.moveTo(x,y); else wctx.lineTo(x,y);
+  }
+  wctx.stroke();
+  wctx.shadowBlur = 0;
+}
+slider.addEventListener('input', renderSpectrum);
+window.addEventListener('resize', renderSpectrum);
+renderSpectrum();
+
+/* ============================== USES: BAND CARDS ============================== */
+const bandCardsEl = document.getElementById('bandCards');
+bands.forEach(b=>{
+  const col = bandColor(b);
+  const el = document.createElement('div');
+  el.className = 'band-card';
+  el.innerHTML = `
+    <div class="bc-top">
+      <span class="bc-dot" style="background:${col}"></span>
+      <h3>${b.name}</h3>
+      <span class="bc-arrow">&#9656;</span>
+    </div>
+    <div class="bc-body">
+      <h4>Typical uses</h4>
+      <ul>${b.uses.map(u=>`<li>${u}</li>`).join('')}</ul>
+      <h4>Hazard of excess exposure</h4>
+      <div class="hazard-txt">${b.hazard}</div>
+    </div>
+  `;
+  el.addEventListener('click', ()=> el.classList.toggle('open'));
+  bandCardsEl.appendChild(el);
+});
+
+/* ============================== MATCHING GAME ============================== */
+const matchUseText = {
+  gamma:'Detection and treatment of cancer',
+  xray:'Medical scanning and security scanners',
+  uv:'Detecting fake bank notes',
+  visible:'Vision and photography',
+  infrared:'Remote controllers for televisions',
+  microwave:'Cooking food in a microwave oven',
+  radio:'Bluetooth and radio/TV transmission'
+};
+let matchSelectedWave = null;
+let matchDoneCount = 0;
+function shuffle(arr){ return arr.map(a=>[Math.random(),a]).sort((a,b)=>a[0]-b[0]).map(a=>a[1]); }
+
+function buildMatchGame(){
+  const wavesEl = document.getElementById('matchWaves');
+  const usesEl = document.getElementById('matchUses');
+  wavesEl.innerHTML=''; usesEl.innerHTML='';
+  matchSelectedWave = null; matchDoneCount = 0;
+  document.getElementById('matchStatus').textContent = '0 / 7 matched';
+
+  shuffle(bands).forEach(b=>{
+    const d = document.createElement('div');
+    d.className='match-item'; d.textContent=b.name; d.dataset.id=b.id;
+    d.addEventListener('click', ()=>{
+      if(d.classList.contains('done')) return;
+      document.querySelectorAll('#matchWaves .match-item').forEach(x=>x.classList.remove('selected'));
+      d.classList.add('selected');
+      matchSelectedWave = b.id;
+    });
+    wavesEl.appendChild(d);
+  });
+
+  const shuffledUses = shuffle(bands);
+  shuffledUses.forEach(b=>{
+    const d = document.createElement('div');
+    d.className='match-item'; d.textContent = matchUseText[b.id]; d.dataset.id=b.id;
+    d.addEventListener('click', ()=>{
+      if(d.classList.contains('done') || !matchSelectedWave) return;
+      if(matchSelectedWave === b.id){
+        d.classList.remove('wrong'); d.classList.add('correct','done');
+        const waveEl = document.querySelector(`#matchWaves .match-item[data-id="${matchSelectedWave}"]`);
+        waveEl.classList.remove('selected'); waveEl.classList.add('correct','done');
+        matchDoneCount++;
+        document.getElementById('matchStatus').textContent = matchDoneCount+' / 7 matched';
+        matchSelectedWave = null;
+        if(matchDoneCount===7){ document.getElementById('matchStatus').textContent = 'All matched! Nice work.'; }
+      } else {
+        d.classList.add('wrong');
+        setTimeout(()=>d.classList.remove('wrong'), 350);
+      }
+    });
+    usesEl.appendChild(d);
+  });
+}
+document.getElementById('matchReset').addEventListener('click', buildMatchGame);
+buildMatchGame();
+
+/* ============================== SIGNALS TAB ============================== */
+const sigCanvas = document.getElementById('signalCanvas');
+const sctx = sigCanvas.getContext('2d');
+let signalMode = 'analogue';
+let noise = 0;
+const btnA = document.getElementById('btnAnalogue');
+const btnD = document.getElementById('btnDigital');
+const benefitBox = document.getElementById('signalBenefit');
+
+function setSignalMode(m){
+  signalMode = m;
+  btnA.classList.toggle('on', m==='analogue');
+  btnD.classList.toggle('on', m==='digital');
+  benefitBox.innerHTML = m==='analogue'
+    ? '<b>Analogue:</b> continuous in value and time. Notice how noise permanently blends into the wave shape &mdash; once distorted, the original signal can\'t be perfectly recovered.'
+    : '<b>Digital:</b> discrete on/off values (binary). Even with noise added, as long as each pulse can still be told apart from 0 or 1, the receiver can regenerate a perfectly clean signal &mdash; this is why digital signals travel further accurately.';
+  drawSignal();
+}
+btnA.addEventListener('click', ()=>setSignalMode('analogue'));
+btnD.addEventListener('click', ()=>setSignalMode('digital'));
+
+const noiseSlider = document.getElementById('noiseSlider');
+noiseSlider.addEventListener('input', ()=>{
+  noise = +noiseSlider.value;
+  document.getElementById('noiseVal').textContent = noise+'%';
+  drawSignal();
+});
+
+let sigPhase = 0;
+function drawSignal(){
+  const {w,h} = sizeCanvas(sigCanvas);
+  sctx.clearRect(0,0,w,h);
+  const midY = h/2;
+  sctx.strokeStyle = 'rgba(180,200,255,0.12)';
+  sctx.lineWidth = 1;
+  sctx.beginPath(); sctx.moveTo(0,midY); sctx.lineTo(w,midY); sctx.stroke();
+
+  const amp = h*0.32;
+  const noiseAmp = (noise/100) * h * 0.22;
+
+  if(signalMode==='analogue'){
+    sctx.strokeStyle = '#5bc8ff';
+    sctx.lineWidth = 2.2;
+    sctx.shadowColor='#5bc8ff'; sctx.shadowBlur=5;
+    sctx.beginPath();
+    for(let x=0;x<=w;x++){
+      const base = Math.sin((x/w)*4*Math.PI*2 + sigPhase);
+      const n = (Math.random()-0.5)*2*noiseAmp;
+      const y = midY + base*amp + n;
+      if(x===0) sctx.moveTo(x,y); else sctx.lineTo(x,y);
+    }
+    sctx.stroke();
+    sctx.shadowBlur=0;
+  } else {
+    // digital square wave with bits, plus noisy version overlaid, then "regenerated" clean signal
+    const bits = [1,0,1,1,0,0,1,0,1,1,0,1];
+    const step = w/bits.length;
+    // noisy raw signal (thin, faded)
+    sctx.strokeStyle = 'rgba(255,150,160,0.55)';
+    sctx.lineWidth = 1.4;
+    sctx.beginPath();
+    for(let x=0;x<=w;x++){
+      const bitIdx = Math.min(bits.length-1, Math.floor(x/step));
+      const target = bits[bitIdx]===1 ? midY-amp : midY+amp;
+      const n = (Math.random()-0.5)*2*noiseAmp*1.4;
+      const y = target + n;
+      if(x===0) sctx.moveTo(x,y); else sctx.lineTo(x,y);
+    }
+    sctx.stroke();
+    // clean regenerated square wave (bold) - stays perfect regardless of noise, unless noise is extreme (>85 flips a bit visually)
+    sctx.strokeStyle = '#4dffa0';
+    sctx.lineWidth = 2.6;
+    sctx.shadowColor='#4dffa0'; sctx.shadowBlur=6;
+    sctx.beginPath();
+    let prevY = null;
+    for(let i=0;i<bits.length;i++){
+      let bit = bits[i];
+      if(noise>85 && (i===3)) bit = bit===1?0:1; // simulate a flipped bit at extreme noise
+      const y = bit===1 ? midY-amp : midY+amp;
+      const x0 = i*step, x1=(i+1)*step;
+      if(prevY===null){ sctx.moveTo(x0,y); } else { sctx.lineTo(x0,prevY); sctx.lineTo(x0,y); }
+      sctx.lineTo(x1,y);
+      prevY = y;
+    }
+    sctx.stroke();
+    sctx.shadowBlur=0;
+  }
+}
+function signalLoop(){
+  sigPhase += 0.045;
+  drawSignal();
+  requestAnimationFrame(signalLoop);
+}
+setSignalMode('analogue');
+signalLoop();
+
+/* ============================== CHALLENGE MODE QUIZ ============================== */
+const quizQuestions = [
+  {q:'Which type of wave motion describes all electromagnetic waves?',
+   opts:['Longitudinal','Transverse','Torsional','Standing only'],
+   correct:1,
+   exp:'EM waves are transverse waves: the electric and magnetic field oscillations are at right angles to the direction the wave travels.'},
+  {q:'What is the speed of electromagnetic waves in a vacuum?',
+   opts:['3.0 &times; 10&#8309; m/s','3.0 &times; 10&#8310; m/s','3.0 &times; 10&#8312; m/s','3.0 &times; 10&sup1;&#8304; m/s'],
+   correct:2,
+   exp:'All EM waves travel at 3.0 &times; 10&#8312; m/s through a vacuum, and approximately the same speed through air.'},
+  {q:'Put these in order from lowest to highest frequency: X-rays, Radio waves, Visible light.',
+   opts:['Radio &lt; Visible &lt; X-rays','X-rays &lt; Visible &lt; Radio','Visible &lt; Radio &lt; X-rays','X-rays &lt; Radio &lt; Visible'],
+   correct:0,
+   exp:'The spectrum runs Radio &rarr; Microwave &rarr; Infrared &rarr; Visible &rarr; UV &rarr; X-ray &rarr; Gamma, in order of increasing frequency.'},
+  {q:'Which region of the spectrum is mainly used for communicating with artificial satellites?',
+   opts:['Radio waves','Microwaves','Infrared','Ultraviolet'],
+   correct:1,
+   exp:'Communication with artificial satellites &mdash; including satellite phones and direct broadcast TV &mdash; is mainly by microwaves.'},
+  {q:'Why does Bluetooth use radio waves rather than microwaves?',
+   opts:['Radio waves travel faster','Radio waves pass through walls, though the signal weakens','Radio waves carry more data','Radio waves are safer at any exposure'],
+   correct:1,
+   exp:'Radio waves pass through walls (with the signal weakened), which suits short-range device communication like Bluetooth.'},
+  {q:'Excessive exposure to ultraviolet radiation can lead to:',
+   opts:['Internal heating of body cells','Skin burns only','Skin cancer and eye conditions','No known harmful effects'],
+   correct:2,
+   exp:'UV can damage surface cells and eyes, which can lead to skin cancer and eye conditions.'},
+  {q:'Which hazard is specifically associated with microwaves?',
+   opts:['Mutation of cells','Skin burns','Internal heating of body cells','Eye damage'],
+   correct:2,
+   exp:'Excessive microwave exposure causes internal heating of body cells.'},
+  {q:'Optical fibres used for broadband and cable TV rely on which property of glass?',
+   opts:['Glass is magnetic','Glass is transparent to visible light and some infrared','Glass reflects all EM waves','Glass amplifies radio waves'],
+   correct:1,
+   exp:'Glass is transparent to visible light and some infrared, so fibres can carry these waves (and the high data rates they support) over long distances.'},
+  {q:'Which best describes an analogue signal?',
+   opts:['Discrete in value and time','Continuous in value and time','Always digital in origin','Only used for images'],
+   correct:1,
+   exp:'Analogue signals are continuous in both value and time; naturally occurring signals are analogue.'},
+  {q:'What is a key benefit of digital signalling over analogue?',
+   opts:['It cannot be corrupted by any noise','It always requires less bandwidth','Higher data transmission rate and signals can be accurately regenerated over distance','It cannot be transmitted through optical fibres'],
+   correct:2,
+   exp:'Digital signals transmit data faster and more accurately, and because they are discrete (on/off), they can be regenerated cleanly even after picking up some noise, giving greater range.'},
+  {q:'X-rays are typically used for:',
+   opts:['Sterilizing water','Medical scanning and security scanners','Cooking food','Remote controls'],
+   correct:1,
+   exp:'X-rays are used in medical scanning and security scanners, among other imaging uses.'},
+  {q:'Which satellite type do some satellite phones use for low-orbit communication?',
+   opts:['Direct broadcast satellites only','Low orbit artificial satellites','Weather balloons','Ground-based repeaters'],
+   correct:1,
+   exp:'Some satellite phones use low orbit artificial satellites, while others (along with direct broadcast TV) use geostationary satellites.'}
+];
+
+let quizIndex = 0, quizScore = 0, quizOrder = [];
+function shuffleQuiz(){ quizOrder = shuffle(quizQuestions.map((q,i)=>i)); }
+
+function startQuiz(){
+  quizIndex = 0; quizScore = 0;
+  shuffleQuiz();
+  document.getElementById('quizResult').style.display='none';
+  document.getElementById('quizCard').style.display='block';
+  document.getElementById('quizProgress').style.display='flex';
+  renderQuizQuestion();
+}
+function renderQuizQuestion(){
+  const total = quizQuestions.length;
+  document.getElementById('quizProgressFill').style.width = (quizIndex/total*100)+'%';
+  document.getElementById('quizScoreTag').textContent = `Score ${quizScore} / ${quizIndex}`;
+  const qObj = quizQuestions[quizOrder[quizIndex]];
+  document.getElementById('quizQ').innerHTML = `${quizIndex+1}. ${qObj.q}`;
+  const optsEl = document.getElementById('quizOpts');
+  optsEl.innerHTML = '';
+  document.getElementById('quizExplain').style.display='none';
+  document.getElementById('quizNextBtn').style.display='none';
+  qObj.opts.forEach((opt,i)=>{
+    const b = document.createElement('button');
+    b.className='quiz-opt'; b.innerHTML = opt;
+    b.addEventListener('click', ()=>selectQuizAnswer(i));
+    optsEl.appendChild(b);
+  });
+}
+function selectQuizAnswer(i){
+  const qObj = quizQuestions[quizOrder[quizIndex]];
+  const btns = document.querySelectorAll('.quiz-opt');
+  btns.forEach(b=>b.disabled=true);
+  btns[qObj.correct].classList.add('correct');
+  if(i!==qObj.correct){ btns[i].classList.add('wrong'); } else { quizScore++; }
+  document.getElementById('quizExplain').style.display='block';
+  document.getElementById('quizExplain').innerHTML = qObj.exp;
+  document.getElementById('quizNextBtn').style.display='inline-block';
+  document.getElementById('quizScoreTag').textContent = `Score ${quizScore} / ${quizIndex+1}`;
+}
+document.getElementById('quizNextBtn').addEventListener('click', ()=>{
+  quizIndex++;
+  if(quizIndex>=quizQuestions.length){ finishQuiz(); } else { renderQuizQuestion(); }
+});
+function finishQuiz(){
+  document.getElementById('quizCard').style.display='none';
+  document.getElementById('quizProgress').style.display='none';
+  const total = quizQuestions.length;
+  document.getElementById('quizFinalScore').textContent = `${quizScore}/${total}`;
+  let msg = 'Solid effort &mdash; review the sections above and try again.';
+  if(quizScore===total) msg = 'Perfect score! You\'ve got Key Concept 2 nailed.';
+  else if(quizScore>=total*0.75) msg = 'Great work &mdash; just a couple to brush up on.';
+  document.getElementById('quizFinalMsg').innerHTML = msg;
+  document.getElementById('quizResult').style.display='block';
+}
+document.getElementById('quizRestartBtn').addEventListener('click', startQuiz);
+startQuiz();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================== SATELLITE COMMS 3D SCENE ============================== */
+(function(){
+  const canvas = document.getElementById('satCanvas');
+  const labelCanvas = document.getElementById('satLabelCanvas');
+  const wrap = document.getElementById('satGlobeWrap');
+  const lctx = labelCanvas.getContext('2d');
+
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setClearColor(0x000000, 0);
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(45, 1.6, 0.1, 100);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.15));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.85); sun.position.set(5,3,4); scene.add(sun);
+
+  function resizeSat(){
+    const r = wrap.getBoundingClientRect();
+    const w = r.width || 800;
+    const h = canvas.clientHeight || 440;
+    renderer.setSize(w, h, false);
+    cam.aspect = w/h; cam.updateProjectionMatrix();
+    const dpr = window.devicePixelRatio || 1;
+    labelCanvas.width = w*dpr; labelCanvas.height = h*dpr;
+    labelCanvas.style.width = w+'px'; labelCanvas.style.height = h+'px';
+    lctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resizeSat);
+  window.__resizeSatGlobe = resizeSat;
+
+  /* ---------- Earth ---------- */
+  const R = 2;
+  function makeEarthTexture(){
+    const c = document.createElement('canvas'); c.width=1024; c.height=512;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,512);
+    grad.addColorStop(0,'#c7e8ff'); grad.addColorStop(0.5,'#8fd0f0'); grad.addColorStop(1,'#c7e8ff');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,1024,512);
+    ctx.fillStyle = '#6fbf7a';
+    function blob(cx,cy,pts){
+      ctx.beginPath();
+      pts.forEach((p,i)=>{ const x=cx+p[0], y=cy+p[1]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+      ctx.closePath(); ctx.fill();
+    }
+    blob(230,190,[[-40,-90],[10,-100],[40,-40],[20,20],[35,90],[10,140],[-20,90],[-35,20],[-30,-40]]); // Americas
+    blob(520,220,[[-25,-110],[20,-100],[45,-40],[35,30],[45,120],[10,160],[-20,120],[-35,40],[-25,-30]]); // Europe/Africa
+    blob(700,160,[[-60,-60],[10,-90],[90,-60],[110,0],[70,50],[0,40],[-50,10]]); // Asia
+    blob(830,330,[[-30,-20],[30,-25],[40,10],[10,25],[-25,15]]); // Australia
+    return new THREE.CanvasTexture(c);
+  }
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(R,48,48), new THREE.MeshPhongMaterial({map:makeEarthTexture(), shininess:4}));
+  scene.add(earth);
+  const atmo = new THREE.Mesh(new THREE.SphereGeometry(R*1.035,48,48), new THREE.MeshBasicMaterial({color:0x5bc8ff, transparent:true, opacity:0.09}));
+  scene.add(atmo);
+
+  /* ---------- Helpers ---------- */
+  function latLonToVec3(lat,lon,r){
+    const phi=(90-lat)*Math.PI/180, theta=(lon+180)*Math.PI/180;
+    return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta));
+  }
+  function slerpPoint(pA,pB,t,radius){
+    const dirA=pA.clone().normalize(), dirB=pB.clone().normalize();
+    const dotp=THREE.MathUtils.clamp(dirA.dot(dirB),-1,1);
+    const omega=Math.acos(dotp);
+    if(omega<1e-6) return dirA.multiplyScalar(radius);
+    const s=Math.sin(omega);
+    const a=Math.sin((1-t)*omega)/s, b=Math.sin(t*omega)/s;
+    return dirA.multiplyScalar(a).add(dirB.multiplyScalar(b)).multiplyScalar(radius);
+  }
+  function wrapAngle(a){ while(a>Math.PI) a-=Math.PI*2; while(a<-Math.PI) a+=Math.PI*2; return a; }
+  function angleFromPos(v){
+    const r = v.length();
+    return { theta: Math.atan2(v.z, v.x), phi: Math.acos(THREE.MathUtils.clamp(v.y/r, -1, 1)) };
+  }
+  function makeSatMesh(color, scale){
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(0.12,0.12,0.18), new THREE.MeshPhongMaterial({color:0xdcdcdc})));
+    const panelMat = new THREE.MeshPhongMaterial({color, transparent:true, opacity:0.9});
+    const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.32,0.01,0.12), panelMat); p1.position.x=0.28; g.add(p1);
+    const p2 = p1.clone(); p2.position.x=-0.28; g.add(p2);
+    g.scale.setScalar(scale||1);
+    return g;
+  }
+  function makeMarker(pos,color){
+    const g = new THREE.Group();
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.05,12,12), new THREE.MeshBasicMaterial({color}));
+    dot.position.copy(pos); g.add(dot);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.1,12,12), new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.25}));
+    glow.position.copy(pos); g.add(glow);
+    return g;
+  }
+  function makeFootprint(dirVec, radius, color){
+    const dir = dirVec.clone().normalize();
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(radius,32), new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.16, side:THREE.DoubleSide}));
+    disc.position.copy(dir.clone().multiplyScalar(R*1.005));
+    disc.lookAt(dir.clone().multiplyScalar(R*3));
+    return disc;
+  }
+  function makeDashedLine(points,color){
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineDashedMaterial({color, dashSize:0.09, gapSize:0.06, transparent:true, opacity:0.6});
+    const line = new THREE.Line(geo,mat); line.computeLineDistances();
+    return line;
+  }
+
+  /* ---------- Ground stations ---------- */
+  const A_LL = {lat:51.5, lon:-0.1, name:'A \u00b7 Ground Station'};
+  const B_LL = {lat:-33.9, lon:151.2, name:'B \u00b7 Ground Station'};
+  const posA = latLonToVec3(A_LL.lat, A_LL.lon, R);
+  const posB = latLonToVec3(B_LL.lat, B_LL.lon, R);
+  scene.add(makeMarker(posA, 0xffc857));
+  scene.add(makeMarker(posB, 0xffc857));
+
+  /* ---------- Geostationary satellite ---------- */
+  const geoPos = latLonToVec3(0, 75, 4.6);
+  const geoSat = makeSatMesh(0xb57aff, 1); geoSat.position.copy(geoPos); scene.add(geoSat);
+  const geoFootprint = makeFootprint(geoPos, 1.15, 0xb57aff); scene.add(geoFootprint);
+  const geoLines = [ makeDashedLine([posA,geoPos],0xb57aff), makeDashedLine([geoPos,posB],0xb57aff) ];
+  geoLines.forEach(l=>scene.add(l));
+
+  /* ---------- Low Earth orbit hop satellites ---------- */
+  const leoHops = [0.22,0.5,0.78].map(t=>slerpPoint(posA,posB,t,2.35));
+  const leoHopMeshes = leoHops.map(p=>{ const s=makeSatMesh(0x5bc8ff,0.6); s.position.copy(p); scene.add(s); return s; });
+  const leoFootprints = leoHops.map(p=>{ const f=makeFootprint(p,0.34,0x5bc8ff); scene.add(f); return f; });
+  const leoPathPts = [posA, ...leoHops, posB];
+  const leoLines = [];
+  for(let i=0;i<leoPathPts.length-1;i++){ const l=makeDashedLine([leoPathPts[i],leoPathPts[i+1]],0x5bc8ff); scene.add(l); leoLines.push(l); }
+
+  /* ---------- Decorative orbiting LEO satellites (ambient motion) ---------- */
+  const decorGroup = new THREE.Group(); decorGroup.rotation.z = 0.5; scene.add(decorGroup);
+  const decorSats = [];
+  for(let i=0;i<4;i++){
+    const s = makeSatMesh(0x5bc8ff, 0.42);
+    s.userData.angle = i*(Math.PI*2/4);
+    decorGroup.add(s); decorSats.push(s);
+  }
+  function updateDecorSats(t){
+    decorSats.forEach(s=>{
+      const ang = s.userData.angle + t*0.5;
+      s.position.set(Math.cos(ang)*2.42, 0, Math.sin(ang)*2.42);
+      s.lookAt(0,0,0);
+    });
+  }
+
+  /* ---------- Signal pulse ---------- */
+  const pulse = new THREE.Mesh(new THREE.SphereGeometry(0.075,12,12), new THREE.MeshBasicMaterial({color:0xffe27a}));
+  pulse.visible = false; scene.add(pulse);
+  let pulseAnim = null;
+  let followPulse = false;
+  function firePulse(from,to,dur){
+    pulse.visible = true; pulse.position.copy(from);
+    pulseAnim = {from:from.clone(), to:to.clone(), start:performance.now(), dur};
+    followPulse = true;
+  }
+  function updatePulse(now){
+    if(!pulseAnim) return;
+    let t = (now - pulseAnim.start)/pulseAnim.dur;
+    if(t>=1){
+      pulse.position.copy(pulseAnim.to);
+      pulseAnim=null;
+      followPulse=false;
+      setTimeout(()=>{pulse.visible=false;},150);
+      return;
+    }
+    pulse.position.lerpVectors(pulseAnim.from, pulseAnim.to, t);
+    if(followPulse){
+      const target = angleFromPos(pulse.position);
+      orb.theta += wrapAngle(target.theta - orb.theta) * 0.07;
+      orb.phi += (target.phi - orb.phi) * 0.07;
+      orb.phi = Math.min(2.6, Math.max(0.4, orb.phi));
+      applyOrbit();
+    }
+  }
+  function flashSatellite(satGroup){
+    const start = performance.now();
+    const target = angleFromPos(satGroup.position);
+    function tick(now){
+      const t = (now-start)/700;
+      if(t>1){ satGroup.scale.setScalar(1); return; }
+      satGroup.scale.setScalar(1 + Math.sin(t*Math.PI)*0.5);
+      orb.theta += wrapAngle(target.theta - orb.theta) * 0.07;
+      orb.phi += (target.phi - orb.phi) * 0.07;
+      orb.phi = Math.min(2.6, Math.max(0.4, orb.phi));
+      applyOrbit();
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- Coverage checkboxes (independent) ---------- */
+  const chkGeo = document.getElementById('chkGeo');
+  const chkLeo = document.getElementById('chkLeo');
+  function updateCoverage(){
+    const showGeo = chkGeo.checked, showLeo = chkLeo.checked;
+    geoSat.visible = showGeo; geoFootprint.visible = showGeo; geoLines.forEach(l=>l.visible=showGeo);
+    leoHopMeshes.forEach(s=>s.visible=showLeo); leoFootprints.forEach(f=>f.visible=showLeo); leoLines.forEach(l=>l.visible=showLeo);
+  }
+  chkGeo.addEventListener('change', updateCoverage);
+  chkLeo.addEventListener('change', updateCoverage);
+
+  /* ---------- Orbit camera controls ---------- */
+  const orb = {theta:0.65, phi:1.05, radius:7.2};
+  function applyOrbit(){
+    cam.position.set(
+      orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta),
+      orb.radius*Math.cos(orb.phi),
+      orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta)
+    );
+    cam.lookAt(0,0,0);
+  }
+  applyOrbit();
+  let dragging=false, lastX=0, lastY=0;
+  canvas.addEventListener('pointerdown', e=>{ dragging=true; followPulse=false; lastX=e.clientX; lastY=e.clientY; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointerup', ()=> dragging=false);
+  canvas.addEventListener('pointercancel', ()=> dragging=false);
+  canvas.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+    orb.theta -= dx*0.006;
+    orb.phi = Math.min(2.6, Math.max(0.4, orb.phi - dy*0.006));
+    applyOrbit();
+  });
+  canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    orb.radius = Math.min(14, Math.max(3.4, orb.radius + e.deltaY*0.0035));
+    applyOrbit();
+  }, {passive:false});
+  let pinchDist=null;
+  canvas.addEventListener('touchmove', e=>{
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+      const d=Math.hypot(dx,dy);
+      if(pinchDist!=null){ orb.radius = Math.min(14, Math.max(3.4, orb.radius - (d-pinchDist)*0.02)); applyOrbit(); }
+      pinchDist=d;
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchend', ()=> pinchDist=null);
+
+  /* ---------- Screen-space labels ---------- */
+  function project(v){
+    const p = v.clone().project(cam);
+    const r = wrap.getBoundingClientRect();
+    return {x:(p.x*0.5+0.5)*(r.width||800), y:(1-(p.y*0.5+0.5))*(canvas.clientHeight||440), visible:p.z<1};
+  }
+  function drawLabels(){
+    const r = wrap.getBoundingClientRect();
+    lctx.clearRect(0,0,r.width||800,canvas.clientHeight||440);
+    const items = [{p:posA,t:A_LL.name,c:'#ffc857'},{p:posB,t:B_LL.name,c:'#ffc857'}];
+    if(chkGeo.checked) items.push({p:geoPos,t:'Geostationary satellite',c:'#b57aff'});
+    items.forEach(it=>{
+      const pr = project(it.p);
+      if(!pr.visible) return;
+      lctx.font = '10px "Space Mono", monospace';
+      const tw = lctx.measureText(it.t).width + 12;
+      lctx.fillStyle = 'rgba(6,8,18,0.72)';
+      lctx.fillRect(pr.x-tw/2, pr.y-24, tw, 16);
+      lctx.fillStyle = it.c; lctx.textAlign='center';
+      lctx.fillText(it.t, pr.x, pr.y-12);
+    });
+  }
+
+  /* ---------- Render loop ---------- */
+  function animate(now){
+    requestAnimationFrame(animate);
+    updateDecorSats((now||0)*0.001);
+    updatePulse(now||0);
+    drawLabels();
+    renderer.render(scene, cam);
+  }
+  requestAnimationFrame(animate);
+  resizeSat();
+
+  /* ---------- Step-by-step walkthrough ---------- */
+  const scenarios = {
+    geo: {
+      path:[posA, geoPos, posB],
+      steps:[
+        {title:'Uplink to the satellite', text:'Ground Station A converts the information into a microwave signal and transmits it up toward the satellite.', seg:[0,1]},
+        {title:'Transponder relay', text:'The satellite\u2019s transponder receives the weak signal, amplifies it, and re-broadcasts it on a different frequency. Because it stays above one fixed point, it can \u201csee\u201d a huge area of Earth at once.', seg:null},
+        {title:'Downlink to Ground Station B', text:'The satellite beams the signal back down to Ground Station B, on the other side of the world, which receives and decodes it.', seg:[1,2]}
+      ]
+    },
+    leo: {
+      path:[posA, leoHops[0], leoHops[1], leoHops[2], posB],
+      steps:[
+        {title:'Uplink to the nearest satellite', text:'Ground Station A sends the signal up to the nearest low Earth orbit satellite passing overhead.', seg:[0,1]},
+        {title:'Satellite-to-satellite hop', text:'A low-orbit satellite moves quickly and only covers a small area, so it hands the signal on to the next satellite moving into range.', seg:[1,2]},
+        {title:'Another hop across the constellation', text:'The signal keeps hopping between satellites in the constellation, tracking a path toward the destination.', seg:[2,3]},
+        {title:'Downlink to Ground Station B', text:'The last satellite in the chain beams the signal down to Ground Station B, which receives and decodes it.', seg:[3,4]}
+      ]
+    }
+  };
+  let curScenario = 'geo', curStep = 0;
+
+  function renderStep(){
+    const sc = scenarios[curScenario], step = sc.steps[curStep];
+    document.getElementById('walkTitle').textContent = `${curStep+1}. ${step.title}`;
+    document.getElementById('walkText').textContent = step.text;
+    document.getElementById('walkPrev').disabled = curStep===0;
+    document.getElementById('walkNext').disabled = curStep===sc.steps.length-1;
+    const dotsEl = document.getElementById('walkDots'); dotsEl.innerHTML='';
+    sc.steps.forEach((s,i)=>{
+      const d = document.createElement('span');
+      d.className = 'step-dot' + (i===curStep?' active':(i<curStep?' done':''));
+      dotsEl.appendChild(d);
+    });
+  }
+  function playStep(){
+    const sc = scenarios[curScenario], step = sc.steps[curStep];
+    if(step.seg){ firePulse(sc.path[step.seg[0]], sc.path[step.seg[1]], 1300); }
+    else { flashSatellite(geoSat); }
+  }
+  document.getElementById('walkPlay').addEventListener('click', playStep);
+  document.getElementById('walkNext').addEventListener('click', ()=>{
+    const sc = scenarios[curScenario];
+    curStep = Math.min(curStep+1, sc.steps.length-1);
+    renderStep();
+  });
+  document.getElementById('walkPrev').addEventListener('click', ()=>{
+    curStep = Math.max(curStep-1, 0);
+    renderStep();
+  });
+  document.querySelectorAll('input[name="walkScenario"]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      if(!r.checked) return;
+      curScenario = r.value; curStep = 0;
+      renderStep();
+    });
+  });
+
+  updateCoverage();
+  renderStep();
+})();
+</script>
+</body>
+</html>
