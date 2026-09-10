@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Electric Field Lab | Field Strength, Point Charges & Field Lines</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2307090f'/%3E%3Cpath d='M13 2 L4 14 h6 l-1 8 9-12h-6z' fill='%23ffc857'/%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --pink:#ff6fae;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.86;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.4px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.4);letter-spacing:1.4px;margin-top:2px;font-family:'Space Mono',monospace;}
+
+#tabbar{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;z-index:10;max-width:calc(100vw - 260px);overflow-x:auto;}
+#tabbar::-webkit-scrollbar{height:0;}
+.tab-btn{padding:8px 11px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;transition:all .18s;}
+.tab-btn:hover{color:#fff;}
+.tab-btn.on{background:rgba(91,200,255,0.20);color:#fff;}
+
+#hud{
+  position:absolute;top:70px;right:14px;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:15px;width:238px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;
+}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:6px;}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-align:right;}
+.dv.amber{color:var(--amber);}
+.dv.blue{color:var(--blue);}
+.dv.violet{color:var(--violet);}
+.dv.green{color:var(--green);}
+.dv.red{color:var(--red);}
+.dv.pink{color:var(--pink);}
+.hdiv{height:1px;background:var(--border);margin:9px 0;}
+#legend{display:flex;flex-wrap:wrap;gap:6px 10px;font-family:'Space Mono',monospace;font-size:9px;}
+.legchip{display:flex;align-items:center;gap:4px;color:rgba(200,215,255,.65);}
+.legdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.note-box{padding:8px 9px;border-radius:9px;background:rgba(180,120,255,0.06);border:1px solid rgba(180,120,255,0.18);font-size:10px;font-family:'Space Mono',monospace;color:rgba(210,220,255,0.8);line-height:1.7;}
+.chart-wrap{margin-top:8px;border-radius:10px;overflow:hidden;background:rgba(180,200,255,0.03);border:1px solid var(--border);padding:6px;}
+.chart-wrap canvas{display:block;width:100%;height:auto;}
+.chart-cap{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,0.4);text-align:center;margin-top:4px;letter-spacing:.5px;}
+
+#leftColumn{position:absolute;top:70px;left:14px;z-index:10;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 160px);}
+#topViewPanel{width:272px;max-width:calc(100vw - 330px);background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:12px;flex-shrink:0;}
+#topViewPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+#topViewCanvas{width:100%;height:auto;border-radius:8px;background:rgba(180,200,255,0.02);display:block;touch-action:none;cursor:pointer;}
+.topview-info{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.55);margin-top:7px;min-height:14px;line-height:1.5;}
+.chk-row{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.65);margin-top:7px;cursor:pointer;}
+.chk-row input{cursor:pointer;}
+
+#topViewZoomOverlay{display:none;position:fixed;inset:0;z-index:70;background:rgba(4,6,18,.85);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#topViewZoomOverlay.show{display:flex;}
+#topViewZoomBox{width:80vw;height:80vh;background:rgba(10,14,28,.97);border:1px solid var(--border);border-radius:20px;padding:18px;display:flex;flex-direction:column;}
+#topViewZoomHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;}
+#topViewZoomHeader h2{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;color:rgba(180,200,255,0.6);text-transform:uppercase;}
+#topViewCanvasZoom{flex:1;width:100%;min-height:0;border-radius:12px;background:rgba(180,200,255,0.02);touch-action:none;display:block;}
+#topViewZoomBox .topview-info{font-size:11px;flex-shrink:0;}
+#topViewZoomBox .chk-row{font-size:11px;flex-shrink:0;}
+
+#infoPanel{width:272px;max-width:calc(100vw - 330px);
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;
+  padding:15px;overflow-y:auto;flex-shrink:1;min-height:0;}
+#infoPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+#infoPanel.collapsed .info-block{display:none !important;}
+#infoPanel.collapsed{padding-bottom:15px;}
+.fold-btn{background:none;border:none;color:rgba(180,200,255,0.5);cursor:pointer;font-size:12px;padding:0 3px;}
+.fold-btn:hover{color:#fff;}
+.info-block h3{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:8px;}
+.info-block p{font-size:11.5px;line-height:1.65;color:rgba(210,222,250,0.82);margin-bottom:8px;}
+.info-block p:last-child{margin-bottom:0;}
+.info-block b{color:#fff;}
+.info-block .pos{color:var(--red);font-weight:700;}
+.info-block .neg{color:var(--blue);font-weight:700;}
+.info-block .formula{display:block;text-align:center;font-family:'Space Mono',monospace;font-size:13px;color:var(--amber);background:rgba(255,200,87,0.06);border:1px solid rgba(255,200,87,0.2);border-radius:8px;padding:9px;margin:9px 0;letter-spacing:.5px;}
+.info-block .tag{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--green);background:rgba(77,255,160,.08);border:1px solid rgba(77,255,160,.25);border-radius:6px;padding:2px 7px;margin-bottom:7px;letter-spacing:.5px;}
+
+#controls{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;align-items:center;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:40px;
+  padding:8px 14px;z-index:10;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 24px);
+}
+.ctrl-block{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:26px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.red{border-color:rgba(255,94,114,0.4);color:var(--red);background:rgba(255,94,114,0.06);}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.violet{border-color:rgba(181,122,255,0.4);color:var(--violet);background:rgba(181,122,255,0.06);}
+.btn.pink{border-color:rgba(255,111,174,0.4);color:var(--pink);background:rgba(255,111,174,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:70px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--thumb-color,var(--violet));cursor:pointer;box-shadow:0 0 8px var(--thumb-glow,rgba(181,122,255,0.6));}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:none;background:var(--thumb-color,var(--violet));cursor:pointer;box-shadow:0 0 8px var(--thumb-glow,rgba(181,122,255,0.6));}
+
+.dirpad{display:inline-grid;grid-template-columns:repeat(3,20px);grid-template-rows:repeat(3,20px);gap:2px;grid-template-areas:". up ." "left . right" ". down .";vertical-align:middle;}
+.dirpad button{width:20px;height:20px;padding:0;font-size:8px;line-height:1;border-radius:5px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.06);color:var(--blue);cursor:pointer;}
+.dirpad button:hover{background:rgba(180,200,255,0.18);}
+.dirpad .up{grid-area:up;} .dirpad .down{grid-area:down;} .dirpad .left{grid-area:left;} .dirpad .right{grid-area:right;}
+
+#fieldLineOverlay{position:absolute;inset:0;z-index:2;display:none;}
+#fieldLineOverlay.show{display:block;}
+#fieldLineCanvas{width:100%;height:100%;display:block;touch-action:none;}
+
+#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);font-size:8.5px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+
+@media (max-width:900px){
+  #leftColumn{display:none;}
+  #hud{width:190px;top:66px;}
+  #tabbar{max-width:calc(100vw - 20px);top:60px;left:14px;transform:none;}
+}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+
+<div id="fieldLineOverlay">
+  <canvas id="fieldLineCanvas"></canvas>
+</div>
+
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    <g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)">
+      <path d="M2760 6510 c-289 -20 -598 -100 -862 -223 -437 -204 -814 -545 -1057 -957 -138 -234 -246 -524 -295 -790 -35 -186 -41 -262 -41 -480 0 -218 6 -294 41 -480 89 -481 322 -925 663 -1266 341 -341 785 -574 1266 -663 186 -35 262 -41 480 -41 218 0 294 6 480 41 481 89 925 322 1266 663 341 341 574 785 663 1266 35 186 41 262 41 480 0 218 -6 294 -41 480 -89 481 -322 925 -663 1266 -338 338 -775 570 -1246 662 -212 42 -474 58 -695 42z m440 -230 c344 -46 640 -159 917 -350 l71 -49 -364 -365 -364 -364 0 -736 0 -736 -1055 -1055 -1055 -1055 -49 71 c-191 277 -304 573 -350 917 -18 137 -13 411 10 552 89 542 337 992 730 1325 366 310 810 495 1289 535 82 7 149 6 220 -1 56 -6 133 -1 -1 z"/>
+    </g>
+  </svg>
+  <div id="title-text">
+    <h1>ELECTRIC FIELD LAB</h1>
+    <p>Field Strength · Point Charges · Superposition · Field Lines</p>
+  </div>
+</div>
+
+<div id="tabbar">
+  <button class="tab-btn on" data-mod="field">2.1.1 · FIELD &amp; FORCE</button>
+  <button class="tab-btn" data-mod="point">2.1.2 · POINT CHARGE</button>
+  <button class="tab-btn" data-mod="super">2.1.3 · SUPERPOSITION</button>
+  <button class="tab-btn" data-mod="lines">2.1.4 · FIELD LINES</button>
+</div>
+
+<div id="hud">
+  <h2>Readings</h2>
+  <div id="legend">
+    <span class="legchip"><span class="legdot" style="background:var(--red);"></span>positive</span>
+    <span class="legchip"><span class="legdot" style="background:var(--blue);"></span>negative</span>
+    <span class="legchip"><span class="legdot" style="background:var(--green);"></span>field E</span>
+    <span class="legchip"><span class="legdot" style="background:var(--pink);"></span>force F</span>
+  </div>
+  <div class="hdiv"></div>
+
+  <div id="hud-field" class="hud-block">
+    <div class="dr"><span class="dl">Source q₁ (amber)</span><span class="dv amber" id="fd-q1">+5.0 µC</span></div>
+    <div class="dr"><span class="dl">Source q₂ (violet)</span><span class="dv violet" id="fd-q2">−4.0 µC</span></div>
+    <div class="dr"><span class="dl">Source q₃ (blue)</span><span class="dv blue" id="fd-q3">+3.0 µC</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Field E at point P</span><span class="dv green" id="fd-emag">0 N/C</span></div>
+    <div class="dr"><span class="dl">Field direction</span><span class="dv green" id="fd-edir">0°</span></div>
+    <div id="fd-test-rows" style="display:none;">
+      <div class="hdiv"></div>
+      <div class="dr"><span class="dl">Test charge q₀</span><span class="dv" id="fd-q0">+2.0 µC</span></div>
+      <div class="dr"><span class="dl">Force F = q₀E</span><span class="dv pink" id="fd-fmag">0.000 N</span></div>
+    </div>
+    <div class="note-box" id="fd-note">The field E exists at P whether or not a test charge is there. Add a test charge to see the force F = q₀E it would feel.</div>
+  </div>
+
+  <div id="hud-point" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Charge Q</span><span class="dv" id="pt-Q">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Distance r</span><span class="dv" id="pt-r">1.60 m</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Field E = kQ/r²</span><span class="dv green" id="pt-E">0 N/C</span></div>
+    <div class="dr"><span class="dl">Direction</span><span class="dv green" id="pt-dir">radially out</span></div>
+    <div class="chart-wrap"><canvas id="chartPoint" width="420" height="200"></canvas></div>
+    <div class="chart-cap">E vs. r (inverse-square curve) — dot marks the current setting</div>
+  </div>
+
+  <div id="hud-super" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Q₁ (amber)</span><span class="dv amber" id="sp-q1">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Q₂ (violet)</span><span class="dv violet" id="sp-q2">−5.0 µC</span></div>
+    <div class="dr"><span class="dl">Q₃ (blue)</span><span class="dv blue" id="sp-q3">+4.0 µC</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Net field |ΣE| at P</span><span class="dv green" id="sp-emag">0 N/C</span></div>
+    <div class="chart-wrap"><canvas id="chartSuper" width="300" height="220"></canvas></div>
+    <div class="chart-cap">tip-to-tail vector addition ΣE = E₁+E₂+E₃</div>
+  </div>
+
+  <div id="hud-lines" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Charge Q₁</span><span class="dv" id="ln-q1">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Charge Q₂</span><span class="dv" id="ln-q2">−6.0 µC</span></div>
+    <div class="hdiv"></div>
+    <div class="note-box">Lines start on <span class="pos">+</span> charges and end on <span class="neg">−</span> charges. More lines = bigger charge. Lines never cross.</div>
+  </div>
+</div>
+
+<div id="leftColumn">
+  <div id="topViewPanel" style="display:none;">
+    <h2>Top View (x, z) — grid in metres</h2>
+    <canvas id="topViewCanvas" width="272" height="200"></canvas>
+    <div id="topViewInfo" class="topview-info">Tap a charge to select it (move buttons appear below) · drag to move it directly · tap empty space to zoom in</div>
+    <label class="chk-row"><input type="checkbox" id="chk-show-fields" checked> Show E₁/E₂/E₃ and net field</label>
+  </div>
+
+  <div id="infoPanel">
+    <h2>Concept <button class="fold-btn" id="btn-fold-info" title="Collapse / expand">▾</button></h2>
+
+    <div id="info-field" class="info-block">
+      <h3>Electric Field &amp; Force on a Test Charge</h3>
+      <p>A <b>test charge</b> is a small positively charged object of negligible size and mass, used only to probe the field — it doesn't disturb it.</p>
+      <span class="formula">E = F / q</span>
+      <p>An electric field <b>exists at a point</b> if a charge placed there would feel a force. Its <b>direction</b> is the direction that test charge would move.</p>
+      <p>E is measured in <b>N/C</b>. The force on any charge q sitting in a field is <span class="formula" style="margin:6px 0;">F = qE</span></p>
+      <p>Toggle the test charge on to see F appear — same direction as E if q₀ is positive, opposite if negative.</p>
+    </div>
+
+    <div id="info-point" class="info-block" style="display:none;">
+      <h3>Field of a Single Point Charge</h3>
+      <p>Combining E = F/q with Coulomb's law gives the field of one point charge:</p>
+      <span class="formula">E = (1/4πε₀) · Q/r² = kQ/r²</span>
+      <p>• The field points <b>radially away</b> from a <span class="pos">positive</span> charge, and <b>radially toward</b> a <span class="neg">negative</span> charge.</p>
+      <p>• It is <b>proportional to Q</b> and <b>inversely proportional to r²</b> — drag the r slider and watch the arrow shrink with distance.</p>
+    </div>
+
+    <div id="info-super" class="info-block" style="display:none;">
+      <h3>Superposition of Fields</h3>
+      <p>The electric field is a <b>vector</b>. When several point charges act at once, the net field is the <b>vector sum</b> of each one's individual field:</p>
+      <span class="formula">ΣE = E₁ + E₂ + E₃ + ⋯</span>
+      <p>Each contribution is found from the single-charge formula, then added <b>head-to-tail</b> — never just by adding magnitudes.</p>
+      <p>Drag Q₁, Q₂, Q₃ around the grid above (or use the ◀▶▲▼ pads) — the field point P stays fixed at the origin so you can see how moving the sources reshapes the net field there.</p>
+    </div>
+
+    <div id="info-lines" class="info-block" style="display:none;">
+      <h3>Electric Field Line Diagrams</h3>
+      <p>Field lines represent the net force direction on a small positive charge at every point in space.</p>
+      <p>• They <b>originate on positive</b> charges and <b>terminate on negative</b> charges.</p>
+      <p>• They <b>never cross</b> — the field has only one direction at any point.</p>
+      <p>• The <b>number of lines</b> leaving/entering a charge is proportional to its magnitude.</p>
+      <p>• <b>Line density</b> (lines per unit area) shows field strength — closer lines mean a stronger field.</p>
+      <p>Try setting Q₂ to 0 for a single charge, matching signs for two <b>like</b> charges, or opposite signs for a <b>dipole</b>.</p>
+      <p><span class="tag">Parallel Plates</span> Between two oppositely charged plates, field lines run straight and parallel from the <span class="pos">+</span> plate to the <span class="neg">−</span> plate — the field is <b>uniform</b> in the middle, with some bowing (fringing) near the edges.</p>
+    </div>
+  </div>
+</div>
+
+<div id="topViewZoomOverlay">
+  <div id="topViewZoomBox">
+    <div id="topViewZoomHeader">
+      <h2>Top View (x, z) — grid in metres</h2>
+      <button class="btn red" id="btn-topview-close">✕ Close</button>
+    </div>
+    <canvas id="topViewCanvasZoom"></canvas>
+    <div id="topViewInfoZoom" class="topview-info">Tap a charge for its coordinates &amp; value · drag to move it</div>
+    <label class="chk-row"><input type="checkbox" id="chk-show-fields-zoom" checked> Show E₁/E₂/E₃ and net field</label>
+  </div>
+</div>
+
+<div id="controls">
+  <div id="ctrl-field" class="ctrl-block">
+    <span class="sw">q₁=<input type="range" id="sl-f-q1" min="-8" max="8" step="1" value="5"><span id="lbl-f-q1">+5</span></span>
+    <span class="sw">q₂=<input type="range" id="sl-f-q2" min="-8" max="8" step="1" value="-4"><span id="lbl-f-q2">−4</span></span>
+    <span class="sw">q₃=<input type="range" id="sl-f-q3" min="-8" max="8" step="1" value="3"><span id="lbl-f-q3">+3</span></span>
+    <div class="sep"></div>
+    <button class="btn pink" id="btn-f-test">➕ Add Test Charge</button>
+    <button class="btn" id="btn-f-testsign" style="display:none;">q₀: +</button>
+    <button class="btn green" id="btn-f-release" style="display:none;">▶ Release Charge</button>
+    <button class="btn" id="btn-reset-f">Reset</button>
+  </div>
+
+  <div id="ctrl-point" class="ctrl-block" style="display:none;">
+    <span class="sw">Q=<input type="range" id="sl-p-Q" min="-10" max="10" step="0.5" value="6"><span id="lbl-p-Q">+6.0</span></span>
+    <span class="sw">r=<input type="range" id="sl-p-r" min="0.4" max="3.2" step="0.05" value="1.6"><span id="lbl-p-r">1.60</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-p">Reset</button>
+  </div>
+
+  <div id="ctrl-super" class="ctrl-block" style="display:none;">
+    <button class="btn" id="btn-s-toggle-result">👁 Hide Resultant</button>
+    <span class="sw">Q₁=<input type="range" id="sl-s-q1" min="-8" max="8" step="1" value="6"><span id="lbl-s-q1">+6</span></span>
+    <div class="dirpad" id="dirpad-1" style="display:none;"><button class="up" id="btn-s1-up">▲</button><button class="left" id="btn-s1-left">◀</button><button class="right" id="btn-s1-right">▶</button><button class="down" id="btn-s1-down">▼</button></div>
+    <span class="sw">Q₂=<input type="range" id="sl-s-q2" min="-8" max="8" step="1" value="-5"><span id="lbl-s-q2">−5</span></span>
+    <div class="dirpad" id="dirpad-2" style="display:none;"><button class="up" id="btn-s2-up">▲</button><button class="left" id="btn-s2-left">◀</button><button class="right" id="btn-s2-right">▶</button><button class="down" id="btn-s2-down">▼</button></div>
+    <span class="sw">Q₃=<input type="range" id="sl-s-q3" min="-8" max="8" step="1" value="4"><span id="lbl-s-q3">+4</span></span>
+    <div class="dirpad" id="dirpad-3" style="display:none;"><button class="up" id="btn-s3-up">▲</button><button class="left" id="btn-s3-left">◀</button><button class="right" id="btn-s3-right">▶</button><button class="down" id="btn-s3-down">▼</button></div>
+    <button class="btn" id="btn-reset-s">Reset</button>
+  </div>
+
+  <div id="ctrl-lines" class="ctrl-block" style="display:none;">
+    <span class="sw">Q₁=<input type="range" id="sl-l-q1" min="-8" max="8" step="0.5" value="6"><span id="lbl-l-q1">+6.0</span></span>
+    <span class="sw">Q₂=<input type="range" id="sl-l-q2" min="-8" max="8" step="0.5" value="-6"><span id="lbl-l-q2">−6.0</span></span>
+    <span class="sw" id="wrap-l-dist" style="display:none;">plate gap=<input type="range" id="sl-l-dist" min="0.8" max="3.2" step="0.1" value="1.8"><span id="lbl-l-dist">3.60</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-l-single">Single Charge</button>
+    <button class="btn" id="btn-l-like">Like Charges</button>
+    <button class="btn" id="btn-l-dipole">Dipole</button>
+    <button class="btn" id="btn-l-plates">Parallel Plates</button>
+  </div>
+
+  <div class="sep"></div>
+  <button class="btn" id="btn-camreset">⟲ View</button>
+</div>
+
+<div id="hint">🖐️ drag: rotate view · scroll / pinch: zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+/* ============================== CORE SETUP ============================== */
+let activeModuleRef = 'field';
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.016);
+const cam3 = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  cam3.aspect = w / h; cam3.updateProjectionMatrix();
+  labelCanvas.width = w; labelCanvas.height = h;
+  const flc = document.getElementById('fieldLineCanvas');
+  flc.width = w; flc.height = h;
+  if(activeModuleRef==='lines') drawFieldLines();
+}
+resize(); window.addEventListener('resize', resize);
+
+scene3.add(new THREE.AmbientLight(0xffffff, 1.15));
+const sun = new THREE.DirectionalLight(0xfff8f0, 0.9); sun.position.set(5,10,6); scene3.add(sun);
+const rim = new THREE.DirectionalLight(0x6688ff, 0.4); rim.position.set(-6,4,-4); scene3.add(rim);
+
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0x0d1020, roughness:0.95}));
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -1.4; scene3.add(floorM);
+const grid = new THREE.GridHelper(40,30,0x1a2540,0x121c30); grid.position.y = -1.38; scene3.add(grid);
+
+/* ============================== SHARED HELPERS ============================== */
+const COL_C1 = 0xffc857, COL_C2 = 0xb57aff, COL_C3 = 0x5bc8ff, COL_RESULT = 0x4dffa0, COL_FORCE = 0xff6fae;
+const COL_NEUTRAL = 0x5c6a85;
+const DARK = { amber:0xb7903f, violet:0x7b53ad, blue:0x3e88ad, red:0xb84452 };
+const DARK_CSS = { amber:'#b7903f', violet:'#7b53ad', blue:'#3e88ad', red:'#b84452' };
+const K_COULOMB = 8.99e9;
+
+function ease(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function fmt(x,d){ return x.toFixed(d===undefined?2:d); }
+function signStr(x){ return x>=0? ('+'+fmt(x,1)) : fmt(x,1); }
+function fmtSci(x){
+  if(Math.abs(x) < 0.001 && x!==0){ return x.toExponential(2)+' N/C'; }
+  if(Math.abs(x) >= 1000){ return (x/1000).toFixed(2)+' kN/C'; }
+  return fmt(x,1)+' N/C';
+}
+// Electric field magnitude (N/C) from a point charge, Q in microcoulombs, r in metres.
+function fieldMag(QuC, r){
+  if(r < 0.02) r = 0.02;
+  return K_COULOMB * Math.abs(QuC*1e-6) / (r*r);
+}
+function bindSlider(id, lblId, cb, fmtFn){
+  const el = document.getElementById(id), lbl = document.getElementById(lblId);
+  el.addEventListener('input', ()=>{ const v=parseFloat(el.value); lbl.textContent = fmtFn?fmtFn(v):v; cb(v); });
+}
+const THUMB_COLORS = {
+  amber:{c:'#ffc857', g:'rgba(255,200,87,0.6)'},
+  violet:{c:'#b57aff', g:'rgba(181,122,255,0.6)'},
+  blue:{c:'#5bc8ff', g:'rgba(91,200,255,0.6)'},
+  red:{c:'#ff5e72', g:'rgba(255,94,114,0.6)'}
+};
+function setSliderColor(id, key){
+  const el = document.getElementById(id); if(!el) return;
+  const t = THUMB_COLORS[key]; if(!t) return;
+  el.style.setProperty('--thumb-color', t.c);
+  el.style.setProperty('--thumb-glow', t.g);
+}
+
+function makeSignTexture(sign){
+  const c = document.createElement('canvas'); c.width=64; c.height=64;
+  const cx = c.getContext('2d');
+  cx.clearRect(0,0,64,64);
+  cx.font = 'bold 50px sans-serif';
+  cx.textAlign='center'; cx.textBaseline='middle';
+  cx.lineWidth=7; cx.strokeStyle='rgba(0,0,0,0.55)';
+  cx.strokeText(sign, 32, 33);
+  cx.fillStyle='#ffffff';
+  cx.fillText(sign, 32, 33);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+const SIGN_TEX = { '+': makeSignTexture('+'), '−': makeSignTexture('−') };
+function makeChargeSphere(){
+  const geo = new THREE.SphereGeometry(0.3, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({color:COL_NEUTRAL, roughness:0.45, metalness:0.08, emissive:COL_NEUTRAL, emissiveIntensity:0.12});
+  const mesh = new THREE.Mesh(geo, mat);
+  const spriteMat = new THREE.SpriteMaterial({map:SIGN_TEX['+'], transparent:true, depthTest:false});
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.scale.set(0.34,0.34,1);
+  sprite.renderOrder = 999;
+  mesh.add(sprite);
+  mesh.userData.signSprite = sprite;
+  mesh.userData.lastSign = null;
+  return mesh;
+}
+function updateChargeMesh(mesh, qValue, colorKey){
+  const isPos = qValue >= 0;
+  const color = qValue===0 ? COL_NEUTRAL : (colorKey ? DARK[colorKey] : (isPos ? DARK.red : DARK.blue));
+  const radius = clamp(0.16 + 0.032*Math.sqrt(Math.abs(qValue)), 0.16, 0.5);
+  mesh.scale.setScalar(radius/0.3);
+  mesh.material.color.setHex(color);
+  mesh.material.emissive.setHex(color);
+  const sprite = mesh.userData.signSprite;
+  if(sprite){
+    if(qValue===0){ sprite.visible = false; }
+    else {
+      sprite.visible = true;
+      const sign = isPos ? '+' : '−';
+      if(mesh.userData.lastSign !== sign){
+        sprite.material.map = SIGN_TEX[sign];
+        sprite.material.needsUpdate = true;
+        mesh.userData.lastSign = sign;
+      }
+    }
+  }
+}
+function makeFieldMarker(){
+  const geo = new THREE.OctahedronGeometry(0.14, 0);
+  const mat = new THREE.MeshStandardMaterial({color:0x6fd6ff, emissive:0x6fd6ff, emissiveIntensity:0.4, roughness:0.3});
+  return new THREE.Mesh(geo, mat);
+}
+function project(v3){
+  const p = v3.clone().project(cam3);
+  return { x:(p.x*0.5+0.5)*labelCanvas.width, y:(-p.y*0.5+0.5)*labelCanvas.height, behind: p.z>1 };
+}
+function drawChip(pt, text, colorCss, size){
+  if(pt.behind) return;
+  lctx.font = (size||10)+'px "Space Mono", monospace';
+  const w = lctx.measureText(text).width + 12;
+  const h = (size||10) + 10;
+  lctx.fillStyle = 'rgba(8,10,20,0.82)';
+  lctx.strokeStyle = colorCss; lctx.lineWidth = 1;
+  roundRect(lctx, pt.x - w/2, pt.y - h/2, w, h, 6);
+  lctx.fill(); lctx.stroke();
+  lctx.fillStyle = colorCss;
+  lctx.textAlign='center'; lctx.textBaseline='middle';
+  lctx.fillText(text, pt.x, pt.y+0.5);
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+// Fixed (non data-dependent) scales so each arrow's length depends only on its OWN
+// value, while a shared constant still keeps a resultant's length exactly equal to
+// the vector sum of the individually-scaled arrows (no cross-talk between sliders).
+const ARROW_MIN_LEN = 0.18, ARROW_MAX_LEN = 2.8;
+const FORCE_N_TO_UNITS = 80;      // Newtons -> world units (for F = qE arrows)
+const EFIELD_N_TO_UNITS = 0.00016; // N/C -> world units (for E field arrows)
+function arrowHeadDims(len){ return { hl: clamp(len*0.16, 0.12, 0.32), hw: clamp(len*0.07, 0.05, 0.14) }; }
+function setArrow3D(arrow, vec3, unitsPerValue, valueMag){
+  if(valueMag < 1e-9){ arrow.visible=false; return; }
+  arrow.visible = true;
+  arrow.setDirection(vec3.clone().normalize());
+  const len = clamp(valueMag*unitsPerValue, ARROW_MIN_LEN, ARROW_MAX_LEN);
+  const hd = arrowHeadDims(len);
+  arrow.setLength(len, hd.hl, hd.hw);
+}
+
+/* ============================== ORBIT CAMERA ============================== */
+const orb = {theta:0.45, phi:0.95, radius:6.5, cx:0, cy:0, cz:0};
+function applyOrbit(){
+  cam3.position.set(
+    orb.cx + orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta),
+    orb.cy + orb.radius*Math.cos(orb.phi),
+    orb.cz + orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta)
+  );
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
+}
+applyOrbit();
+let dragging=false, lastX=0, lastY=0;
+canvas.addEventListener('pointerdown', e=>{dragging=true; lastX=e.clientX; lastY=e.clientY; canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerup', ()=>dragging=false);
+canvas.addEventListener('pointercancel', ()=>dragging=false);
+canvas.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+  orb.theta -= dx*0.006; orb.phi = clamp(orb.phi - dy*0.006, 0.18, 1.5);
+  applyOrbit();
+});
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  orb.radius = clamp(orb.radius + e.deltaY*0.0035, 2.5, 16);
+  applyOrbit();
+}, {passive:false});
+let pinchDist=null;
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    if(pinchDist!=null){ orb.radius = clamp(orb.radius - (d-pinchDist)*0.02, 2.5, 16); applyOrbit(); }
+    pinchDist = d;
+  }
+}, {passive:true});
+canvas.addEventListener('touchend', ()=>pinchDist=null);
+
+function tween(duration, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now-start)/duration);
+    onUpdate(ease(t), t);
+    if(t < 1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+/* ============================== TAB 1 (2.1.1): FIELD & TEST CHARGE ============================== */
+const grpField = new THREE.Group(); scene3.add(grpField);
+const stateFd = { q1:5, q2:-4, q3:3, testOn:false, testSign:1, testPos:new THREE.Vector3(0,0,0), animating:false };
+const FD_SRC_POS = [ new THREE.Vector3(0,0,-2.2), new THREE.Vector3(1.9,0,1.1), new THREE.Vector3(-1.9,0,1.1) ];
+const fdMarker = makeFieldMarker(); grpField.add(fdMarker);
+const fdTestMesh = makeChargeSphere(); fdTestMesh.visible=false; grpField.add(fdTestMesh);
+const fdSrcMeshes = [0,1,2].map(()=>{ const m=makeChargeSphere(); grpField.add(m); return m; });
+const fdArrowE = [0,1,2].map(i=> new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, [COL_C1,COL_C2,COL_C3][i], 0.22, 0.13));
+fdArrowE.forEach(a=>grpField.add(a));
+const fdArrowNet = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_RESULT, 0.28, 0.16);
+grpField.add(fdArrowNet);
+const fdArrowF = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_FORCE, 0.24, 0.14);
+grpField.add(fdArrowF);
+
+function computeField(){
+  const P = stateFd.testPos;
+  fdMarker.position.copy(P);
+  const vals = [stateFd.q1, stateFd.q2, stateFd.q3];
+  let ex=0, ez=0;
+  vals.forEach((qs,i)=>{
+    fdSrcMeshes[i].position.copy(FD_SRC_POS[i]);
+    updateChargeMesh(fdSrcMeshes[i], qs, ['amber','violet','blue'][i]);
+    const rel = P.clone().sub(FD_SRC_POS[i]);
+    const r = Math.max(rel.length(), 0.25);
+    const dir = rel.clone().normalize();
+    const Emag = qs===0 ? 0 : fieldMag(qs, r);
+    const evec = dir.multiplyScalar(qs>=0?Emag:-Emag);
+    ex += evec.x; ez += evec.z;
+    setArrow3D(fdArrowE[i], new THREE.Vector3(evec.x,0,evec.z), EFIELD_N_TO_UNITS, Math.abs(Emag));
+    fdArrowE[i].position.copy(P);
+  });
+  const Emag = Math.hypot(ex,ez);
+  setArrow3D(fdArrowNet, new THREE.Vector3(ex,0,ez), EFIELD_N_TO_UNITS, Emag);
+  fdArrowNet.position.copy(P);
+  let angle = Math.atan2(-ez, ex)*180/Math.PI; if(angle<0) angle+=360;
+  document.getElementById('fd-emag').textContent = fmtSci(Emag);
+  document.getElementById('fd-edir').textContent = (Emag<1e-6?'—':fmt(angle,0)+'°');
+
+  fdTestMesh.visible = stateFd.testOn;
+  fdArrowF.visible = false;
+  document.getElementById('fd-test-rows').style.display = stateFd.testOn ? 'block' : 'none';
+  let fx=0, fz=0;
+  if(stateFd.testOn){
+    fdTestMesh.position.copy(P);
+    updateChargeMesh(fdTestMesh, stateFd.testSign*2);
+    document.getElementById('fd-q0').textContent = (stateFd.testSign>0?'+':'−')+'2.0 µC';
+    const qC = stateFd.testSign*2*1e-6;
+    fx = qC*ex; fz = qC*ez;
+    const Fmag = Math.hypot(fx,fz);
+    setArrow3D(fdArrowF, new THREE.Vector3(fx,0,fz), FORCE_N_TO_UNITS, Fmag);
+    fdArrowF.position.copy(P);
+    document.getElementById('fd-fmag').textContent = fmt(Fmag,4)+' N';
+  }
+  return {fx,fz};
+}
+function labelsField(){
+  const P = stateFd.testPos;
+  const labels = [{p:project(P.clone().add(new THREE.Vector3(0,0.5,0))), t:'P', c:'#6fd6ff', size:10}];
+  const vals=[stateFd.q1,stateFd.q2,stateFd.q3];
+  const cols=['#ffc857','#b57aff','#5bc8ff'];
+  FD_SRC_POS.forEach((p,i)=> labels.push({p:project(p.clone().add(new THREE.Vector3(0,0.45,0))), t:signStr(vals[i])+' µC', c:cols[i], size:9.5}));
+  if(stateFd.testOn) labels.push({p:project(P.clone().add(new THREE.Vector3(0,0.85,0))), t:(stateFd.testSign>0?'+':'−')+'2.0 µC (q₀)', c:stateFd.testSign>0?'#ff5e72':'#5bc8ff', size:9.5});
+  return labels;
+}
+bindSlider('sl-f-q1','lbl-f-q1', v=>{ stateFd.q1=v; document.getElementById('fd-q1').textContent=signStr(v)+' µC'; computeField(); }, v=>signStr(v));
+bindSlider('sl-f-q2','lbl-f-q2', v=>{ stateFd.q2=v; document.getElementById('fd-q2').textContent=signStr(v)+' µC'; computeField(); }, v=>signStr(v));
+bindSlider('sl-f-q3','lbl-f-q3', v=>{ stateFd.q3=v; document.getElementById('fd-q3').textContent=signStr(v)+' µC'; computeField(); }, v=>signStr(v));
+document.getElementById('btn-f-test').addEventListener('click', function(){
+  stateFd.testOn = !stateFd.testOn;
+  this.textContent = stateFd.testOn ? '➖ Remove Test Charge' : '➕ Add Test Charge';
+  this.classList.toggle('on', stateFd.testOn);
+  document.getElementById('btn-f-testsign').style.display = stateFd.testOn ? 'inline-block' : 'none';
+  document.getElementById('btn-f-release').style.display = stateFd.testOn ? 'inline-block' : 'none';
+  computeField();
+});
+document.getElementById('btn-f-testsign').addEventListener('click', function(){
+  stateFd.testSign *= -1;
+  this.textContent = 'q₀: '+(stateFd.testSign>0?'+':'−');
+  computeField();
+});
+document.getElementById('btn-f-release').addEventListener('click', ()=>{
+  if(stateFd.animating || !stateFd.testOn) return;
+  const {fx,fz} = computeField();
+  const Fmag = Math.hypot(fx,fz);
+  if(Fmag<1e-9) return;
+  stateFd.animating = true;
+  document.getElementById('btn-f-release').disabled = true;
+  const dir = new THREE.Vector3(fx,0,fz).normalize();
+  const start = new THREE.Vector3(0,0,0);
+  const peak = dir.clone().multiplyScalar(1.15);
+  tween(750, e=>{ stateFd.testPos.copy(start).lerp(peak,e); computeField(); }, ()=>{
+    setTimeout(()=>{
+      tween(750, e2=>{ stateFd.testPos.copy(peak).lerp(start,e2); computeField(); }, ()=>{
+        stateFd.animating=false; document.getElementById('btn-f-release').disabled=false;
+      });
+    }, 500);
+  });
+});
+document.getElementById('btn-reset-f').addEventListener('click', ()=>{
+  stateFd.q1=5; stateFd.q2=-4; stateFd.q3=3; stateFd.testOn=false; stateFd.testSign=1; stateFd.testPos.set(0,0,0);
+  document.getElementById('sl-f-q1').value=5; document.getElementById('lbl-f-q1').textContent='+5';
+  document.getElementById('sl-f-q2').value=-4; document.getElementById('lbl-f-q2').textContent='−4';
+  document.getElementById('sl-f-q3').value=3; document.getElementById('lbl-f-q3').textContent='+3';
+  document.getElementById('fd-q1').textContent='+5.0 µC'; document.getElementById('fd-q2').textContent='−4.0 µC'; document.getElementById('fd-q3').textContent='+3.0 µC';
+  document.getElementById('btn-f-test').textContent='➕ Add Test Charge'; document.getElementById('btn-f-test').classList.remove('on');
+  document.getElementById('btn-f-testsign').style.display='none'; document.getElementById('btn-f-testsign').textContent='q₀: +';
+  document.getElementById('btn-f-release').style.display='none';
+  computeField();
+});
+computeField();
+setSliderColor('sl-f-q1','amber'); setSliderColor('sl-f-q2','violet'); setSliderColor('sl-f-q3','blue');
+
+/* ============================== TAB 2 (2.1.2): FIELD OF A POINT CHARGE ============================== */
+const grpPoint = new THREE.Group(); scene3.add(grpPoint); grpPoint.visible=false;
+const stateP = { Q:6, r:1.6 };
+const ptChargeMesh = makeChargeSphere(); grpPoint.add(ptChargeMesh);
+const ptMeasureMarker = makeFieldMarker(); grpPoint.add(ptMeasureMarker);
+const ptArrowMain = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_RESULT, 0.24, 0.14);
+grpPoint.add(ptArrowMain);
+const PT_RING_ANGLES = [0,45,90,135,180,225,270,315].map(d=>d*Math.PI/180);
+const ptRingArrows = PT_RING_ANGLES.map(()=> new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 0.45, COL_RESULT, 0.1, 0.06));
+ptRingArrows.forEach(a=>{ a.line.material.transparent=true; a.line.material.opacity=0.35; a.cone.material.transparent=true; a.cone.material.opacity=0.35; grpPoint.add(a); });
+const PT_RING_R = 1.15;
+
+function computePoint(){
+  updateChargeMesh(ptChargeMesh, stateP.Q);
+  const isPos = stateP.Q>=0;
+  PT_RING_ANGLES.forEach((ang,i)=>{
+    const pos = new THREE.Vector3(Math.cos(ang)*PT_RING_R, 0, Math.sin(ang)*PT_RING_R);
+    const dir = isPos ? pos.clone().normalize() : pos.clone().normalize().negate();
+    ptRingArrows[i].position.copy(pos);
+    ptRingArrows[i].visible = stateP.Q!==0;
+    ptRingArrows[i].setDirection(dir);
+  });
+  const measurePos = new THREE.Vector3(stateP.r,0,0);
+  ptMeasureMarker.position.copy(measurePos);
+  const E = fieldMag(stateP.Q, stateP.r);
+  const dir = isPos ? new THREE.Vector3(1,0,0) : new THREE.Vector3(-1,0,0);
+  setArrow3D(ptArrowMain, dir, EFIELD_N_TO_UNITS, stateP.Q===0?0:E);
+  ptArrowMain.position.copy(measurePos);
+  document.getElementById('pt-Q').textContent = signStr(stateP.Q)+' µC';
+  document.getElementById('pt-r').textContent = fmt(stateP.r,2)+' m';
+  document.getElementById('pt-E').textContent = stateP.Q===0 ? '0 N/C' : fmtSci(E);
+  document.getElementById('pt-dir').textContent = stateP.Q===0 ? '—' : (isPos ? 'radially out' : 'radially in');
+  drawPointChart();
+}
+function labelsPoint(){
+  const out = [
+    {p:project(new THREE.Vector3(0,0.5,0)), t:signStr(stateP.Q)+' µC (Q)', c:stateP.Q>=0?'#ff5e72':'#5bc8ff', size:10},
+    {p:project(new THREE.Vector3(stateP.r,0.4,0)), t:'r = '+fmt(stateP.r,2)+' m', c:'#8fa2c0', size:9}
+  ];
+  return out;
+}
+function drawPointChart(){
+  const cv = document.getElementById('chartPoint'); const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height, pad=28;
+  ctx.clearRect(0,0,W,H);
+  const rMax=3.2, rMin=0.3;
+  const pts=[]; let eMax=0;
+  for(let r=rMin;r<=rMax;r+=0.02){ const e=fieldMag(stateP.Q,r); pts.push([r,e]); if(e>eMax) eMax=e; }
+  eMax = Math.max(eMax, 1);
+  function X(r){ return pad + (r-rMin)/(rMax-rMin)*(W-2*pad); }
+  function Y(e){ return H-pad - (e/eMax)*(H-2*pad); }
+  ctx.strokeStyle='rgba(180,200,255,0.18)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.strokeStyle='#4dffa0'; ctx.lineWidth=2; ctx.beginPath();
+  pts.forEach(([r,e],i)=>{ const x=X(r), y=Y(e); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  ctx.stroke();
+  const E0 = fieldMag(stateP.Q, stateP.r);
+  const mx=X(stateP.r), my=Y(E0);
+  ctx.fillStyle='#ffc857'; ctx.beginPath(); ctx.arc(mx,my,4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,200,87,0.4)'; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(mx,H-pad); ctx.lineTo(mx,my); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='9px "Space Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText('r (m)', W-pad-24, H-pad+14);
+  ctx.save(); ctx.translate(10,pad+4); ctx.rotate(-Math.PI/2); ctx.fillText('E (N/C)',0,0); ctx.restore();
+}
+bindSlider('sl-p-Q','lbl-p-Q', v=>{ stateP.Q=v; computePoint(); }, v=>signStr(v));
+bindSlider('sl-p-r','lbl-p-r', v=>{ stateP.r=v; computePoint(); }, v=>fmt(v,2));
+document.getElementById('btn-reset-p').addEventListener('click', ()=>{
+  stateP.Q=6; stateP.r=1.6;
+  document.getElementById('sl-p-Q').value=6; document.getElementById('lbl-p-Q').textContent='+6.0';
+  document.getElementById('sl-p-r').value=1.6; document.getElementById('lbl-p-r').textContent='1.60';
+  computePoint();
+});
+computePoint();
+
+/* ============================== TAB 3 (2.1.3): SUPERPOSITION ============================== */
+const grpSuper = new THREE.Group(); scene3.add(grpSuper); grpSuper.visible=false;
+const stateSp = { q1:6, q2:-5, q3:4, showResult:true };
+let SP_POS = [ new THREE.Vector3(0,0,-2.0), new THREE.Vector3(1.8,0,1.1), new THREE.Vector3(-1.8,0,1.1) ];
+const spMarker = makeFieldMarker(); grpSuper.add(spMarker);
+const spSrcMeshes = [0,1,2].map(()=>{ const m=makeChargeSphere(); grpSuper.add(m); return m; });
+const spArrowE = [0,1,2].map(i=> new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, [COL_C1,COL_C2,COL_C3][i], 0.2, 0.12));
+spArrowE.forEach(a=>grpSuper.add(a));
+const spArrowNet = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_RESULT, 0.26, 0.15);
+grpSuper.add(spArrowNet);
+
+let lastSpFields = {E1:new THREE.Vector2(), E2:new THREE.Vector2(), E3:new THREE.Vector2(), R:new THREE.Vector2()};
+function computeSuper(){
+  const P = new THREE.Vector3(0,0,0);
+  const vals=[stateSp.q1,stateSp.q2,stateSp.q3];
+  let ex=0, ez=0; const comps=[];
+  vals.forEach((qs,i)=>{
+    spSrcMeshes[i].position.copy(SP_POS[i]);
+    updateChargeMesh(spSrcMeshes[i], qs, ['amber','violet','blue'][i]);
+    const rel = P.clone().sub(SP_POS[i]);
+    const r = Math.max(rel.length(),0.25);
+    const dir = rel.clone().normalize();
+    const Emag = qs===0?0:fieldMag(qs,r);
+    const evec = dir.multiplyScalar(qs>=0?Emag:-Emag);
+    ex+=evec.x; ez+=evec.z;
+    comps.push(new THREE.Vector2(evec.x,evec.z));
+    setArrow3D(spArrowE[i], new THREE.Vector3(evec.x,0,evec.z), EFIELD_N_TO_UNITS, Math.abs(Emag));
+    spArrowE[i].position.copy(P);
+  });
+  const Emag = Math.hypot(ex,ez);
+  if(!stateSp.showResult){ spArrowNet.visible=false; } else { setArrow3D(spArrowNet, new THREE.Vector3(ex,0,ez), EFIELD_N_TO_UNITS, Emag); }
+  spArrowNet.position.copy(P);
+  lastSpFields = {E1:comps[0],E2:comps[1],E3:comps[2],R:new THREE.Vector2(ex,ez)};
+  document.getElementById('sp-emag').textContent = fmtSci(Emag);
+  drawSuperChart();
+  refreshTopViews();
+}
+function labelsSuper(){
+  const cols=['#ffc857','#b57aff','#5bc8ff'];
+  const vals=[stateSp.q1,stateSp.q2,stateSp.q3];
+  const labels=[{p:project(new THREE.Vector3(0,0.5,0)), t:'P', c:'#6fd6ff', size:10}];
+  SP_POS.forEach((p,i)=> labels.push({p:project(p.clone().add(new THREE.Vector3(0,0.45,0))), t:signStr(vals[i])+' µC', c:cols[i], size:9.5}));
+  return labels;
+}
+function drawArrow2D(ctx,x1,y1,x2,y2,color,width){
+  const dx=x2-x1, dy=y2-y1;
+  const len = Math.hypot(dx,dy);
+  if(len < 1) return;
+  const ang = Math.atan2(dy,dx);
+  const lw = width || 2.6;
+  const headLen = clamp(len*0.26, 8, 22);
+  const headWidth = headLen*0.8;
+  const baseX = x2 - headLen*Math.cos(ang), baseY = y2 - headLen*Math.sin(ang);
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(baseX,baseY); ctx.stroke();
+  const perpX = -Math.sin(ang), perpY = Math.cos(ang), hw = headWidth/2;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(baseX + perpX*hw, baseY + perpY*hw);
+  ctx.lineTo(baseX - perpX*hw, baseY - perpY*hw);
+  ctx.closePath(); ctx.fill();
+}
+function drawSuperChart(){
+  const cv=document.getElementById('chartSuper'); const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height; ctx.clearRect(0,0,W,H);
+  const {E1,E2,E3,R} = lastSpFields;
+  const maxLen = Math.max(E1.length(),E2.length(),E3.length(),R.length(),0.001);
+  const scale = (Math.min(W,H)*0.32)/maxLen;
+  let cx=W*0.24, cy=H*0.68;
+  ctx.fillStyle='rgba(180,200,255,0.5)'; ctx.beginPath(); ctx.arc(cx,cy,3.5,0,Math.PI*2); ctx.fill();
+  const chain=[E1,E2,E3]; const cols=['#ffc857','#b57aff','#5bc8ff'];
+  let x=cx,y=cy;
+  chain.forEach((v,i)=>{
+    const nx = x + v.x*scale, ny = y - v.y*scale;
+    drawArrow2D(ctx,x,y,nx,ny,cols[i]);
+    x=nx; y=ny;
+  });
+  drawArrow2D(ctx, cx, cy, cx+R.x*scale, cy-R.y*scale, '#4dffa0', 2.4);
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='9px "Space Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText('E₁→E₂→E₃ chained, tail-to-head', 8, H-8);
+}
+let selectedChargeIdx = null;
+function selectCharge(idx){
+  selectedChargeIdx = idx;
+  [0,1,2].forEach(i=>{
+    document.getElementById('dirpad-'+(i+1)).style.display = (i===idx) ? 'inline-grid' : 'none';
+  });
+}
+function moveSPSource(i, dx, dz){
+  SP_POS[i].x = clamp(Math.round((SP_POS[i].x+dx)*10)/10, -3, 3);
+  SP_POS[i].z = clamp(Math.round((SP_POS[i].z+dz)*10)/10, -3, 3);
+  computeSuper();
+  const hit = {idx:i, x:SP_POS[i].x, z:SP_POS[i].z};
+  showTopViewInfo('topViewInfo', hit);
+  showTopViewInfo('topViewInfoZoom', hit);
+}
+['1','2','3'].forEach(n=>{
+  const idx = +n-1;
+  document.getElementById('btn-s'+n+'-up').addEventListener('click', ()=>moveSPSource(idx, 0, -0.1));
+  document.getElementById('btn-s'+n+'-down').addEventListener('click', ()=>moveSPSource(idx, 0, 0.1));
+  document.getElementById('btn-s'+n+'-left').addEventListener('click', ()=>moveSPSource(idx, -0.1, 0));
+  document.getElementById('btn-s'+n+'-right').addEventListener('click', ()=>moveSPSource(idx, 0.1, 0));
+});
+bindSlider('sl-s-q1','lbl-s-q1', v=>{ stateSp.q1=v; document.getElementById('sp-q1').textContent=signStr(v)+' µC'; computeSuper(); }, v=>signStr(v));
+bindSlider('sl-s-q2','lbl-s-q2', v=>{ stateSp.q2=v; document.getElementById('sp-q2').textContent=signStr(v)+' µC'; computeSuper(); }, v=>signStr(v));
+bindSlider('sl-s-q3','lbl-s-q3', v=>{ stateSp.q3=v; document.getElementById('sp-q3').textContent=signStr(v)+' µC'; computeSuper(); }, v=>signStr(v));
+document.getElementById('btn-s-toggle-result').addEventListener('click', function(){
+  stateSp.showResult = !stateSp.showResult;
+  this.textContent = stateSp.showResult ? '👁 Hide Resultant' : '👁 Show Resultant';
+  this.classList.toggle('on', !stateSp.showResult);
+  computeSuper();
+});
+document.getElementById('btn-reset-s').addEventListener('click', ()=>{
+  stateSp.q1=6; stateSp.q2=-5; stateSp.q3=4; stateSp.showResult=true;
+  SP_POS = [ new THREE.Vector3(0,0,-2.0), new THREE.Vector3(1.8,0,1.1), new THREE.Vector3(-1.8,0,1.1) ];
+  selectCharge(null);
+  document.getElementById('btn-s-toggle-result').textContent='👁 Hide Resultant'; document.getElementById('btn-s-toggle-result').classList.remove('on');
+  document.getElementById('sl-s-q1').value=6; document.getElementById('lbl-s-q1').textContent='+6';
+  document.getElementById('sl-s-q2').value=-5; document.getElementById('lbl-s-q2').textContent='−5';
+  document.getElementById('sl-s-q3').value=4; document.getElementById('lbl-s-q3').textContent='+4';
+  document.getElementById('sp-q1').textContent='+6.0 µC'; document.getElementById('sp-q2').textContent='−5.0 µC'; document.getElementById('sp-q3').textContent='+4.0 µC';
+  computeSuper();
+});
+setSliderColor('sl-s-q1','amber'); setSliderColor('sl-s-q2','violet'); setSliderColor('sl-s-q3','blue');
+
+/* ---------- Top-view grid panel (shared by Tab 3) ---------- */
+const stateTopView = { showFields:true };
+function topViewMapping(cv){
+  const W=cv.width, H=cv.height, pad=30, range=3.4;
+  const scale = Math.min(W-2*pad, H-2*pad) / (2*range);
+  const cx = W/2, cy = H/2;
+  return { W,H,pad,range,scale,cx,cy, X:(x)=>cx+x*scale, Y:(z)=>cy+z*scale, invX:(px)=>(px-cx)/scale, invY:(py)=>(py-cy)/scale };
+}
+function topViewDotRadius(cv){ return clamp(Math.min(cv.width,cv.height)*0.03, 6, 16); }
+function drawSignOnDot(ctx, x, y, dotR, isPos){
+  const sign = isPos ? '+' : '−';
+  const fontPx = Math.max(10, dotR*1.15);
+  ctx.save();
+  ctx.font = 'bold '+fontPx+'px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.lineWidth = Math.max(2, fontPx*0.14);
+  ctx.strokeStyle='rgba(0,0,0,0.55)';
+  ctx.strokeText(sign, x, y+1);
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(sign, x, y+1);
+  ctx.restore();
+}
+const ARROW_TOPVIEW_E_REF = 15000; // fixed reference field (N/C) mapped to ~full-length pixel arrows
+function drawTopViewOn(cv){
+  const ctx = cv.getContext('2d');
+  const m = topViewMapping(cv);
+  ctx.clearRect(0,0,m.W,m.H);
+  const fontPx = clamp(m.scale*0.16, 8, 13);
+  const left=m.X(-m.range), right=m.X(m.range), top=m.Y(-m.range), bottom=m.Y(m.range);
+  ctx.strokeStyle='rgba(180,200,255,0.12)'; ctx.lineWidth=1; ctx.font=fontPx+'px "Space Mono",monospace'; ctx.fillStyle='rgba(180,200,255,0.35)';
+  for(let g=-3; g<=3; g++){
+    ctx.beginPath(); ctx.moveTo(m.X(g),top); ctx.lineTo(m.X(g),bottom); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(left,m.Y(g)); ctx.lineTo(right,m.Y(g)); ctx.stroke();
+    ctx.textAlign='center'; ctx.fillText(g, m.X(g), bottom+fontPx+4);
+    ctx.textAlign='right'; ctx.fillText(g, Math.max(fontPx*1.6,left-6), m.Y(g)+3);
+  }
+  ctx.strokeStyle='rgba(180,200,255,0.4)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(m.X(0),top); ctx.lineTo(m.X(0),bottom); ctx.moveTo(left,m.Y(0)); ctx.lineTo(right,m.Y(0)); ctx.stroke();
+
+  const dotR = topViewDotRadius(cv);
+
+  if(stateTopView.showFields){
+    const {E1,E2,E3,R} = lastSpFields;
+    const ox=m.X(0), oy=m.Y(0);
+    const lw = clamp(m.scale*0.05, 2.5, 4.5);
+    const maxLenPx = Math.min(m.W,m.H)*0.4;
+    const k = maxLenPx / ARROW_TOPVIEW_E_REF;
+    const drawF=(vec,color)=>{
+      const F = vec.length(); if(F<1e-6) return;
+      const dir = vec.clone().normalize();
+      const lenPx = clamp(F*k, 10, maxLenPx);
+      const sx = ox + dir.x*(dotR+4), sy = oy + dir.y*(dotR+4);
+      const ex = sx + dir.x*lenPx, ey = sy + dir.y*lenPx;
+      drawArrow2D(ctx, sx, sy, ex, ey, color, lw);
+    };
+    drawF(E1, DARK_CSS.amber); drawF(E2, DARK_CSS.violet); drawF(E3, DARK_CSS.blue);
+    if(stateSp.showResult) drawF(R, '#4dffa0');
+  }
+
+  ctx.fillStyle='#6fd6ff';
+  ctx.beginPath(); ctx.arc(m.X(0),m.Y(0),dotR*0.75,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(220,230,255,0.85)'; ctx.font=fontPx+'px "Space Mono",monospace'; ctx.textAlign='center';
+  ctx.fillText('P', m.X(0), m.Y(0)-dotR-6);
+  const cols=[DARK_CSS.amber, DARK_CSS.violet, DARK_CSS.blue];
+  const vals2=[stateSp.q1,stateSp.q2,stateSp.q3];
+  SP_POS.forEach((p,i)=>{
+    ctx.fillStyle=cols[i];
+    ctx.beginPath(); ctx.arc(m.X(p.x),m.Y(p.z),dotR,0,Math.PI*2); ctx.fill();
+    drawSignOnDot(ctx, m.X(p.x), m.Y(p.z), dotR, vals2[i]>=0);
+    ctx.fillStyle='rgba(220,230,255,0.85)';
+    ctx.fillText('Q'+(i+1), m.X(p.x), m.Y(p.z)-dotR-6);
+  });
+}
+function refreshTopViews(){
+  drawTopViewOn(document.getElementById('topViewCanvas'));
+  if(document.getElementById('topViewZoomOverlay').classList.contains('show')){
+    drawTopViewOn(document.getElementById('topViewCanvasZoom'));
+  }
+}
+function topViewHitTest(cv, px, py){
+  const m = topViewMapping(cv);
+  const r = topViewDotRadius(cv) + 8;
+  const candidates = [0,1,2].map(i=>({idx:i, x:SP_POS[i].x, z:SP_POS[i].z}));
+  for(const c of candidates){
+    if(Math.hypot(m.X(c.x)-px, m.Y(c.z)-py) <= r) return c;
+  }
+  return null;
+}
+function showTopViewInfo(elId, hit){
+  const el = document.getElementById(elId); if(!el) return;
+  const qVal = [stateSp.q1,stateSp.q2,stateSp.q3][hit.idx];
+  el.textContent = 'Q'+(hit.idx+1)+': ('+fmt(hit.x,2)+', '+fmt(hit.z,2)+') m · '+signStr(qVal)+' µC';
+}
+function canvasPointFromEvent(cv, evt){
+  const rect = cv.getBoundingClientRect();
+  const scaleX = cv.width/rect.width, scaleY = cv.height/rect.height;
+  return { x:(evt.clientX-rect.left)*scaleX, y:(evt.clientY-rect.top)*scaleY };
+}
+function attachTopViewInteraction(cv, infoElId){
+  let dragIdx = null;
+  cv.addEventListener('pointerdown', (e)=>{
+    const {x:px,y:py} = canvasPointFromEvent(cv, e);
+    const hit = topViewHitTest(cv, px, py);
+    if(hit){
+      dragIdx = hit.idx;
+      selectCharge(hit.idx);
+      showTopViewInfo(infoElId, hit);
+      try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+    } else if(cv.id==='topViewCanvas'){
+      openTopViewZoom();
+    }
+  });
+  cv.addEventListener('pointermove', (e)=>{
+    if(dragIdx===null) return;
+    const {x:px,y:py} = canvasPointFromEvent(cv, e);
+    const m = topViewMapping(cv);
+    const wx = clamp(m.invX(px), -3, 3), wz = clamp(m.invY(py), -3, 3);
+    SP_POS[dragIdx].x = wx; SP_POS[dragIdx].z = wz;
+    computeSuper();
+    showTopViewInfo(infoElId, {idx:dragIdx, x:wx, z:wz});
+  });
+  cv.addEventListener('pointerup', ()=>{
+    if(dragIdx!==null){
+      SP_POS[dragIdx].x = clamp(Math.round(SP_POS[dragIdx].x*10)/10, -3, 3);
+      SP_POS[dragIdx].z = clamp(Math.round(SP_POS[dragIdx].z*10)/10, -3, 3);
+      computeSuper();
+      const hit = {idx:dragIdx, x:SP_POS[dragIdx].x, z:SP_POS[dragIdx].z};
+      showTopViewInfo('topViewInfo', hit);
+      showTopViewInfo('topViewInfoZoom', hit);
+    }
+    dragIdx=null;
+  });
+  cv.addEventListener('pointercancel', ()=>{ dragIdx=null; });
+}
+function openTopViewZoom(){
+  const overlay = document.getElementById('topViewZoomOverlay');
+  overlay.classList.add('show');
+  const cvZoom = document.getElementById('topViewCanvasZoom');
+  requestAnimationFrame(()=>{
+    cvZoom.width = cvZoom.clientWidth; cvZoom.height = cvZoom.clientHeight;
+    drawTopViewOn(cvZoom);
+  });
+}
+document.getElementById('btn-topview-close').addEventListener('click', ()=> document.getElementById('topViewZoomOverlay').classList.remove('show'));
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') document.getElementById('topViewZoomOverlay').classList.remove('show'); });
+attachTopViewInteraction(document.getElementById('topViewCanvas'), 'topViewInfo');
+attachTopViewInteraction(document.getElementById('topViewCanvasZoom'), 'topViewInfoZoom');
+function syncFieldCheckboxes(checked){
+  stateTopView.showFields = checked;
+  document.getElementById('chk-show-fields').checked = checked;
+  document.getElementById('chk-show-fields-zoom').checked = checked;
+  refreshTopViews();
+}
+document.getElementById('chk-show-fields').addEventListener('change', e=> syncFieldCheckboxes(e.target.checked));
+document.getElementById('chk-show-fields-zoom').addEventListener('change', e=> syncFieldCheckboxes(e.target.checked));
+computeSuper();
+
+/* ============================== TAB 4 (2.1.4): FIELD LINE DIAGRAMS ============================== */
+const flCanvas = document.getElementById('fieldLineCanvas');
+const flCtx = flCanvas.getContext('2d');
+const stateLn = { q1:6, q2:-6, mode:'charges', plateGap:1.8 };
+const LN_POS = [ {x:-1.5,z:0}, {x:1.5,z:0} ];
+const PLATE_HALF_LEN = 2.1, PLATE_SUBN = 16;
+
+function lnFieldAt(x,z,charges){
+  let ex=0, ez=0;
+  charges.forEach(c=>{
+    if(Math.abs(c.Q) < 0.002) return;
+    const dx=x-c.x, dz=z-c.z;
+    const r = Math.max(Math.hypot(dx,dz), 0.08);
+    const ux=dx/r, uz=dz/r;
+    const Emag = fieldMag(c.Q, r);
+    const sgn = c.Q>=0?1:-1;
+    ex += ux*Emag*sgn; ez += uz*Emag*sgn;
+  });
+  return {x:ex, z:ez};
+}
+// Traces one line by following the local field direction, budgeted by total PATH
+// LENGTH travelled (not distance from the world origin) so an isolated charge that
+// isn't centred at (0,0) still produces a perfectly symmetric radial star.
+function traceOneLine(seed, charges, maxPathLen, isTerminated){
+  const pts=[{x:seed.x,z:seed.z}];
+  let x=seed.x, z=seed.z, pathLen=0;
+  const stepSize=0.03;
+  for(let step=0; step<3000; step++){
+    const E = lnFieldAt(x,z,charges);
+    const mag = Math.hypot(E.x,E.z);
+    if(mag<1e-6) break;
+    x += (E.x/mag)*stepSize; z += (E.z/mag)*stepSize;
+    pts.push({x,z});
+    pathLen += stepSize;
+    if(isTerminated && isTerminated(x,z)) break;
+    if(pathLen > maxPathLen) break;
+  }
+  return pts;
+}
+function traceFieldLines(charges){
+  const lines = [];
+  const positives = charges.filter(c=>c.Q>0.05);
+  const seeds = [];
+  if(positives.length>0){
+    positives.forEach(c=>{
+      const n = clamp(Math.round(4+2.6*Math.abs(c.Q)), 6, 26);
+      for(let i=0;i<n;i++){
+        const ang = (i/n)*Math.PI*2 + 0.15;
+        seeds.push({x:c.x+Math.cos(ang)*0.17, z:c.z+Math.sin(ang)*0.17});
+      }
+    });
+  } else {
+    const n=16;
+    for(let i=0;i<n;i++){
+      const ang=(i/n)*Math.PI*2;
+      seeds.push({x:Math.cos(ang)*3.7, z:Math.sin(ang)*3.7});
+    }
+  }
+  const term = (x,z)=>{
+    for(const c of charges){ if(c.Q<-0.05 && Math.hypot(x-c.x,z-c.z)<0.18){ return true; } }
+    return false;
+  };
+  seeds.forEach(seed=> lines.push(traceOneLine(seed, charges, 6.5, term)));
+  return lines;
+}
+function buildPlateCharges(q1,q2){
+  const charges = [];
+  for(let i=0;i<PLATE_SUBN;i++){
+    const z = -PLATE_HALF_LEN + (2*PLATE_HALF_LEN)*(i+0.5)/PLATE_SUBN;
+    charges.push({x:-stateLn.plateGap, z, Q:q1/PLATE_SUBN});
+    charges.push({x:stateLn.plateGap, z, Q:q2/PLATE_SUBN});
+  }
+  return charges;
+}
+function tracePlateFieldLines(q1,q2){
+  const charges = buildPlateCharges(q1,q2);
+  const lines = [];
+  const term = (x,z)=>{
+    if(q2 < -0.3 && Math.abs(x-stateLn.plateGap)<0.1 && Math.abs(z)<PLATE_HALF_LEN+0.15) return true;
+    if(q1 < -0.3 && Math.abs(x+stateLn.plateGap)<0.1 && Math.abs(z)<PLATE_HALF_LEN+0.15) return true;
+    return false;
+  };
+  const seedN = 14;
+  function seedFromPlate(px, dirSign){
+    for(let i=0;i<seedN;i++){
+      const z0 = -PLATE_HALF_LEN*0.9 + (2*PLATE_HALF_LEN*0.9)*(i+0.5)/seedN;
+      const seed = {x:px+dirSign*0.09, z:z0};
+      lines.push(traceOneLine(seed, charges, 7.5, term));
+    }
+  }
+  if(q1 > 0.3) seedFromPlate(-stateLn.plateGap, 1);
+  if(q2 > 0.3) seedFromPlate(stateLn.plateGap, -1);
+  if(q1<=0.3 && q2<=0.3){
+    const n=16;
+    for(let i=0;i<n;i++){
+      const ang=(i/n)*Math.PI*2;
+      lines.push(traceOneLine({x:Math.cos(ang)*5,z:Math.sin(ang)*5}, charges, 7.5, term));
+    }
+  }
+  return lines;
+}
+function lnMapping(){
+  const W=flCanvas.width, H=flCanvas.height, pad=50, range=5.2;
+  const scale = Math.min(W-2*pad, H-2*pad) / (2*range);
+  const cx=W/2, cy=H/2;
+  return { X:(x)=>cx+x*scale, Y:(z)=>cy+z*scale, scale };
+}
+function drawFieldLineArrowhead(ctx, pts, idx, color){
+  if(idx<1 || idx>=pts.length) return;
+  const a=pts[idx-1], b=pts[idx];
+  const ang = Math.atan2((b.z-a.z), (b.x-a.x));
+  const m = lnMapping();
+  const x=m.X(b.x), y=m.Y(b.z);
+  const hs=7;
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(x+hs*Math.cos(ang), y+hs*Math.sin(ang));
+  ctx.lineTo(x-hs*Math.cos(ang-0.5), y-hs*Math.sin(ang-0.5));
+  ctx.lineTo(x-hs*Math.cos(ang+0.5), y-hs*Math.sin(ang+0.5));
+  ctx.closePath(); ctx.fill();
+}
+function drawTracedLines(lines){
+  const m = lnMapping();
+  flCtx.strokeStyle='rgba(200,220,255,0.55)'; flCtx.lineWidth=1.4; flCtx.lineJoin='round'; flCtx.lineCap='round';
+  lines.forEach(pts=>{
+    flCtx.beginPath();
+    pts.forEach((p,i)=>{ const x=m.X(p.x), y=m.Y(p.z); if(i===0) flCtx.moveTo(x,y); else flCtx.lineTo(x,y); });
+    flCtx.stroke();
+    const mid = Math.floor(pts.length*0.45);
+    drawFieldLineArrowhead(flCtx, pts, mid, 'rgba(200,220,255,0.75)');
+    if(pts.length>30){ const mid2=Math.floor(pts.length*0.8); drawFieldLineArrowhead(flCtx, pts, mid2, 'rgba(200,220,255,0.75)'); }
+  });
+}
+function drawPlates(){
+  const m = lnMapping();
+  [ {x:-stateLn.plateGap, Q:stateLn.q1}, {x:stateLn.plateGap, Q:stateLn.q2} ].forEach(p=>{
+    const x = m.X(p.x), y1 = m.Y(-PLATE_HALF_LEN), y2 = m.Y(PLATE_HALF_LEN);
+    const color = p.Q>0.05 ? DARK_CSS.red : (p.Q<-0.05 ? DARK_CSS.blue : '#5c6a85');
+    flCtx.strokeStyle=color; flCtx.lineWidth=9; flCtx.lineCap='round';
+    flCtx.beginPath(); flCtx.moveTo(x,y1); flCtx.lineTo(x,y2); flCtx.stroke();
+    if(Math.abs(p.Q)>0.05){
+      flCtx.fillStyle=color; flCtx.font='bold 18px sans-serif'; flCtx.textAlign='center'; flCtx.textBaseline='middle';
+      for(let i=0;i<5;i++){
+        const zz = -PLATE_HALF_LEN + (2*PLATE_HALF_LEN)*(i+0.5)/5;
+        flCtx.fillText(p.Q>=0?'+':'−', x + (p.Q>=0? -20:20), m.Y(zz));
+      }
+    }
+    flCtx.font='10px "Space Mono",monospace'; flCtx.fillStyle='rgba(220,230,255,0.75)'; flCtx.textAlign='center';
+    flCtx.fillText(signStr(p.Q)+' µC', x, y2+20);
+  });
+}
+function drawFieldLines(){
+  if(flCanvas.width===0 || flCanvas.height===0) return;
+  const m = lnMapping();
+  flCtx.fillStyle = '#07090f';
+  flCtx.fillRect(0,0,flCanvas.width,flCanvas.height);
+  // grid
+  flCtx.strokeStyle='rgba(180,200,255,0.08)'; flCtx.lineWidth=1;
+  for(let g=-5;g<=5;g++){
+    flCtx.beginPath(); flCtx.moveTo(m.X(g),m.Y(-5.2)); flCtx.lineTo(m.X(g),m.Y(5.2)); flCtx.stroke();
+    flCtx.beginPath(); flCtx.moveTo(m.X(-5.2),m.Y(g)); flCtx.lineTo(m.X(5.2),m.Y(g)); flCtx.stroke();
+  }
+  if(stateLn.mode==='plates'){
+    drawTracedLines(tracePlateFieldLines(stateLn.q1, stateLn.q2));
+    drawPlates();
+    return;
+  }
+  const charges = [ {x:LN_POS[0].x, z:LN_POS[0].z, Q:stateLn.q1}, {x:LN_POS[1].x, z:LN_POS[1].z, Q:stateLn.q2} ];
+  drawTracedLines(traceFieldLines(charges));
+  charges.forEach(c=>{
+    if(Math.abs(c.Q)<0.05) return;
+    const radius = clamp(16 + Math.sqrt(Math.abs(c.Q))*7, 16, 44);
+    const color = c.Q>=0 ? DARK_CSS.red : DARK_CSS.blue;
+    const x=m.X(c.x), y=m.Y(c.z);
+    flCtx.fillStyle=color; flCtx.beginPath(); flCtx.arc(x,y,radius,0,Math.PI*2); flCtx.fill();
+    flCtx.strokeStyle='rgba(0,0,0,0.3)'; flCtx.lineWidth=1.5; flCtx.stroke();
+    flCtx.fillStyle='#fff'; flCtx.font='bold '+Math.max(14,radius*0.85)+'px sans-serif'; flCtx.textAlign='center'; flCtx.textBaseline='middle';
+    flCtx.fillText(c.Q>=0?'+':'−', x, y+1);
+    flCtx.font='10px "Space Mono",monospace'; flCtx.fillStyle='rgba(220,230,255,0.75)';
+    flCtx.fillText(signStr(c.Q)+' µC', x, y+radius+16);
+  });
+}
+function updateLinesHUD(){
+  document.getElementById('ln-q1').textContent = signStr(stateLn.q1)+' µC';
+  document.getElementById('ln-q2').textContent = signStr(stateLn.q2)+' µC';
+}
+bindSlider('sl-l-q1','lbl-l-q1', v=>{ stateLn.q1=v; updateLinesHUD(); drawFieldLines(); }, v=>signStr(v));
+bindSlider('sl-l-q2','lbl-l-q2', v=>{ stateLn.q2=v; updateLinesHUD(); drawFieldLines(); }, v=>signStr(v));
+function setLinesPreset(q1,q2,mode){
+  stateLn.q1=q1; stateLn.q2=q2; stateLn.mode = mode||'charges';
+  document.getElementById('sl-l-q1').value=q1; document.getElementById('lbl-l-q1').textContent=signStr(q1);
+  document.getElementById('sl-l-q2').value=q2; document.getElementById('lbl-l-q2').textContent=signStr(q2);
+  document.getElementById('wrap-l-dist').style.display = (stateLn.mode==='plates') ? 'flex' : 'none';
+  document.querySelectorAll('#ctrl-lines .btn').forEach(b=>b.classList.remove('on'));
+  updateLinesHUD(); drawFieldLines();
+}
+bindSlider('sl-l-dist','lbl-l-dist', v=>{ stateLn.plateGap=v; drawFieldLines(); }, v=>fmt(v*2,2));
+document.getElementById('btn-l-single').addEventListener('click', function(){ setLinesPreset(6,0,'charges'); this.classList.add('on'); });
+document.getElementById('btn-l-like').addEventListener('click', function(){ setLinesPreset(6,6,'charges'); this.classList.add('on'); });
+document.getElementById('btn-l-dipole').addEventListener('click', function(){ setLinesPreset(6,-6,'charges'); this.classList.add('on'); });
+document.getElementById('btn-l-plates').addEventListener('click', function(){ setLinesPreset(6,-6,'plates'); this.classList.add('on'); });
+setSliderColor('sl-l-q1','red'); setSliderColor('sl-l-q2','blue');
+updateLinesHUD();
+
+/* ============================== TAB SWITCHING ============================== */
+document.getElementById('btn-fold-info').addEventListener('click', function(){
+  const panel = document.getElementById('infoPanel');
+  const folded = panel.classList.toggle('collapsed');
+  this.textContent = folded ? '▸' : '▾';
+});
+
+const moduleGroups = { field:grpField, point:grpPoint, super:grpSuper, lines:null };
+const moduleCams = {
+  field:{theta:0.45,phi:0.95,radius:6.5,cx:0,cy:0,cz:0},
+  point:{theta:0.5,phi:1.0,radius:5.5,cx:0,cy:0,cz:0},
+  super:{theta:0.4,phi:0.95,radius:7,cx:0,cy:0,cz:0},
+  lines:{theta:0.45,phi:0.95,radius:6.5,cx:0,cy:0,cz:0}
+};
+const moduleLabelFns = { field:labelsField, point:labelsPoint, super:labelsSuper, lines:null };
+
+function setActiveModule(id){
+  Object.keys(moduleGroups).forEach(k=>{ if(moduleGroups[k]) moduleGroups[k].visible = (k===id); });
+  activeModuleRef = id;
+  const c = moduleCams[id];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.mod===id));
+  document.querySelectorAll('.hud-block').forEach(el=>{ el.style.display = (el.id==='hud-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.info-block').forEach(el=>{ el.style.display = (el.id==='info-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.ctrl-block').forEach(el=>{ el.style.display = (el.id==='ctrl-'+id) ? 'flex' : 'none'; });
+  document.getElementById('topViewPanel').style.display = (id==='super') ? 'block' : 'none';
+  if(id!=='super') document.getElementById('topViewZoomOverlay').classList.remove('show');
+  const fieldLineOverlay = document.getElementById('fieldLineOverlay');
+  const hint = document.getElementById('hint');
+  if(id==='lines'){
+    fieldLineOverlay.classList.add('show');
+    canvas.style.visibility = 'hidden';
+    hint.style.display = 'none';
+    requestAnimationFrame(()=>{
+      flCanvas.width = flCanvas.clientWidth; flCanvas.height = flCanvas.clientHeight;
+      drawFieldLines();
+    });
+  } else {
+    fieldLineOverlay.classList.remove('show');
+    canvas.style.visibility = 'visible';
+    hint.style.display = 'block';
+  }
+  if(id==='super') refreshTopViews();
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setActiveModule(btn.dataset.mod));
+});
+document.getElementById('btn-camreset').addEventListener('click', ()=>{
+  const c = moduleCams[activeModuleRef];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+});
+setActiveModule('field');
+
+/* ============================== MAIN LOOP ============================== */
+function drawLabels(){
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  const fn = moduleLabelFns[activeModuleRef];
+  if(!fn) return;
+  fn().forEach(l=> drawChip(l.p, l.t, l.c, l.size));
+}
+function animate(){
+  requestAnimationFrame(animate);
+  drawLabels();
+  if(activeModuleRef!=='lines'){ renderer.render(scene3, cam3); }
+}
+animate();
+</script>
+</body>
+</html>
