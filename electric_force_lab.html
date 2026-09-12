@@ -3,6 +3,487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Electric Force</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#06080f;font-family:'Syne',sans-serif;color:#e8f4ff;}
+
+/* ── HOME SCREEN ─────────────────────────────────────── */
+#home{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,transform .5s;}
+#home.out{opacity:0;transform:scale(1.04);pointer-events:none;}
+
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+.home-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0;}
+
+/* Title */
+.lab-title{text-align:center;margin-bottom:48px;}
+.home-logo{width:52px;height:56px;opacity:0.7;display:block;margin:0 auto 14px;}
+.lab-title h1{font-family:'Space Mono',monospace;font-size:clamp(22px,4vw,42px);font-weight:700;letter-spacing:4px;color:#fff;text-shadow:0 0 40px rgba(120,180,255,.5);}
+.lab-title p{font-size:clamp(9px,1.2vw,12px);letter-spacing:4px;color:rgba(120,180,255,.45);text-transform:uppercase;margin-top:6px;}
+
+/* Cards row */
+.cards{display:flex;gap:clamp(16px,2.5vw,32px);align-items:stretch;flex-wrap:wrap;justify-content:center;}
+
+.card{
+  position:relative;width:clamp(200px,22vw,270px);
+  background:rgba(8,14,30,.85);backdrop-filter:blur(24px);
+  border:1px solid rgba(120,180,255,.15);border-radius:22px;
+  padding:28px 24px 24px;cursor:pointer;
+  transition:transform .25s,border-color .25s,box-shadow .25s;
+  display:flex;flex-direction:column;gap:14px;overflow:hidden;
+}
+.card:hover{transform:translateY(-6px) scale(1.025);border-color:rgba(120,180,255,.45);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(120,180,255,.12);}
+.card:active{transform:translateY(-2px) scale(1.01);}
+
+.card-num{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(120,180,255,.35);text-transform:uppercase;}
+.card h2{font-family:'Space Mono',monospace;font-size:clamp(13px,1.4vw,16px);font-weight:700;color:#fff;line-height:1.3;}
+.card p{font-size:clamp(10px,1vw,12px);color:rgba(160,200,255,.55);line-height:1.6;flex:1;}
+
+/* Mini pattern canvas in each card */
+.card-canvas{width:100%;height:90px;border-radius:10px;overflow:hidden;background:#04060d;border:1px solid rgba(120,180,255,.1);}
+.card-canvas canvas{width:100%;height:100%;display:block;}
+
+.card-formula{font-family:'Space Mono',monospace;font-size:10px;color:rgba(200,160,255,.75);padding:6px 10px;border-radius:8px;background:rgba(180,100,255,.06);border:1px solid rgba(180,100,255,.18);text-align:center;line-height:1.7;}
+
+.card-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;border-radius:12px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.25);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#78b4ff;transition:background .2s,border-color .2s;}
+.card:hover .card-btn{background:rgba(120,180,255,.22);border-color:#78b4ff;}
+
+/* Card accent colours */
+.card.fo{--accent:120,180,255;}
+.card.fi{--accent:127,255,178;}
+.card.po{--accent:200,150,255;}
+.card.fo:hover{box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(120,180,255,.15);}
+.card.fi:hover{border-color:rgba(127,255,178,.45);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(127,255,178,.15);}
+.card.po:hover{border-color:rgba(200,150,255,.45);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(200,150,255,.15);}
+.card.fi .card-num,.card.fi h2{color:rgba(180,255,220,1);}
+.card.fi .card-btn{color:#7fffb2;border-color:rgba(127,255,178,.25);background:rgba(127,255,178,.08);}
+.card.fi:hover .card-btn{background:rgba(127,255,178,.2);border-color:#7fffb2;}
+.card.po .card-num,.card.po h2{color:rgba(220,180,255,1);}
+.card.po .card-btn{color:#cc88ff;border-color:rgba(200,150,255,.25);background:rgba(200,150,255,.08);}
+.card.po:hover .card-btn{background:rgba(200,150,255,.2);border-color:#cc88ff;}
+.card.po .card-formula{color:rgba(220,180,255,.8);background:rgba(200,130,255,.07);border-color:rgba(200,130,255,.2);}
+.card.fo .card-formula{color:rgba(180,200,255,.8);}
+.card.fi .card-formula{color:rgba(180,255,220,.8);background:rgba(127,255,178,.05);border-color:rgba(127,255,178,.18);}
+
+/* Footer */
+.home-footer{margin-top:36px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(120,180,255,.2);letter-spacing:2px;text-transform:uppercase;}
+
+/* ── QR button (home screen, bottom-right) ── */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(120,180,255,.25);background:rgba(6,10,22,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;color:rgba(120,180,255,.55);}
+#qr-btn:hover{border-color:rgba(120,180,255,.55);background:rgba(120,180,255,.14);color:#78b4ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(120,180,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(120,180,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(160,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#78b4ff;}
+
+/* ── EXPERIMENT FRAME ────────────────────────────────── */
+#exp-wrap{position:fixed;inset:0;z-index:20;display:none;}
+#exp-wrap.show{display:block;}
+#exp-frame{width:100%;height:100%;border:none;display:block;}
+
+/* Back button */
+#back-btn{
+  position:fixed;bottom:20px;left:20px;z-index:30;
+  display:none;padding:8px 18px;border-radius:30px;
+  background:rgba(6,10,22,.92);backdrop-filter:blur(16px);
+  border:1px solid rgba(120,180,255,.3);color:#78b4ff;
+  font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;
+  transition:all .2s;letter-spacing:1px;
+}
+#back-btn:hover{background:rgba(120,180,255,.18);border-color:#78b4ff;}
+#back-btn.show{display:block;}
+</style>
+</head>
+<body>
+
+<!-- Animated background -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Home screen -->
+<div id="home">
+  <div class="home-inner">
+    <div class="lab-title">
+      <svg class="home-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+      <h1>ELECTRIC FORCE</h1>
+      <p>Electric Force · Field · Potential — Interactive Topics</p>
+    </div>
+
+    <div class="cards">
+      <!-- Electric Force -->
+      <div class="card fo" onclick="launchExp('fo')">
+        <div class="card-num">Topic I</div>
+        <h2>Electric Force<br>Coulomb's Law</h2>
+        <div class="card-canvas"><canvas id="c-fo" width="240" height="90"></canvas></div>
+        <p>Place point charges and measure the attractive or repulsive force between them, including superposition of multiple charges.</p>
+        <div class="card-formula">F = k·q₁q₂ / r²</div>
+        <div class="card-btn"><span>▶</span> Open Lab</div>
+      </div>
+
+      <!-- Electric Field -->
+      <div class="card fi" onclick="launchExp('fi')">
+        <div class="card-num">Topic II</div>
+        <h2>Electric Field<br>Field Lines</h2>
+        <div class="card-canvas"><canvas id="c-fi" width="240" height="90"></canvas></div>
+        <p>Map the field strength and direction around point charges and visualize the resulting field line patterns.</p>
+        <div class="card-formula">E = k·q / r²</div>
+        <div class="card-btn"><span>▶</span> Open Lab</div>
+      </div>
+
+      <!-- Electric Potential -->
+      <div class="card po" onclick="launchExp('po')">
+        <div class="card-num">Topic III</div>
+        <h2>Electric Potential<br>Potential Energy</h2>
+        <div class="card-canvas"><canvas id="c-po" width="240" height="90"></canvas></div>
+        <p>Explore equipotential surfaces around charges and relate potential differences to the work done moving a test charge.</p>
+        <div class="card-formula">V = k·q / r</div>
+        <div class="card-btn"><span>▶</span> Open Lab</div>
+      </div>
+    </div>
+
+    <div class="home-footer">Select a topic to begin · AR mode available on mobile</div>
+  </div>
+</div>
+
+<!-- Experiment iframe -->
+<div id="exp-wrap">
+  <iframe id="exp-frame" allowfullscreen
+    allow="camera;gyroscope;accelerometer;xr-spatial-tracking"></iframe>
+</div>
+<button id="back-btn" onclick="goHome()">← Back to Lab</button>
+
+<!-- QR code button — fixed bottom-right on home screen -->
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<!-- QR modal -->
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Felectric_force.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Felectric_force.html'" />
+    <p>darawa-io.github.io/ARLABS/electric_force.html</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  BACKGROUND ANIMATION — animated charge dipole + field lines
+// ═══════════════════════════════════════════════════════
+const bgC = document.getElementById('bg-canvas');
+const bgX = bgC.getContext('2d');
+function resizeBG(){ bgC.width=innerWidth; bgC.height=innerHeight; }
+resizeBG(); window.addEventListener('resize',resizeBG);
+
+const POS_COLOR=[255,120,90];   // warm red-orange for +
+const NEG_COLOR=[90,170,255];   // cool blue for −
+const FIELD_COLOR=[140,190,255];
+
+// Ambient drifting particles (test charges)
+const particles = Array.from({length:70},()=>({
+  x:Math.random()*1.2-0.1, y:Math.random(),
+  vx:(Math.random()-.5)*0.00015, vy:-(Math.random()*0.0003+0.0001),
+  r:Math.random()*1.4+0.3, a:Math.random()*0.35+0.05
+}));
+
+let bgT = 0;
+let dashOffset = 0;
+
+function drawBG(){
+  bgT++;
+  dashOffset -= 0.35;
+  const W=bgC.width, H=bgC.height;
+  bgX.fillStyle='rgba(6,8,15,0.16)';
+  bgX.fillRect(0,0,W,H);
+
+  const cx=W/2, cy=H/2;
+  // Gentle breathing separation between the two charges
+  const sep = Math.min(W,H)*0.30 + Math.sin(bgT*0.006)*Math.min(W,H)*0.02;
+  const px1=cx-sep/2, py1=cy;   // + charge
+  const px2=cx+sep/2, py2=cy;   // − charge
+  const R = Math.max(14, Math.min(W,H)*0.022);
+
+  // ── Field lines between the charges (classic dipole arcs) ──
+  const nLines = 9;
+  for(let i=0;i<nLines;i++){
+    const t = (i/(nLines-1))*2-1; // -1..1
+    const bow = t*sep*0.62;
+    const midY = cy+bow;
+    bgX.beginPath();
+    bgX.moveTo(px1,py1);
+    bgX.quadraticCurveTo(cx, midY, px2, py2);
+    bgX.strokeStyle=`rgba(${FIELD_COLOR[0]},${FIELD_COLOR[1]},${FIELD_COLOR[2]},${0.16-Math.abs(t)*0.06})`;
+    bgX.lineWidth=1.3;
+    bgX.setLineDash([6,10]);
+    bgX.lineDashOffset=dashOffset;
+    bgX.stroke();
+  }
+  bgX.setLineDash([]);
+
+  // ── Outward field lines from + charge escaping to infinity ──
+  const nOut = 6;
+  for(let i=0;i<nOut;i++){
+    const ang = Math.PI*0.55 + (i/(nOut-1))*Math.PI*0.9;
+    const ex = px1+Math.cos(ang)*sep*0.9;
+    const ey = py1+Math.sin(ang)*sep*0.9;
+    bgX.beginPath();
+    bgX.moveTo(px1,py1);
+    bgX.lineTo(ex,ey);
+    bgX.strokeStyle=`rgba(${POS_COLOR[0]},${POS_COLOR[1]},${POS_COLOR[2]},0.10)`;
+    bgX.lineWidth=1.1;
+    bgX.setLineDash([5,9]);
+    bgX.lineDashOffset=dashOffset;
+    bgX.stroke();
+  }
+  // ── Inward field lines converging into − charge from infinity ──
+  for(let i=0;i<nOut;i++){
+    const ang = Math.PI*0.55 + (i/(nOut-1))*Math.PI*0.9;
+    const ex = px2-Math.cos(ang)*sep*0.9;
+    const ey = py2+Math.sin(ang)*sep*0.9;
+    bgX.beginPath();
+    bgX.moveTo(ex,ey);
+    bgX.lineTo(px2,py2);
+    bgX.strokeStyle=`rgba(${NEG_COLOR[0]},${NEG_COLOR[1]},${NEG_COLOR[2]},0.10)`;
+    bgX.lineWidth=1.1;
+    bgX.setLineDash([5,9]);
+    bgX.lineDashOffset=dashOffset;
+    bgX.stroke();
+  }
+  bgX.setLineDash([]);
+
+  // ── Charge glows ──
+  function glow(x,y,col,pulse){
+    const gr=R*(3.4+Math.sin(bgT*0.05+pulse)*0.4);
+    const grd=bgX.createRadialGradient(x,y,0,x,y,gr);
+    grd.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},0.55)`);
+    grd.addColorStop(0.5,`rgba(${col[0]},${col[1]},${col[2]},0.16)`);
+    grd.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},0)`);
+    bgX.fillStyle=grd; bgX.beginPath(); bgX.arc(x,y,gr,0,Math.PI*2); bgX.fill();
+  }
+  glow(px1,py1,POS_COLOR,0);
+  glow(px2,py2,NEG_COLOR,Math.PI);
+
+  // ── Charge bodies ──
+  function charge(x,y,col,sign){
+    bgX.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},0.92)`;
+    bgX.beginPath(); bgX.arc(x,y,R,0,Math.PI*2); bgX.fill();
+    bgX.strokeStyle='rgba(255,255,255,0.5)'; bgX.lineWidth=1.4;
+    bgX.beginPath(); bgX.arc(x,y,R,0,Math.PI*2); bgX.stroke();
+    bgX.fillStyle='#0a0e1a';
+    bgX.font=`700 ${Math.round(R*1.1)}px 'Space Mono',monospace`;
+    bgX.textAlign='center'; bgX.textBaseline='middle';
+    bgX.fillText(sign,x,y+1);
+  }
+  charge(px1,py1,POS_COLOR,'+');
+  charge(px2,py2,NEG_COLOR,'−');
+
+  // ── Ambient particles ──
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.y<-0.02){ p.y=1.02; p.x=Math.random(); }
+    if(p.x<-0.05||p.x>1.05){ p.vx*=-1; }
+    const p_x=p.x*W, p_y=p.y*H;
+    bgX.fillStyle=`rgba(${FIELD_COLOR[0]},${FIELD_COLOR[1]},${FIELD_COLOR[2]},${p.a*0.6})`;
+    bgX.beginPath(); bgX.arc(p_x,p_y,p.r,0,Math.PI*2); bgX.fill();
+  });
+
+  requestAnimationFrame(drawBG);
+}
+drawBG();
+
+// ═══════════════════════════════════════════════════════
+//  MINI PREVIEW CANVASES ON CARDS
+// ═══════════════════════════════════════════════════════
+
+// -- Electric Force preview: two charges with a scaling force arrow --
+let forcePhase = 0;
+function drawForcePreview(){
+  const cv=document.getElementById('c-fo'); if(!cv) return;
+  const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
+  ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
+  forcePhase+=0.018;
+  const cy=H/2;
+  const r = W*0.30 + Math.sin(forcePhase)*W*0.12; // separation breathing
+  const x1=W/2-r/2, x2=W/2+r/2;
+  const R=8;
+  // Force magnitude ~ 1/r^2 (normalized for display)
+  const rMin=W*0.18, rMax=W*0.42;
+  const f = Math.pow((rMax-rMin+8)/(r-rMin+8), 2);
+  const fLen = Math.min(34, 8+f*7);
+
+  function charge(x,col,sign){
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,cy,R,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#04060d'; ctx.font="700 10px 'Space Mono',monospace";
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(sign,x,cy+1);
+  }
+  function arrow(x0,dir,len,col){
+    const x1a=x0+dir*len;
+    ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x0,cy-16); ctx.lineTo(x1a,cy-16); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x1a,cy-16);
+    ctx.lineTo(x1a-dir*6,cy-16-4);
+    ctx.lineTo(x1a-dir*6,cy-16+4);
+    ctx.closePath(); ctx.fillStyle=col; ctx.fill();
+  }
+  charge(x1,'rgba(255,120,90,0.95)','+');
+  charge(x2,'rgba(255,120,90,0.95)','+');
+  arrow(x1+R+2, -1, fLen*0.6, 'rgba(255,170,110,0.9)');
+  arrow(x2-R-2, 1, fLen*0.6, 'rgba(255,170,110,0.9)');
+
+  // faint distance line
+  ctx.strokeStyle='rgba(120,180,255,.25)'; ctx.lineWidth=1;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(x1,cy+16); ctx.lineTo(x2,cy+16); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// -- Electric Field preview: radiating field lines from a point charge --
+let fieldPhase = 0;
+function drawFieldPreview(){
+  const cv=document.getElementById('c-fi'); if(!cv) return;
+  const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
+  ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
+  fieldPhase+=0.01;
+  const cx=W/2, cy=H/2;
+  const nLines=14;
+  for(let i=0;i<nLines;i++){
+    const ang = (i/nLines)*Math.PI*2 + fieldPhase*0.3;
+    const len = W*0.42;
+    const ex=cx+Math.cos(ang)*len, ey=cy+Math.sin(ang)*len;
+    const grad=ctx.createLinearGradient(cx,cy,ex,ey);
+    grad.addColorStop(0,'rgba(127,255,178,0.85)');
+    grad.addColorStop(1,'rgba(127,255,178,0)');
+    ctx.strokeStyle=grad; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ex,ey); ctx.stroke();
+    // arrowhead partway
+    const ax=cx+Math.cos(ang)*len*0.55, ay=cy+Math.sin(ang)*len*0.55;
+    ctx.fillStyle='rgba(127,255,178,0.8)';
+    ctx.beginPath();
+    ctx.moveTo(ax+Math.cos(ang)*5,ay+Math.sin(ang)*5);
+    ctx.lineTo(ax+Math.cos(ang+2.4)*4,ay+Math.sin(ang+2.4)*4);
+    ctx.lineTo(ax+Math.cos(ang-2.4)*4,ay+Math.sin(ang-2.4)*4);
+    ctx.closePath(); ctx.fill();
+  }
+  // central charge
+  ctx.fillStyle='rgba(255,120,90,0.95)';
+  ctx.beginPath(); ctx.arc(cx,cy,7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle='#04060d'; ctx.font="700 9px 'Space Mono',monospace";
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('+',cx,cy+1);
+}
+
+// -- Electric Potential preview: concentric equipotential rings --
+let potPhase = 0;
+function drawPotentialPreview(){
+  const cv=document.getElementById('c-po'); if(!cv) return;
+  const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
+  ctx.fillStyle='#03050c'; ctx.fillRect(0,0,W,H);
+  potPhase+=0.012;
+  const cx=W/2, cy=H/2;
+  const nRings=5;
+  for(let i=1;i<=nRings;i++){
+    const rad = i*(W*0.078) + Math.sin(potPhase+i)*1.4;
+    const alpha = 0.75 - i*0.11;
+    ctx.strokeStyle=`rgba(200,150,255,${Math.max(0.08,alpha)})`;
+    ctx.lineWidth=1.4;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // central charge
+  ctx.fillStyle='rgba(255,120,90,0.95)';
+  ctx.beginPath(); ctx.arc(cx,cy,7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle='#04060d'; ctx.font="700 9px 'Space Mono',monospace";
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('+',cx,cy+1);
+}
+
+function animatePreviews(){
+  drawForcePreview();
+  drawFieldPreview();
+  drawPotentialPreview();
+  requestAnimationFrame(animatePreviews);
+}
+animatePreviews();
+
+// ═══════════════════════════════════════════════════════
+//  EXPERIMENT FILES  (stored as blobs)
+// ═══════════════════════════════════════════════════════
+// Each experiment HTML is fetched from a <script type="text/html"> tag
+// embedded below, converted to a blob URL, and loaded in the iframe.
+const expSources = {};
+
+function getExpSource(id){
+  if(expSources[id]) return expSources[id];
+  const el = document.getElementById('src-'+id);
+  if(!el){ console.error('No source for',id); return null; }
+  // textContent preserves the literal <\/script> escape we used to embed the HTML.
+  // Unescape it back to <\/script> so the blob parses as valid HTML.
+  const html = el.textContent.replace(/<\\\/script>/g, '<\/script>');
+  const blob = new Blob([html],{type:'text/html'});
+  expSources[id] = URL.createObjectURL(blob);
+  return expSources[id];
+}
+
+function launchExp(id){
+  const url = getExpSource(id);
+  if(!url) return;
+  const frame = document.getElementById('exp-frame');
+  frame.src = url;
+  document.getElementById('home').classList.add('out');
+  setTimeout(()=>{
+    document.getElementById('exp-wrap').classList.add('show');
+    document.getElementById('back-btn').classList.add('show');
+  },300);
+}
+
+function goHome(){
+  document.getElementById('exp-wrap').classList.remove('show');
+  document.getElementById('back-btn').classList.remove('show');
+  document.getElementById('home').classList.remove('out');
+  // Clear iframe to stop any AR camera
+  const frame = document.getElementById('exp-frame');
+  frame.src='about:blank';
+}
+
+// QR button
+document.getElementById('qr-btn').addEventListener('click',()=>{
+  document.getElementById('qr-modal').classList.add('show');
+});
+document.getElementById('qr-modal').addEventListener('click',function(e){
+  if(e.target===this) this.classList.remove('show');
+});
+document.getElementById('qr-modal-close').addEventListener('click',()=>{
+  document.getElementById('qr-modal').classList.remove('show');
+});
+</script>
+
+<!-- ═══════════════════════════════════════════════════
+     EMBEDDED EXPERIMENT SOURCES
+     Each wrapped in <script type="text/html"> so the
+     browser ignores the markup but JS can read it.
+════════════════════════════════════════════════════ -->
+<script type="text/html" id="src-fo">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Electric Force Lab | Point Charges, Coulomb's Law & Superposition</title>
 <link rel="icon" type="image/png" href="assets/logo1.png">
 <style>
@@ -373,9 +854,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bor
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"><\/script>
 <script>
 'use strict';
 /* ============================== CORE SETUP ============================== */
@@ -1607,7 +2088,7 @@ function animate(){
   renderer.render(scene3, cam3);
 }
 animate();
-</script>
+<\/script>
 
 <button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1630,6 +2111,2687 @@ animate();
 document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
 document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
 document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+<\/script>
+</body>
+</html>
+
 </script>
+
+<script type="text/html" id="src-fi">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Electric Field Lab | Field Strength, Point Charges & Field Lines</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2307090f'/%3E%3Cpath d='M13 2 L4 14 h6 l-1 8 9-12h-6z' fill='%23ffc857'/%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --pink:#ff6fae;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.86;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.4px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.4);letter-spacing:1.4px;margin-top:2px;font-family:'Space Mono',monospace;}
+
+#tabbar{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;z-index:10;max-width:calc(100vw - 260px);overflow-x:auto;}
+#tabbar::-webkit-scrollbar{height:0;}
+.tab-btn{padding:8px 11px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;transition:all .18s;}
+.tab-btn:hover{color:#fff;}
+.tab-btn.on{background:rgba(91,200,255,0.20);color:#fff;}
+
+#hud{
+  position:absolute;top:70px;right:14px;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:15px;width:238px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;
+}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:6px;}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-align:right;}
+.dv.amber{color:var(--amber);}
+.dv.blue{color:var(--blue);}
+.dv.violet{color:var(--violet);}
+.dv.green{color:var(--green);}
+.dv.red{color:var(--red);}
+.dv.pink{color:var(--pink);}
+.hdiv{height:1px;background:var(--border);margin:9px 0;}
+#legend{display:flex;flex-wrap:wrap;gap:6px 10px;font-family:'Space Mono',monospace;font-size:9px;}
+.legchip{display:flex;align-items:center;gap:4px;color:rgba(200,215,255,.65);}
+.legdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.note-box{padding:8px 9px;border-radius:9px;background:rgba(180,120,255,0.06);border:1px solid rgba(180,120,255,0.18);font-size:10px;font-family:'Space Mono',monospace;color:rgba(210,220,255,0.8);line-height:1.7;}
+.chart-wrap{margin-top:8px;border-radius:10px;overflow:hidden;background:rgba(180,200,255,0.03);border:1px solid var(--border);padding:6px;}
+.chart-wrap canvas{display:block;width:100%;height:auto;}
+.chart-cap{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,0.4);text-align:center;margin-top:4px;letter-spacing:.5px;}
+
+#leftColumn{position:absolute;top:70px;left:14px;z-index:10;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 160px);}
+#topViewPanel{width:272px;max-width:calc(100vw - 330px);background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:12px;flex-shrink:0;}
+#topViewPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+#topViewCanvas{width:100%;height:auto;border-radius:8px;background:rgba(180,200,255,0.02);display:block;touch-action:none;cursor:pointer;}
+.topview-info{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.55);margin-top:7px;min-height:14px;line-height:1.5;}
+.chk-row{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,0.65);margin-top:7px;cursor:pointer;}
+.chk-row input{cursor:pointer;}
+
+#topViewZoomOverlay{display:none;position:fixed;inset:0;z-index:70;background:rgba(4,6,18,.85);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#topViewZoomOverlay.show{display:flex;}
+#topViewZoomBox{width:80vw;height:80vh;background:rgba(10,14,28,.97);border:1px solid var(--border);border-radius:20px;padding:18px;display:flex;flex-direction:column;}
+#topViewZoomHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;}
+#topViewZoomHeader h2{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;color:rgba(180,200,255,0.6);text-transform:uppercase;}
+#topViewCanvasZoom{flex:1;width:100%;min-height:0;border-radius:12px;background:rgba(180,200,255,0.02);touch-action:none;display:block;}
+#topViewZoomBox .topview-info{font-size:11px;flex-shrink:0;}
+#topViewZoomBox .chk-row{font-size:11px;flex-shrink:0;}
+
+#infoPanel{width:272px;max-width:calc(100vw - 330px);
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;
+  padding:15px;overflow-y:auto;flex-shrink:1;min-height:0;}
+#infoPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+#infoPanel.collapsed .info-block{display:none !important;}
+#infoPanel.collapsed{padding-bottom:15px;}
+.fold-btn{background:none;border:none;color:rgba(180,200,255,0.5);cursor:pointer;font-size:12px;padding:0 3px;}
+.fold-btn:hover{color:#fff;}
+.info-block h3{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:8px;}
+.info-block p{font-size:11.5px;line-height:1.65;color:rgba(210,222,250,0.82);margin-bottom:8px;}
+.info-block p:last-child{margin-bottom:0;}
+.info-block b{color:#fff;}
+.info-block .pos{color:var(--red);font-weight:700;}
+.info-block .neg{color:var(--blue);font-weight:700;}
+.info-block .formula{display:block;text-align:center;font-family:'Space Mono',monospace;font-size:13px;color:var(--amber);background:rgba(255,200,87,0.06);border:1px solid rgba(255,200,87,0.2);border-radius:8px;padding:9px;margin:9px 0;letter-spacing:.5px;}
+.info-block .tag{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--green);background:rgba(77,255,160,.08);border:1px solid rgba(77,255,160,.25);border-radius:6px;padding:2px 7px;margin-bottom:7px;letter-spacing:.5px;}
+
+#controls{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;align-items:center;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:40px;
+  padding:8px 14px;z-index:10;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 24px);
+}
+.ctrl-block{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:26px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.red{border-color:rgba(255,94,114,0.4);color:var(--red);background:rgba(255,94,114,0.06);}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.violet{border-color:rgba(181,122,255,0.4);color:var(--violet);background:rgba(181,122,255,0.06);}
+.btn.pink{border-color:rgba(255,111,174,0.4);color:var(--pink);background:rgba(255,111,174,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:70px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--thumb-color,var(--violet));cursor:pointer;box-shadow:0 0 8px var(--thumb-glow,rgba(181,122,255,0.6));}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:none;background:var(--thumb-color,var(--violet));cursor:pointer;box-shadow:0 0 8px var(--thumb-glow,rgba(181,122,255,0.6));}
+
+.dirpad{display:inline-grid;grid-template-columns:repeat(3,20px);grid-template-rows:repeat(3,20px);gap:2px;grid-template-areas:". up ." "left . right" ". down .";vertical-align:middle;}
+.dirpad button{width:20px;height:20px;padding:0;font-size:8px;line-height:1;border-radius:5px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.06);color:var(--blue);cursor:pointer;}
+.dirpad button:hover{background:rgba(180,200,255,0.18);}
+.dirpad .up{grid-area:up;} .dirpad .down{grid-area:down;} .dirpad .left{grid-area:left;} .dirpad .right{grid-area:right;}
+
+#fieldLineOverlay{position:absolute;inset:0;z-index:2;display:none;}
+#fieldLineOverlay.show{display:block;}
+#fieldLineCanvas{width:100%;height:100%;display:block;touch-action:none;}
+
+#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);font-size:8.5px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+
+@media (max-width:900px){
+  #leftColumn{display:none;}
+  #hud{width:190px;top:66px;}
+  #tabbar{max-width:calc(100vw - 20px);top:60px;left:14px;transform:none;}
+}
+
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(120,180,255,.25);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;color:rgba(120,180,255,.55);}
+#qr-btn:hover{border-color:rgba(120,180,255,.55);background:rgba(120,180,255,.14);color:#78b4ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(120,180,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(120,180,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(160,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#78b4ff;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+
+<div id="fieldLineOverlay">
+  <canvas id="fieldLineCanvas"></canvas>
+</div>
+
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+  <div id="title-text">
+    <h1>ELECTRIC FIELD LAB</h1>
+    <p>Field Strength · Point Charges · Superposition · Field Lines</p>
+  </div>
+</div>
+
+<div id="tabbar">
+  <button class="tab-btn on" data-mod="field">2.1.1 · FIELD &amp; FORCE</button>
+  <button class="tab-btn" data-mod="point">2.1.2 · POINT CHARGE</button>
+  <button class="tab-btn" data-mod="super">2.1.3 · SUPERPOSITION</button>
+  <button class="tab-btn" data-mod="lines">2.1.4 · FIELD LINES</button>
+</div>
+
+<div id="hud">
+  <h2>Readings</h2>
+  <div id="legend">
+    <span class="legchip"><span class="legdot" style="background:var(--red);"></span>positive</span>
+    <span class="legchip"><span class="legdot" style="background:var(--blue);"></span>negative</span>
+    <span class="legchip"><span class="legdot" style="background:var(--green);"></span>field E</span>
+    <span class="legchip"><span class="legdot" style="background:var(--pink);"></span>force F</span>
+  </div>
+  <div class="hdiv"></div>
+
+  <div id="hud-field" class="hud-block">
+    <div class="dr"><span class="dl">Source q₁ (amber)</span><span class="dv amber" id="fd-q1">+5.0 µC</span></div>
+    <div class="dr"><span class="dl">Source q₂ (violet)</span><span class="dv violet" id="fd-q2">−4.0 µC</span></div>
+    <div class="dr"><span class="dl">Source q₃ (blue)</span><span class="dv blue" id="fd-q3">+3.0 µC</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Field E at point P</span><span class="dv green" id="fd-emag">0 N/C</span></div>
+    <div class="dr"><span class="dl">Field direction</span><span class="dv green" id="fd-edir">0°</span></div>
+    <div id="fd-test-rows" style="display:none;">
+      <div class="hdiv"></div>
+      <div class="dr"><span class="dl">Test charge q₀</span><span class="dv" id="fd-q0">+2.0 µC</span></div>
+      <div class="dr"><span class="dl">Force F = q₀E</span><span class="dv pink" id="fd-fmag">0.000 N</span></div>
+    </div>
+    <div class="note-box" id="fd-note">The field E exists at P whether or not a test charge is there. Add a test charge to see the force F = q₀E it would feel.</div>
+  </div>
+
+  <div id="hud-point" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Charge Q</span><span class="dv" id="pt-Q">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Distance r</span><span class="dv" id="pt-r">1.60 m</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Field E = kQ/r²</span><span class="dv green" id="pt-E">0 N/C</span></div>
+    <div class="dr"><span class="dl">Direction</span><span class="dv green" id="pt-dir">radially out</span></div>
+    <div class="chart-wrap"><canvas id="chartPoint" width="420" height="200"></canvas></div>
+    <div class="chart-cap">E vs. r (inverse-square curve) — dot marks the current setting</div>
+  </div>
+
+  <div id="hud-super" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Q₁ (amber)</span><span class="dv amber" id="sp-q1">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Q₂ (violet)</span><span class="dv violet" id="sp-q2">−5.0 µC</span></div>
+    <div class="dr"><span class="dl">Q₃ (blue)</span><span class="dv blue" id="sp-q3">+4.0 µC</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Net field |ΣE| at P</span><span class="dv green" id="sp-emag">0 N/C</span></div>
+    <div class="chart-wrap"><canvas id="chartSuper" width="300" height="220"></canvas></div>
+    <div class="chart-cap">tip-to-tail vector addition ΣE = E₁+E₂+E₃</div>
+  </div>
+
+  <div id="hud-lines" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Charge Q₁</span><span class="dv" id="ln-q1">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Charge Q₂</span><span class="dv" id="ln-q2">−6.0 µC</span></div>
+    <div class="hdiv"></div>
+    <div class="note-box">Lines start on <span class="pos">+</span> charges and end on <span class="neg">−</span> charges. More lines = bigger charge. Lines never cross.</div>
+  </div>
+</div>
+
+<div id="leftColumn">
+  <div id="topViewPanel" style="display:none;">
+    <h2>Top View (x, z) — grid in metres</h2>
+    <canvas id="topViewCanvas" width="272" height="200"></canvas>
+    <div id="topViewInfo" class="topview-info">Tap a charge to select it (move buttons appear below) · drag to move it directly · tap empty space to zoom in</div>
+    <label class="chk-row"><input type="checkbox" id="chk-show-fields" checked> Show E₁/E₂/E₃ and net field</label>
+  </div>
+
+  <div id="infoPanel">
+    <h2>Concept <button class="fold-btn" id="btn-fold-info" title="Collapse / expand">▾</button></h2>
+
+    <div id="info-field" class="info-block">
+      <h3>Electric Field &amp; Force on a Test Charge</h3>
+      <p>A <b>test charge</b> is a small positively charged object of negligible size and mass, used only to probe the field — it doesn't disturb it.</p>
+      <span class="formula">E = F / q</span>
+      <p>An electric field <b>exists at a point</b> if a charge placed there would feel a force. Its <b>direction</b> is the direction that test charge would move.</p>
+      <p>E is measured in <b>N/C</b>. The force on any charge q sitting in a field is <span class="formula" style="margin:6px 0;">F = qE</span></p>
+      <p>Toggle the test charge on to see F appear — same direction as E if q₀ is positive, opposite if negative.</p>
+    </div>
+
+    <div id="info-point" class="info-block" style="display:none;">
+      <h3>Field of a Single Point Charge</h3>
+      <p>Combining E = F/q with Coulomb's law gives the field of one point charge:</p>
+      <span class="formula">E = (1/4πε₀) · Q/r² = kQ/r²</span>
+      <p>• The field points <b>radially away</b> from a <span class="pos">positive</span> charge, and <b>radially toward</b> a <span class="neg">negative</span> charge.</p>
+      <p>• It is <b>proportional to Q</b> and <b>inversely proportional to r²</b> — drag the r slider and watch the arrow shrink with distance.</p>
+    </div>
+
+    <div id="info-super" class="info-block" style="display:none;">
+      <h3>Superposition of Fields</h3>
+      <p>The electric field is a <b>vector</b>. When several point charges act at once, the net field is the <b>vector sum</b> of each one's individual field:</p>
+      <span class="formula">ΣE = E₁ + E₂ + E₃ + ⋯</span>
+      <p>Each contribution is found from the single-charge formula, then added <b>head-to-tail</b> — never just by adding magnitudes.</p>
+      <p>Drag Q₁, Q₂, Q₃ around the grid above (or use the ◀▶▲▼ pads) — the field point P stays fixed at the origin so you can see how moving the sources reshapes the net field there.</p>
+    </div>
+
+    <div id="info-lines" class="info-block" style="display:none;">
+      <h3>Electric Field Line Diagrams</h3>
+      <p>Field lines represent the net force direction on a small positive charge at every point in space.</p>
+      <p>• They <b>originate on positive</b> charges and <b>terminate on negative</b> charges.</p>
+      <p>• They <b>never cross</b> — the field has only one direction at any point.</p>
+      <p>• The <b>number of lines</b> leaving/entering a charge is proportional to its magnitude.</p>
+      <p>• <b>Line density</b> (lines per unit area) shows field strength — closer lines mean a stronger field.</p>
+      <p>Try setting Q₂ to 0 for a single charge, matching signs for two <b>like</b> charges, or opposite signs for a <b>dipole</b>.</p>
+      <p><span class="tag">Parallel Plates</span> Between two oppositely charged plates, field lines run straight and parallel from the <span class="pos">+</span> plate to the <span class="neg">−</span> plate — the field is <b>uniform</b> in the middle, with some bowing (fringing) near the edges.</p>
+    </div>
+  </div>
+</div>
+
+<div id="topViewZoomOverlay">
+  <div id="topViewZoomBox">
+    <div id="topViewZoomHeader">
+      <h2>Top View (x, z) — grid in metres</h2>
+      <button class="btn red" id="btn-topview-close">✕ Close</button>
+    </div>
+    <canvas id="topViewCanvasZoom"></canvas>
+    <div id="topViewInfoZoom" class="topview-info">Tap a charge for its coordinates &amp; value · drag to move it</div>
+    <label class="chk-row"><input type="checkbox" id="chk-show-fields-zoom" checked> Show E₁/E₂/E₃ and net field</label>
+  </div>
+</div>
+
+<div id="controls">
+  <div id="ctrl-field" class="ctrl-block">
+    <span class="sw">q₁=<input type="range" id="sl-f-q1" min="-8" max="8" step="1" value="5"><span id="lbl-f-q1">+5</span></span>
+    <span class="sw">q₂=<input type="range" id="sl-f-q2" min="-8" max="8" step="1" value="-4"><span id="lbl-f-q2">−4</span></span>
+    <span class="sw">q₃=<input type="range" id="sl-f-q3" min="-8" max="8" step="1" value="3"><span id="lbl-f-q3">+3</span></span>
+    <div class="sep"></div>
+    <button class="btn pink" id="btn-f-test">➕ Add Test Charge</button>
+    <button class="btn" id="btn-f-testsign" style="display:none;">q₀: +</button>
+    <button class="btn green" id="btn-f-release" style="display:none;">▶ Release Charge</button>
+    <button class="btn" id="btn-reset-f">Reset</button>
+  </div>
+
+  <div id="ctrl-point" class="ctrl-block" style="display:none;">
+    <span class="sw">Q=<input type="range" id="sl-p-Q" min="-10" max="10" step="0.5" value="6"><span id="lbl-p-Q">+6.0</span></span>
+    <span class="sw">r=<input type="range" id="sl-p-r" min="0.4" max="3.2" step="0.05" value="1.6"><span id="lbl-p-r">1.60</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-p">Reset</button>
+  </div>
+
+  <div id="ctrl-super" class="ctrl-block" style="display:none;">
+    <button class="btn" id="btn-s-toggle-result">👁 Hide Resultant</button>
+    <span class="sw">Q₁=<input type="range" id="sl-s-q1" min="-8" max="8" step="1" value="6"><span id="lbl-s-q1">+6</span></span>
+    <div class="dirpad" id="dirpad-1" style="display:none;"><button class="up" id="btn-s1-up">▲</button><button class="left" id="btn-s1-left">◀</button><button class="right" id="btn-s1-right">▶</button><button class="down" id="btn-s1-down">▼</button></div>
+    <span class="sw">Q₂=<input type="range" id="sl-s-q2" min="-8" max="8" step="1" value="-5"><span id="lbl-s-q2">−5</span></span>
+    <div class="dirpad" id="dirpad-2" style="display:none;"><button class="up" id="btn-s2-up">▲</button><button class="left" id="btn-s2-left">◀</button><button class="right" id="btn-s2-right">▶</button><button class="down" id="btn-s2-down">▼</button></div>
+    <span class="sw">Q₃=<input type="range" id="sl-s-q3" min="-8" max="8" step="1" value="4"><span id="lbl-s-q3">+4</span></span>
+    <div class="dirpad" id="dirpad-3" style="display:none;"><button class="up" id="btn-s3-up">▲</button><button class="left" id="btn-s3-left">◀</button><button class="right" id="btn-s3-right">▶</button><button class="down" id="btn-s3-down">▼</button></div>
+    <button class="btn" id="btn-reset-s">Reset</button>
+  </div>
+
+  <div id="ctrl-lines" class="ctrl-block" style="display:none;">
+    <span class="sw">Q₁=<input type="range" id="sl-l-q1" min="-8" max="8" step="0.5" value="6"><span id="lbl-l-q1">+6.0</span></span>
+    <span class="sw">Q₂=<input type="range" id="sl-l-q2" min="-8" max="8" step="0.5" value="-6"><span id="lbl-l-q2">−6.0</span></span>
+    <span class="sw" id="wrap-l-dist" style="display:none;">plate gap=<input type="range" id="sl-l-dist" min="0.8" max="3.2" step="0.1" value="1.8"><span id="lbl-l-dist">3.60</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-l-single">Single Charge</button>
+    <button class="btn" id="btn-l-like">Like Charges</button>
+    <button class="btn" id="btn-l-dipole">Dipole</button>
+    <button class="btn" id="btn-l-plates">Parallel Plates</button>
+  </div>
+
+  <div class="sep"></div>
+  <button class="btn" id="btn-camreset">⟲ View</button>
+</div>
+
+<div id="hint">🖐️ drag: rotate view · scroll / pinch: zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+<script>
+'use strict';
+/* ============================== CORE SETUP ============================== */
+let activeModuleRef = 'field';
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.016);
+const cam3 = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  cam3.aspect = w / h; cam3.updateProjectionMatrix();
+  labelCanvas.width = w; labelCanvas.height = h;
+  const flc = document.getElementById('fieldLineCanvas');
+  flc.width = w; flc.height = h;
+  if(activeModuleRef==='lines') drawFieldLines();
+}
+resize(); window.addEventListener('resize', resize);
+
+scene3.add(new THREE.AmbientLight(0xffffff, 1.15));
+const sun = new THREE.DirectionalLight(0xfff8f0, 0.9); sun.position.set(5,10,6); scene3.add(sun);
+const rim = new THREE.DirectionalLight(0x6688ff, 0.4); rim.position.set(-6,4,-4); scene3.add(rim);
+
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0x0d1020, roughness:0.95}));
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -1.4; scene3.add(floorM);
+const grid = new THREE.GridHelper(40,30,0x1a2540,0x121c30); grid.position.y = -1.38; scene3.add(grid);
+
+/* ============================== SHARED HELPERS ============================== */
+const COL_C1 = 0xffc857, COL_C2 = 0xb57aff, COL_C3 = 0x5bc8ff, COL_RESULT = 0x4dffa0, COL_FORCE = 0xff6fae;
+const COL_NEUTRAL = 0x5c6a85;
+const DARK = { amber:0xb7903f, violet:0x7b53ad, blue:0x3e88ad, red:0xb84452 };
+const DARK_CSS = { amber:'#b7903f', violet:'#7b53ad', blue:'#3e88ad', red:'#b84452' };
+const K_COULOMB = 8.99e9;
+
+function ease(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function fmt(x,d){ return x.toFixed(d===undefined?2:d); }
+function signStr(x){ return x>=0? ('+'+fmt(x,1)) : fmt(x,1); }
+function fmtSci(x){
+  if(Math.abs(x) < 0.001 && x!==0){ return x.toExponential(2)+' N/C'; }
+  if(Math.abs(x) >= 1000){ return (x/1000).toFixed(2)+' kN/C'; }
+  return fmt(x,1)+' N/C';
+}
+// Electric field magnitude (N/C) from a point charge, Q in microcoulombs, r in metres.
+function fieldMag(QuC, r){
+  if(r < 0.02) r = 0.02;
+  return K_COULOMB * Math.abs(QuC*1e-6) / (r*r);
+}
+function bindSlider(id, lblId, cb, fmtFn){
+  const el = document.getElementById(id), lbl = document.getElementById(lblId);
+  el.addEventListener('input', ()=>{ const v=parseFloat(el.value); lbl.textContent = fmtFn?fmtFn(v):v; cb(v); });
+}
+const THUMB_COLORS = {
+  amber:{c:'#ffc857', g:'rgba(255,200,87,0.6)'},
+  violet:{c:'#b57aff', g:'rgba(181,122,255,0.6)'},
+  blue:{c:'#5bc8ff', g:'rgba(91,200,255,0.6)'},
+  red:{c:'#ff5e72', g:'rgba(255,94,114,0.6)'}
+};
+function setSliderColor(id, key){
+  const el = document.getElementById(id); if(!el) return;
+  const t = THUMB_COLORS[key]; if(!t) return;
+  el.style.setProperty('--thumb-color', t.c);
+  el.style.setProperty('--thumb-glow', t.g);
+}
+
+function makeSignTexture(sign){
+  const c = document.createElement('canvas'); c.width=64; c.height=64;
+  const cx = c.getContext('2d');
+  cx.clearRect(0,0,64,64);
+  cx.font = 'bold 50px sans-serif';
+  cx.textAlign='center'; cx.textBaseline='middle';
+  cx.lineWidth=7; cx.strokeStyle='rgba(0,0,0,0.55)';
+  cx.strokeText(sign, 32, 33);
+  cx.fillStyle='#ffffff';
+  cx.fillText(sign, 32, 33);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+const SIGN_TEX = { '+': makeSignTexture('+'), '−': makeSignTexture('−') };
+function makeChargeSphere(){
+  const geo = new THREE.SphereGeometry(0.3, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({color:COL_NEUTRAL, roughness:0.45, metalness:0.08, emissive:COL_NEUTRAL, emissiveIntensity:0.12});
+  const mesh = new THREE.Mesh(geo, mat);
+  const spriteMat = new THREE.SpriteMaterial({map:SIGN_TEX['+'], transparent:true, depthTest:false});
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.scale.set(0.34,0.34,1);
+  sprite.renderOrder = 999;
+  mesh.add(sprite);
+  mesh.userData.signSprite = sprite;
+  mesh.userData.lastSign = null;
+  return mesh;
+}
+function updateChargeMesh(mesh, qValue, colorKey){
+  const isPos = qValue >= 0;
+  const color = qValue===0 ? COL_NEUTRAL : (colorKey ? DARK[colorKey] : (isPos ? DARK.red : DARK.blue));
+  const radius = clamp(0.16 + 0.032*Math.sqrt(Math.abs(qValue)), 0.16, 0.5);
+  mesh.scale.setScalar(radius/0.3);
+  mesh.material.color.setHex(color);
+  mesh.material.emissive.setHex(color);
+  const sprite = mesh.userData.signSprite;
+  if(sprite){
+    if(qValue===0){ sprite.visible = false; }
+    else {
+      sprite.visible = true;
+      const sign = isPos ? '+' : '−';
+      if(mesh.userData.lastSign !== sign){
+        sprite.material.map = SIGN_TEX[sign];
+        sprite.material.needsUpdate = true;
+        mesh.userData.lastSign = sign;
+      }
+    }
+  }
+}
+function makeFieldMarker(){
+  const geo = new THREE.OctahedronGeometry(0.14, 0);
+  const mat = new THREE.MeshStandardMaterial({color:0x6fd6ff, emissive:0x6fd6ff, emissiveIntensity:0.4, roughness:0.3});
+  return new THREE.Mesh(geo, mat);
+}
+function project(v3){
+  const p = v3.clone().project(cam3);
+  return { x:(p.x*0.5+0.5)*labelCanvas.width, y:(-p.y*0.5+0.5)*labelCanvas.height, behind: p.z>1 };
+}
+function drawChip(pt, text, colorCss, size){
+  if(pt.behind) return;
+  lctx.font = (size||10)+'px "Space Mono", monospace';
+  const w = lctx.measureText(text).width + 12;
+  const h = (size||10) + 10;
+  lctx.fillStyle = 'rgba(8,10,20,0.82)';
+  lctx.strokeStyle = colorCss; lctx.lineWidth = 1;
+  roundRect(lctx, pt.x - w/2, pt.y - h/2, w, h, 6);
+  lctx.fill(); lctx.stroke();
+  lctx.fillStyle = colorCss;
+  lctx.textAlign='center'; lctx.textBaseline='middle';
+  lctx.fillText(text, pt.x, pt.y+0.5);
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+// Fixed (non data-dependent) scales so each arrow's length depends only on its OWN
+// value, while a shared constant still keeps a resultant's length exactly equal to
+// the vector sum of the individually-scaled arrows (no cross-talk between sliders).
+const ARROW_MIN_LEN = 0.18, ARROW_MAX_LEN = 2.8;
+const FORCE_N_TO_UNITS = 80;      // Newtons -> world units (for F = qE arrows)
+const EFIELD_N_TO_UNITS = 0.00016; // N/C -> world units (for E field arrows)
+function arrowHeadDims(len){ return { hl: clamp(len*0.16, 0.12, 0.32), hw: clamp(len*0.07, 0.05, 0.14) }; }
+function setArrow3D(arrow, vec3, unitsPerValue, valueMag){
+  if(valueMag < 1e-9){ arrow.visible=false; return; }
+  arrow.visible = true;
+  arrow.setDirection(vec3.clone().normalize());
+  const len = clamp(valueMag*unitsPerValue, ARROW_MIN_LEN, ARROW_MAX_LEN);
+  const hd = arrowHeadDims(len);
+  arrow.setLength(len, hd.hl, hd.hw);
+}
+
+/* ============================== ORBIT CAMERA ============================== */
+const orb = {theta:0.45, phi:0.95, radius:6.5, cx:0, cy:0, cz:0};
+function applyOrbit(){
+  cam3.position.set(
+    orb.cx + orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta),
+    orb.cy + orb.radius*Math.cos(orb.phi),
+    orb.cz + orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta)
+  );
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
+}
+applyOrbit();
+let dragging=false, lastX=0, lastY=0;
+canvas.addEventListener('pointerdown', e=>{dragging=true; lastX=e.clientX; lastY=e.clientY; canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerup', ()=>dragging=false);
+canvas.addEventListener('pointercancel', ()=>dragging=false);
+canvas.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+  orb.theta -= dx*0.006; orb.phi = clamp(orb.phi - dy*0.006, 0.18, 1.5);
+  applyOrbit();
+});
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  orb.radius = clamp(orb.radius + e.deltaY*0.0035, 2.5, 16);
+  applyOrbit();
+}, {passive:false});
+let pinchDist=null;
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    if(pinchDist!=null){ orb.radius = clamp(orb.radius - (d-pinchDist)*0.02, 2.5, 16); applyOrbit(); }
+    pinchDist = d;
+  }
+}, {passive:true});
+canvas.addEventListener('touchend', ()=>pinchDist=null);
+
+function tween(duration, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now-start)/duration);
+    onUpdate(ease(t), t);
+    if(t < 1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+/* ============================== TAB 1 (2.1.1): FIELD & TEST CHARGE ============================== */
+const grpField = new THREE.Group(); scene3.add(grpField);
+const stateFd = { q1:5, q2:-4, q3:3, testOn:false, testSign:1, testPos:new THREE.Vector3(0,0,0), animating:false };
+const FD_SRC_POS = [ new THREE.Vector3(0,0,-2.2), new THREE.Vector3(1.9,0,1.1), new THREE.Vector3(-1.9,0,1.1) ];
+const fdMarker = makeFieldMarker(); grpField.add(fdMarker);
+const fdTestMesh = makeChargeSphere(); fdTestMesh.visible=false; grpField.add(fdTestMesh);
+const fdSrcMeshes = [0,1,2].map(()=>{ const m=makeChargeSphere(); grpField.add(m); return m; });
+const fdArrowE = [0,1,2].map(i=> new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, [COL_C1,COL_C2,COL_C3][i], 0.22, 0.13));
+fdArrowE.forEach(a=>grpField.add(a));
+const fdArrowNet = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_RESULT, 0.28, 0.16);
+grpField.add(fdArrowNet);
+const fdArrowF = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_FORCE, 0.24, 0.14);
+grpField.add(fdArrowF);
+
+function computeField(){
+  const P = stateFd.testPos;
+  fdMarker.position.copy(P);
+  const vals = [stateFd.q1, stateFd.q2, stateFd.q3];
+  let ex=0, ez=0;
+  vals.forEach((qs,i)=>{
+    fdSrcMeshes[i].position.copy(FD_SRC_POS[i]);
+    updateChargeMesh(fdSrcMeshes[i], qs, ['amber','violet','blue'][i]);
+    const rel = P.clone().sub(FD_SRC_POS[i]);
+    const r = Math.max(rel.length(), 0.25);
+    const dir = rel.clone().normalize();
+    const Emag = qs===0 ? 0 : fieldMag(qs, r);
+    const evec = dir.multiplyScalar(qs>=0?Emag:-Emag);
+    ex += evec.x; ez += evec.z;
+    setArrow3D(fdArrowE[i], new THREE.Vector3(evec.x,0,evec.z), EFIELD_N_TO_UNITS, Math.abs(Emag));
+    fdArrowE[i].position.copy(P);
+  });
+  const Emag = Math.hypot(ex,ez);
+  setArrow3D(fdArrowNet, new THREE.Vector3(ex,0,ez), EFIELD_N_TO_UNITS, Emag);
+  fdArrowNet.position.copy(P);
+  let angle = Math.atan2(-ez, ex)*180/Math.PI; if(angle<0) angle+=360;
+  document.getElementById('fd-emag').textContent = fmtSci(Emag);
+  document.getElementById('fd-edir').textContent = (Emag<1e-6?'—':fmt(angle,0)+'°');
+
+  fdTestMesh.visible = stateFd.testOn;
+  fdArrowF.visible = false;
+  document.getElementById('fd-test-rows').style.display = stateFd.testOn ? 'block' : 'none';
+  let fx=0, fz=0;
+  if(stateFd.testOn){
+    fdTestMesh.position.copy(P);
+    updateChargeMesh(fdTestMesh, stateFd.testSign*2);
+    document.getElementById('fd-q0').textContent = (stateFd.testSign>0?'+':'−')+'2.0 µC';
+    const qC = stateFd.testSign*2*1e-6;
+    fx = qC*ex; fz = qC*ez;
+    const Fmag = Math.hypot(fx,fz);
+    setArrow3D(fdArrowF, new THREE.Vector3(fx,0,fz), FORCE_N_TO_UNITS, Fmag);
+    fdArrowF.position.copy(P);
+    document.getElementById('fd-fmag').textContent = fmt(Fmag,4)+' N';
+  }
+  return {fx,fz};
+}
+function labelsField(){
+  const P = stateFd.testPos;
+  const labels = [{p:project(P.clone().add(new THREE.Vector3(0,0.5,0))), t:'P', c:'#6fd6ff', size:10}];
+  const vals=[stateFd.q1,stateFd.q2,stateFd.q3];
+  const cols=['#ffc857','#b57aff','#5bc8ff'];
+  FD_SRC_POS.forEach((p,i)=> labels.push({p:project(p.clone().add(new THREE.Vector3(0,0.45,0))), t:signStr(vals[i])+' µC', c:cols[i], size:9.5}));
+  if(stateFd.testOn) labels.push({p:project(P.clone().add(new THREE.Vector3(0,0.85,0))), t:(stateFd.testSign>0?'+':'−')+'2.0 µC (q₀)', c:stateFd.testSign>0?'#ff5e72':'#5bc8ff', size:9.5});
+  return labels;
+}
+bindSlider('sl-f-q1','lbl-f-q1', v=>{ stateFd.q1=v; document.getElementById('fd-q1').textContent=signStr(v)+' µC'; computeField(); }, v=>signStr(v));
+bindSlider('sl-f-q2','lbl-f-q2', v=>{ stateFd.q2=v; document.getElementById('fd-q2').textContent=signStr(v)+' µC'; computeField(); }, v=>signStr(v));
+bindSlider('sl-f-q3','lbl-f-q3', v=>{ stateFd.q3=v; document.getElementById('fd-q3').textContent=signStr(v)+' µC'; computeField(); }, v=>signStr(v));
+document.getElementById('btn-f-test').addEventListener('click', function(){
+  stateFd.testOn = !stateFd.testOn;
+  this.textContent = stateFd.testOn ? '➖ Remove Test Charge' : '➕ Add Test Charge';
+  this.classList.toggle('on', stateFd.testOn);
+  document.getElementById('btn-f-testsign').style.display = stateFd.testOn ? 'inline-block' : 'none';
+  document.getElementById('btn-f-release').style.display = stateFd.testOn ? 'inline-block' : 'none';
+  computeField();
+});
+document.getElementById('btn-f-testsign').addEventListener('click', function(){
+  stateFd.testSign *= -1;
+  this.textContent = 'q₀: '+(stateFd.testSign>0?'+':'−');
+  computeField();
+});
+document.getElementById('btn-f-release').addEventListener('click', ()=>{
+  if(stateFd.animating || !stateFd.testOn) return;
+  const {fx,fz} = computeField();
+  const Fmag = Math.hypot(fx,fz);
+  if(Fmag<1e-9) return;
+  stateFd.animating = true;
+  document.getElementById('btn-f-release').disabled = true;
+  const dir = new THREE.Vector3(fx,0,fz).normalize();
+  const start = new THREE.Vector3(0,0,0);
+  const peak = dir.clone().multiplyScalar(1.15);
+  tween(750, e=>{ stateFd.testPos.copy(start).lerp(peak,e); computeField(); }, ()=>{
+    setTimeout(()=>{
+      tween(750, e2=>{ stateFd.testPos.copy(peak).lerp(start,e2); computeField(); }, ()=>{
+        stateFd.animating=false; document.getElementById('btn-f-release').disabled=false;
+      });
+    }, 500);
+  });
+});
+document.getElementById('btn-reset-f').addEventListener('click', ()=>{
+  stateFd.q1=5; stateFd.q2=-4; stateFd.q3=3; stateFd.testOn=false; stateFd.testSign=1; stateFd.testPos.set(0,0,0);
+  document.getElementById('sl-f-q1').value=5; document.getElementById('lbl-f-q1').textContent='+5';
+  document.getElementById('sl-f-q2').value=-4; document.getElementById('lbl-f-q2').textContent='−4';
+  document.getElementById('sl-f-q3').value=3; document.getElementById('lbl-f-q3').textContent='+3';
+  document.getElementById('fd-q1').textContent='+5.0 µC'; document.getElementById('fd-q2').textContent='−4.0 µC'; document.getElementById('fd-q3').textContent='+3.0 µC';
+  document.getElementById('btn-f-test').textContent='➕ Add Test Charge'; document.getElementById('btn-f-test').classList.remove('on');
+  document.getElementById('btn-f-testsign').style.display='none'; document.getElementById('btn-f-testsign').textContent='q₀: +';
+  document.getElementById('btn-f-release').style.display='none';
+  computeField();
+});
+computeField();
+setSliderColor('sl-f-q1','amber'); setSliderColor('sl-f-q2','violet'); setSliderColor('sl-f-q3','blue');
+
+/* ============================== TAB 2 (2.1.2): FIELD OF A POINT CHARGE ============================== */
+const grpPoint = new THREE.Group(); scene3.add(grpPoint); grpPoint.visible=false;
+const stateP = { Q:6, r:1.6 };
+const ptChargeMesh = makeChargeSphere(); grpPoint.add(ptChargeMesh);
+const ptMeasureMarker = makeFieldMarker(); grpPoint.add(ptMeasureMarker);
+const ptArrowMain = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_RESULT, 0.24, 0.14);
+grpPoint.add(ptArrowMain);
+const PT_RING_ANGLES = [0,45,90,135,180,225,270,315].map(d=>d*Math.PI/180);
+const ptRingArrows = PT_RING_ANGLES.map(()=> new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 0.45, COL_RESULT, 0.1, 0.06));
+ptRingArrows.forEach(a=>{ a.line.material.transparent=true; a.line.material.opacity=0.35; a.cone.material.transparent=true; a.cone.material.opacity=0.35; grpPoint.add(a); });
+const PT_RING_R = 1.15;
+
+function computePoint(){
+  updateChargeMesh(ptChargeMesh, stateP.Q);
+  const isPos = stateP.Q>=0;
+  PT_RING_ANGLES.forEach((ang,i)=>{
+    const pos = new THREE.Vector3(Math.cos(ang)*PT_RING_R, 0, Math.sin(ang)*PT_RING_R);
+    const dir = isPos ? pos.clone().normalize() : pos.clone().normalize().negate();
+    ptRingArrows[i].position.copy(pos);
+    ptRingArrows[i].visible = stateP.Q!==0;
+    ptRingArrows[i].setDirection(dir);
+  });
+  const measurePos = new THREE.Vector3(stateP.r,0,0);
+  ptMeasureMarker.position.copy(measurePos);
+  const E = fieldMag(stateP.Q, stateP.r);
+  const dir = isPos ? new THREE.Vector3(1,0,0) : new THREE.Vector3(-1,0,0);
+  setArrow3D(ptArrowMain, dir, EFIELD_N_TO_UNITS, stateP.Q===0?0:E);
+  ptArrowMain.position.copy(measurePos);
+  document.getElementById('pt-Q').textContent = signStr(stateP.Q)+' µC';
+  document.getElementById('pt-r').textContent = fmt(stateP.r,2)+' m';
+  document.getElementById('pt-E').textContent = stateP.Q===0 ? '0 N/C' : fmtSci(E);
+  document.getElementById('pt-dir').textContent = stateP.Q===0 ? '—' : (isPos ? 'radially out' : 'radially in');
+  drawPointChart();
+}
+function labelsPoint(){
+  const out = [
+    {p:project(new THREE.Vector3(0,0.5,0)), t:signStr(stateP.Q)+' µC (Q)', c:stateP.Q>=0?'#ff5e72':'#5bc8ff', size:10},
+    {p:project(new THREE.Vector3(stateP.r,0.4,0)), t:'r = '+fmt(stateP.r,2)+' m', c:'#8fa2c0', size:9}
+  ];
+  return out;
+}
+function drawPointChart(){
+  const cv = document.getElementById('chartPoint'); const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height, pad=28;
+  ctx.clearRect(0,0,W,H);
+  const rMax=3.2, rMin=0.3;
+  const pts=[]; let eMax=0;
+  for(let r=rMin;r<=rMax;r+=0.02){ const e=fieldMag(stateP.Q,r); pts.push([r,e]); if(e>eMax) eMax=e; }
+  eMax = Math.max(eMax, 1);
+  function X(r){ return pad + (r-rMin)/(rMax-rMin)*(W-2*pad); }
+  function Y(e){ return H-pad - (e/eMax)*(H-2*pad); }
+  ctx.strokeStyle='rgba(180,200,255,0.18)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.strokeStyle='#4dffa0'; ctx.lineWidth=2; ctx.beginPath();
+  pts.forEach(([r,e],i)=>{ const x=X(r), y=Y(e); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  ctx.stroke();
+  const E0 = fieldMag(stateP.Q, stateP.r);
+  const mx=X(stateP.r), my=Y(E0);
+  ctx.fillStyle='#ffc857'; ctx.beginPath(); ctx.arc(mx,my,4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,200,87,0.4)'; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(mx,H-pad); ctx.lineTo(mx,my); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='9px "Space Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText('r (m)', W-pad-24, H-pad+14);
+  ctx.save(); ctx.translate(10,pad+4); ctx.rotate(-Math.PI/2); ctx.fillText('E (N/C)',0,0); ctx.restore();
+}
+bindSlider('sl-p-Q','lbl-p-Q', v=>{ stateP.Q=v; computePoint(); }, v=>signStr(v));
+bindSlider('sl-p-r','lbl-p-r', v=>{ stateP.r=v; computePoint(); }, v=>fmt(v,2));
+document.getElementById('btn-reset-p').addEventListener('click', ()=>{
+  stateP.Q=6; stateP.r=1.6;
+  document.getElementById('sl-p-Q').value=6; document.getElementById('lbl-p-Q').textContent='+6.0';
+  document.getElementById('sl-p-r').value=1.6; document.getElementById('lbl-p-r').textContent='1.60';
+  computePoint();
+});
+computePoint();
+
+/* ============================== TAB 3 (2.1.3): SUPERPOSITION ============================== */
+const grpSuper = new THREE.Group(); scene3.add(grpSuper); grpSuper.visible=false;
+const stateSp = { q1:6, q2:-5, q3:4, showResult:true };
+let SP_POS = [ new THREE.Vector3(0,0,-2.0), new THREE.Vector3(1.8,0,1.1), new THREE.Vector3(-1.8,0,1.1) ];
+const spMarker = makeFieldMarker(); grpSuper.add(spMarker);
+const spSrcMeshes = [0,1,2].map(()=>{ const m=makeChargeSphere(); grpSuper.add(m); return m; });
+const spArrowE = [0,1,2].map(i=> new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, [COL_C1,COL_C2,COL_C3][i], 0.2, 0.12));
+spArrowE.forEach(a=>grpSuper.add(a));
+const spArrowNet = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_RESULT, 0.26, 0.15);
+grpSuper.add(spArrowNet);
+
+let lastSpFields = {E1:new THREE.Vector2(), E2:new THREE.Vector2(), E3:new THREE.Vector2(), R:new THREE.Vector2()};
+function computeSuper(){
+  const P = new THREE.Vector3(0,0,0);
+  const vals=[stateSp.q1,stateSp.q2,stateSp.q3];
+  let ex=0, ez=0; const comps=[];
+  vals.forEach((qs,i)=>{
+    spSrcMeshes[i].position.copy(SP_POS[i]);
+    updateChargeMesh(spSrcMeshes[i], qs, ['amber','violet','blue'][i]);
+    const rel = P.clone().sub(SP_POS[i]);
+    const r = Math.max(rel.length(),0.25);
+    const dir = rel.clone().normalize();
+    const Emag = qs===0?0:fieldMag(qs,r);
+    const evec = dir.multiplyScalar(qs>=0?Emag:-Emag);
+    ex+=evec.x; ez+=evec.z;
+    comps.push(new THREE.Vector2(evec.x,evec.z));
+    setArrow3D(spArrowE[i], new THREE.Vector3(evec.x,0,evec.z), EFIELD_N_TO_UNITS, Math.abs(Emag));
+    spArrowE[i].position.copy(P);
+  });
+  const Emag = Math.hypot(ex,ez);
+  if(!stateSp.showResult){ spArrowNet.visible=false; } else { setArrow3D(spArrowNet, new THREE.Vector3(ex,0,ez), EFIELD_N_TO_UNITS, Emag); }
+  spArrowNet.position.copy(P);
+  lastSpFields = {E1:comps[0],E2:comps[1],E3:comps[2],R:new THREE.Vector2(ex,ez)};
+  document.getElementById('sp-emag').textContent = fmtSci(Emag);
+  drawSuperChart();
+  refreshTopViews();
+}
+function labelsSuper(){
+  const cols=['#ffc857','#b57aff','#5bc8ff'];
+  const vals=[stateSp.q1,stateSp.q2,stateSp.q3];
+  const labels=[{p:project(new THREE.Vector3(0,0.5,0)), t:'P', c:'#6fd6ff', size:10}];
+  SP_POS.forEach((p,i)=> labels.push({p:project(p.clone().add(new THREE.Vector3(0,0.45,0))), t:signStr(vals[i])+' µC', c:cols[i], size:9.5}));
+  return labels;
+}
+function drawArrow2D(ctx,x1,y1,x2,y2,color,width){
+  const dx=x2-x1, dy=y2-y1;
+  const len = Math.hypot(dx,dy);
+  if(len < 1) return;
+  const ang = Math.atan2(dy,dx);
+  const lw = width || 2.6;
+  const headLen = clamp(len*0.26, 8, 22);
+  const headWidth = headLen*0.8;
+  const baseX = x2 - headLen*Math.cos(ang), baseY = y2 - headLen*Math.sin(ang);
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(baseX,baseY); ctx.stroke();
+  const perpX = -Math.sin(ang), perpY = Math.cos(ang), hw = headWidth/2;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(baseX + perpX*hw, baseY + perpY*hw);
+  ctx.lineTo(baseX - perpX*hw, baseY - perpY*hw);
+  ctx.closePath(); ctx.fill();
+}
+function drawSuperChart(){
+  const cv=document.getElementById('chartSuper'); const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height; ctx.clearRect(0,0,W,H);
+  const {E1,E2,E3,R} = lastSpFields;
+  const maxLen = Math.max(E1.length(),E2.length(),E3.length(),R.length(),0.001);
+  const scale = (Math.min(W,H)*0.32)/maxLen;
+  let cx=W*0.24, cy=H*0.68;
+  ctx.fillStyle='rgba(180,200,255,0.5)'; ctx.beginPath(); ctx.arc(cx,cy,3.5,0,Math.PI*2); ctx.fill();
+  const chain=[E1,E2,E3]; const cols=['#ffc857','#b57aff','#5bc8ff'];
+  let x=cx,y=cy;
+  chain.forEach((v,i)=>{
+    const nx = x + v.x*scale, ny = y - v.y*scale;
+    drawArrow2D(ctx,x,y,nx,ny,cols[i]);
+    x=nx; y=ny;
+  });
+  drawArrow2D(ctx, cx, cy, cx+R.x*scale, cy-R.y*scale, '#4dffa0', 2.4);
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='9px "Space Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText('E₁→E₂→E₃ chained, tail-to-head', 8, H-8);
+}
+let selectedChargeIdx = null;
+function selectCharge(idx){
+  selectedChargeIdx = idx;
+  [0,1,2].forEach(i=>{
+    document.getElementById('dirpad-'+(i+1)).style.display = (i===idx) ? 'inline-grid' : 'none';
+  });
+}
+function moveSPSource(i, dx, dz){
+  SP_POS[i].x = clamp(Math.round((SP_POS[i].x+dx)*10)/10, -3, 3);
+  SP_POS[i].z = clamp(Math.round((SP_POS[i].z+dz)*10)/10, -3, 3);
+  computeSuper();
+  const hit = {idx:i, x:SP_POS[i].x, z:SP_POS[i].z};
+  showTopViewInfo('topViewInfo', hit);
+  showTopViewInfo('topViewInfoZoom', hit);
+}
+['1','2','3'].forEach(n=>{
+  const idx = +n-1;
+  document.getElementById('btn-s'+n+'-up').addEventListener('click', ()=>moveSPSource(idx, 0, -0.1));
+  document.getElementById('btn-s'+n+'-down').addEventListener('click', ()=>moveSPSource(idx, 0, 0.1));
+  document.getElementById('btn-s'+n+'-left').addEventListener('click', ()=>moveSPSource(idx, -0.1, 0));
+  document.getElementById('btn-s'+n+'-right').addEventListener('click', ()=>moveSPSource(idx, 0.1, 0));
+});
+bindSlider('sl-s-q1','lbl-s-q1', v=>{ stateSp.q1=v; document.getElementById('sp-q1').textContent=signStr(v)+' µC'; computeSuper(); }, v=>signStr(v));
+bindSlider('sl-s-q2','lbl-s-q2', v=>{ stateSp.q2=v; document.getElementById('sp-q2').textContent=signStr(v)+' µC'; computeSuper(); }, v=>signStr(v));
+bindSlider('sl-s-q3','lbl-s-q3', v=>{ stateSp.q3=v; document.getElementById('sp-q3').textContent=signStr(v)+' µC'; computeSuper(); }, v=>signStr(v));
+document.getElementById('btn-s-toggle-result').addEventListener('click', function(){
+  stateSp.showResult = !stateSp.showResult;
+  this.textContent = stateSp.showResult ? '👁 Hide Resultant' : '👁 Show Resultant';
+  this.classList.toggle('on', !stateSp.showResult);
+  computeSuper();
+});
+document.getElementById('btn-reset-s').addEventListener('click', ()=>{
+  stateSp.q1=6; stateSp.q2=-5; stateSp.q3=4; stateSp.showResult=true;
+  SP_POS = [ new THREE.Vector3(0,0,-2.0), new THREE.Vector3(1.8,0,1.1), new THREE.Vector3(-1.8,0,1.1) ];
+  selectCharge(null);
+  document.getElementById('btn-s-toggle-result').textContent='👁 Hide Resultant'; document.getElementById('btn-s-toggle-result').classList.remove('on');
+  document.getElementById('sl-s-q1').value=6; document.getElementById('lbl-s-q1').textContent='+6';
+  document.getElementById('sl-s-q2').value=-5; document.getElementById('lbl-s-q2').textContent='−5';
+  document.getElementById('sl-s-q3').value=4; document.getElementById('lbl-s-q3').textContent='+4';
+  document.getElementById('sp-q1').textContent='+6.0 µC'; document.getElementById('sp-q2').textContent='−5.0 µC'; document.getElementById('sp-q3').textContent='+4.0 µC';
+  computeSuper();
+});
+setSliderColor('sl-s-q1','amber'); setSliderColor('sl-s-q2','violet'); setSliderColor('sl-s-q3','blue');
+
+/* ---------- Top-view grid panel (shared by Tab 3) ---------- */
+const stateTopView = { showFields:true };
+function topViewMapping(cv){
+  const W=cv.width, H=cv.height, pad=30, range=3.4;
+  const scale = Math.min(W-2*pad, H-2*pad) / (2*range);
+  const cx = W/2, cy = H/2;
+  return { W,H,pad,range,scale,cx,cy, X:(x)=>cx+x*scale, Y:(z)=>cy+z*scale, invX:(px)=>(px-cx)/scale, invY:(py)=>(py-cy)/scale };
+}
+function topViewDotRadius(cv){ return clamp(Math.min(cv.width,cv.height)*0.03, 6, 16); }
+function drawSignOnDot(ctx, x, y, dotR, isPos){
+  const sign = isPos ? '+' : '−';
+  const fontPx = Math.max(10, dotR*1.15);
+  ctx.save();
+  ctx.font = 'bold '+fontPx+'px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.lineWidth = Math.max(2, fontPx*0.14);
+  ctx.strokeStyle='rgba(0,0,0,0.55)';
+  ctx.strokeText(sign, x, y+1);
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(sign, x, y+1);
+  ctx.restore();
+}
+const ARROW_TOPVIEW_E_REF = 15000; // fixed reference field (N/C) mapped to ~full-length pixel arrows
+function drawTopViewOn(cv){
+  const ctx = cv.getContext('2d');
+  const m = topViewMapping(cv);
+  ctx.clearRect(0,0,m.W,m.H);
+  const fontPx = clamp(m.scale*0.16, 8, 13);
+  const left=m.X(-m.range), right=m.X(m.range), top=m.Y(-m.range), bottom=m.Y(m.range);
+  ctx.strokeStyle='rgba(180,200,255,0.12)'; ctx.lineWidth=1; ctx.font=fontPx+'px "Space Mono",monospace'; ctx.fillStyle='rgba(180,200,255,0.35)';
+  for(let g=-3; g<=3; g++){
+    ctx.beginPath(); ctx.moveTo(m.X(g),top); ctx.lineTo(m.X(g),bottom); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(left,m.Y(g)); ctx.lineTo(right,m.Y(g)); ctx.stroke();
+    ctx.textAlign='center'; ctx.fillText(g, m.X(g), bottom+fontPx+4);
+    ctx.textAlign='right'; ctx.fillText(g, Math.max(fontPx*1.6,left-6), m.Y(g)+3);
+  }
+  ctx.strokeStyle='rgba(180,200,255,0.4)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(m.X(0),top); ctx.lineTo(m.X(0),bottom); ctx.moveTo(left,m.Y(0)); ctx.lineTo(right,m.Y(0)); ctx.stroke();
+
+  const dotR = topViewDotRadius(cv);
+
+  if(stateTopView.showFields){
+    const {E1,E2,E3,R} = lastSpFields;
+    const ox=m.X(0), oy=m.Y(0);
+    const lw = clamp(m.scale*0.05, 2.5, 4.5);
+    const maxLenPx = Math.min(m.W,m.H)*0.4;
+    const k = maxLenPx / ARROW_TOPVIEW_E_REF;
+    const drawF=(vec,color)=>{
+      const F = vec.length(); if(F<1e-6) return;
+      const dir = vec.clone().normalize();
+      const lenPx = clamp(F*k, 10, maxLenPx);
+      const sx = ox + dir.x*(dotR+4), sy = oy + dir.y*(dotR+4);
+      const ex = sx + dir.x*lenPx, ey = sy + dir.y*lenPx;
+      drawArrow2D(ctx, sx, sy, ex, ey, color, lw);
+    };
+    drawF(E1, DARK_CSS.amber); drawF(E2, DARK_CSS.violet); drawF(E3, DARK_CSS.blue);
+    if(stateSp.showResult) drawF(R, '#4dffa0');
+  }
+
+  ctx.fillStyle='#6fd6ff';
+  ctx.beginPath(); ctx.arc(m.X(0),m.Y(0),dotR*0.75,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(220,230,255,0.85)'; ctx.font=fontPx+'px "Space Mono",monospace'; ctx.textAlign='center';
+  ctx.fillText('P', m.X(0), m.Y(0)-dotR-6);
+  const cols=[DARK_CSS.amber, DARK_CSS.violet, DARK_CSS.blue];
+  const vals2=[stateSp.q1,stateSp.q2,stateSp.q3];
+  SP_POS.forEach((p,i)=>{
+    ctx.fillStyle=cols[i];
+    ctx.beginPath(); ctx.arc(m.X(p.x),m.Y(p.z),dotR,0,Math.PI*2); ctx.fill();
+    drawSignOnDot(ctx, m.X(p.x), m.Y(p.z), dotR, vals2[i]>=0);
+    ctx.fillStyle='rgba(220,230,255,0.85)';
+    ctx.fillText('Q'+(i+1), m.X(p.x), m.Y(p.z)-dotR-6);
+  });
+}
+function refreshTopViews(){
+  drawTopViewOn(document.getElementById('topViewCanvas'));
+  if(document.getElementById('topViewZoomOverlay').classList.contains('show')){
+    drawTopViewOn(document.getElementById('topViewCanvasZoom'));
+  }
+}
+function topViewHitTest(cv, px, py){
+  const m = topViewMapping(cv);
+  const r = topViewDotRadius(cv) + 8;
+  const candidates = [0,1,2].map(i=>({idx:i, x:SP_POS[i].x, z:SP_POS[i].z}));
+  for(const c of candidates){
+    if(Math.hypot(m.X(c.x)-px, m.Y(c.z)-py) <= r) return c;
+  }
+  return null;
+}
+function showTopViewInfo(elId, hit){
+  const el = document.getElementById(elId); if(!el) return;
+  const qVal = [stateSp.q1,stateSp.q2,stateSp.q3][hit.idx];
+  el.textContent = 'Q'+(hit.idx+1)+': ('+fmt(hit.x,2)+', '+fmt(hit.z,2)+') m · '+signStr(qVal)+' µC';
+}
+function canvasPointFromEvent(cv, evt){
+  const rect = cv.getBoundingClientRect();
+  const scaleX = cv.width/rect.width, scaleY = cv.height/rect.height;
+  return { x:(evt.clientX-rect.left)*scaleX, y:(evt.clientY-rect.top)*scaleY };
+}
+function attachTopViewInteraction(cv, infoElId){
+  let dragIdx = null;
+  cv.addEventListener('pointerdown', (e)=>{
+    const {x:px,y:py} = canvasPointFromEvent(cv, e);
+    const hit = topViewHitTest(cv, px, py);
+    if(hit){
+      dragIdx = hit.idx;
+      selectCharge(hit.idx);
+      showTopViewInfo(infoElId, hit);
+      try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+    } else if(cv.id==='topViewCanvas'){
+      openTopViewZoom();
+    }
+  });
+  cv.addEventListener('pointermove', (e)=>{
+    if(dragIdx===null) return;
+    const {x:px,y:py} = canvasPointFromEvent(cv, e);
+    const m = topViewMapping(cv);
+    const wx = clamp(m.invX(px), -3, 3), wz = clamp(m.invY(py), -3, 3);
+    SP_POS[dragIdx].x = wx; SP_POS[dragIdx].z = wz;
+    computeSuper();
+    showTopViewInfo(infoElId, {idx:dragIdx, x:wx, z:wz});
+  });
+  cv.addEventListener('pointerup', ()=>{
+    if(dragIdx!==null){
+      SP_POS[dragIdx].x = clamp(Math.round(SP_POS[dragIdx].x*10)/10, -3, 3);
+      SP_POS[dragIdx].z = clamp(Math.round(SP_POS[dragIdx].z*10)/10, -3, 3);
+      computeSuper();
+      const hit = {idx:dragIdx, x:SP_POS[dragIdx].x, z:SP_POS[dragIdx].z};
+      showTopViewInfo('topViewInfo', hit);
+      showTopViewInfo('topViewInfoZoom', hit);
+    }
+    dragIdx=null;
+  });
+  cv.addEventListener('pointercancel', ()=>{ dragIdx=null; });
+}
+function openTopViewZoom(){
+  const overlay = document.getElementById('topViewZoomOverlay');
+  overlay.classList.add('show');
+  const cvZoom = document.getElementById('topViewCanvasZoom');
+  requestAnimationFrame(()=>{
+    cvZoom.width = cvZoom.clientWidth; cvZoom.height = cvZoom.clientHeight;
+    drawTopViewOn(cvZoom);
+  });
+}
+document.getElementById('btn-topview-close').addEventListener('click', ()=> document.getElementById('topViewZoomOverlay').classList.remove('show'));
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') document.getElementById('topViewZoomOverlay').classList.remove('show'); });
+attachTopViewInteraction(document.getElementById('topViewCanvas'), 'topViewInfo');
+attachTopViewInteraction(document.getElementById('topViewCanvasZoom'), 'topViewInfoZoom');
+function syncFieldCheckboxes(checked){
+  stateTopView.showFields = checked;
+  document.getElementById('chk-show-fields').checked = checked;
+  document.getElementById('chk-show-fields-zoom').checked = checked;
+  refreshTopViews();
+}
+document.getElementById('chk-show-fields').addEventListener('change', e=> syncFieldCheckboxes(e.target.checked));
+document.getElementById('chk-show-fields-zoom').addEventListener('change', e=> syncFieldCheckboxes(e.target.checked));
+computeSuper();
+
+/* ============================== TAB 4 (2.1.4): FIELD LINE DIAGRAMS ============================== */
+const flCanvas = document.getElementById('fieldLineCanvas');
+const flCtx = flCanvas.getContext('2d');
+const stateLn = { q1:6, q2:-6, mode:'charges', plateGap:1.8 };
+const LN_POS = [ {x:-1.5,z:0}, {x:1.5,z:0} ];
+const PLATE_HALF_LEN = 2.1, PLATE_SUBN = 16;
+
+function lnFieldAt(x,z,charges){
+  let ex=0, ez=0;
+  charges.forEach(c=>{
+    if(Math.abs(c.Q) < 0.002) return;
+    const dx=x-c.x, dz=z-c.z;
+    const r = Math.max(Math.hypot(dx,dz), 0.08);
+    const ux=dx/r, uz=dz/r;
+    const Emag = fieldMag(c.Q, r);
+    const sgn = c.Q>=0?1:-1;
+    ex += ux*Emag*sgn; ez += uz*Emag*sgn;
+  });
+  return {x:ex, z:ez};
+}
+// Traces one line by following the local field direction, budgeted by total PATH
+// LENGTH travelled (not distance from the world origin) so an isolated charge that
+// isn't centred at (0,0) still produces a perfectly symmetric radial star.
+function traceOneLine(seed, charges, maxPathLen, isTerminated){
+  const pts=[{x:seed.x,z:seed.z}];
+  let x=seed.x, z=seed.z, pathLen=0;
+  const stepSize=0.03;
+  for(let step=0; step<3000; step++){
+    const E = lnFieldAt(x,z,charges);
+    const mag = Math.hypot(E.x,E.z);
+    if(mag<1e-6) break;
+    x += (E.x/mag)*stepSize; z += (E.z/mag)*stepSize;
+    pts.push({x,z});
+    pathLen += stepSize;
+    if(isTerminated && isTerminated(x,z)) break;
+    if(pathLen > maxPathLen) break;
+  }
+  return pts;
+}
+// Number of field lines shown at a charge is strictly proportional to its
+// magnitude: doubling |Q| doubles the line count (e.g. a 2C charge with 8
+// lines means a 4C charge shows 16 lines).
+const FIELD_LINES_PER_UNIT_CHARGE = 3;
+function chargeLineCount(Q){
+  return Math.max(0, Math.round(FIELD_LINES_PER_UNIT_CHARGE*Math.abs(Q)));
+}
+// Traces a line starting just outside a negative charge, walking *against*
+// the local field (E points into a negative charge, so -E points away from
+// it) so the resulting path is the same field line, just parametrized
+// outward from the sink. The caller reverses the point list so it still
+// draws — and arrows still point — from far away into the charge.
+function traceOutwardFromSink(seed, charges, maxPathLen){
+  const pts=[{x:seed.x,z:seed.z}];
+  let x=seed.x, z=seed.z, pathLen=0;
+  const stepSize=0.03;
+  for(let step=0; step<3000; step++){
+    const E = lnFieldAt(x,z,charges);
+    const mag = Math.hypot(E.x,E.z);
+    if(mag<1e-6) break;
+    x += -(E.x/mag)*stepSize; z += -(E.z/mag)*stepSize;
+    pts.push({x,z});
+    pathLen += stepSize;
+    if(pathLen > maxPathLen) break;
+  }
+  return pts;
+}
+function traceFieldLines(charges){
+  const lines = [];
+  const positives = charges.filter(c=>c.Q>0.05);
+  const negatives = charges.filter(c=>c.Q<-0.05);
+
+  const termAny = (x,z)=>{
+    for(const c of negatives){ if(Math.hypot(x-c.x,z-c.z)<0.18) return true; }
+    return false;
+  };
+
+  // How many lines each negative charge has actually received so far, so we
+  // can tell how many more it still needs to reach its own proportional count.
+  const received = new Map(negatives.map(c=>[c,0]));
+
+  if(positives.length>0){
+    positives.forEach(c=>{
+      const n = chargeLineCount(c.Q);
+      for(let i=0;i<n;i++){
+        const ang = (i/n)*Math.PI*2 + 0.15;
+        const seed = {x:c.x+Math.cos(ang)*0.17, z:c.z+Math.sin(ang)*0.17};
+        const pts = traceOneLine(seed, charges, 6.5, termAny);
+        lines.push(pts);
+        const last = pts[pts.length-1];
+        for(const nc of negatives){
+          if(Math.hypot(last.x-nc.x, last.z-nc.z) < 0.25){ received.set(nc,(received.get(nc)||0)+1); break; }
+        }
+      }
+    });
+  }
+
+  // A negative charge's own line count depends on its own magnitude, not on
+  // how many of the positive charge's lines happened to reach it. If it's
+  // short of its proportional share (e.g. it's larger than the positive
+  // charge, or there is no positive charge at all), fill the rest with lines
+  // converging into it from further out.
+  negatives.forEach(c=>{
+    const need = chargeLineCount(c.Q);
+    const have = received.get(c)||0;
+    const deficit = Math.max(0, need-have);
+    for(let i=0;i<deficit;i++){
+      const ang = (i/deficit)*Math.PI*2 + 0.4;
+      const seed = {x:c.x+Math.cos(ang)*0.17, z:c.z+Math.sin(ang)*0.17};
+      const pts = traceOutwardFromSink(seed, charges, 6.5);
+      pts.reverse();
+      lines.push(pts);
+    }
+  });
+
+  return lines;
+}
+function buildPlateCharges(q1,q2){
+  const charges = [];
+  for(let i=0;i<PLATE_SUBN;i++){
+    const z = -PLATE_HALF_LEN + (2*PLATE_HALF_LEN)*(i+0.5)/PLATE_SUBN;
+    charges.push({x:-stateLn.plateGap, z, Q:q1/PLATE_SUBN});
+    charges.push({x:stateLn.plateGap, z, Q:q2/PLATE_SUBN});
+  }
+  return charges;
+}
+function tracePlateFieldLines(q1,q2){
+  const charges = buildPlateCharges(q1,q2);
+  const lines = [];
+  const term = (x,z)=>{
+    if(q2 < -0.3 && Math.abs(x-stateLn.plateGap)<0.1 && Math.abs(z)<PLATE_HALF_LEN+0.15) return true;
+    if(q1 < -0.3 && Math.abs(x+stateLn.plateGap)<0.1 && Math.abs(z)<PLATE_HALF_LEN+0.15) return true;
+    return false;
+  };
+  const seedN = 14;
+  function seedFromPlate(px, dirSign){
+    for(let i=0;i<seedN;i++){
+      const z0 = -PLATE_HALF_LEN*0.9 + (2*PLATE_HALF_LEN*0.9)*(i+0.5)/seedN;
+      const seed = {x:px+dirSign*0.09, z:z0};
+      lines.push(traceOneLine(seed, charges, 7.5, term));
+    }
+  }
+  if(q1 > 0.3) seedFromPlate(-stateLn.plateGap, 1);
+  if(q2 > 0.3) seedFromPlate(stateLn.plateGap, -1);
+  if(q1<=0.3 && q2<=0.3){
+    const n=16;
+    for(let i=0;i<n;i++){
+      const ang=(i/n)*Math.PI*2;
+      lines.push(traceOneLine({x:Math.cos(ang)*5,z:Math.sin(ang)*5}, charges, 7.5, term));
+    }
+  }
+  return lines;
+}
+function lnMapping(){
+  const W=flCanvas.width, H=flCanvas.height, pad=50, range=5.2;
+  const scale = Math.min(W-2*pad, H-2*pad) / (2*range);
+  const cx=W/2, cy=H/2;
+  return { X:(x)=>cx+x*scale, Y:(z)=>cy+z*scale, scale };
+}
+function drawFieldLineArrowhead(ctx, pts, idx, color){
+  if(idx<1 || idx>=pts.length) return;
+  const a=pts[idx-1], b=pts[idx];
+  const ang = Math.atan2((b.z-a.z), (b.x-a.x));
+  const m = lnMapping();
+  const x=m.X(b.x), y=m.Y(b.z);
+  const hs=7;
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(x+hs*Math.cos(ang), y+hs*Math.sin(ang));
+  ctx.lineTo(x-hs*Math.cos(ang-0.5), y-hs*Math.sin(ang-0.5));
+  ctx.lineTo(x-hs*Math.cos(ang+0.5), y-hs*Math.sin(ang+0.5));
+  ctx.closePath(); ctx.fill();
+}
+function drawTracedLines(lines){
+  const m = lnMapping();
+  flCtx.strokeStyle='rgba(200,220,255,0.55)'; flCtx.lineWidth=1.4; flCtx.lineJoin='round'; flCtx.lineCap='round';
+  lines.forEach(pts=>{
+    flCtx.beginPath();
+    pts.forEach((p,i)=>{ const x=m.X(p.x), y=m.Y(p.z); if(i===0) flCtx.moveTo(x,y); else flCtx.lineTo(x,y); });
+    flCtx.stroke();
+    const mid = Math.floor(pts.length*0.45);
+    drawFieldLineArrowhead(flCtx, pts, mid, 'rgba(200,220,255,0.75)');
+    if(pts.length>30){ const mid2=Math.floor(pts.length*0.8); drawFieldLineArrowhead(flCtx, pts, mid2, 'rgba(200,220,255,0.75)'); }
+  });
+}
+function drawPlates(){
+  const m = lnMapping();
+  [ {x:-stateLn.plateGap, Q:stateLn.q1}, {x:stateLn.plateGap, Q:stateLn.q2} ].forEach(p=>{
+    const x = m.X(p.x), y1 = m.Y(-PLATE_HALF_LEN), y2 = m.Y(PLATE_HALF_LEN);
+    const color = p.Q>0.05 ? DARK_CSS.red : (p.Q<-0.05 ? DARK_CSS.blue : '#5c6a85');
+    flCtx.strokeStyle=color; flCtx.lineWidth=9; flCtx.lineCap='round';
+    flCtx.beginPath(); flCtx.moveTo(x,y1); flCtx.lineTo(x,y2); flCtx.stroke();
+    if(Math.abs(p.Q)>0.05){
+      flCtx.fillStyle=color; flCtx.font='bold 18px sans-serif'; flCtx.textAlign='center'; flCtx.textBaseline='middle';
+      for(let i=0;i<5;i++){
+        const zz = -PLATE_HALF_LEN + (2*PLATE_HALF_LEN)*(i+0.5)/5;
+        flCtx.fillText(p.Q>=0?'+':'−', x + (p.Q>=0? -20:20), m.Y(zz));
+      }
+    }
+    flCtx.font='10px "Space Mono",monospace'; flCtx.fillStyle='rgba(220,230,255,0.75)'; flCtx.textAlign='center';
+    flCtx.fillText(signStr(p.Q)+' µC', x, y2+20);
+  });
+}
+function drawFieldLines(){
+  if(flCanvas.width===0 || flCanvas.height===0) return;
+  const m = lnMapping();
+  flCtx.fillStyle = '#07090f';
+  flCtx.fillRect(0,0,flCanvas.width,flCanvas.height);
+  // grid
+  flCtx.strokeStyle='rgba(180,200,255,0.08)'; flCtx.lineWidth=1;
+  for(let g=-5;g<=5;g++){
+    flCtx.beginPath(); flCtx.moveTo(m.X(g),m.Y(-5.2)); flCtx.lineTo(m.X(g),m.Y(5.2)); flCtx.stroke();
+    flCtx.beginPath(); flCtx.moveTo(m.X(-5.2),m.Y(g)); flCtx.lineTo(m.X(5.2),m.Y(g)); flCtx.stroke();
+  }
+  if(stateLn.mode==='plates'){
+    drawTracedLines(tracePlateFieldLines(stateLn.q1, stateLn.q2));
+    drawPlates();
+    return;
+  }
+  const charges = [ {x:LN_POS[0].x, z:LN_POS[0].z, Q:stateLn.q1}, {x:LN_POS[1].x, z:LN_POS[1].z, Q:stateLn.q2} ];
+  drawTracedLines(traceFieldLines(charges));
+  charges.forEach(c=>{
+    if(Math.abs(c.Q)<0.05) return;
+    const radius = clamp(16 + Math.sqrt(Math.abs(c.Q))*7, 16, 44);
+    const color = c.Q>=0 ? DARK_CSS.red : DARK_CSS.blue;
+    const x=m.X(c.x), y=m.Y(c.z);
+    flCtx.fillStyle=color; flCtx.beginPath(); flCtx.arc(x,y,radius,0,Math.PI*2); flCtx.fill();
+    flCtx.strokeStyle='rgba(0,0,0,0.3)'; flCtx.lineWidth=1.5; flCtx.stroke();
+    flCtx.fillStyle='#fff'; flCtx.font='bold '+Math.max(14,radius*0.85)+'px sans-serif'; flCtx.textAlign='center'; flCtx.textBaseline='middle';
+    flCtx.fillText(c.Q>=0?'+':'−', x, y+1);
+    flCtx.font='10px "Space Mono",monospace'; flCtx.fillStyle='rgba(220,230,255,0.75)';
+    flCtx.fillText(signStr(c.Q)+' µC', x, y+radius+16);
+  });
+}
+function updateLinesHUD(){
+  document.getElementById('ln-q1').textContent = signStr(stateLn.q1)+' µC';
+  document.getElementById('ln-q2').textContent = signStr(stateLn.q2)+' µC';
+}
+bindSlider('sl-l-q1','lbl-l-q1', v=>{ stateLn.q1=v; updateLinesHUD(); drawFieldLines(); }, v=>signStr(v));
+bindSlider('sl-l-q2','lbl-l-q2', v=>{ stateLn.q2=v; updateLinesHUD(); drawFieldLines(); }, v=>signStr(v));
+function setLinesPreset(q1,q2,mode){
+  stateLn.q1=q1; stateLn.q2=q2; stateLn.mode = mode||'charges';
+  document.getElementById('sl-l-q1').value=q1; document.getElementById('lbl-l-q1').textContent=signStr(q1);
+  document.getElementById('sl-l-q2').value=q2; document.getElementById('lbl-l-q2').textContent=signStr(q2);
+  document.getElementById('wrap-l-dist').style.display = (stateLn.mode==='plates') ? 'flex' : 'none';
+  document.querySelectorAll('#ctrl-lines .btn').forEach(b=>b.classList.remove('on'));
+  updateLinesHUD(); drawFieldLines();
+}
+bindSlider('sl-l-dist','lbl-l-dist', v=>{ stateLn.plateGap=v; drawFieldLines(); }, v=>fmt(v*2,2));
+document.getElementById('btn-l-single').addEventListener('click', function(){ setLinesPreset(6,0,'charges'); this.classList.add('on'); });
+document.getElementById('btn-l-like').addEventListener('click', function(){ setLinesPreset(6,6,'charges'); this.classList.add('on'); });
+document.getElementById('btn-l-dipole').addEventListener('click', function(){ setLinesPreset(6,-6,'charges'); this.classList.add('on'); });
+document.getElementById('btn-l-plates').addEventListener('click', function(){ setLinesPreset(6,-6,'plates'); this.classList.add('on'); });
+setSliderColor('sl-l-q1','red'); setSliderColor('sl-l-q2','blue');
+updateLinesHUD();
+
+/* ============================== TAB SWITCHING ============================== */
+document.getElementById('btn-fold-info').addEventListener('click', function(){
+  const panel = document.getElementById('infoPanel');
+  const folded = panel.classList.toggle('collapsed');
+  this.textContent = folded ? '▸' : '▾';
+});
+
+const moduleGroups = { field:grpField, point:grpPoint, super:grpSuper, lines:null };
+const moduleCams = {
+  field:{theta:0.45,phi:0.95,radius:6.5,cx:0,cy:0,cz:0},
+  point:{theta:0.5,phi:1.0,radius:5.5,cx:0,cy:0,cz:0},
+  super:{theta:0.4,phi:0.95,radius:7,cx:0,cy:0,cz:0},
+  lines:{theta:0.45,phi:0.95,radius:6.5,cx:0,cy:0,cz:0}
+};
+const moduleLabelFns = { field:labelsField, point:labelsPoint, super:labelsSuper, lines:null };
+
+function setActiveModule(id){
+  Object.keys(moduleGroups).forEach(k=>{ if(moduleGroups[k]) moduleGroups[k].visible = (k===id); });
+  activeModuleRef = id;
+  const c = moduleCams[id];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.mod===id));
+  document.querySelectorAll('.hud-block').forEach(el=>{ el.style.display = (el.id==='hud-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.info-block').forEach(el=>{ el.style.display = (el.id==='info-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.ctrl-block').forEach(el=>{ el.style.display = (el.id==='ctrl-'+id) ? 'flex' : 'none'; });
+  document.getElementById('topViewPanel').style.display = (id==='super') ? 'block' : 'none';
+  if(id!=='super') document.getElementById('topViewZoomOverlay').classList.remove('show');
+  const fieldLineOverlay = document.getElementById('fieldLineOverlay');
+  const hint = document.getElementById('hint');
+  if(id==='lines'){
+    fieldLineOverlay.classList.add('show');
+    canvas.style.visibility = 'hidden';
+    hint.style.display = 'none';
+    requestAnimationFrame(()=>{
+      flCanvas.width = flCanvas.clientWidth; flCanvas.height = flCanvas.clientHeight;
+      drawFieldLines();
+    });
+  } else {
+    fieldLineOverlay.classList.remove('show');
+    canvas.style.visibility = 'visible';
+    hint.style.display = 'block';
+  }
+  if(id==='super') refreshTopViews();
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setActiveModule(btn.dataset.mod));
+});
+document.getElementById('btn-camreset').addEventListener('click', ()=>{
+  const c = moduleCams[activeModuleRef];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+});
+setActiveModule('field');
+
+/* ============================== MAIN LOOP ============================== */
+function drawLabels(){
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  const fn = moduleLabelFns[activeModuleRef];
+  if(!fn) return;
+  fn().forEach(l=> drawChip(l.p, l.t, l.c, l.size));
+}
+function animate(){
+  requestAnimationFrame(animate);
+  drawLabels();
+  if(activeModuleRef!=='lines'){ renderer.render(scene3, cam3); }
+}
+animate();
+<\/script>
+
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Felectric_field_lab.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Felectric_field_lab.html'"/>
+    <p>darawa-io.github.io/ARLABS/electric_field_lab.html</p>
+  </div>
+</div>
+<script>
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+<\/script>
+</body>
+</html>
+
+</script>
+
+<script type="text/html" id="src-po">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Electric Potential Lab | Potential Energy, Potential & Work</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2307090f'/%3E%3Cpath d='M13 2 L4 14 h6 l-1 8 9-12h-6z' fill='%23ffc857'/%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --pink:#ff6fae;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.86;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.4px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.4);letter-spacing:1.4px;margin-top:2px;font-family:'Space Mono',monospace;}
+
+#tabbar{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;z-index:10;max-width:calc(100vw - 260px);overflow-x:auto;}
+#tabbar::-webkit-scrollbar{height:0;}
+.tab-btn{padding:8px 10px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;transition:all .18s;}
+.tab-btn:hover{color:#fff;}
+.tab-btn.on{background:rgba(91,200,255,0.20);color:#fff;}
+
+#hud{
+  position:absolute;top:70px;right:14px;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:15px;width:240px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;
+}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:6px;}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-align:right;}
+.dv.amber{color:var(--amber);}
+.dv.blue{color:var(--blue);}
+.dv.violet{color:var(--violet);}
+.dv.green{color:var(--green);}
+.dv.red{color:var(--red);}
+.dv.pink{color:var(--pink);}
+.hdiv{height:1px;background:var(--border);margin:9px 0;}
+#legend{display:flex;flex-wrap:wrap;gap:6px 10px;font-family:'Space Mono',monospace;font-size:9px;}
+.legchip{display:flex;align-items:center;gap:4px;color:rgba(200,215,255,.65);}
+.legdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.note-box{padding:8px 9px;border-radius:9px;background:rgba(180,120,255,0.06);border:1px solid rgba(180,120,255,0.18);font-size:10px;font-family:'Space Mono',monospace;color:rgba(210,220,255,0.8);line-height:1.7;}
+.rule-box{padding:8px 9px;border-radius:9px;background:rgba(77,255,160,0.06);border:1px solid rgba(77,255,160,0.2);font-size:10px;font-family:'Space Mono',monospace;color:rgba(210,220,255,0.85);line-height:1.6;margin-top:8px;}
+.chart-wrap{margin-top:8px;border-radius:10px;overflow:hidden;background:rgba(180,200,255,0.03);border:1px solid var(--border);padding:6px;}
+.chart-wrap canvas{display:block;width:100%;height:auto;}
+.chart-cap{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,0.4);text-align:center;margin-top:4px;letter-spacing:.5px;}
+.vbar-wrap{margin-top:8px;padding:8px 9px;border-radius:9px;background:rgba(180,200,255,0.03);border:1px solid var(--border);}
+.vbar-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.vbar-row:last-child{margin-bottom:0;}
+.vbar-lbl{width:28px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:9.5px;font-weight:700;}
+.vbar-track{position:relative;flex:1;height:12px;border-radius:4px;background:rgba(180,200,255,0.08);overflow:hidden;}
+.vbar-track::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(180,200,255,0.3);}
+.vbar-fill{position:absolute;top:1px;bottom:1px;border-radius:3px;transition:left .15s,width .15s;}
+
+#infoPanel{position:absolute;top:70px;left:14px;width:272px;max-width:calc(100vw - 330px);
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;
+  padding:15px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;}
+#infoPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+#infoPanel.collapsed .info-block{display:none !important;}
+#infoPanel.collapsed{padding-bottom:15px;}
+.fold-btn{background:none;border:none;color:rgba(180,200,255,0.5);cursor:pointer;font-size:12px;padding:0 3px;}
+.fold-btn:hover{color:#fff;}
+.info-block h3{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:8px;}
+.info-block p{font-size:11.5px;line-height:1.65;color:rgba(210,222,250,0.82);margin-bottom:8px;}
+.info-block p:last-child{margin-bottom:0;}
+.info-block b{color:#fff;}
+.info-block .pos{color:var(--red);font-weight:700;}
+.info-block .neg{color:var(--blue);font-weight:700;}
+.info-block .formula{display:block;text-align:center;font-family:'Space Mono',monospace;font-size:13px;color:var(--amber);background:rgba(255,200,87,0.06);border:1px solid rgba(255,200,87,0.2);border-radius:8px;padding:9px;margin:9px 0;letter-spacing:.5px;}
+.info-block .tag{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--green);background:rgba(77,255,160,.08);border:1px solid rgba(77,255,160,.25);border-radius:6px;padding:2px 7px;margin-bottom:7px;letter-spacing:.5px;}
+
+#controls{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;align-items:center;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:40px;
+  padding:8px 14px;z-index:10;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 24px);
+}
+.ctrl-block{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:26px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.red{border-color:rgba(255,94,114,0.4);color:var(--red);background:rgba(255,94,114,0.06);}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.violet{border-color:rgba(181,122,255,0.4);color:var(--violet);background:rgba(181,122,255,0.06);}
+.btn.pink{border-color:rgba(255,111,174,0.4);color:var(--pink);background:rgba(255,111,174,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:70px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--thumb-color,var(--violet));cursor:pointer;box-shadow:0 0 8px var(--thumb-glow,rgba(181,122,255,0.6));}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:none;background:var(--thumb-color,var(--violet));cursor:pointer;box-shadow:0 0 8px var(--thumb-glow,rgba(181,122,255,0.6));}
+
+#challengeModal{display:none;position:fixed;inset:0;z-index:60;background:rgba(4,6,18,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#challengeModal.show{display:flex;}
+#challengeBox{background:rgba(10,14,28,.97);border:1px solid rgba(255,200,87,.3);border-radius:20px;padding:22px;max-width:320px;width:90%;}
+#challengeBox h3{font-family:'Syne',sans-serif;font-size:15px;color:#fff;margin-bottom:10px;}
+.chal-const{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);background:rgba(255,200,87,0.08);border:1px solid rgba(255,200,87,0.25);border-radius:8px;padding:7px 9px;margin-bottom:10px;text-align:center;letter-spacing:.3px;}
+.chal-row{display:flex;justify-content:space-between;padding:7px 9px;border-radius:8px;background:rgba(180,200,255,0.05);margin-bottom:6px;font-family:'Space Mono',monospace;font-size:11px;}
+.chal-unknown{background:rgba(255,200,87,0.1);border:1px solid rgba(255,200,87,0.3);}
+#chal-input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(180,200,255,0.06);color:#fff;font-family:'Space Mono',monospace;font-size:12px;}
+#chal-input-wrap{display:flex;align-items:center;gap:8px;margin:10px 0;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);}
+#chal-feedback{font-family:'Space Mono',monospace;font-size:10.5px;min-height:16px;margin-bottom:8px;line-height:1.5;}
+#chal-feedback.correct{color:var(--green);}
+#chal-feedback.wrong{color:var(--red);}
+#chal-actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
+
+#ascModal{display:none;position:fixed;inset:0;z-index:60;background:rgba(4,6,18,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#ascModal.show{display:flex;}
+#ascBox{background:rgba(10,14,28,.97);border:1px solid rgba(255,200,87,.3);border-radius:20px;padding:22px;max-width:360px;width:90%;max-height:86vh;overflow-y:auto;}
+#ascBox h3{font-family:'Syne',sans-serif;font-size:15px;color:#fff;margin-bottom:10px;}
+.asc-given-row{display:flex;justify-content:space-between;padding:6px 9px;border-radius:8px;background:rgba(180,200,255,0.05);margin-bottom:5px;font-family:'Space Mono',monospace;font-size:11px;}
+.asc-row{margin-bottom:8px;}
+.asc-row-label{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);margin-bottom:4px;display:block;}
+.asc-row input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(180,200,255,0.06);color:#fff;font-family:'Space Mono',monospace;font-size:12px;box-sizing:border-box;}
+.asc-row input.correct{border-color:rgba(77,255,160,0.5);background:rgba(77,255,160,0.08);}
+.asc-row input.wrong{border-color:rgba(255,94,114,0.5);background:rgba(255,94,114,0.08);}
+#asc-feedback{font-family:'Space Mono',monospace;font-size:10.5px;min-height:16px;margin:6px 0 8px;line-height:1.6;}
+#asc-feedback.correct{color:var(--green);}
+#asc-feedback.wrong{color:var(--red);}
+#asc-actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
+
+#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);font-size:8.5px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+
+@media (max-width:900px){
+  #infoPanel{display:none;}
+  #hud{width:190px;top:66px;}
+  #tabbar{max-width:calc(100vw - 20px);top:60px;left:14px;transform:none;}
+}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+  <div id="title-text">
+    <h1>ELECTRIC POTENTIAL LAB</h1>
+    <p>Potential Energy · Potential · Work · Superposition</p>
+  </div>
+</div>
+
+<div id="tabbar">
+  <button class="tab-btn on" data-mod="pe">2.2.1 · PE BETWEEN CHARGES</button>
+  <button class="tab-btn" data-mod="work">2.2.2 · WORK IN A FIELD</button>
+  <button class="tab-btn" data-mod="potential">2.2.3-4 · POTENTIAL</button>
+  <button class="tab-btn" data-mod="multi">2.2.5 · SUPERPOSITION OF V</button>
+  <button class="tab-btn" data-mod="assemble">2.2.6-7 · ASSEMBLING CHARGES</button>
+</div>
+
+<div id="hud">
+  <h2>Readings</h2>
+  <div id="legend">
+    <span class="legchip"><span class="legdot" style="background:var(--red);"></span>positive PE/V</span>
+    <span class="legchip"><span class="legdot" style="background:var(--blue);"></span>negative PE/V</span>
+    <span class="legchip"><span class="legdot" style="background:var(--green);"></span>net / work</span>
+  </div>
+  <div class="hdiv"></div>
+
+  <div id="hud-pe" class="hud-block">
+    <div class="dr"><span class="dl">Charge q₁</span><span class="dv" id="pe-q1">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Charge q₂</span><span class="dv" id="pe-q2">−4.0 µC</span></div>
+    <div class="dr"><span class="dl">Separation r</span><span class="dv" id="pe-r">1.20 m</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">PE = kq₁q₂/r</span><span class="dv" id="pe-val">0.000 J</span></div>
+    <div class="chart-wrap"><canvas id="chartPE" width="420" height="200"></canvas></div>
+    <div class="chart-cap">PE vs. r — dot marks the current setting</div>
+    <div class="rule-box" id="pe-rule">Opposite charges: PE is negative — separating them takes work in.</div>
+  </div>
+
+  <div id="hud-work" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Plate voltage ΔV</span><span class="dv" id="wk-dv">40 V</span></div>
+    <div class="dr"><span class="dl">Plate gap d</span><span class="dv" id="wk-d">2.00 m</span></div>
+    <div class="dr"><span class="dl">Field E = ΔV/d</span><span class="dv green" id="wk-E">20.0 V/m</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Charge q</span><span class="dv" id="wk-q">+2.0 µC</span></div>
+    <div class="dr"><span class="dl">Position x (from + plate)</span><span class="dv" id="wk-x">0.50 m</span></div>
+    <div class="dr"><span class="dl">Work by field W = qEx</span><span class="dv pink" id="wk-W">0.000 mJ</span></div>
+    <div class="dr"><span class="dl">ΔPE = −W</span><span class="dv" id="wk-dPE">0.000 mJ</span></div>
+    <div class="chart-wrap"><canvas id="chartWork" width="420" height="200"></canvas></div>
+    <div class="chart-cap">PE(x) — uniform field gives a straight line</div>
+    <div class="rule-box" id="wk-rule">—</div>
+  </div>
+
+  <div id="hud-potential" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Source charge Q</span><span class="dv" id="vp-Q">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">Distance r</span><span class="dv" id="vp-r">1.60 m</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Potential V = kQ/r</span><span class="dv" id="vp-V">0 V</span></div>
+    <div class="dr"><span class="dl">Test charge q₀</span><span class="dv" id="vp-q0">+2.0 µC</span></div>
+    <div class="dr"><span class="dl">Accelerates toward</span><span class="dv green" id="vp-dir">—</span></div>
+    <div class="chart-wrap"><canvas id="chartV" width="420" height="200"></canvas></div>
+    <div class="chart-cap">V vs. r — dot marks the current setting</div>
+  </div>
+
+  <div id="hud-multi" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Q₁ (amber)</span><span class="dv amber" id="mv-q1">+6.0 µC</span></div>
+    <div class="dr"><span class="dl">V₁ at P</span><span class="dv amber" id="mv-v1">0 V</span></div>
+    <div class="dr"><span class="dl">Q₂ (violet)</span><span class="dv violet" id="mv-q2">−5.0 µC</span></div>
+    <div class="dr"><span class="dl">V₂ at P</span><span class="dv violet" id="mv-v2">0 V</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Net V at P = ΣVᵢ</span><span class="dv green" id="mv-net">0 V</span></div>
+    <div class="vbar-wrap">
+      <div class="vbar-row"><span class="vbar-lbl" style="color:var(--amber);">V₁</span><div class="vbar-track"><div class="vbar-fill" id="mv-bar1" style="background:var(--amber);"></div></div></div>
+      <div class="vbar-row"><span class="vbar-lbl" style="color:var(--violet);">V₂</span><div class="vbar-track"><div class="vbar-fill" id="mv-bar2" style="background:var(--violet);"></div></div></div>
+      <div class="vbar-row"><span class="vbar-lbl" style="color:var(--green);">Total</span><div class="vbar-track"><div class="vbar-fill" id="mv-barnet" style="background:var(--green);"></div></div></div>
+    </div>
+    <div class="chart-cap" id="mv-scale-cap">scale: fixed to ± max possible V</div>
+    <div class="note-box">V is a <b>scalar</b> — these just add up directly, no vector components needed.</div>
+  </div>
+
+  <div id="hud-assemble" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Q₁</span><span class="dv amber" id="as-q1">+5.0 µC</span></div>
+    <div class="dr"><span class="dl">Q₂</span><span class="dv violet" id="as-q2">+4.0 µC</span></div>
+    <div class="dr"><span class="dl">Q₃</span><span class="dv blue" id="as-q3">−3.0 µC</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">PE₁₂</span><span class="dv" id="as-pe12">—</span></div>
+    <div class="dr"><span class="dl">PE₁₃</span><span class="dv" id="as-pe13">—</span></div>
+    <div class="dr"><span class="dl">PE₂₃</span><span class="dv" id="as-pe23">—</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Total U = ΣPEᵢⱼ</span><span class="dv green" id="as-total">0.000 J</span></div>
+    <div class="note-box" id="as-note">Press "Next Step" to bring the charges in from infinity one at a time.</div>
+  </div>
+</div>
+
+<div id="infoPanel">
+  <h2>Concept <button class="fold-btn" id="btn-fold-info" title="Collapse / expand">▾</button></h2>
+
+  <div id="info-pe" class="info-block">
+    <h3>Electric Fields Store Mechanical Work</h3>
+    <p>Moving charges against the electric force takes <b>mechanical work</b>, and that work is stored as <b>electric potential energy</b>.</p>
+    <span class="formula">PE = kq₁q₂/r</span>
+    <p>• <span class="pos">Separating charges that attract</span> (opposite signs) takes work in — PE rises from a negative value toward zero.</p>
+    <p>• <span class="neg">Pushing charges that repel closer</span> (same sign) also takes work in — PE rises further above zero.</p>
+    <p>Try "Separate" and "Bring Together" and watch which direction PE moves.</p>
+  </div>
+
+  <div id="info-work" class="info-block" style="display:none;">
+    <h3>Work Done in a Uniform Field</h3>
+    <p>Between two charged plates the field is uniform. Moving a charge q a distance x with the field does work:</p>
+    <span class="formula">Wₑ = qE·x</span>
+    <span class="formula" style="margin-top:6px;">ΔPE = −Wₑ</span>
+    <p>If q &gt; 0 and it moves <b>with</b> the field (toward the − plate), it <b>loses</b> PE. Moving <b>against</b> the field <b>gains</b> PE.</p>
+    <p>By the work-energy theorem, ΔKE = Wₑ — press "Release Charge" to see it accelerate as PE turns into motion.</p>
+    <p><b>The electrostatic (Coulomb) force is conservative</b>, which means the work done on charge q is <b>independent of the path taken</b> — only the start and end positions matter. That's exactly why ΔPE can be written as a single-valued function of position, and why we can talk about "the" potential energy at a point rather than needing to know how the charge got there.</p>
+  </div>
+
+  <div id="info-potential" class="info-block" style="display:none;">
+    <h3>Electric Potential &amp; Direction of Motion</h3>
+    <p>Potential is potential energy <b>per unit charge</b> — a scalar that exists at every point, independent of any test charge:</p>
+    <span class="formula">V = PE/q = kQ/r</span>
+    <p>The rings shown are <b>equipotential surfaces</b> — every point on a ring has the same V.</p>
+    <p>• <span class="pos">Positive charges accelerate toward decreasing V.</span></p>
+    <p>• <span class="neg">Negative charges accelerate toward increasing V.</span></p>
+    <p>Either way, the charge moves toward <b>lower potential energy</b>. Toggle the test charge's sign and watch the arrow flip.</p>
+  </div>
+
+  <div id="info-multi" class="info-block" style="display:none;">
+    <h3>Potential from Multiple Charges</h3>
+    <p>Unlike the electric field, potential is a <b>scalar</b> — no directions to combine, just plain addition:</p>
+    <span class="formula">V = k Σ (qᵢ/rᵢ)</span>
+    <p>Drag the sliders and notice how much simpler this is than superposing field vectors — positive and negative contributions can partly (or fully) cancel through simple arithmetic.</p>
+  </div>
+
+  <div id="info-assemble" class="info-block" style="display:none;">
+    <h3>Work to Assemble a Configuration</h3>
+    <p>Building up a group of charges from far apart takes work — the total is the sum of the potential energy of <b>every pair</b>:</p>
+    <span class="formula">U = Σ kqᵢqⱼ/rᵢⱼ</span>
+    <p>The first charge costs nothing to place (there's nothing to push against yet). Each new charge after that costs the PE of its interaction with <b>every</b> charge already there.</p>
+    <p>Press "Next Step" to bring in one charge at a time and watch the running total build up pair by pair, at your own pace.</p>
+  </div>
+</div>
+
+<div id="controls">
+  <div id="ctrl-pe" class="ctrl-block">
+    <span class="sw">q₁=<input type="range" id="sl-pe-q1" min="-9" max="9" step="0.5" value="6"><span id="lbl-pe-q1">+6.0</span></span>
+    <span class="sw">q₂=<input type="range" id="sl-pe-q2" min="-9" max="9" step="0.5" value="-4"><span id="lbl-pe-q2">−4.0</span></span>
+    <span class="sw">r=<input type="range" id="sl-pe-r" min="0.3" max="3.5" step="0.05" value="1.2"><span id="lbl-pe-r">1.20</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-pe-separate">⇤⇥ Separate</button>
+    <button class="btn" id="btn-pe-together">⇥⇤ Bring Together</button>
+    <button class="btn amber" id="btn-pe-challenge">🎯 Challenge</button>
+    <button class="btn" id="btn-reset-pe">Reset</button>
+  </div>
+
+  <div id="ctrl-work" class="ctrl-block" style="display:none;">
+    <span class="sw">ΔV=<input type="range" id="sl-wk-dv" min="-100" max="100" step="5" value="40"><span id="lbl-wk-dv">40</span></span>
+    <span class="sw">q=<input type="range" id="sl-wk-q" min="-8" max="8" step="0.5" value="2"><span id="lbl-wk-q">+2.0</span></span>
+    <span class="sw">x=<input type="range" id="sl-wk-x" min="0" max="2" step="0.05" value="0.5"><span id="lbl-wk-x">0.50</span></span>
+    <div class="sep"></div>
+    <button class="btn green" id="btn-wk-release">▶ Release Charge</button>
+    <button class="btn amber" id="btn-wk-challenge">🎯 Challenge</button>
+    <button class="btn" id="btn-reset-wk">Reset</button>
+  </div>
+
+  <div id="ctrl-potential" class="ctrl-block" style="display:none;">
+    <span class="sw">Q=<input type="range" id="sl-vp-Q" min="-10" max="10" step="0.5" value="6"><span id="lbl-vp-Q">+6.0</span></span>
+    <span class="sw">r=<input type="range" id="sl-vp-r" min="0.4" max="3.2" step="0.05" value="1.6"><span id="lbl-vp-r">1.60</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-vp-testsign">q₀: +</button>
+    <button class="btn amber" id="btn-vp-challenge">🎯 Challenge</button>
+    <button class="btn" id="btn-reset-vp">Reset</button>
+  </div>
+
+  <div id="ctrl-multi" class="ctrl-block" style="display:none;">
+    <span class="sw">Q₁=<input type="range" id="sl-mv-q1" min="-8" max="8" step="1" value="6"><span id="lbl-mv-q1">+6</span></span>
+    <span class="sw">Q₂=<input type="range" id="sl-mv-q2" min="-8" max="8" step="1" value="-5"><span id="lbl-mv-q2">−5</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-mv">Reset</button>
+  </div>
+
+  <div id="ctrl-assemble" class="ctrl-block" style="display:none;">
+    <span class="sw">Q₁=<input type="range" id="sl-as-q1" min="-8" max="8" step="1" value="5"><span id="lbl-as-q1">+5</span></span>
+    <span class="sw">Q₂=<input type="range" id="sl-as-q2" min="-8" max="8" step="1" value="4"><span id="lbl-as-q2">+4</span></span>
+    <span class="sw">Q₃=<input type="range" id="sl-as-q3" min="-8" max="8" step="1" value="-3"><span id="lbl-as-q3">−3</span></span>
+    <div class="sep"></div>
+    <button class="btn green" id="btn-as-next">▶ Next Step (1/4)</button>
+    <button class="btn" id="btn-as-reset-anim">Reset Assembly</button>
+    <button class="btn amber" id="btn-as-challenge">🎯 Challenge</button>
+    <button class="btn" id="btn-reset-as">Reset</button>
+  </div>
+
+</div>
+
+<div id="ascModal">
+  <div id="ascBox">
+    <h3>🎯 Assembling Charges Challenge</h3>
+    <div class="chal-const">k = 1/4πε₀ = 8.99 × 10⁹ N·m²/C²</div>
+    <div id="asc-note" class="note-box">Three charges are brought in from infinity, one at a time. Using the charges and separations below, work out the potential energy added at each step, then the total.</div>
+    <div id="asc-given"></div>
+    <div class="hdiv" style="margin:10px 0;"></div>
+    <div id="asc-rows"></div>
+    <div id="asc-feedback"></div>
+    <div id="asc-actions">
+      <button class="btn green" id="btn-asc-check">Check Answers</button>
+      <button class="btn" id="btn-asc-new">New Challenge</button>
+      <button class="btn red" id="btn-asc-exit">Exit Challenge</button>
+    </div>
+  </div>
+</div>
+
+<div id="hint">🖐️ drag: rotate view · scroll / pinch: zoom</div>
+
+<div id="challengeModal">
+  <div id="challengeBox">
+    <h3 id="chal-title">🎯 Challenge</h3>
+    <div class="chal-const" id="chal-const">k = 1/4πε₀ = 8.99 × 10⁹ N·m²/C²</div>
+    <div id="chal-note" class="note-box" style="display:none;margin-bottom:10px;"></div>
+    <div id="chal-rows"></div>
+    <div id="chal-input-wrap">Find:&nbsp;<input type="text" id="chal-input" placeholder="your answer"><span id="chal-unit-label"></span></div>
+    <div id="chal-feedback"></div>
+    <div id="chal-actions">
+      <button class="btn green" id="btn-chal-check">Check Answer</button>
+      <button class="btn" id="btn-chal-new">New Question</button>
+      <button class="btn red" id="btn-chal-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+<script>
+'use strict';
+/* ============================== CORE SETUP ============================== */
+let activeModuleRef = 'pe';
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.016);
+const cam3 = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  cam3.aspect = w / h; cam3.updateProjectionMatrix();
+  labelCanvas.width = w; labelCanvas.height = h;
+}
+resize(); window.addEventListener('resize', resize);
+
+scene3.add(new THREE.AmbientLight(0xffffff, 1.15));
+const sun = new THREE.DirectionalLight(0xfff8f0, 0.9); sun.position.set(5,10,6); scene3.add(sun);
+const rim = new THREE.DirectionalLight(0x6688ff, 0.4); rim.position.set(-6,4,-4); scene3.add(rim);
+
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0x0d1020, roughness:0.95}));
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -1.4; scene3.add(floorM);
+const grid = new THREE.GridHelper(40,30,0x1a2540,0x121c30); grid.position.y = -1.38; scene3.add(grid);
+
+/* ============================== SHARED HELPERS ============================== */
+const COL_C1 = 0xffc857, COL_C2 = 0xb57aff, COL_C3 = 0x5bc8ff, COL_RESULT = 0x4dffa0, COL_FORCE = 0xff6fae;
+const COL_NEUTRAL = 0x5c6a85;
+const DARK = { amber:0xb7903f, violet:0x7b53ad, blue:0x3e88ad, red:0xb84452 };
+const DARK_CSS = { amber:'#b7903f', violet:'#7b53ad', blue:'#3e88ad', red:'#b84452' };
+const K_COULOMB = 8.99e9;
+
+function ease(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function fmt(x,d){ return x.toFixed(d===undefined?2:d); }
+function signStr(x){ return x>=0? ('+'+fmt(x,1)) : fmt(x,1); }
+function tween(duration, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now-start)/duration);
+    onUpdate(ease(t), t);
+    if(t < 1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+// Signed potential energy between two point charges (Joules). q's in microcoulombs, r in metres.
+function peBetween(q1uC, q2uC, r){
+  if(r < 0.05) r = 0.05;
+  return K_COULOMB * (q1uC*1e-6) * (q2uC*1e-6) / r;
+}
+// Signed electric potential from a point charge (Volts).
+function potentialAt(QuC, r){
+  if(r < 0.05) r = 0.05;
+  return K_COULOMB * (QuC*1e-6) / r;
+}
+function bindSlider(id, lblId, cb, fmtFn){
+  const el = document.getElementById(id), lbl = document.getElementById(lblId);
+  el.addEventListener('input', ()=>{ const v=parseFloat(el.value); lbl.textContent = fmtFn?fmtFn(v):v; cb(v); });
+}
+const THUMB_COLORS = {
+  amber:{c:'#ffc857', g:'rgba(255,200,87,0.6)'},
+  violet:{c:'#b57aff', g:'rgba(181,122,255,0.6)'},
+  blue:{c:'#5bc8ff', g:'rgba(91,200,255,0.6)'},
+  red:{c:'#ff5e72', g:'rgba(255,94,114,0.6)'}
+};
+function setSliderColor(id, key){
+  const el = document.getElementById(id); if(!el) return;
+  const t = THUMB_COLORS[key]; if(!t) return;
+  el.style.setProperty('--thumb-color', t.c);
+  el.style.setProperty('--thumb-glow', t.g);
+}
+
+function makeSignTexture(sign){
+  const c = document.createElement('canvas'); c.width=64; c.height=64;
+  const cx = c.getContext('2d');
+  cx.clearRect(0,0,64,64);
+  cx.font = 'bold 50px sans-serif';
+  cx.textAlign='center'; cx.textBaseline='middle';
+  cx.lineWidth=7; cx.strokeStyle='rgba(0,0,0,0.55)';
+  cx.strokeText(sign, 32, 33);
+  cx.fillStyle='#ffffff';
+  cx.fillText(sign, 32, 33);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+const SIGN_TEX = { '+': makeSignTexture('+'), '−': makeSignTexture('−') };
+function makeChargeSphere(){
+  const geo = new THREE.SphereGeometry(0.3, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({color:COL_NEUTRAL, roughness:0.45, metalness:0.08, emissive:COL_NEUTRAL, emissiveIntensity:0.12});
+  const mesh = new THREE.Mesh(geo, mat);
+  const spriteMat = new THREE.SpriteMaterial({map:SIGN_TEX['+'], transparent:true, depthTest:false});
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.scale.set(0.34,0.34,1);
+  sprite.renderOrder = 999;
+  mesh.add(sprite);
+  mesh.userData.signSprite = sprite;
+  mesh.userData.lastSign = null;
+  return mesh;
+}
+function updateChargeMesh(mesh, qValue, colorKey){
+  const isPos = qValue >= 0;
+  const color = qValue===0 ? COL_NEUTRAL : (colorKey ? DARK[colorKey] : (isPos ? DARK.red : DARK.blue));
+  const radius = clamp(0.16 + 0.032*Math.sqrt(Math.abs(qValue)), 0.16, 0.5);
+  mesh.scale.setScalar(radius/0.3);
+  mesh.material.color.setHex(color);
+  mesh.material.emissive.setHex(color);
+  const sprite = mesh.userData.signSprite;
+  if(sprite){
+    if(qValue===0){ sprite.visible = false; }
+    else {
+      sprite.visible = true;
+      const sign = isPos ? '+' : '−';
+      if(mesh.userData.lastSign !== sign){
+        sprite.material.map = SIGN_TEX[sign];
+        sprite.material.needsUpdate = true;
+        mesh.userData.lastSign = sign;
+      }
+    }
+  }
+}
+function makeFieldMarker(){
+  const geo = new THREE.OctahedronGeometry(0.14, 0);
+  const mat = new THREE.MeshStandardMaterial({color:0x6fd6ff, emissive:0x6fd6ff, emissiveIntensity:0.4, roughness:0.3});
+  return new THREE.Mesh(geo, mat);
+}
+// A vertical bar that grows up (positive) or down (negative) from a baseline — for
+// showing a signed scalar (PE or V) in 3D without needing an arrow direction.
+function makeScalarBar(){
+  const geo = new THREE.BoxGeometry(0.28, 1, 0.28);
+  geo.translate(0, 0.5, 0); // pivot at the base so scaling grows away from y=0 locally
+  const mat = new THREE.MeshStandardMaterial({color:DARK.red, emissive:DARK.red, emissiveIntensity:0.3, roughness:0.4});
+  return new THREE.Mesh(geo, mat);
+}
+function setScalarBar(mesh, baseY, value, unitsPerValue, maxH){
+  const h = clamp(Math.abs(value)*unitsPerValue, 0.06, maxH);
+  const isPos = value>=0;
+  // NOTE: always scale by a positive value. A negative scale.y flips the box's
+  // winding/normals, which made the bar render as a dark/degenerate sliver whenever
+  // value was negative (opposite-sign charges) — it looked like the bar wasn't
+  // responding to r, when really it just wasn't rendering correctly. Instead, grow
+  // the bar downward by shifting its position, never by inverting its scale.
+  mesh.scale.y = h;
+  mesh.position.y = isPos ? baseY : baseY - h;
+  const color = value===0 ? COL_NEUTRAL : (isPos ? DARK.red : DARK.blue);
+  mesh.material.color.setHex(color);
+  mesh.material.emissive.setHex(color);
+  // World-space Y of the bar's tip (the end away from the baseline) — used to place a label above/below it.
+  mesh.userData.tipY = isPos ? baseY + h : baseY - h;
+}
+function project(v3){
+  const p = v3.clone().project(cam3);
+  return { x:(p.x*0.5+0.5)*labelCanvas.width, y:(-p.y*0.5+0.5)*labelCanvas.height, behind: p.z>1 };
+}
+function drawChip(pt, text, colorCss, size){
+  if(pt.behind) return;
+  lctx.font = (size||10)+'px "Space Mono", monospace';
+  const w = lctx.measureText(text).width + 12;
+  const h = (size||10) + 10;
+  lctx.fillStyle = 'rgba(8,10,20,0.82)';
+  lctx.strokeStyle = colorCss; lctx.lineWidth = 1;
+  roundRect(lctx, pt.x - w/2, pt.y - h/2, w, h, 6);
+  lctx.fill(); lctx.stroke();
+  lctx.fillStyle = colorCss;
+  lctx.textAlign='center'; lctx.textBaseline='middle';
+  lctx.fillText(text, pt.x, pt.y+0.5);
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function arrowHeadDims(len){ return { hl: clamp(len*0.16, 0.12, 0.32), hw: clamp(len*0.07, 0.05, 0.14) }; }
+const ARROW_MIN_LEN = 0.18, ARROW_MAX_LEN = 2.8;
+const FORCE_N_TO_UNITS = 80;
+
+/* ============================== GENERIC 2D LINE CHART (handles negative y) ============================== */
+function drawSignedChart(canvasId, xMin, xMax, xCurrent, yFn, opts){
+  const cv = document.getElementById(canvasId); const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height, pad=30;
+  ctx.clearRect(0,0,W,H);
+  const pts=[]; let yMax=0;
+  const steps = 120;
+  for(let i=0;i<=steps;i++){ const x=xMin+(xMax-xMin)*i/steps; const y=yFn(x); pts.push([x,y]); yMax=Math.max(yMax,Math.abs(y)); }
+  yMax = Math.max(yMax, 1e-9);
+  function X(x){ return pad + (x-xMin)/(xMax-xMin)*(W-2*pad); }
+  function Y(y){ return H/2 - (y/yMax)*(H/2-pad); }
+  ctx.strokeStyle='rgba(180,200,255,0.18)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,H/2); ctx.lineTo(W-pad,H/2); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.strokeStyle=(opts&&opts.color)||'#4dffa0'; ctx.lineWidth=2; ctx.beginPath();
+  pts.forEach(([x,y],i)=>{ const px=X(x), py=Y(y); if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); });
+  ctx.stroke();
+  const yCur = yFn(xCurrent);
+  const mx=X(xCurrent), my=Y(yCur);
+  ctx.fillStyle='#ffc857'; ctx.beginPath(); ctx.arc(mx,my,4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,200,87,0.4)'; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(mx,H/2); ctx.lineTo(mx,my); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='rgba(180,200,255,0.4)'; ctx.font='9px "Space Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText((opts&&opts.xLabel)||'x', W-pad-16, H/2-6);
+}
+
+/* ============================== ORBIT CAMERA ============================== */
+const orb = {theta:0.45, phi:0.95, radius:6.5, cx:0, cy:0, cz:0};
+function applyOrbit(){
+  cam3.position.set(
+    orb.cx + orb.radius*Math.sin(orb.phi)*Math.cos(orb.theta),
+    orb.cy + orb.radius*Math.cos(orb.phi),
+    orb.cz + orb.radius*Math.sin(orb.phi)*Math.sin(orb.theta)
+  );
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
+}
+applyOrbit();
+let dragging=false, lastX=0, lastY=0;
+canvas.addEventListener('pointerdown', e=>{dragging=true; lastX=e.clientX; lastY=e.clientY; canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerup', ()=>dragging=false);
+canvas.addEventListener('pointercancel', ()=>dragging=false);
+canvas.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+  orb.theta -= dx*0.006; orb.phi = clamp(orb.phi - dy*0.006, 0.18, 1.5);
+  applyOrbit();
+});
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  orb.radius = clamp(orb.radius + e.deltaY*0.0035, 2.5, 16);
+  applyOrbit();
+}, {passive:false});
+let pinchDist=null;
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    if(pinchDist!=null){ orb.radius = clamp(orb.radius - (d-pinchDist)*0.02, 2.5, 16); applyOrbit(); }
+    pinchDist = d;
+  }
+}, {passive:true});
+canvas.addEventListener('touchend', ()=>pinchDist=null);
+
+/* ============================== CHALLENGE MODAL (shared, formula-driven) ============================== */
+function randRange(a,b){ return a + Math.random()*(b-a); }
+function randSigned(a,b){ const m=randRange(a,b); return Math.random()<0.5?m:-m; }
+const CHALLENGE_TYPES = {
+  pe: {
+    title: '🎯 Potential Energy Challenge',
+    const: 'k = 1/4πε₀ = 8.99 × 10⁹ N·m²/C²',
+    labels: {q1:{name:'Charge q₁', unit:'µC'}, q2:{name:'Charge q₂', unit:'µC'}, r:{name:'Separation r', unit:'m'}, PE:{name:'Potential Energy', unit:'J'}},
+    keys: ['q1','q2','r','PE'],
+    generate(){
+      const q1 = +randSigned(1,9).toFixed(1);
+      const q2 = +randSigned(1,9).toFixed(1);
+      const r = +randRange(0.3,3).toFixed(2);
+      const PE = peBetween(q1,q2,r);
+      return {q1,q2,r,PE};
+    }
+  },
+  v: {
+    title: '🎯 Electric Potential Challenge',
+    const: 'k = 1/4πε₀ = 8.99 × 10⁹ N·m²/C²',
+    labels: {q:{name:'Charge Q', unit:'µC'}, r:{name:'Distance r', unit:'m'}, V:{name:'Potential V', unit:'V'}},
+    keys: ['q','r','V'],
+    generate(){
+      const q = +randSigned(1,9).toFixed(1);
+      const r = +randRange(0.3,3).toFixed(2);
+      const V = potentialAt(q,r);
+      return {q,r,V};
+    }
+  },
+  w: {
+    title: '🎯 Work & Potential Energy Challenge',
+    const: 'E = ΔV/d,   ΔPE = −Wₑ = −qE·x',
+    note: 'Reminder: the Coulomb force is conservative, so this work depends only on the start and end positions — not on the path taken to get there.',
+    labels: {
+      dv:{name:'Plate voltage ΔV', unit:'V'},
+      d:{name:'Plate gap d', unit:'m'},
+      q:{name:'Charge q', unit:'µC'},
+      x:{name:'Displacement x', unit:'m'},
+      E:{name:'Field E = ΔV/d', unit:'V/m'},
+      dPE:{name:'ΔPE = −qEx', unit:'mJ'}
+    },
+    keys: ['dv','d','q','x','E','dPE'],
+    generate(){
+      const dv = +randSigned(10,100).toFixed(0);
+      const d = +randRange(0.5,3).toFixed(2);
+      const q = +randSigned(1,9).toFixed(1);
+      const x = +randRange(0.1, d).toFixed(2);
+      const E = dv/d; // V/m
+      const We = q*1e-6*E*x; // J
+      const dPE = -We*1000; // mJ
+      return {dv,d,q,x,E,dPE};
+    }
+  }
+};
+const stateChal = { type:'pe', unknownKey:'PE', values:{} };
+function newChallenge(type){
+  stateChal.type = type;
+  const def = CHALLENGE_TYPES[type];
+  stateChal.values = def.generate();
+  stateChal.unknownKey = def.keys[Math.floor(Math.random()*def.keys.length)];
+  renderChallenge();
+}
+function renderChallenge(){
+  const def = CHALLENGE_TYPES[stateChal.type];
+  document.getElementById('chal-title').textContent = def.title;
+  document.getElementById('chal-const').textContent = def.const;
+  const noteEl = document.getElementById('chal-note');
+  if(def.note){ noteEl.textContent = def.note; noteEl.style.display='block'; }
+  else{ noteEl.style.display='none'; }
+  const box = document.getElementById('chal-rows'); box.innerHTML='';
+  def.keys.forEach(k=>{
+    const row = document.createElement('div');
+    row.className = 'chal-row' + (k===stateChal.unknownKey?' chal-unknown':'');
+    const raw = stateChal.values[k];
+    const dp = {PE:4, W:3, V:1, dPE:3, E:1, dv:0, d:2, x:2, q:1, r:2}[k] ?? 2;
+    const val = fmt(raw, dp);
+    row.innerHTML = '<span>'+def.labels[k].name+'</span><span>'+(k===stateChal.unknownKey?'?':val+' '+def.labels[k].unit)+'</span>';
+    box.appendChild(row);
+  });
+  document.getElementById('chal-unit-label').textContent = def.labels[stateChal.unknownKey].unit;
+  document.getElementById('chal-input').value='';
+  const fb = document.getElementById('chal-feedback'); fb.textContent=''; fb.className='';
+}
+function checkChallenge(){
+  const v = parseFloat(document.getElementById('chal-input').value);
+  const fb = document.getElementById('chal-feedback');
+  if(isNaN(v)){ fb.textContent='Enter a number first.'; fb.className='wrong'; return; }
+  const def = CHALLENGE_TYPES[stateChal.type];
+  const correct = stateChal.values[stateChal.unknownKey];
+  const tolerance = Math.max(Math.abs(correct)*0.05, 0.01);
+  if(Math.abs(v-correct) <= tolerance){
+    fb.textContent = '✓ Correct! '+stateChal.unknownKey+' ≈ '+fmt(correct,3)+' '+def.labels[stateChal.unknownKey].unit;
+    fb.className='correct';
+  } else {
+    fb.textContent = '✗ Not quite — rearrange the formula for the missing quantity and try again.';
+    fb.className='wrong';
+  }
+}
+function openChallenge(type){
+  document.getElementById('challengeModal').classList.add('show');
+  newChallenge(type);
+}
+document.getElementById('btn-chal-check').addEventListener('click', checkChallenge);
+document.getElementById('btn-chal-new').addEventListener('click', ()=> newChallenge(stateChal.type));
+document.getElementById('btn-chal-close').addEventListener('click', ()=> document.getElementById('challengeModal').classList.remove('show'));
+document.getElementById('btn-pe-challenge').addEventListener('click', ()=> openChallenge('pe'));
+document.getElementById('btn-vp-challenge').addEventListener('click', ()=> openChallenge('v'));
+document.getElementById('btn-wk-challenge').addEventListener('click', ()=> openChallenge('w'));
+
+/* ============================== TAB 1 (2.2.1): PE BETWEEN TWO CHARGES ============================== */
+const grpPE = new THREE.Group(); scene3.add(grpPE);
+const statePE = { q1:6, q2:-4, r:1.2, animating:false };
+const peMeshA = makeChargeSphere(), peMeshB = makeChargeSphere();
+grpPE.add(peMeshA, peMeshB);
+const peLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-1,0,0), new THREE.Vector3(1,0,0)]);
+const peLineMat = new THREE.LineDashedMaterial({color:0x8fa2c0, dashSize:0.12, gapSize:0.08, transparent:true, opacity:0.5});
+const peLine = new THREE.Line(peLineGeo, peLineMat); grpPE.add(peLine);
+const peBar = makeScalarBar(); peBar.position.set(0,0,-1.6); grpPE.add(peBar);
+
+function computePE(){
+  const r = statePE.r;
+  const posA = new THREE.Vector3(-r/2,0,0), posB = new THREE.Vector3(r/2,0,0);
+  peMeshA.position.copy(posA); peMeshB.position.copy(posB);
+  updateChargeMesh(peMeshA, statePE.q1); updateChargeMesh(peMeshB, statePE.q2);
+  peLine.geometry.setFromPoints([posA,posB]); peLine.computeLineDistances();
+  const PE = peBetween(statePE.q1, statePE.q2, r);
+  statePE.PE = PE;
+  setScalarBar(peBar, 0.4, PE, 8, 1.5);
+  document.getElementById('pe-q1').textContent = signStr(statePE.q1)+' µC';
+  document.getElementById('pe-q2').textContent = signStr(statePE.q2)+' µC';
+  document.getElementById('pe-r').textContent = fmt(r,2)+' m';
+  document.getElementById('pe-val').textContent = fmt(PE,4)+' J';
+  const valEl = document.getElementById('pe-val'); valEl.className = 'dv '+(PE>=0?'red':'blue');
+  const sameSign = (statePE.q1>=0)===(statePE.q2>=0);
+  const ruleEl = document.getElementById('pe-rule');
+  if(statePE.q1===0||statePE.q2===0){ ruleEl.textContent='With no charge there is no interaction — PE = 0.'; }
+  else if(sameSign){ ruleEl.textContent='Same signs repel: PE is positive — pushing them closer takes work in, letting them fly apart releases it.'; }
+  else { ruleEl.textContent='Opposite signs attract: PE is negative — separating them takes work in, letting them come together releases it.'; }
+  drawSignedChart('chartPE', 0.3, 3.5, r, x=>peBetween(statePE.q1,statePE.q2,x), {xLabel:'r (m)'});
+}
+function labelsPE(){
+  const r = statePE.r;
+  const tipY = (peBar.userData.tipY!==undefined ? peBar.userData.tipY : 0);
+  const barY = tipY + (statePE.PE>=0 ? 0.22 : -0.22);
+  return [
+    {p:project(new THREE.Vector3(-r/2,0.45,0)), t:signStr(statePE.q1)+' µC', c:statePE.q1>=0?'#ff5e72':'#5bc8ff', size:10},
+    {p:project(new THREE.Vector3(r/2,0.45,0)), t:signStr(statePE.q2)+' µC', c:statePE.q2>=0?'#ff5e72':'#5bc8ff', size:10},
+    {p:project(new THREE.Vector3(0,0.15,0.35)), t:'r = '+fmt(r,2)+' m', c:'#8fa2c0', size:9},
+    {p:project(new THREE.Vector3(0,barY,-1.6)), t:'PE = '+fmt(statePE.PE,3)+' J', c:statePE.PE>=0?'#ff5e72':'#5bc8ff', size:9.5}
+  ];
+}
+bindSlider('sl-pe-q1','lbl-pe-q1', v=>{ statePE.q1=v; computePE(); }, v=>signStr(v));
+bindSlider('sl-pe-q2','lbl-pe-q2', v=>{ statePE.q2=v; computePE(); }, v=>signStr(v));
+bindSlider('sl-pe-r','lbl-pe-r', v=>{ statePE.r=v; computePE(); }, v=>fmt(v,2));
+function animatePE_r(target){
+  if(statePE.animating) return;
+  statePE.animating = true;
+  const start = statePE.r;
+  tween(700, e=>{
+    statePE.r = start + (target-start)*e;
+    document.getElementById('sl-pe-r').value = statePE.r;
+    document.getElementById('lbl-pe-r').textContent = fmt(statePE.r,2);
+    computePE();
+  }, ()=>{ statePE.animating=false; });
+}
+document.getElementById('btn-pe-separate').addEventListener('click', ()=> animatePE_r(clamp(statePE.r*1.9, 0.3, 3.5)));
+document.getElementById('btn-pe-together').addEventListener('click', ()=> animatePE_r(clamp(statePE.r*0.5, 0.3, 3.5)));
+document.getElementById('btn-reset-pe').addEventListener('click', ()=>{
+  statePE.q1=6; statePE.q2=-4; statePE.r=1.2;
+  document.getElementById('sl-pe-q1').value=6; document.getElementById('lbl-pe-q1').textContent='+6.0';
+  document.getElementById('sl-pe-q2').value=-4; document.getElementById('lbl-pe-q2').textContent='−4.0';
+  document.getElementById('sl-pe-r').value=1.2; document.getElementById('lbl-pe-r').textContent='1.20';
+  computePE();
+});
+computePE();
+setSliderColor('sl-pe-q1','red'); setSliderColor('sl-pe-q2','blue');
+
+/* ============================== TAB 2 (2.2.2): WORK IN A UNIFORM FIELD ============================== */
+const grpWork = new THREE.Group(); scene3.add(grpWork); grpWork.visible=false;
+const stateWk = { dv:40, q:2, x:0.5, d:2.0, animating:false };
+const WORK_FORCE_TO_UNITS = 6000; // tuned for the small force magnitudes (~1e-4 N) typical here
+function makePlateMesh(color){
+  const geo = new THREE.BoxGeometry(0.12, 2.2, 2.2);
+  const mat = new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:0.25, roughness:0.4});
+  return new THREE.Mesh(geo, mat);
+}
+const wkPlatePos = makePlateMesh(DARK.red), wkPlateNeg = makePlateMesh(DARK.blue);
+grpWork.add(wkPlatePos, wkPlateNeg);
+const wkCharge = makeChargeSphere(); grpWork.add(wkCharge);
+const wkArrowF = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, COL_FORCE, 0.2, 0.12);
+grpWork.add(wkArrowF);
+const wkArrowE = [ -0.7, 0, 0.7 ].map(()=> new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 0.9, COL_RESULT, 0.16, 0.09));
+wkArrowE.forEach(a=>{ a.line.material.transparent=true; a.line.material.opacity=0.45; a.cone.material.transparent=true; a.cone.material.opacity=0.45; grpWork.add(a); });
+
+function computeWork(){
+  const d = stateWk.d;
+  wkPlatePos.position.set(-d/2,0,0);
+  wkPlateNeg.position.set(d/2,0,0);
+  [-0.7,0,0.7].forEach((z,i)=>{ wkArrowE[i].position.set(-d/2+0.15,0,z); wkArrowE[i].setDirection(new THREE.Vector3(1,0,0)); wkArrowE[i].setLength(d-0.3,0.16,0.09); });
+  const E = stateWk.dv / d; // V/m
+  const xPos = new THREE.Vector3(-d/2 + stateWk.x, 0, 0);
+  wkCharge.position.copy(xPos);
+  updateChargeMesh(wkCharge, stateWk.q);
+  const qC = stateWk.q*1e-6;
+  const F = qC*E; // Newtons, signed (positive = toward -plate / +x direction)
+  if(Math.abs(F) < 1e-12){ wkArrowF.visible=false; }
+  else{
+    wkArrowF.visible = true;
+    wkArrowF.position.copy(xPos);
+    wkArrowF.setDirection(new THREE.Vector3(F>=0?1:-1,0,0));
+    const len = clamp(Math.abs(F)*WORK_FORCE_TO_UNITS, ARROW_MIN_LEN, ARROW_MAX_LEN);
+    const hd = arrowHeadDims(len);
+    wkArrowF.setLength(len, hd.hl, hd.hw);
+  }
+  const W = qC*E*stateWk.x; // Joules
+  const Wmj = W*1000;
+  const dPE = -Wmj;
+  document.getElementById('wk-dv').textContent = fmt(stateWk.dv,0)+' V';
+  document.getElementById('wk-d').textContent = fmt(d,2)+' m';
+  document.getElementById('wk-E').textContent = fmt(E,1)+' V/m';
+  document.getElementById('wk-q').textContent = signStr(stateWk.q)+' µC';
+  document.getElementById('wk-x').textContent = fmt(stateWk.x,2)+' m';
+  document.getElementById('wk-W').textContent = fmt(Wmj,4)+' mJ';
+  document.getElementById('wk-dPE').textContent = fmt(dPE,4)+' mJ';
+  const ruleEl = document.getElementById('wk-rule');
+  if(stateWk.q===0){ ruleEl.textContent='No charge, no force, no work.'; }
+  else{
+    const towardNeg = E>=0; // field points from + to - plate (toward +x) when dv>0
+    const movingWithField = stateWk.q>0;
+    if(stateWk.q>0) ruleEl.textContent = 'Positive charge: moving toward the − plate (with the field) loses PE; moving toward the + plate gains PE.';
+    else ruleEl.textContent = 'Negative charge: moving toward the + plate (against the field, for a + charge) loses PE for this charge.';
+  }
+  drawSignedChart('chartWork', 0, d, stateWk.x, x=> -(stateWk.q*1e-6*E*x)*1000, {xLabel:'x (m)'});
+}
+function labelsWork(){
+  const d = stateWk.d;
+  return [
+    {p:project(new THREE.Vector3(-d/2,1.3,0)), t:'+ plate', c:'#ff5e72', size:9.5},
+    {p:project(new THREE.Vector3(d/2,1.3,0)), t:'− plate', c:'#5bc8ff', size:9.5},
+    {p:project(wkCharge.position.clone().add(new THREE.Vector3(0,0.5,0))), t:signStr(stateWk.q)+' µC', c:stateWk.q>=0?'#ff5e72':'#5bc8ff', size:9.5}
+  ];
+}
+bindSlider('sl-wk-dv','lbl-wk-dv', v=>{ stateWk.dv=v; computeWork(); }, v=>fmt(v,0));
+bindSlider('sl-wk-q','lbl-wk-q', v=>{ stateWk.q=v; computeWork(); }, v=>signStr(v));
+bindSlider('sl-wk-x','lbl-wk-x', v=>{ stateWk.x=v; computeWork(); }, v=>fmt(v,2));
+document.getElementById('btn-wk-release').addEventListener('click', ()=>{
+  if(stateWk.animating) return;
+  const E = stateWk.dv/stateWk.d;
+  const F = stateWk.q*1e-6*E;
+  if(Math.abs(F) < 1e-12) return;
+  stateWk.animating = true;
+  document.getElementById('btn-wk-release').disabled = true;
+  const target = F>=0 ? stateWk.d : 0;
+  const start = stateWk.x;
+  tween(1400, e=>{
+    stateWk.x = start + (target-start)*e;
+    document.getElementById('sl-wk-x').value = stateWk.x;
+    document.getElementById('lbl-wk-x').textContent = fmt(stateWk.x,2);
+    computeWork();
+  }, ()=>{
+    setTimeout(()=>{ stateWk.animating=false; document.getElementById('btn-wk-release').disabled=false; }, 300);
+  });
+});
+document.getElementById('btn-reset-wk').addEventListener('click', ()=>{
+  stateWk.dv=40; stateWk.q=2; stateWk.x=0.5;
+  document.getElementById('sl-wk-dv').value=40; document.getElementById('lbl-wk-dv').textContent='40';
+  document.getElementById('sl-wk-q').value=2; document.getElementById('lbl-wk-q').textContent='+2.0';
+  document.getElementById('sl-wk-x').value=0.5; document.getElementById('lbl-wk-x').textContent='0.50';
+  computeWork();
+});
+computeWork();
+setSliderColor('sl-wk-q','red');
+
+/* ============================== TAB 3 (2.2.3-4): ELECTRIC POTENTIAL ============================== */
+const grpV = new THREE.Group(); scene3.add(grpV); grpV.visible=false;
+const stateV = { Q:6, r:1.6, testSign:1 };
+const vChargeMesh = makeChargeSphere(); grpV.add(vChargeMesh);
+const vTestMesh = makeChargeSphere(); grpV.add(vTestMesh);
+const V_RINGS = [0.8, 1.4, 2.0, 2.6, 3.2];
+const vRingMeshes = V_RINGS.map(r=>{
+  const geo = new THREE.RingGeometry(r-0.015, r+0.015, 64);
+  const mat = new THREE.MeshBasicMaterial({color:0x6fd6ff, transparent:true, opacity:0.35, side:THREE.DoubleSide});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI/2;
+  grpV.add(mesh);
+  return mesh;
+});
+const vArrowDir = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 0.8, COL_RESULT, 0.18, 0.1);
+grpV.add(vArrowDir);
+
+function computeV(){
+  updateChargeMesh(vChargeMesh, stateV.Q);
+  const isPos = stateV.Q>=0;
+  const ringColor = isPos ? DARK.red : DARK.blue;
+  vRingMeshes.forEach(m=> m.material.color.setHex(stateV.Q===0?COL_NEUTRAL:ringColor));
+  const testPos = new THREE.Vector3(stateV.r,0,0);
+  vTestMesh.position.copy(testPos);
+  updateChargeMesh(vTestMesh, stateV.testSign*2);
+  const V = potentialAt(stateV.Q, stateV.r);
+  // Positive charges accelerate toward decreasing V; negative toward increasing V.
+  // For an isolated source Q, V decreases outward if Q>0, increases outward if Q<0.
+  let towardOutward;
+  if(stateV.Q===0){ towardOutward = null; }
+  else {
+    const dVdr_sign = stateV.Q>0 ? -1 : 1; // sign of dV/dr moving outward
+    const wantSign = stateV.testSign>0 ? -1 : 1; // direction of decreasing V (for +) or increasing V (for -)
+    towardOutward = (dVdr_sign === wantSign);
+  }
+  if(stateV.Q===0 || Math.abs(V)<1e-9){ vArrowDir.visible=false; }
+  else{
+    vArrowDir.visible = true;
+    vArrowDir.position.copy(testPos);
+    vArrowDir.setDirection(new THREE.Vector3(towardOutward?1:-1,0,0));
+  }
+  document.getElementById('vp-Q').textContent = signStr(stateV.Q)+' µC';
+  document.getElementById('vp-r').textContent = fmt(stateV.r,2)+' m';
+  document.getElementById('vp-V').textContent = fmt(V,1)+' V';
+  const vValEl = document.getElementById('vp-V'); vValEl.className='dv '+(V>=0?'red':'blue');
+  document.getElementById('vp-q0').textContent = (stateV.testSign>0?'+':'−')+'2.0 µC';
+  document.getElementById('vp-dir').textContent = stateV.Q===0?'—':(towardOutward?'outward (away from Q)':'inward (toward Q)');
+  drawSignedChart('chartV', 0.4, 3.2, stateV.r, x=>potentialAt(stateV.Q,x), {xLabel:'r (m)'});
+}
+function labelsV(){
+  const rings = V_RINGS.map(r=>{
+    const V = potentialAt(stateV.Q, r);
+    return {p:project(new THREE.Vector3(r,0.1,0)), t:fmt(V,0)+'V', c:'#6fd6ff', size:8};
+  });
+  return [
+    {p:project(new THREE.Vector3(0,0.5,0)), t:signStr(stateV.Q)+' µC (Q)', c:stateV.Q>=0?'#ff5e72':'#5bc8ff', size:10},
+    {p:project(new THREE.Vector3(stateV.r,0.45,0)), t:(stateV.testSign>0?'+':'−')+'2.0 µC', c:stateV.testSign>0?'#ff5e72':'#5bc8ff', size:9.5},
+    ...rings
+  ];
+}
+bindSlider('sl-vp-Q','lbl-vp-Q', v=>{ stateV.Q=v; computeV(); }, v=>signStr(v));
+bindSlider('sl-vp-r','lbl-vp-r', v=>{ stateV.r=v; computeV(); }, v=>fmt(v,2));
+document.getElementById('btn-vp-testsign').addEventListener('click', function(){
+  stateV.testSign*=-1; this.textContent='q₀: '+(stateV.testSign>0?'+':'−');
+  computeV();
+});
+document.getElementById('btn-reset-vp').addEventListener('click', ()=>{
+  stateV.Q=6; stateV.r=1.6; stateV.testSign=1;
+  document.getElementById('sl-vp-Q').value=6; document.getElementById('lbl-vp-Q').textContent='+6.0';
+  document.getElementById('sl-vp-r').value=1.6; document.getElementById('lbl-vp-r').textContent='1.60';
+  document.getElementById('btn-vp-testsign').textContent='q₀: +';
+  computeV();
+});
+computeV();
+
+/* ============================== TAB 4 (2.2.5): SUPERPOSITION OF POTENTIAL ============================== */
+const grpMulti = new THREE.Group(); scene3.add(grpMulti); grpMulti.visible=false;
+const stateMv = { q1:6, q2:-5 };
+const MV_POS = [ new THREE.Vector3(-1.4,0,0), new THREE.Vector3(1.4,0,0) ];
+const mvMarker = makeFieldMarker(); grpMulti.add(mvMarker);
+const mvSrcMeshes = [0,1].map(()=>{ const m=makeChargeSphere(); grpMulti.add(m); return m; });
+
+// Sets a 2D diverging bar (in the HUD readings panel) to represent a signed value,
+// scaled relative to the largest of the three values so the bars stay comparable.
+function setVBar(elId, value, maxAbs){
+  const el = document.getElementById(elId);
+  const pct = maxAbs<1e-9 ? 0 : clamp(Math.abs(value)/maxAbs*50, 0, 50);
+  if(value>=0){ el.style.left='50%'; el.style.width=pct+'%'; }
+  else{ el.style.left=(50-pct)+'%'; el.style.width=pct+'%'; }
+}
+
+// Fixed scale reference for the 2.2.5 bars: the largest |V| any single charge can
+// produce at P (slider max, at the fixed geometric distance), doubled to cover the
+// worst-case net (both charges maxed out with the same sign). This is a constant —
+// computed once — so a bar's width only ever reflects its OWN value, never a
+// side-effect of the other charge or net changing.
+const MV_Q_SLIDER_MAX = 8; // matches sl-mv-q1 / sl-mv-q2 max attribute
+const MV_DIST_TO_P = MV_POS[0].distanceTo(new THREE.Vector3(0,0,0));
+const MV_VMAX_SINGLE = potentialAt(MV_Q_SLIDER_MAX, MV_DIST_TO_P);
+const MV_VREF = MV_VMAX_SINGLE * 2;
+document.getElementById('mv-scale-cap').textContent = 'scale: fixed to ±'+fmt(MV_VREF,0)+' V (max possible net V)';
+
+function computeMulti(){
+  const P = new THREE.Vector3(0,0,0);
+  const vals = [stateMv.q1, stateMv.q2];
+  const keys = ['amber','violet'];
+  let vNet = 0;
+  const vs = [];
+  vals.forEach((qs,i)=>{
+    mvSrcMeshes[i].position.copy(MV_POS[i]);
+    updateChargeMesh(mvSrcMeshes[i], qs, keys[i]);
+    const r = Math.max(P.distanceTo(MV_POS[i]), 0.25);
+    const Vi = qs===0?0:potentialAt(qs, r);
+    vs.push(Vi);
+    vNet += Vi;
+  });
+  document.getElementById('mv-q1').textContent = signStr(stateMv.q1)+' µC';
+  document.getElementById('mv-q2').textContent = signStr(stateMv.q2)+' µC';
+  document.getElementById('mv-v1').textContent = fmt(vs[0],0)+' V';
+  document.getElementById('mv-v2').textContent = fmt(vs[1],0)+' V';
+  document.getElementById('mv-net').textContent = fmt(vNet,0)+' V';
+  const maxAbs = MV_VREF;
+  setVBar('mv-bar1', vs[0], maxAbs);
+  setVBar('mv-bar2', vs[1], maxAbs);
+  setVBar('mv-barnet', vNet, maxAbs);
+}
+function labelsMulti(){
+  const cols=['#ffc857','#b57aff'];
+  const vals=[stateMv.q1,stateMv.q2];
+  const labels=[{p:project(new THREE.Vector3(0,0.5,0)), t:'P', c:'#6fd6ff', size:10}];
+  MV_POS.forEach((p,i)=> labels.push({p:project(p.clone().add(new THREE.Vector3(0,0.45,0))), t:signStr(vals[i])+' µC', c:cols[i], size:9.5}));
+  return labels;
+}
+bindSlider('sl-mv-q1','lbl-mv-q1', v=>{ stateMv.q1=v; computeMulti(); }, v=>signStr(v));
+bindSlider('sl-mv-q2','lbl-mv-q2', v=>{ stateMv.q2=v; computeMulti(); }, v=>signStr(v));
+document.getElementById('btn-reset-mv').addEventListener('click', ()=>{
+  stateMv.q1=6; stateMv.q2=-5;
+  document.getElementById('sl-mv-q1').value=6; document.getElementById('lbl-mv-q1').textContent='+6';
+  document.getElementById('sl-mv-q2').value=-5; document.getElementById('lbl-mv-q2').textContent='−5';
+  computeMulti();
+});
+computeMulti();
+setSliderColor('sl-mv-q1','amber'); setSliderColor('sl-mv-q2','violet');
+
+/* ============================== TAB 5 (2.2.6-7): ASSEMBLING A CONFIGURATION ============================== */
+const grpAssemble = new THREE.Group(); scene3.add(grpAssemble); grpAssemble.visible=false;
+const stateAs = { q1:5, q2:4, q3:-3, stage:0, animating:false };
+const AS_POS = [ new THREE.Vector3(-1.6,0,-1.0), new THREE.Vector3(1.6,0,-1.0), new THREE.Vector3(0,0,1.4) ];
+const asMeshes = [0,1,2].map(()=>{ const m=makeChargeSphere(); m.visible=false; grpAssemble.add(m); return m; });
+const asPairLines = [[0,1],[0,2],[1,2]].map(()=>{
+  const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);
+  const mat = new THREE.LineDashedMaterial({color:0xffc857, dashSize:0.1, gapSize:0.07, transparent:true, opacity:0});
+  const line = new THREE.Line(geo,mat); grpAssemble.add(line); return line;
+});
+const PAIR_IDX = [[0,1],[0,2],[1,2]];
+
+function pairPE(i,j){
+  const q = [stateAs.q1,stateAs.q2,stateAs.q3];
+  const r = Math.max(AS_POS[i].distanceTo(AS_POS[j]), 0.25);
+  return peBetween(q[i], q[j], r);
+}
+function computeAssemblePreview(){
+  const pe12 = pairPE(0,1), pe13 = pairPE(0,2), pe23 = pairPE(1,2);
+  document.getElementById('as-pe12').textContent = fmt(pe12,4)+' J';
+  document.getElementById('as-pe13').textContent = fmt(pe13,4)+' J';
+  document.getElementById('as-pe23').textContent = fmt(pe23,4)+' J';
+  document.getElementById('as-q1').textContent = signStr(stateAs.q1)+' µC';
+  document.getElementById('as-q2').textContent = signStr(stateAs.q2)+' µC';
+  document.getElementById('as-q3').textContent = signStr(stateAs.q3)+' µC';
+  if(stateAs.stage===0){
+    document.getElementById('as-total').textContent = fmt(pe12+pe13+pe23,4)+' J (preview — press Assemble)';
+  }
+}
+function resetAssemblyAnim(){
+  stateAs.stage = 0; stateAs.animating=false; stateAs.running=0;
+  asMeshes.forEach(m=> m.visible=false);
+  asPairLines.forEach(l=> l.material.opacity=0);
+  document.getElementById('as-note').textContent = 'Press "Next Step" to bring the charges in from infinity one at a time.';
+  const btn = document.getElementById('btn-as-next');
+  if(btn){ btn.disabled=false; btn.textContent = '▶ Next Step (1/4)'; }
+  computeAssemblePreview();
+}
+function showPairLine(idx, i, j){
+  const line = asPairLines[idx];
+  line.geometry.setFromPoints([AS_POS[i], AS_POS[j]]);
+  line.computeLineDistances();
+  line.material.opacity = 0.6;
+}
+function placeCharge(i, onDone){
+  const q = [stateAs.q1,stateAs.q2,stateAs.q3];
+  const keys = ['amber','violet','blue'];
+  const mesh = asMeshes[i];
+  mesh.visible = true;
+  updateChargeMesh(mesh, q[i], keys[i]);
+  const target = AS_POS[i].clone();
+  const start = target.clone().add(new THREE.Vector3(0,4,0));
+  mesh.position.copy(start);
+  tween(700, e=>{ mesh.position.copy(start).lerp(target, e); }, onDone);
+}
+const AS_TOTAL_STEPS = 4;
+const AS_STEP_NOTE = [
+  'Placing Q₁ — no other charges yet, so this costs no energy.',
+  'Bringing in Q₂ — this costs PE₁₂.',
+  'Bringing in Q₃ — it interacts with both Q₁ and Q₂, but let\'s place it first.',
+  'Q₃ is in place. Press "Next Step" to reveal its interactions with Q₁ and Q₂.'
+];
+// Step-by-step interaction: each click of "Next Step" performs exactly one action —
+// placing a charge, or (as its own separate step) revealing the last two pair
+// interactions and the final total — then waits for the student to click again.
+// Nothing advances automatically, and the conclusion is never bundled together with
+// an animation, so there's always time to read before moving on.
+function assembleNextStep(){
+  if(stateAs.animating || stateAs.stage>=AS_TOTAL_STEPS) return;
+  const stage = stateAs.stage;
+  stateAs.animating = true;
+  const btn = document.getElementById('btn-as-next');
+  btn.disabled = true;
+  document.getElementById('as-note').textContent = AS_STEP_NOTE[stage];
+
+  function finishStep(){
+    stateAs.stage = stage+1;
+    stateAs.animating = false;
+    if(stateAs.stage>=AS_TOTAL_STEPS){ btn.disabled=true; btn.textContent='✓ Assembled'; }
+    else{ btn.disabled=false; btn.textContent='▶ Next Step ('+(stateAs.stage+1)+'/'+AS_TOTAL_STEPS+')'; }
+  }
+
+  if(stage===0){
+    placeCharge(0, finishStep);
+  } else if(stage===1){
+    placeCharge(1, ()=>{
+      showPairLine(0,0,1);
+      stateAs.running = (stateAs.running||0) + pairPE(0,1);
+      document.getElementById('as-total').textContent = fmt(stateAs.running,4)+' J';
+      finishStep();
+    });
+  } else if(stage===2){
+    placeCharge(2, finishStep); // just place Q₃ — no reveal yet, so there's a beat to read before the total appears
+  } else if(stage===3){
+    showPairLine(1,0,2);
+    showPairLine(2,1,2);
+    stateAs.running = (stateAs.running||0) + pairPE(0,2) + pairPE(1,2);
+    document.getElementById('as-total').textContent = fmt(stateAs.running,4)+' J (fully assembled)';
+    document.getElementById('as-note').textContent = 'Done — the total U equals the sum of all three pairwise potential energies.';
+    finishStep();
+  }
+}
+function labelsAssemble(){
+  const labels = [];
+  const q=[stateAs.q1,stateAs.q2,stateAs.q3];
+  AS_POS.forEach((p,i)=>{ if(asMeshes[i].visible) labels.push({p:project(p.clone().add(new THREE.Vector3(0,0.45,0))), t:signStr(q[i])+' µC', c:['#ffc857','#b57aff','#5bc8ff'][i], size:9.5}); });
+  return labels;
+}
+bindSlider('sl-as-q1','lbl-as-q1', v=>{ stateAs.q1=v; computeAssemblePreview(); }, v=>signStr(v));
+bindSlider('sl-as-q2','lbl-as-q2', v=>{ stateAs.q2=v; computeAssemblePreview(); }, v=>signStr(v));
+bindSlider('sl-as-q3','lbl-as-q3', v=>{ stateAs.q3=v; computeAssemblePreview(); }, v=>signStr(v));
+document.getElementById('btn-as-next').addEventListener('click', assembleNextStep);
+document.getElementById('btn-as-reset-anim').addEventListener('click', resetAssemblyAnim);
+document.getElementById('btn-reset-as').addEventListener('click', ()=>{
+  stateAs.q1=5; stateAs.q2=4; stateAs.q3=-3;
+  document.getElementById('sl-as-q1').value=5; document.getElementById('lbl-as-q1').textContent='+5';
+  document.getElementById('sl-as-q2').value=4; document.getElementById('lbl-as-q2').textContent='+4';
+  document.getElementById('sl-as-q3').value=-3; document.getElementById('lbl-as-q3').textContent='−3';
+  resetAssemblyAnim();
+});
+setSliderColor('sl-as-q1','amber'); setSliderColor('sl-as-q2','violet'); setSliderColor('sl-as-q3','blue');
+resetAssemblyAnim();
+
+/* ============================== ASSEMBLING CHARGES — CHALLENGE MODE ============================== */
+const ASC_FIELDS = [
+  {key:'pe12', label:'Step 2 — bring in Q₂: PE₁₂', unit:'J'},
+  {key:'pe13', label:'Step 3 — bring in Q₃: PE₁₃', unit:'J'},
+  {key:'pe23', label:'Step 3 — bring in Q₃: PE₂₃', unit:'J'},
+  {key:'total', label:'Total assembly energy U', unit:'J'}
+];
+const stateAsc = { values:{}, checked:false };
+function generateAscChallenge(){
+  const q1 = +randSigned(1,8).toFixed(1);
+  const q2 = +randSigned(1,8).toFixed(1);
+  const q3 = +randSigned(1,8).toFixed(1);
+  const r12 = +randRange(0.3,3).toFixed(2);
+  const r13 = +randRange(0.3,3).toFixed(2);
+  const r23 = +randRange(0.3,3).toFixed(2);
+  const pe12 = peBetween(q1,q2,r12);
+  const pe13 = peBetween(q1,q3,r13);
+  const pe23 = peBetween(q2,q3,r23);
+  const total = pe12+pe13+pe23;
+  return {q1,q2,q3,r12,r13,r23,pe12,pe13,pe23,total};
+}
+function renderAscGiven(){
+  const v = stateAsc.values;
+  const box = document.getElementById('asc-given'); box.innerHTML='';
+  const rows = [
+    ['Charge Q₁', signStr(v.q1)+' µC'],
+    ['Charge Q₂', signStr(v.q2)+' µC'],
+    ['Charge Q₃', signStr(v.q3)+' µC'],
+    ['Separation r₁₂ (Q₁–Q₂)', fmt(v.r12,2)+' m'],
+    ['Separation r₁₃ (Q₁–Q₃)', fmt(v.r13,2)+' m'],
+    ['Separation r₂₃ (Q₂–Q₃)', fmt(v.r23,2)+' m']
+  ];
+  rows.forEach(([label,val])=>{
+    const row = document.createElement('div');
+    row.className = 'asc-given-row';
+    row.innerHTML = '<span>'+label+'</span><span>'+val+'</span>';
+    box.appendChild(row);
+  });
+}
+function renderAscRows(){
+  const box = document.getElementById('asc-rows'); box.innerHTML='';
+  ASC_FIELDS.forEach(f=>{
+    const row = document.createElement('div');
+    row.className = 'asc-row';
+    row.innerHTML = '<span class="asc-row-label">'+f.label+' ('+f.unit+')</span><input type="text" id="asc-in-'+f.key+'" placeholder="your answer">';
+    box.appendChild(row);
+  });
+}
+function newAscChallenge(){
+  stateAsc.values = generateAscChallenge();
+  stateAsc.checked = false;
+  renderAscGiven();
+  renderAscRows();
+  const fb = document.getElementById('asc-feedback'); fb.textContent=''; fb.className='';
+  const btn = document.getElementById('btn-asc-check'); btn.disabled=false; btn.textContent='Check Answers';
+}
+function checkAscChallenge(){
+  if(stateAsc.checked) return; // one validation attempt per challenge
+  const v = stateAsc.values;
+  let allCorrect = true;
+  const wrongList = [];
+  ASC_FIELDS.forEach(f=>{
+    const input = document.getElementById('asc-in-'+f.key);
+    const guess = parseFloat(input.value);
+    const correct = v[f.key];
+    const tolerance = Math.max(Math.abs(correct)*0.05, 0.0005);
+    const ok = !isNaN(guess) && Math.abs(guess-correct) <= tolerance;
+    input.classList.remove('correct','wrong');
+    input.classList.add(ok?'correct':'wrong');
+    if(!ok){ allCorrect=false; wrongList.push(f.label+' = '+fmt(correct,4)+' '+f.unit); }
+  });
+  stateAsc.checked = true;
+  const btn = document.getElementById('btn-asc-check'); btn.disabled=true; btn.textContent='Checked';
+  const fb = document.getElementById('asc-feedback');
+  if(allCorrect){
+    fb.textContent = '✓ All correct! U builds up pair by pair as each new charge arrives. Press "New Challenge" to try another set.';
+    fb.className = 'correct';
+  } else {
+    fb.textContent = '✗ Not quite. Correct values — '+wrongList.join('; ')+'. Press "New Challenge" to try a fresh set of charges.';
+    fb.className = 'wrong';
+  }
+}
+function openAscChallenge(){
+  document.getElementById('ascModal').classList.add('show');
+  newAscChallenge();
+}
+document.getElementById('btn-as-challenge').addEventListener('click', openAscChallenge);
+document.getElementById('btn-asc-check').addEventListener('click', checkAscChallenge);
+document.getElementById('btn-asc-new').addEventListener('click', newAscChallenge);
+document.getElementById('btn-asc-exit').addEventListener('click', ()=> document.getElementById('ascModal').classList.remove('show'));
+
+/* ============================== TAB SWITCHING ============================== */
+document.getElementById('btn-fold-info').addEventListener('click', function(){
+  const panel = document.getElementById('infoPanel');
+  const folded = panel.classList.toggle('collapsed');
+  this.textContent = folded ? '▸' : '▾';
+});
+
+const moduleGroups = { pe:grpPE, work:grpWork, potential:grpV, multi:grpMulti, assemble:grpAssemble };
+const moduleCams = {
+  pe:{theta:0.45,phi:0.95,radius:6.0,cx:0,cy:0,cz:0},
+  work:{theta:0.5,phi:1.0,radius:6.5,cx:0,cy:0,cz:0},
+  potential:{theta:0.45,phi:0.95,radius:6.5,cx:0,cy:0,cz:0},
+  multi:{theta:0.4,phi:0.95,radius:7,cx:0,cy:0,cz:0},
+  assemble:{theta:0.4,phi:0.95,radius:6.5,cx:0,cy:0,cz:0}
+};
+const moduleLabelFns = { pe:labelsPE, work:labelsWork, potential:labelsV, multi:labelsMulti, assemble:labelsAssemble };
+
+function setActiveModule(id){
+  Object.keys(moduleGroups).forEach(k=> moduleGroups[k].visible = (k===id));
+  activeModuleRef = id;
+  const c = moduleCams[id];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.mod===id));
+  document.querySelectorAll('.hud-block').forEach(el=>{ el.style.display = (el.id==='hud-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.info-block').forEach(el=>{ el.style.display = (el.id==='info-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.ctrl-block').forEach(el=>{ el.style.display = (el.id==='ctrl-'+id) ? 'flex' : 'none'; });
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setActiveModule(btn.dataset.mod));
+});
+setActiveModule('pe');
+
+/* ============================== MAIN LOOP ============================== */
+function drawLabels(){
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  const fn = moduleLabelFns[activeModuleRef];
+  if(!fn) return;
+  fn().forEach(l=> drawChip(l.p, l.t, l.c, l.size));
+}
+function animate(){
+  requestAnimationFrame(animate);
+  drawLabels();
+  renderer.render(scene3, cam3);
+}
+animate();
+<\/script>
+</body>
+</html>
+
+</script>
+
 </body>
 </html>
