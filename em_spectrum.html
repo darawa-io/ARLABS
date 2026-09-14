@@ -86,10 +86,8 @@ main{max-width:1180px;margin:0 auto;padding:28px 18px 80px;}
 #spectrumSlider{width:100%;margin-top:6px;-webkit-appearance:none;height:6px;border-radius:3px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;}
 #spectrumSlider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;box-shadow:0 0 12px rgba(91,200,255,0.6);}
 #spectrumSlider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;}
-.band-labels{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,0.4);margin-top:4px;letter-spacing:.3px;}
-.band-labels span{flex:1;text-align:center;}
-.band-labels span:first-child{text-align:left;}
-.band-labels span:last-child{text-align:right;}
+.band-labels{position:relative;height:12px;font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,0.4);margin-top:4px;letter-spacing:.3px;}
+.band-labels span{position:absolute;top:0;text-align:center;white-space:nowrap;transform:translateX(-50%);}
 .freq-wave-arrows{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.5px;margin-top:16px;padding-top:14px;border-top:1px dashed rgba(180,200,255,0.12);}
 .freq-wave-arrows .arrow-left{color:var(--red);}
 .freq-wave-arrows .arrow-right{color:var(--green);}
@@ -271,7 +269,7 @@ main{max-width:1180px;margin:0 auto;padding:28px 18px 80px;}
       <svg id="spectrumSvg" viewBox="0 0 700 64" preserveAspectRatio="none"></svg>
       <input type="range" id="spectrumSlider" min="0" max="1000" value="850">
       <div class="band-labels">
-        <span>Gamma</span><span>X-ray</span><span>UV</span><span>Visible</span><span>Infrared</span><span>Microwave</span><span>Radio</span>
+        <span style="left:6%;">Gamma</span><span style="left:18%;">X-ray</span><span style="left:30%;">UV</span><span style="left:39.5%;">Visible</span><span style="left:51.5%;">Infrared</span><span style="left:71%;">Microwave</span><span style="left:91%;">Radio</span>
       </div>
       <div class="freq-wave-arrows">
         <span class="arrow-left">&larr;&#8212;&#8212;&#8212; Increasing frequency</span>
@@ -505,9 +503,9 @@ const svg = document.getElementById('spectrumSvg');
 (function buildSpectrumSvg(){
   const defs = `<defs>
     <linearGradient id="visRainbow" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#ff5e72"/><stop offset="20%" stop-color="#ff9f4d"/>
-      <stop offset="40%" stop-color="#ffe45e"/><stop offset="60%" stop-color="#4dffa0"/>
-      <stop offset="80%" stop-color="#5bc8ff"/><stop offset="100%" stop-color="#b57aff"/>
+      <stop offset="0%" stop-color="#b57aff"/><stop offset="20%" stop-color="#5bc8ff"/>
+      <stop offset="40%" stop-color="#4dffa0"/><stop offset="60%" stop-color="#ffe45e"/>
+      <stop offset="80%" stop-color="#ff9f4d"/><stop offset="100%" stop-color="#ff5e72"/>
     </linearGradient>
   </defs>`;
   let rects = '';
