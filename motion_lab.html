@@ -169,6 +169,19 @@ body.ar-active #ar-clock-pill{display:block;}
   #graphPanel.expanded{top:6vh;left:5vw;width:90vw;height:88vh;}
   #hint{display:none;}
 }
+
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,200,87,.3);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;color:rgba(255,200,87,.55);}
+#qr-btn:hover{border-color:rgba(255,200,87,.6);background:rgba(255,200,87,.12);color:#ffc857;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,6,18,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,8,20,.97);border:1px solid rgba(255,200,87,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(255,200,87,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(255,200,87,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(255,200,87,.35);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(255,200,87,.35);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#ffc857;}
 </style>
 </head>
 <body>
@@ -227,6 +240,23 @@ body.ar-active #ar-clock-pill{display:block;}
         <p>Speed &amp; Distance–Time Graphs</p>
       </div>
     </div>
+
+<!-- QR button -->
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=ffc857&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fmotion_lab.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fmotion_lab.html'"/>
+    <p>darawa-io.github.io/ARLABS/motion_lab.html</p>
+  </div>
+</div>
     <div id="clockWidget">
       <canvas id="clockCanvas" width="112" height="112"></canvas>
       <div id="clockDigital">
@@ -388,7 +418,7 @@ for(let m = 0; m <= LOOP_LEN; m += 2){
   post.position.set(x, 0.28, 1.55); root3.add(post);
   const tip = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), tipMat);
   tip.position.set(x, 0.55, 1.55); root3.add(tip);
-  markers.push({x, pos: new THREE.Vector3(x, 0.75, 1.55), label: m + ' m'});
+  markers.push({x, pos: new THREE.Vector3(x, 0.75, 1.55), m});
 }
 
 /* ---- lamp posts (ambience) ---- */
@@ -454,6 +484,14 @@ function carXFromD(d){
   const m = d % LOOP_LEN;
   return STARTX + (m === 0 ? LOOP_LEN : m);
 }
+// Distance already "banked" by completed laps, so the physical marker posts can
+// be relabelled each lap (post at road-position m shows m + lapOffset metres)
+// instead of always re-showing the first lap's 0–18 m values.
+function currentLapOffset(d){
+  if(d <= 0) return 0;
+  const m = d % LOOP_LEN;
+  return (m === 0) ? (d - LOOP_LEN) : (d - m);
+}
 function updateCarTransform(){
   car.position.x = carXFromD(S.d);
 }
@@ -466,12 +504,14 @@ function w2s(v){
 }
 function drawLabels(){
   lctx.clearRect(0,0,labelCanvas.width, labelCanvas.height);
+  const lapOffset = currentLapOffset(S.d);
   markers.forEach(mk=>{
     const s = w2s(mk.pos);
+    const label = (mk.m + lapOffset) + ' m';
     lctx.font = '500 10px "Space Mono",monospace';
-    const tw = lctx.measureText(mk.label).width;
+    const tw = lctx.measureText(label).width;
     lctx.fillStyle = 'rgba(4,7,15,0.62)'; lctx.fillRect(s.x - tw/2 - 4, s.y - 12, tw + 8, 16);
-    lctx.fillStyle = 'rgba(180,205,255,0.8)'; lctx.fillText(mk.label, s.x - tw/2, s.y);
+    lctx.fillStyle = 'rgba(180,205,255,0.8)'; lctx.fillText(label, s.x - tw/2, s.y);
   });
   // floating "current distance" tag above the car (distance only — never the speed)
   const carLabelPos = new THREE.Vector3(car.position.x, 1.15, 0);
@@ -1322,6 +1362,10 @@ function animate(ts){
 resizeGraphCanvas();
 updatePointReadout();
 requestAnimationFrame(animate);
+// QR button
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
 </script>
 </body>
 </html>
