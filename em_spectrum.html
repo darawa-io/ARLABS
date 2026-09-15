@@ -24,7 +24,7 @@
   --gamma:#ff5e72;
   --xray:#ff8a5e;
   --uv:#b57aff;
-  --infrared:#ff9f4d;
+  --infrared:#ff5e72;
   --microwave:#5bc8ff;
   --radio:#4dffa0;
 }
@@ -344,7 +344,7 @@ main{max-width:1180px;margin:0 auto;padding:28px 18px 80px;}
     <div class="prop-list">
       <div class="prop-item"><span class="chk" style="background:rgba(91,200,255,.12);border-color:rgba(91,200,255,.35);color:var(--blue);">&#8226;</span> Mobile phones &amp; wireless internet use <b style="color:#fff;">microwaves</b> — they penetrate some walls and only need a short aerial.</div>
         <div class="prop-item"><span class="chk" style="background:rgba(77,255,160,.12);border-color:rgba(77,255,160,.35);color:var(--green);">&#8226;</span> Bluetooth uses <b style="color:#fff;">radio waves</b> — they pass through walls, though the signal weakens doing so.</div>
-        <div class="prop-item"><span class="chk" style="background:rgba(255,159,77,.12);border-color:rgba(255,159,77,.35);color:var(--infrared);">&#8226;</span> Optical fibres use <b style="color:#fff;">visible light or infrared</b> — glass is transparent to them, and they can carry very high data rates.</div>
+        <div class="prop-item"><span class="chk" style="background:rgba(255,94,114,.12);border-color:rgba(255,94,114,.35);color:var(--infrared);">&#8226;</span> Optical fibres use <b style="color:#fff;">visible light or infrared</b> — glass is transparent to them, and they can carry very high data rates.</div>
         <div class="prop-item"><span class="chk" style="background:rgba(91,200,255,.12);border-color:rgba(91,200,255,.35);color:var(--blue);">&#8226;</span> Satellite communication is mainly by <b style="color:#fff;">microwaves</b>: low-orbit satellites for some satellite phones; geostationary satellites for some satellite phones and direct broadcast TV.</div>
     </div>
   </div>
@@ -470,7 +470,7 @@ const bands = [
   {id:'visible', name:'Visible Light', color:'visgrad', pos:[360,430], wave:'400 &ndash; 700 nm', freq:'medium', energy:'Medium',
     uses:['Vision','Photography','Illumination'],
     hazard:'&mdash;'},
-  {id:'infrared', name:'Infrared', color:'#ff9f4d', pos:[430,600], wave:'700 nm &ndash; 1 mm', freq:'medium-low', energy:'Medium-low',
+  {id:'infrared', name:'Infrared', color:'#ff5e72', pos:[430,600], wave:'700 nm &ndash; 1 mm', freq:'medium-low', energy:'Medium-low',
     uses:['Electric grills','Remote controllers for TVs','Intruder alarms','Thermal imaging','Optical fibres'],
     hazard:'Skin burns.'},
   {id:'microwave', name:'Microwaves', color:'#5bc8ff', pos:[600,820], wave:'1 mm &ndash; 1 m', freq:'low', energy:'Low',
@@ -613,20 +613,21 @@ const matchUseText = {
 };
 let matchSelectedWave = null;
 let matchDoneCount = 0;
+let matchLocked = false;
 function shuffle(arr){ return arr.map(a=>[Math.random(),a]).sort((a,b)=>a[0]-b[0]).map(a=>a[1]); }
 
 function buildMatchGame(){
   const wavesEl = document.getElementById('matchWaves');
   const usesEl = document.getElementById('matchUses');
   wavesEl.innerHTML=''; usesEl.innerHTML='';
-  matchSelectedWave = null; matchDoneCount = 0;
+  matchSelectedWave = null; matchDoneCount = 0; matchLocked = false;
   document.getElementById('matchStatus').textContent = '0 / 7 matched';
 
   shuffle(bands).forEach(b=>{
     const d = document.createElement('div');
     d.className='match-item'; d.textContent=b.name; d.dataset.id=b.id;
     d.addEventListener('click', ()=>{
-      if(d.classList.contains('done')) return;
+      if(matchLocked || d.classList.contains('done')) return;
       document.querySelectorAll('#matchWaves .match-item').forEach(x=>x.classList.remove('selected'));
       d.classList.add('selected');
       matchSelectedWave = b.id;
@@ -639,7 +640,7 @@ function buildMatchGame(){
     const d = document.createElement('div');
     d.className='match-item'; d.textContent = matchUseText[b.id]; d.dataset.id=b.id;
     d.addEventListener('click', ()=>{
-      if(d.classList.contains('done') || !matchSelectedWave) return;
+      if(matchLocked || d.classList.contains('done') || !matchSelectedWave) return;
       if(matchSelectedWave === b.id){
         d.classList.remove('wrong'); d.classList.add('correct','done');
         const waveEl = document.querySelector(`#matchWaves .match-item[data-id="${matchSelectedWave}"]`);
@@ -649,8 +650,12 @@ function buildMatchGame(){
         matchSelectedWave = null;
         if(matchDoneCount===7){ document.getElementById('matchStatus').textContent = 'All matched! Nice work.'; }
       } else {
+        matchLocked = true;
         d.classList.add('wrong');
-        setTimeout(()=>d.classList.remove('wrong'), 350);
+        const waveEl = document.querySelector(`#matchWaves .match-item[data-id="${matchSelectedWave}"]`);
+        if(waveEl) waveEl.classList.add('wrong');
+        document.getElementById('matchStatus').textContent = 'Not quite — restarting the activity...';
+        setTimeout(()=>{ buildMatchGame(); }, 800);
       }
     });
     usesEl.appendChild(d);
