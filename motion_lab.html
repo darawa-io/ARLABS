@@ -722,6 +722,46 @@ function drawGraph(){
   gctx.fillRect(PAD.l, PAD.t, plotW, plotH);
 
   const DIVS = 5;
+
+  /* ---- subscale: minor gridlines + ticks between the major divisions.
+     Only in the expanded panel, where there's enough room for them to help
+     rather than clutter. Each major division is split into SUB parts, so
+     the student can read intermediate values precisely. ---- */
+  if(graphExpanded){
+    const SUB = 5;                       // minor intervals per major division
+    const minorT = maxT/(DIVS*SUB);
+    const minorD = maxD/(DIVS*SUB);
+    const tickLen = 5*Math.min(fontScale,1.6);
+    gctx.lineWidth = 1;
+    for(let i=1;i<DIVS*SUB;i++){
+      if(i % SUB === 0) continue;        // skip where a major line already sits
+      // vertical minor lines (time axis)
+      const px = toPx(minorT*i, 0).x;
+      gctx.beginPath(); gctx.moveTo(px, PAD.t); gctx.lineTo(px, PAD.t+plotH);
+      gctx.strokeStyle = 'rgba(190,210,255,0.055)'; gctx.stroke();
+      // tick mark on the x-axis
+      gctx.beginPath(); gctx.moveTo(px, PAD.t+plotH); gctx.lineTo(px, PAD.t+plotH+tickLen);
+      gctx.strokeStyle = 'rgba(200,220,255,0.38)'; gctx.stroke();
+      // horizontal minor lines (distance axis)
+      const py = toPx(0, minorD*i).y;
+      gctx.beginPath(); gctx.moveTo(PAD.l, py); gctx.lineTo(GW-PAD.r, py);
+      gctx.strokeStyle = 'rgba(190,210,255,0.055)'; gctx.stroke();
+      // tick mark on the y-axis
+      gctx.beginPath(); gctx.moveTo(PAD.l-tickLen, py); gctx.lineTo(PAD.l, py);
+      gctx.strokeStyle = 'rgba(200,220,255,0.38)'; gctx.stroke();
+    }
+    // Midpoint ticks get drawn slightly longer/brighter so halves are easy to spot
+    const halfLen = tickLen*1.8;
+    for(let i=0;i<DIVS;i++){
+      const pxh = toPx(minorT*(i*SUB + SUB/2), 0).x;
+      gctx.beginPath(); gctx.moveTo(pxh, PAD.t+plotH); gctx.lineTo(pxh, PAD.t+plotH+halfLen);
+      gctx.strokeStyle = 'rgba(200,220,255,0.55)'; gctx.lineWidth = 1.2; gctx.stroke();
+      const pyh = toPx(0, minorD*(i*SUB + SUB/2)).y;
+      gctx.beginPath(); gctx.moveTo(PAD.l-halfLen, pyh); gctx.lineTo(PAD.l, pyh);
+      gctx.strokeStyle = 'rgba(200,220,255,0.55)'; gctx.lineWidth = 1.2; gctx.stroke();
+    }
+  }
+
   gctx.font = axisFontPx + 'px "Space Mono",monospace';
   for(let i=0;i<=DIVS;i++){
     const t = (maxT/DIVS)*i;
@@ -741,6 +781,14 @@ function drawGraph(){
   gctx.textAlign='center'; gctx.fillText('Time (s)', PAD.l+plotW/2, GH-6);
   gctx.save(); gctx.translate(12, PAD.t+plotH/2); gctx.rotate(-Math.PI/2);
   gctx.fillText('Distance (m)', 0, 0); gctx.restore();
+
+  // Legend telling the student what one small square on the subscale is worth
+  if(graphExpanded){
+    gctx.font = Math.round(axisFontPx*0.78) + 'px "Space Mono",monospace';
+    gctx.fillStyle = 'rgba(190,210,255,0.5)';
+    gctx.textAlign = 'right';
+    gctx.fillText('minor grid = ' + (maxT/(DIVS*5)).toFixed(2) + ' s × ' + (maxD/(DIVS*5)).toFixed(2) + ' m', GW-PAD.r, GH-6);
+  }
 
   if(S.points.length>1){
     gctx.beginPath();
@@ -1075,9 +1123,9 @@ challengeInput.addEventListener('keydown', e=>{ if(e.key === 'Enter') submitAnsw
 
 /* ============================= AR MODE — AR.js (A-Frame) · Hiro marker ============================= */
 let arScene = null, arEntities = {};
-let arScale = 0.5, arPinchDist0 = null, arScale0 = null;
-const AR_REAL_LEN = 3.0;     // the "real" track length shown to students, in metres — fixed and always visible
-const AR_TRACK_UNITS = 4;    // length of the AR track geometry in AR-local units (arbitrary; scaled by arScale)
+let arScale = 0.22, arPinchDist0 = null, arScale0 = null;
+const AR_REAL_LEN = 10.0;    // the "real" track length shown to students, in metres — fixed and always visible
+const AR_TRACK_UNITS = 12;   // length of the AR track geometry in AR-local units (arbitrary; scaled by arScale)
 
 let arChallengeSpeed = null;   // hidden target speed for the current AR challenge
 let arChallengePhase = 'idle'; // idle | running | finished
@@ -1090,7 +1138,7 @@ function showARStep(n){ [1,2,3,4].forEach(i=>{ const el=document.getElementById(
 function buildARScene(){
   const wrap = document.getElementById('arWrap');
   wrap.innerHTML = ''; wrap.classList.add('show');
-  arScale = 0.5;
+  arScale = 0.22;
 
   const sceneEl = document.createElement('a-scene');
   sceneEl.setAttribute('embedded','');
@@ -1109,59 +1157,84 @@ function buildARScene(){
   marker.addEventListener('markerFound', ()=>{ const s=document.getElementById('ar-status'); s.textContent='✅ MARKER DETECTED'; s.style.background='rgba(89,232,143,.18)'; s.style.border='1px solid rgba(89,232,143,.5)'; s.style.color='#59e88f'; });
   marker.addEventListener('markerLost', ()=>{ const s=document.getElementById('ar-status'); s.textContent='🔍 SCANNING…'; s.style.background='rgba(255,178,56,.12)'; s.style.border='1px solid rgba(255,178,56,.4)'; s.style.color='#ffb238'; });
 
+  // Two nested entities on purpose:
+  //  · sgRoot sits exactly ON the marker and carries the pinch scale.
+  //  · sg is its child and holds the -half-length centring offset, so that offset
+  //    is multiplied by the scale like everything else. Putting the offset on the
+  //    scaled entity itself would shift the track by half its FULL length in raw
+  //    marker units (~6 marker widths), parking it way off to one side.
+  const sgRoot = document.createElement('a-entity');
+  sgRoot.setAttribute('id','ar-scale-group');
+  sgRoot.setAttribute('scale', `${arScale} ${arScale} ${arScale}`);
+  sgRoot.setAttribute('position','0 0 0');
+
   const sg = document.createElement('a-entity');
-  sg.setAttribute('id','ar-scale-group');
-  sg.setAttribute('scale', `${arScale} ${arScale} ${arScale}`);
   sg.setAttribute('position', `${-AR_TRACK_UNITS/2} 0 0`); // centre the track on the marker
+  sgRoot.appendChild(sg);
 
   // Track (road strip)
   const track = document.createElement('a-box');
-  track.setAttribute('width', AR_TRACK_UNITS); track.setAttribute('height','0.05'); track.setAttribute('depth','1.0');
+  track.setAttribute('width', AR_TRACK_UNITS); track.setAttribute('height','0.05'); track.setAttribute('depth','1.1');
   track.setAttribute('color','#171d29'); track.setAttribute('position', `${AR_TRACK_UNITS/2} 0 0`);
   sg.appendChild(track);
 
   // dashed centre line
-  for(let i=0; i<AR_TRACK_UNITS; i+=0.5){
+  for(let i=0; i<AR_TRACK_UNITS; i+=0.8){
     const dash=document.createElement('a-box');
-    dash.setAttribute('width','0.22'); dash.setAttribute('height','0.02'); dash.setAttribute('depth','0.06');
-    dash.setAttribute('color','#ffb238'); dash.setAttribute('position', `${i+0.15} 0.03 0`);
+    dash.setAttribute('width','0.36'); dash.setAttribute('height','0.02'); dash.setAttribute('depth','0.07');
+    dash.setAttribute('color','#ffb238'); dash.setAttribute('position', `${i+0.22} 0.03 0`);
     sg.appendChild(dash);
   }
 
   // Start / finish flags
   function mkFlag(x, color){
-    const g=document.createElement('a-entity'); g.setAttribute('position', `${x} 0 -0.42`);
-    const pole=document.createElement('a-cylinder'); pole.setAttribute('radius','0.015'); pole.setAttribute('height','0.5'); pole.setAttribute('position','0 0.25 0'); pole.setAttribute('color','#8892a8');
+    const g=document.createElement('a-entity'); g.setAttribute('position', `${x} 0 -0.62`);
+    const pole=document.createElement('a-cylinder'); pole.setAttribute('radius','0.025'); pole.setAttribute('height','0.9'); pole.setAttribute('position','0 0.45 0'); pole.setAttribute('color','#8892a8');
     g.appendChild(pole);
-    const flag=document.createElement('a-plane'); flag.setAttribute('width','0.18'); flag.setAttribute('height','0.12'); flag.setAttribute('color',color); flag.setAttribute('position','0.1 0.42 0'); flag.setAttribute('side','double');
+    const flag=document.createElement('a-plane'); flag.setAttribute('width','0.34'); flag.setAttribute('height','0.22'); flag.setAttribute('color',color); flag.setAttribute('position','0.19 0.78 0'); flag.setAttribute('side','double');
     g.appendChild(flag);
     return g;
   }
   sg.appendChild(mkFlag(0, '#59e88f'));
   sg.appendChild(mkFlag(AR_TRACK_UNITS, '#ff6f5e'));
 
+  // Distance markers every 2 m along the track, so the length reads as a real measured track
+  const MARKER_STEP_M = 2;
+  for(let m = MARKER_STEP_M; m < AR_REAL_LEN; m += MARKER_STEP_M){
+    const x = (m/AR_REAL_LEN)*AR_TRACK_UNITS;
+    const post=document.createElement('a-cylinder');
+    post.setAttribute('radius','0.02'); post.setAttribute('height','0.3');
+    post.setAttribute('color','#445068'); post.setAttribute('position', `${x} 0.15 0.62`);
+    sg.appendChild(post);
+    const mLbl=document.createElement('a-text');
+    mLbl.setAttribute('value', m + ' m'); mLbl.setAttribute('align','center');
+    mLbl.setAttribute('color','#4fd6ff'); mLbl.setAttribute('width','4'); mLbl.setAttribute('side','double');
+    mLbl.setAttribute('position', `${x} 0.42 0.62`);
+    sg.appendChild(mLbl);
+  }
+
   // Track-length label, floating above the track — always visible, this is the "given" distance
   const lenLabel = document.createElement('a-text');
   lenLabel.setAttribute('value', `TRACK LENGTH = ${AR_REAL_LEN.toFixed(1)} m`);
   lenLabel.setAttribute('align','center'); lenLabel.setAttribute('color','#ffb238');
-  lenLabel.setAttribute('width','6'); lenLabel.setAttribute('side','double');
-  lenLabel.setAttribute('position', `${AR_TRACK_UNITS/2} 0.9 0`);
+  lenLabel.setAttribute('width','14'); lenLabel.setAttribute('side','double');
+  lenLabel.setAttribute('position', `${AR_TRACK_UNITS/2} 1.6 0`);
   sg.appendChild(lenLabel);
 
-  // Car
+  // Car — sized relative to the track so it stays visible on the longer run
   const carG = document.createElement('a-entity');
   carG.setAttribute('id','ar-car'); carG.setAttribute('position','0 0.05 0');
-  const carBody=document.createElement('a-box'); carBody.setAttribute('width','0.3'); carBody.setAttribute('height','0.1'); carBody.setAttribute('depth','0.16'); carBody.setAttribute('color','#ff6f5e'); carBody.setAttribute('position','0 0.08 0'); carG.appendChild(carBody);
-  const cabin=document.createElement('a-box'); cabin.setAttribute('width','0.16'); cabin.setAttribute('height','0.08'); cabin.setAttribute('depth','0.14'); cabin.setAttribute('color','#9fe8ff'); cabin.setAttribute('position','-0.02 0.17 0'); carG.appendChild(cabin);
-  [[0.1,0.08],[0.1,-0.08],[-0.1,0.08],[-0.1,-0.08]].forEach(([x,z])=>{
-    const wh=document.createElement('a-cylinder'); wh.setAttribute('radius','0.045'); wh.setAttribute('height','0.03'); wh.setAttribute('rotation','0 0 90'); wh.setAttribute('color','#11141c'); wh.setAttribute('position', `${x} 0.045 ${z}`);
+  const carBody=document.createElement('a-box'); carBody.setAttribute('width','0.6'); carBody.setAttribute('height','0.2'); carBody.setAttribute('depth','0.32'); carBody.setAttribute('color','#ff6f5e'); carBody.setAttribute('position','0 0.16 0'); carG.appendChild(carBody);
+  const cabin=document.createElement('a-box'); cabin.setAttribute('width','0.32'); cabin.setAttribute('height','0.16'); cabin.setAttribute('depth','0.28'); cabin.setAttribute('color','#9fe8ff'); cabin.setAttribute('position','-0.04 0.34 0'); carG.appendChild(cabin);
+  [[0.2,0.16],[0.2,-0.16],[-0.2,0.16],[-0.2,-0.16]].forEach(([x,z])=>{
+    const wh=document.createElement('a-cylinder'); wh.setAttribute('radius','0.09'); wh.setAttribute('height','0.06'); wh.setAttribute('rotation','0 0 90'); wh.setAttribute('color','#11141c'); wh.setAttribute('position', `${x} 0.09 ${z}`);
     carG.appendChild(wh);
   });
   sg.appendChild(carG);
 
-  marker.appendChild(sg); sceneEl.appendChild(marker); wrap.appendChild(sceneEl);
+  marker.appendChild(sgRoot); sceneEl.appendChild(marker); wrap.appendChild(sceneEl);
 
-  arEntities = { scaleGroup: sg, car: carG };
+  arEntities = { scaleGroup: sgRoot, car: carG };
   syncARCar();
 
   wrap.addEventListener('touchstart', onARTouch, {passive:false});
