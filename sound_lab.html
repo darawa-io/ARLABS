@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sound Lab | Vibrations, Waves &amp; Ultrasound</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%8A%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
+:root{--bg:#07090f;--surface:#0d1120;--border:rgba(180,200,255,0.12);--amber:#ffc857;--blue:#5bc8ff;--violet:#b57aff;--green:#4dffa0;--red:#ff5e72;--text:#ddeeff;--muted:rgba(180,210,255,0.55);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.45);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+#tabs{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;max-width:min(780px,calc(100vw - 220px));overflow-x:auto;}
+#tabs::-webkit-scrollbar{height:4px;}
+.tab-btn{flex-shrink:0;padding:6px 10px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.tab-btn:hover{color:#fff;background:rgba(180,200,255,0.08);}
+.tab-btn.active{background:rgba(91,200,255,0.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(91,200,255,0.4);}
+#caption{position:absolute;top:66px;left:16px;z-index:5;max-width:320px;max-height:min(380px,calc(100vh - 180px));overflow-y:auto;background:rgba(10,14,28,0.90);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:all 0.3s ease;}
+#caption::-webkit-scrollbar{width:4px;}
+.caption-head{display:flex;justify-content:space-between;align-items:center;}
+#caption-kpi{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:4px;}
+#caption-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;}
+#caption-text{font-size:11.5px;line-height:1.6;color:rgba(210,225,255,0.85);}
+#caption-text p{margin-bottom:10px;}
+#caption-text p:last-child{margin-bottom:0;}
+#caption-text b{color:#fff;}
+.btn-fold{background:none;border:none;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;font-size:12px;padding:2px 6px;border-radius:4px;}
+.btn-fold:hover{color:#fff;background:rgba(180,200,255,0.1);}
+#caption.collapsed #caption-text{display:none;}
+#hud{position:absolute;top:16px;right:16px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:16px;min-width:230px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.5);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:10px;}
+.dl{font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(180,210,255,0.65);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;text-align:right;}
+#controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:26px;padding:9px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);}
+#scene-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:20px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.18);border-color:var(--green);color:#fff;}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.amber.on{background:rgba(255,200,87,0.22);border-color:var(--amber);color:#fff;}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+.btn:disabled:hover{background:rgba(180,200,255,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:100px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--violet);border:none;cursor:pointer;}
+.chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;cursor:pointer;user-select:none;}
+.chk input[type=checkbox]{appearance:none;-webkit-appearance:none;width:15px;height:15px;border-radius:4px;border:1px solid rgba(180,200,255,0.4);background:rgba(180,200,255,0.08);cursor:pointer;position:relative;transition:all .15s;outline:none;flex-shrink:0;}
+.chk input[type=checkbox]:checked{background:var(--violet);border-color:var(--violet);}
+.chk input[type=checkbox]:checked::after{content:'✓';position:absolute;top:-3px;left:2px;color:#fff;font-size:12px;font-weight:700;}
+#hint{position:absolute;bottom:66px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.25);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+#challenge-wrap{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);z-index:15;display:none;width:min(620px,calc(100vw - 24px));}
+#challenge-wrap.show{display:block;}
+#challenge-wrap.s5-pos{top:66px;left:16px;bottom:auto;transform:none;width:340px;max-height:min(480px,calc(100vh - 160px));overflow-y:auto;}
+#challenge-bar{background:rgba(10,14,28,0.96);backdrop-filter:blur(22px);border:1px solid rgba(255,200,87,0.4);border-radius:18px;padding:14px 18px;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+#chal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(255,200,87,0.2);padding-bottom:6px;}
+#chal-head span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-weight:700;}
+#chal-score{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--green);}
+#chal-prompt{font-size:12px;line-height:1.5;color:var(--text);margin-bottom:10px;}
+#challenge-wrap.collapsed #chal-body, #challenge-wrap.collapsed #chal-prompt, #challenge-wrap.collapsed #chal-actions, #challenge-wrap.collapsed #chal-result {display:none;}
+.chal-table-wrap{max-height:140px;overflow-y:auto;margin-bottom:10px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,0.25);}
+.chal-table-wrap::-webkit-scrollbar{width:6px;}
+.chal-table-wrap::-webkit-scrollbar-thumb{background:rgba(180,200,255,0.18);border-radius:3px;}
+.chal-table{width:100%;border-collapse:collapse;font-size:10.5px;font-family:'Space Mono',monospace;}
+.chal-table th{background:rgba(180,200,255,0.08);color:var(--muted);text-align:left;padding:5px 8px;font-weight:400;position:sticky;top:0;}
+.chal-table td{padding:5px 8px;border-top:1px solid rgba(180,200,255,0.06);color:#fff;}
+.chal-inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+@media (max-width:520px){ .chal-inputs-grid{grid-template-columns:1fr;} }
+.chal-field{display:flex;flex-direction:column;gap:4px;}
+.chal-field label{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);}
+.chal-input,.chal-select{background:rgba(180,200,255,0.08);border:1px solid rgba(180,200,255,0.3);color:var(--text);border-radius:8px;padding:6px 10px;font-family:'Space Mono',monospace;font-size:11.5px;outline:none;width:100%;}
+.chal-input:focus,.chal-select:focus{border-color:var(--blue);box-shadow:0 0 6px rgba(91,200,255,0.4);}
+.chal-input:disabled,.chal-select:disabled{opacity:0.45;cursor:not-allowed;background:rgba(0,0,0,0.3);}
+.chal-select option{background:#0d1120;color:#fff;}
+#chal-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+#chal-result{font-size:11.5px;line-height:1.5;margin-top:8px;padding:8px 12px;border-radius:10px;display:none;}
+#chal-result.pass{display:block;background:rgba(77,255,160,0.12);color:var(--green);border:1px solid rgba(77,255,160,0.35);}
+#chal-result.fail{display:block;background:rgba(255,94,114,0.12);color:var(--red);border:1px solid rgba(255,94,114,0.35);}
+#quiz-btn{position:fixed;bottom:16px;right:16px;width:44px;height:44px;border-radius:13px;border:1px solid rgba(180,120,255,.4);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;font-size:19px;}
+#quiz-btn:hover{border-color:rgba(181,122,255,.8);background:rgba(181,122,255,.12);}
+#quiz-modal{display:none;position:fixed;inset:0;z-index:150;background:rgba(4,6,18,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#quiz-modal.show{display:flex;}
+#quiz-box{background:rgba(9,11,22,.98);border:1px solid rgba(180,120,255,.3);border-radius:20px;padding:26px;text-align:left;position:relative;max-width:480px;width:92%;max-height:82vh;overflow-y:auto;}
+#quiz-close{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.5);font-size:19px;cursor:pointer;}
+#quiz-box h3{font-family:'Syne',sans-serif;font-size:18px;color:#fff;margin-bottom:4px;}
+#quiz-progress{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;}
+#quiz-kpi{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--violet);border:1px solid rgba(181,122,255,.4);border-radius:8px;padding:2px 7px;margin-bottom:10px;}
+#quiz-question{font-size:14.5px;line-height:1.6;color:var(--text);margin-bottom:14px;}
+#quiz-options{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.quiz-opt{text-align:left;padding:10px 14px;border-radius:12px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;}
+.quiz-opt:hover{background:rgba(180,200,255,0.12);}
+.quiz-opt.correct{background:rgba(77,255,160,0.2);border-color:var(--green);}
+.quiz-opt.wrong{background:rgba(255,94,114,0.2);border-color:var(--red);}
+#quiz-explain{font-size:12px;line-height:1.55;color:rgba(200,215,255,0.75);background:rgba(180,200,255,0.05);border-radius:10px;padding:10px 12px;display:none;margin-bottom:12px;}
+#quiz-next{display:none;}
+#quiz-final{display:none;text-align:center;}
+#quiz-final h2{font-family:'Syne',sans-serif;font-size:26px;color:#fff;margin-bottom:8px;}
+#quiz-final p{font-size:13px;color:var(--muted);margin-bottom:16px;}
+
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(120,180,255,.25);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;transition:all .2s;color:rgba(120,180,255,.55);}
+#qr-btn:hover{border-color:rgba(120,180,255,.55);background:rgba(120,180,255,.14);color:#78b4ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(120,180,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(120,180,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(160,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#78b4ff;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<div id="title"><svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><div id="title-text"><h1>SOUND LAB</h1><p>Vibrations · Waves · Ultrasound</p></div></div>
+<div id="tabs"></div>
+<div id="caption"><div class="caption-head"><div id="caption-kpi">KPI</div><button class="btn-fold" id="btn-caption-fold" title="Fold panel">▼</button></div><div id="caption-title">Title</div><div id="caption-text">Description</div></div>
+<div id="hud"><h2>Measurements</h2><div id="hud-rows"></div></div>
+<div id="challenge-wrap"><div id="challenge-bar"><div id="chal-head"><span id="chal-title-txt">🎯 Challenge</span><div style="display:flex;align-items:center;gap:8px;"><span id="chal-score">Score: 0/0</span><button class="btn-fold" id="btn-chal-fold" title="Fold challenge panel">▼</button></div></div><div id="chal-prompt">Press "New Challenge" to begin!</div><div id="chal-body"></div><div id="chal-actions"><button class="btn green" id="btn-chal-check">✓ Check Answer</button><button class="btn amber" id="btn-chal-new">🔄 New Challenge</button><button class="btn" id="btn-chal-exit">🚪 Exit Challenge</button></div><div id="chal-result"></div></div></div>
+<div id="controls"><div id="scene-controls"></div><div class="sep"></div><button class="btn amber" id="btn-challenge-toggle">🎯 Challenge Mode</button><button class="btn" id="btn-reset-scene">↺ Reset</button></div>
+<div id="hint">🖐️ drag to rotate · ✌️ pinch / scroll to zoom</div>
+<button id="quiz-btn" title="Take the Sound quiz">🧠</button>
+<div id="quiz-modal"><div id="quiz-box"><button id="quiz-close">✕</button><div id="quiz-live"><h3>Sound Quiz</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-kpi">KPI 3.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+if(renderer.outputEncoding!==undefined) renderer.outputEncoding = THREE.sRGBEncoding;
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.018);
+const cam3 = new THREE.PerspectiveCamera(50,1,0.1,300);
+function resize(){ const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); }
+resize(); window.addEventListener('resize', resize);
+scene3.add(new THREE.AmbientLight(0xffffff, 1.15));
+const sun=new THREE.DirectionalLight(0xfff8f0,1.25); sun.position.set(5,10,5); scene3.add(sun);
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x0d1020,roughness:0.95}));
+floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.6; scene3.add(floorM);
+const grid=new THREE.GridHelper(50,34,0x1a2540,0x121c30); grid.position.y=-2.58; scene3.add(grid);
+const stage = new THREE.Group(); scene3.add(stage);
+function clearStage(){ while(stage.children.length) stage.remove(stage.children[0]); }
+function mat(color,opts){ return new THREE.MeshStandardMaterial(Object.assign({color},opts||{})); }
+function emat(color,intensity){ return new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:intensity===undefined?1.2:intensity}); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=randInt(0,i); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function el(id){ return document.getElementById(id); }
+function fmt(n,d){ return Number(n).toFixed(d===undefined?1:d); }
+const orb = { theta: 0.35, phi: 0.22, radius: 15, cx:0, cy:0.2, cz:0 };
+function applyOrbit(){
+  orb.phi = clamp(orb.phi, -Math.PI/5, Math.PI/3.2);
+  orb.radius = clamp(orb.radius, 5, 34);
+  const r=orb.radius,p=orb.phi,t=orb.theta;
+  cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t), orb.cy+r*Math.sin(p), orb.cz+r*Math.cos(p)*Math.cos(t));
+  cam3.lookAt(orb.cx,orb.cy,orb.cz);
+}
+applyOrbit();
+let dragStart=null, pinchDist0=0, pinchR0=orb.radius;
+canvas.addEventListener('mousedown',e=>{dragStart={x:e.clientX,y:e.clientY};});
+window.addEventListener('mousemove',e=>{ if(!dragStart) return; orb.theta -= (e.clientX-dragStart.x)*0.005; orb.phi += (e.clientY-dragStart.y)*0.005; applyOrbit(); dragStart={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mouseup',()=>dragStart=null);
+canvas.addEventListener('wheel',e=>{ orb.radius += e.deltaY*0.015; applyOrbit(); e.preventDefault(); },{passive:false});
+canvas.addEventListener('touchstart',e=>{ e.preventDefault(); if(e.touches.length===1) dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; else if(e.touches.length===2){ pinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); pinchR0=orb.radius; dragStart=null; } },{passive:false});
+canvas.addEventListener('touchmove',e=>{ e.preventDefault(); if(e.touches.length===1 && dragStart){ orb.theta -= (e.touches[0].clientX-dragStart.x)*0.005; orb.phi += (e.touches[0].clientY-dragStart.y)*0.005; applyOrbit(); dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; } else if(e.touches.length===2 && pinchDist0>0){ const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); orb.radius = pinchR0*(pinchDist0/nd); applyOrbit(); } },{passive:false});
+canvas.addEventListener('touchend',e=>{ if(e.touches.length===0){dragStart=null;pinchDist0=0;} },{passive:false});
+el('btn-caption-fold').onclick = () => { const cap=el('caption'); cap.classList.toggle('collapsed'); el('btn-caption-fold').textContent = cap.classList.contains('collapsed')?'▲':'▼'; };
+el('btn-chal-fold').onclick = () => { const wrap=el('challenge-wrap'); wrap.classList.toggle('collapsed'); el('btn-chal-fold').textContent = wrap.classList.contains('collapsed')?'▲':'▼'; };
+
+function spawnExpandingPulse(origin,color){ const g=new THREE.SphereGeometry(1,16,12); const m=new THREE.MeshBasicMaterial({color,wireframe:true,transparent:true,opacity:0.85}); const mesh=new THREE.Mesh(g,m); mesh.position.copy(origin); mesh.scale.setScalar(0.12); stage.add(mesh); return {mesh, born:performance.now()}; }
+function tickPulses(arr, maxLife, maxScale){ for(let i=arr.length-1;i>=0;i--){ const p=arr[i]; const age=(performance.now()-p.born)/1000; if(age>maxLife){ stage.remove(p.mesh); arr.splice(i,1); continue; } const f=age/maxLife; p.mesh.scale.setScalar(0.12+f*maxScale); p.mesh.material.opacity=0.85*(1-f); } }
+
+/* Proper horizontal elliptical arcs built as flat ShapeGeometry ribbons (no distortion). */
+function createEllipticalArcGeo(rx, ry, thickness){
+  const N = 32;
+  const outer = [], inner = [];
+  for(let i=0;i<=N;i++){
+    const a = -Math.PI/2 + Math.PI * (i/N);
+    outer.push(new THREE.Vector2(Math.cos(a)*(rx + thickness/2), Math.sin(a)*(ry + thickness/2)));
+    inner.push(new THREE.Vector2(Math.cos(a)*(rx - thickness/2), Math.sin(a)*(ry - thickness/2)));
+  }
+  const shape = new THREE.Shape();
+  shape.moveTo(outer[0].x, outer[0].y);
+  for(let i=1;i<outer.length;i++) shape.lineTo(outer[i].x, outer[i].y);
+  for(let i=inner.length-1;i>=0;i--) shape.lineTo(inner[i].x, inner[i].y);
+  shape.closePath();
+  return new THREE.ShapeGeometry(shape);
+}
+function createWavefront(color){
+  const grp = new THREE.Group();
+  const thickness = 0.08;
+  const radii = [0.24, 0.44, 0.64];
+  radii.forEach((r, i) => {
+    const rx = r * 2.1;
+    const ry = r * 0.85;
+    const geo = createEllipticalArcGeo(rx, ry, thickness);
+    const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95 - i*0.18, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
+    const arc = new THREE.Mesh(geo, m);
+    arc.renderOrder = 30;
+    grp.add(arc);
+  });
+  grp.renderOrder = 30;
+  return grp;
+}
+function setWavefrontDir(grp, dir){
+  if(!grp) return;
+  if(dir==='right') grp.rotation.z = 0;
+  else if(dir==='left') grp.rotation.z = Math.PI;
+  else if(dir==='up') grp.rotation.z = Math.PI/2;
+  else if(dir==='down') grp.rotation.z = -Math.PI/2;
+}
+
+function makeTextSprite(text, opts){
+  opts=opts||{}; const fontSize=opts.fontSize||64; const color=opts.color||'#ffffff'; const bgColor=opts.bgColor||null;
+  const cv=document.createElement('canvas'); const ctx=cv.getContext('2d');
+  ctx.font=`700 ${fontSize}px 'Space Mono', Arial, sans-serif`;
+  const textW=Math.ceil(ctx.measureText(text).width);
+  cv.width=textW+48; cv.height=fontSize+40;
+  if(bgColor){ ctx.fillStyle=bgColor; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(4,4,cv.width-8,cv.height-8,16); else ctx.rect(4,4,cv.width-8,cv.height-8); ctx.fill(); }
+  ctx.font=`700 ${fontSize}px 'Space Mono', Arial, sans-serif`; ctx.fillStyle=color; ctx.textBaseline='middle'; ctx.textAlign='center';
+  ctx.shadowColor='rgba(0,0,0,0.85)'; ctx.shadowBlur=8; ctx.fillText(text, cv.width/2, cv.height/2);
+  const tex=new THREE.CanvasTexture(cv); tex.needsUpdate=true;
+  const m=new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false});
+  const sprite=new THREE.Sprite(m); const h=opts.height||0.45;
+  sprite.scale.set((cv.width/cv.height)*h, h, 1); sprite.renderOrder=999; return sprite;
+}
+function figure(color){ const g=new THREE.Group(); const body=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.22,0.9,10), mat(color)); body.position.y=0.55; g.add(body); const head=new THREE.Mesh(new THREE.SphereGeometry(0.22,14,12), mat(0xe8c9a8)); head.position.y=1.15; g.add(head); return g; }
+
+function makeRuler(length, realDistance){
+  const grp = new THREE.Group();
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(length, 0.06, 0.06), new THREE.MeshBasicMaterial({ color: 0xdfe8f5 }));
+  grp.add(bar);
+  const nTicks = 20;
+  for(let i=0;i<=nTicks;i++){
+    const t = i/nTicks;
+    const x = -length/2 + t*length;
+    const isMajor = (i % 5 === 0);
+    const tickH = isMajor ? 0.22 : 0.10;
+    const tick = new THREE.Mesh(new THREE.BoxGeometry(0.02, tickH, 0.02), new THREE.MeshBasicMaterial({ color: isMajor ? 0xffe9a8 : 0x8899bb }));
+    tick.position.set(x, -tickH/2, 0);
+    grp.add(tick);
+    if(isMajor && realDistance!=null && isFinite(realDistance)){
+      const val = Math.round(t*realDistance);
+      const lbl = makeTextSprite(val+' m', {color:'#dfe8f5', height:0.24});
+      lbl.position.set(x, -0.46, 0);
+      grp.add(lbl);
+    }
+  }
+  const capMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
+  const capL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.28, 0.04), capMat); capL.position.set(-length/2, -0.14, 0); grp.add(capL);
+  const capR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.28, 0.04), capMat); capR.position.set( length/2, -0.14, 0); grp.add(capR);
+  return grp;
+}
+
+const ToneEngine = (function(){
+  let ctx=null, osc=null, gain=null, activeOwner=null;
+  function ensure(){ if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+  return {
+    start(owner, freq, amp){ ensure(); if(ctx.state==='suspended') ctx.resume(); if(!osc){ osc=ctx.createOscillator(); gain=ctx.createGain(); osc.type='sine'; osc.frequency.value=freq; gain.gain.value=amp; osc.connect(gain); gain.connect(ctx.destination); osc.start(); } activeOwner=owner; },
+    update(owner, freq, amp){ if(osc && activeOwner===owner){ osc.frequency.setValueAtTime(freq, ctx.currentTime); gain.gain.setValueAtTime(amp, ctx.currentTime); } },
+    stop(owner){ if(owner && activeOwner!==owner) return; if(osc){ try{osc.stop();}catch(e){} osc.disconnect(); gain.disconnect(); osc=null; gain=null; } activeOwner=null; },
+    isPlaying(owner){ return !!osc && (!owner || activeOwner===owner); }
+  };
+})();
+
+/* SCENE 1 */
+const sc1={cone:null,rings:[],acc:0,count:0};
+function s1_build(){ sc1.rings=[]; sc1.acc=0; sc1.count=0;
+  const bodyMat=mat(0x445566,{metalness:0.6,roughness:0.35});
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(1.1,1.6,32), mat(0xbbddff,{metalness:0.2,roughness:0.5,side:THREE.DoubleSide}));
+  cone.rotation.z=Math.PI/2; cone.position.set(0,0.3,0); stage.add(cone); sc1.cone=cone;
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(1.1,0.1,12,40), bodyMat); rim.rotation.y=Math.PI/2; rim.position.set(0.8,0.3,0); stage.add(rim);
+  const stand=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.4,1.6,12), bodyMat); stand.position.set(0,-0.9,0); stage.add(stand);
+}
+function s1_freqAmp(){ return {f:parseFloat(el('t1-freq')?.value||4), amp:parseFloat(el('t1-amp')?.value||0.3)}; }
+function s1_audioParams(f,amp){ return {freq:160+(f-1)*150, gain:clamp(amp*0.32,0.02,0.2)}; }
+function s1_tick(dt){ const {f,amp}=s1_freqAmp(); const phase=(performance.now()/1000)*f*Math.PI*2; if(sc1.cone) sc1.cone.position.x=Math.sin(phase)*amp*0.7; sc1.acc+=dt; if(sc1.acc>=1/f){ sc1.acc=0; sc1.count++; sc1.rings.push(spawnExpandingPulse(new THREE.Vector3(0.8,0.3,0),0xffc857)); } tickPulses(sc1.rings,1.3,5.5); if(ToneEngine.isPlaying('s1')){ const {freq,gain}=s1_audioParams(f,amp); ToneEngine.update('s1',freq,gain); } }
+function s1_toggleTone(){ const {f,amp}=s1_freqAmp(); if(ToneEngine.isPlaying('s1')){ ToneEngine.stop('s1'); el('t1-play').textContent='🔊 Play Sound'; el('t1-play').classList.remove('on'); } else { const {freq,gain}=s1_audioParams(f,amp); ToneEngine.start('s1',freq,gain); el('t1-play').textContent='⏸ Stop Sound'; el('t1-play').classList.add('on'); } }
+function s1_hud(){ const {f,amp}=s1_freqAmp(); return [{l:'Vibration rate',v:fmt(f,1)+' Hz',c:'#ffc857'},{l:'Amplitude',v:fmt(amp,2),c:'#5bc8ff'},{l:'Pulses emitted',v:sc1.count,c:'#4dffa0'}]; }
+
+/* SCENE 2 */
+const sc2={parts:[],n:46,spacing:0.26,piston:null,paddle:null,cPool:[],rPool:[],simTime:0};
+function s2_build(){ sc2.parts=[]; sc2.simTime=0;
+  const startX=-(sc2.n-1)*sc2.spacing/2;
+  for(let i=0;i<sc2.n;i++){ const m=new THREE.Mesh(new THREE.SphereGeometry(0.11,12,10), mat(0x8899bb)); m.position.set(startX+i*sc2.spacing,0,0); stage.add(m); sc2.parts.push({mesh:m, rest:startX+i*sc2.spacing}); }
+  sc2.restLeft=startX; sc2.restRight=startX+(sc2.n-1)*sc2.spacing;
+  const pistonGrp=new THREE.Group(); pistonGrp.position.set(startX-1.1,0,0); stage.add(pistonGrp);
+  const houseMat=mat(0x223344,{metalness:0.7,roughness:0.35});
+  const house=new THREE.Mesh(new THREE.BoxGeometry(0.5,1.5,1.5), houseMat); house.position.set(-0.4,0,0); pistonGrp.add(house);
+  const paddleMat=new THREE.MeshStandardMaterial({color:0xffc857, emissive:0xffc857, emissiveIntensity:0.6, metalness:0.3, roughness:0.4});
+  const paddle=new THREE.Mesh(new THREE.BoxGeometry(0.12,1.3,1.3), paddleMat); pistonGrp.add(paddle);
+  const standBase=new THREE.Mesh(new THREE.BoxGeometry(0.8,0.1,1.3), mat(0x445566,{metalness:0.7})); standBase.position.set(-0.2,-0.85,0); pistonGrp.add(standBase);
+  sc2.piston=pistonGrp; sc2.paddle=paddle;
+  sc2.cPool=[]; sc2.rPool=[];
+  for(let i=0;i<14;i++){
+    const c=makeTextSprite(' C ',{color:'#ffffff', bgColor:'rgba(255,180,30,0.85)', height:0.55}); c.visible=false; stage.add(c); sc2.cPool.push(c);
+    const r=makeTextSprite(' R ',{color:'#ffffff', bgColor:'rgba(40,160,255,0.85)', height:0.55}); r.visible=false; stage.add(r); sc2.rPool.push(r);
+  }
+}
+const compMatCol=new THREE.Color(0xffc857), rareMatCol=new THREE.Color(0x3ab0ff), neutMatCol=new THREE.Color(0x607595);
+function s2_placeLabels(pool, phaseOffset, visK, omega, t){
+  if(!pool||pool.length===0) return;
+  const minX=sc2.restLeft-1.0, maxX=sc2.restRight+1.0;
+  const base=phaseOffset+omega*t;
+  const nStart=Math.ceil((visK*minX - base)/(2*Math.PI));
+  const nEnd=Math.floor((visK*maxX - base)/(2*Math.PI));
+  let i=0;
+  for(let n=nStart; n<=nEnd && i<pool.length; n++){
+    const rest=(base + 2*Math.PI*n)/visK;
+    pool[i].position.set(rest, 0.75, 0);
+    pool[i].visible=true;
+    i++;
+  }
+  for(; i<pool.length; i++) pool[i].visible=false;
+}
+function s2_tick(dt){
+  const f=parseFloat(el('t2-freq')?.value||8), amp=parseFloat(el('t2-amp')?.value||0.3);
+  const isSlow=el('t2-slow')?.checked;
+  const speedMult = isSlow? 0.25 : 1.0;
+  const visK=f/5; const omega=f*1.6;
+  sc2.simTime += dt*speedMult;
+  const t=sc2.simTime;
+  const positions=[];
+  sc2.parts.forEach(p=>{ const dx=amp*Math.sin(visK*p.rest - omega*t); p.mesh.position.x=p.rest+dx; positions.push(p.mesh.position.x); });
+  const restSpacing=sc2.spacing;
+  for(let i=0;i<sc2.parts.length;i++){
+    let ratio=1;
+    if(i>0 && i<sc2.parts.length-1) ratio=(positions[i+1]-positions[i-1])/(2*restSpacing);
+    let c=new THREE.Color();
+    if(ratio<1.0){ const factor=clamp((1.0-ratio)/(amp*1.5),0,1); c.copy(neutMatCol).lerp(compMatCol,factor); }
+    else { const factor=clamp((ratio-1.0)/(amp*1.5),0,1); c.copy(neutMatCol).lerp(rareMatCol,factor); }
+    sc2.parts[i].mesh.material.color.copy(c);
+  }
+  s2_placeLabels(sc2.cPool, Math.PI, visK, omega, t);
+  s2_placeLabels(sc2.rPool, 0, visK, omega, t);
+  if(sc2.paddle){ sc2.paddle.position.x = amp*Math.sin(visK*sc2.restLeft - omega*t); }
+}
+function s2_hud(){ const f=parseFloat(el('t2-freq')?.value||8); const v=340, lambda=v/f; return [{l:'Frequency f',v:fmt(f,1)+' Hz',c:'#ffc857'},{l:'Speed v (air)',v:'340 m/s',c:'#5bc8ff'},{l:'Wavelength λ=v/f',v:fmt(lambda,1)+' m',c:'#b57aff'}]; }
+
+/* SCENE 3 */
+const sc3={marker:null};
+function s3_freqFromSlider(){ return 10*Math.pow(20000, (parseFloat(el('t3-freq')?.value||500))/1000); }
+function s3_build(){
+  const barLen=10; sc3.barLen=barLen;
+  const leftX=-barLen/2, rightX=barLen/2;
+  const xInfraEnd=s3_xForFreq(20), xAudEnd=s3_xForFreq(20000);
+  const infraLen=xInfraEnd-leftX, audLen=xAudEnd-xInfraEnd, ultraLen=rightX-xAudEnd;
+  const infra=new THREE.Mesh(new THREE.BoxGeometry(infraLen,0.5,0.9), new THREE.MeshStandardMaterial({color:0x2c3848, roughness:0.6, metalness:0.2})); infra.position.x=leftX+infraLen/2; stage.add(infra);
+  const aud=new THREE.Mesh(new THREE.BoxGeometry(audLen,0.5,0.9), new THREE.MeshStandardMaterial({color:0x0f512c, roughness:0.5, metalness:0.2})); aud.position.x=xInfraEnd+audLen/2; stage.add(aud);
+  const ultra=new THREE.Mesh(new THREE.BoxGeometry(ultraLen,0.5,0.9), new THREE.MeshStandardMaterial({color:0x4a235a, roughness:0.5, metalness:0.2})); ultra.position.x=xAudEnd+ultraLen/2; stage.add(ultra);
+  const marker=new THREE.Mesh(new THREE.SphereGeometry(0.3,20,16), new THREE.MeshStandardMaterial({color:0xff9900, emissive:0x663300, emissiveIntensity:0.3, roughness:0.3, metalness:0.2})); marker.position.set(0,0.75,0); stage.add(marker); sc3.marker=marker;
+  const lbl20=makeTextSprite('20 Hz',{color:'#ddeeff', height:0.3}); lbl20.position.set(xInfraEnd,0.55,0); stage.add(lbl20);
+  const lbl20k=makeTextSprite('20 kHz',{color:'#ddeeff', height:0.3}); lbl20k.position.set(xAudEnd,0.55,0); stage.add(lbl20k);
+  const zFront=0.9/2+0.06;
+  const capInfra=makeTextSprite('Infrasound',{color:'#8899bb', height:0.3}); capInfra.position.set(leftX+infraLen/2,0,zFront); stage.add(capInfra);
+  const capAud=makeTextSprite('Audible',{color:'#4dffa0', height:0.34}); capAud.position.set(xInfraEnd+audLen/2,0,zFront); stage.add(capAud);
+  const capUltra=makeTextSprite('Ultrasound',{color:'#b57aff', height:0.3}); capUltra.position.set(xAudEnd+ultraLen/2,0,zFront); stage.add(capUltra);
+}
+function s3_xForFreq(f){ return -sc3.barLen/2 + (Math.log(f/10)/Math.log(20000))*sc3.barLen; }
+function s3_tick(){ const f=s3_freqFromSlider(); if(sc3.marker) sc3.marker.position.x=s3_xForFreq(f); if(ToneEngine.isPlaying('s3')){ const {freq,gain}=s3_audioParams(f); ToneEngine.update('s3',freq,gain); } }
+function s3_category(f){ return f<20?'Infrasound':(f<=20000?'Audible':'Ultrasound'); }
+function s3_audioParams(f){ return {freq:clamp(f,20,20000), gain: f>20000?0:0.14}; }
+function s3_toggleTone(){ const f=s3_freqFromSlider(); if(ToneEngine.isPlaying('s3')){ ToneEngine.stop('s3'); el('t3-play').textContent='🔊 Play Sound'; el('t3-play').classList.remove('on'); } else { const {freq,gain}=s3_audioParams(f); ToneEngine.start('s3',freq,gain); el('t3-play').textContent='⏸ Stop Sound'; el('t3-play').classList.add('on'); } }
+function s3_hud(){ const f=s3_freqFromSlider(); const label=f<1000?fmt(f,0)+' Hz':fmt(f/1000,1)+' kHz'; const cat=s3_category(f); return [{l:'Frequency',v:label,c:'#ffc857'},{l:'Category',v:cat,c:cat==='Audible'?'#4dffa0':(cat==='Ultrasound'?'#b57aff':'#8899bb')},{l:'Human range',v:'20 Hz – 20 kHz',c:'#5bc8ff'}]; }
+
+/* SCENE 4 */
+const sc4={air:true,rings:[],jar:null,ear:null,acc:0};
+function s4_build(){
+  sc4.rings=[]; sc4.acc=0;
+  const stand=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,0.15,24), mat(0x334455,{metalness:0.6})); stand.position.set(-1.5,-1.3,0); stage.add(stand);
+  const jarMat=new THREE.MeshPhysicalMaterial({color:0xbfe6ff, transmission:0.85, opacity:0.35, transparent:true, roughness:0.05, side:THREE.DoubleSide});
+  const jar=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,2.2,32,1,true), jarMat); jar.position.set(-1.5,-0.2,0); stage.add(jar); sc4.jar=jar;
+  const lid=new THREE.Mesh(new THREE.CylinderGeometry(1.02,1.02,0.08,32), mat(0x8fa4bb,{metalness:0.75,roughness:0.3,transparent:true,opacity:0.85})); lid.position.set(-1.5,0.94,0); stage.add(lid);
+  const valve=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,0.22,12), mat(0x556677,{metalness:0.8,roughness:0.3})); valve.position.set(-1.5,1.09,0); stage.add(valve);
+  const bell=new THREE.Mesh(new THREE.SphereGeometry(0.28,16,14), emat(0xffc857,1)); bell.position.set(-1.5,-1.0,0); stage.add(bell); sc4.bell=bell;
+  const earHead=new THREE.Mesh(new THREE.SphereGeometry(0.35,16,14), mat(0xe8c9a8)); earHead.position.set(3.2,-0.2,0); stage.add(earHead); sc4.ear=earHead;
+}
+function s4_tick(dt){ sc4.acc+=dt; if(sc4.acc>=0.6){ sc4.acc=0; sc4.rings.push({p:spawnExpandingPulse(new THREE.Vector3(-1.5,-1.0,0), sc4.air?0x5bc8ff:0x554455), air:sc4.air}); } for(let i=sc4.rings.length-1;i>=0;i--){ const r=sc4.rings[i]; const age=(performance.now()-r.p.born)/1000; const stopAt=sc4.air?2.4:0.55; if(age>stopAt){ stage.remove(r.p.mesh); sc4.rings.splice(i,1); continue; } const f=age/2.4; r.p.mesh.scale.setScalar(0.12+f*5.5); r.p.mesh.material.opacity=r.air?0.85*(1-age/2.4):Math.max(0,0.85*(1-age/0.55)); } }
+function s4_hud(){ return [{l:'Medium',v:sc4.air?'Air present':'Vacuum',c:sc4.air?'#4dffa0':'#ff5e72'},{l:'Sound heard outside?',v:sc4.air?'Yes':'No',c:sc4.air?'#4dffa0':'#ff5e72'}]; }
+
+/* SCENE 5 */
+const sc5={vTrue:340, pulse:null, listenerX:0, starterX:-6, flash:null, listenerObj:null, clock:null, rail:null, ruler:null, challengeActive:false, answered:false, challengeStartX:-6, challengeTrueDistance:null};
+function s5_distToX(d){ return lerp(-3, 6.5, clamp((d-50)/(680-50),0,1)); }
+function s5_build(){
+  sc5.vTrue=340; sc5.challengeActive=false; sc5.answered=false;
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(1,0.1,0.2), mat(0x3a5070,{metalness:0.6})); rail.position.y=-0.9; stage.add(rail); sc5.rail=rail;
+  const starter=figure(0xffc857); starter.position.set(sc5.starterX,-0.9,0); stage.add(starter);
+  const flash=new THREE.Mesh(new THREE.SphereGeometry(0.18,12,10), emat(0xffffff,2)); flash.position.set(sc5.starterX,0.5,0); flash.visible=false; stage.add(flash); sc5.flash=flash;
+  const listener=figure(0x5bc8ff); stage.add(listener); sc5.listenerObj=listener;
+  const clock=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.05,8,20), emat(0x4dffa0,1)); stage.add(clock); sc5.clock=clock;
+  const dot=createWavefront(0xffc857); dot.visible=false; stage.add(dot); sc5.dot=dot; sc5.pulse=null;
+  sc5.ruler = makeRuler(1); sc5.ruler.position.set(0, -1.35, 0); stage.add(sc5.ruler);
+  s5_layout();
+}
+function s5_layout(){
+  const d=parseFloat(el('t5-dist')?.value||340);
+  sc5.listenerX=s5_distToX(d);
+  if(sc5.listenerObj) sc5.listenerObj.position.set(sc5.listenerX,-0.9,0);
+  if(sc5.clock) sc5.clock.position.set(sc5.listenerX,0.6,0);
+  if(sc5.rail){ const span=sc5.listenerX-sc5.starterX; sc5.rail.position.x=(sc5.starterX+sc5.listenerX)/2; sc5.rail.scale.x=Math.max(0.15, span); }
+  if(sc5.ruler){
+    const span = sc5.listenerX - sc5.starterX;
+    while(sc5.ruler.children.length) sc5.ruler.remove(sc5.ruler.children[0]);
+    const newRuler = makeRuler(Math.max(0.5, span), sc5.challengeActive ? null : d);
+    while(newRuler.children.length) sc5.ruler.add(newRuler.children[0]);
+    sc5.ruler.position.x = (sc5.starterX + sc5.listenerX)/2;
+  }
+}
+function s5_fire(){
+  const d=parseFloat(el('t5-dist').value);
+  const travel=d/sc5.vTrue;
+  sc5.pulse={t0:performance.now(), travel, d, done:false, x0:sc5.starterX, x1:sc5.listenerX};
+  sc5.dot.visible=true; sc5.dot.position.set(sc5.starterX,0.3,0);
+  setWavefrontDir(sc5.dot, 'right');
+  sc5.flash.visible=true;
+  setTimeout(()=>{ if(sc5.flash) sc5.flash.visible=false; },120);
+}
+function s5_tick(){
+  if(sc5.pulse && !sc5.pulse.done){
+    const el_s=(performance.now()-sc5.pulse.t0)/1000;
+    const frac=clamp(el_s/sc5.pulse.travel,0,1);
+    sc5.dot.position.x=lerp(sc5.pulse.x0, sc5.pulse.x1, frac);
+    if(frac>=1) sc5.pulse.done=true;
+  }
+}
+function s5_hud(){
+  const d=parseFloat(el('t5-dist')?.value||340);
+  let tstr='—', vstr='—';
+  if(sc5.pulse){
+    const el_s=sc5.pulse.done? sc5.pulse.travel : (performance.now()-sc5.pulse.t0)/1000;
+    tstr=fmt(Math.min(el_s,sc5.pulse.travel),3)+' s';
+    if(sc5.pulse.done) vstr = sc5.challengeActive? '??? (Calculate!)' : fmt(sc5.pulse.d/sc5.pulse.travel,1)+' m/s';
+  }
+  const rows = [{l:'Distance d', v: sc5.challengeActive ? '??? (hidden)' : fmt(d,0)+' m', c:'#ffc857'}];
+  rows.push({l:'Stopwatch t', v:tstr, c:'#5bc8ff'});
+  rows.push({l:'v = d / t', v:vstr, c: sc5.challengeActive?'#b57aff':'#4dffa0'});
+  return rows;
+}
+
+/* SCENE 6 */
+const sc6={racers:[], racing:false, simTime:0, finishOrder:[], hammer:null, strikeAnim:0, flash:null, slowMo:false};
+const S6_PULSE_Z=1.7;
+const S6_MEDIA=[
+  {name:'Stone', speed:5000, disp:12.0, y:-1.75, color:0xff5a2e, trailColor:0xd93f14, cat:'Solid'},
+  {name:'Water', speed:1480, disp:4.5,  y:-0.25, color:0x5bc8ff, trailColor:0x3a9fd8, cat:'Liquid'},
+  {name:'Air',   speed:340,  disp:1.5,  y: 1.15, color:0xd8e6f5, trailColor:0x8899bb, cat:'Gas'}
+];
+function s6_build(){
+  sc6.racers=[]; sc6.racing=false; sc6.simTime=0; sc6.finishOrder=[];
+  sc6.hammer=null; sc6.strikeAnim=0; sc6.flash=null; sc6.slowMo=false;
+  const stoneMat=new THREE.MeshStandardMaterial({color:0x5b6270, roughness:0.95, metalness:0.06});
+  const stoneLayer=new THREE.Mesh(new THREE.BoxGeometry(11.4, 1.5, 3.0), stoneMat); stoneLayer.position.set(0, -1.75, 0); stage.add(stoneLayer);
+  for(let i=0;i<20;i++){ const speck=new THREE.Mesh(new THREE.SphereGeometry(0.05+Math.random()*0.05, 6, 5), new THREE.MeshBasicMaterial({color:0x2a2e38})); speck.position.set(-5+Math.random()*10, -1.75+(Math.random()-0.5)*1.2, 1.55); stage.add(speck); }
+  const waterMat=new THREE.MeshStandardMaterial({color:0x2a72a8, transparent:true, opacity:0.32, roughness:0.15, metalness:0.0, side:THREE.DoubleSide, depthWrite:false});
+  const waterLayer=new THREE.Mesh(new THREE.BoxGeometry(11.4, 1.5, 3.0), waterMat); waterLayer.position.set(0, -0.25, 0); stage.add(waterLayer);
+  const waterSurface=new THREE.Mesh(new THREE.PlaneGeometry(11.4, 3.0), new THREE.MeshBasicMaterial({color:0x88c8ff, transparent:true, opacity:0.12, side:THREE.DoubleSide, depthWrite:false}));
+  waterSurface.rotation.x=-Math.PI/2; waterSurface.position.set(0, 0.5, 0); stage.add(waterSurface);
+  const airMat=new THREE.MeshBasicMaterial({color:0xb8d0ee, transparent:true, opacity:0.05, side:THREE.DoubleSide, depthWrite:false});
+  const airLayer=new THREE.Mesh(new THREE.BoxGeometry(11.4, 1.3, 3.0), airMat); airLayer.position.set(0, 1.15, 0); stage.add(airLayer);
+  const airEdges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(11.4, 1.3, 3.0)), new THREE.LineBasicMaterial({color:0x6a89b8, transparent:true, opacity:0.28})); airEdges.position.set(0, 1.15, 0); stage.add(airEdges);
+  const startLine=new THREE.Mesh(new THREE.BoxGeometry(0.05, 3.8, 2.8), new THREE.MeshBasicMaterial({color:0x88aaff, transparent:true, opacity:0.35})); startLine.position.set(-4.9, -0.6, 0); stage.add(startLine);
+  const finishLine=new THREE.Mesh(new THREE.BoxGeometry(0.05, 3.8, 2.8), new THREE.MeshBasicMaterial({color:0x4dffa0, transparent:true, opacity:0.55})); finishLine.position.set(5.0, -0.6, 0); stage.add(finishLine);
+  const sLbl=makeTextSprite('STONE',{color:'#ff5a2e', height:0.34}); sLbl.position.set(4.2, -1.75, 1.65); stage.add(sLbl);
+  const wLbl=makeTextSprite('WATER',{color:'#8ad4ff', height:0.34}); wLbl.position.set(4.2, -0.25, 1.65); stage.add(wLbl);
+  const aLbl=makeTextSprite('AIR',{color:'#dfe8f5', height:0.34}); aLbl.position.set(4.2, 1.15, 1.65); stage.add(aLbl);
+  const sSp=makeTextSprite('5000 m/s',{color:'#ff5a2e', height:0.22}); sSp.position.set(4.2, -2.15, 1.65); stage.add(sSp);
+  const wSp=makeTextSprite('1480 m/s',{color:'#8ad4ff', height:0.22}); wSp.position.set(4.2, -0.65, 1.65); stage.add(wSp);
+  const aSp=makeTextSprite('340 m/s',{color:'#dfe8f5', height:0.22}); aSp.position.set(4.2, 0.75, 1.65); stage.add(aSp);
+  const rimMat=new THREE.MeshStandardMaterial({color:0x6a7285, roughness:0.95, metalness:0.06});
+  const rim=new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.6, 3.2), rimMat); rim.position.set(-5.35, -0.2, 0); stage.add(rim);
+  const rimCap=new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.14, 3.3), new THREE.MeshStandardMaterial({color:0x8a92a5, roughness:0.9, metalness:0.05})); rimCap.position.set(-5.35, 0.6, 0); stage.add(rimCap);
+  const rimLbl=makeTextSprite('POOL RIM',{color:'#dfe8f5', height:0.22}); rimLbl.position.set(-5.35, 0.85, 1.75); stage.add(rimLbl);
+  const hammerGrp=new THREE.Group(); hammerGrp.position.set(-5.35, 1.55, 0);
+  const handle=new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.15, 10), new THREE.MeshStandardMaterial({color:0xa06f3c, roughness:0.75})); handle.position.y=0.55; hammerGrp.add(handle);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.34, 0.52), new THREE.MeshStandardMaterial({color:0x3c3c42, metalness:0.85, roughness:0.3})); head.position.y=1.12; hammerGrp.add(head);
+  stage.add(hammerGrp); sc6.hammer=hammerGrp;
+  const strikePoint=new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), new THREE.MeshBasicMaterial({color:0xffaa44})); strikePoint.position.set(-5.35, 0.7, 0); stage.add(strikePoint);
+  const flash=new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 12), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.0})); flash.position.set(-5.35, 0.7, 0); stage.add(flash); sc6.flash=flash;
+  S6_MEDIA.forEach(m=>{
+    const pulse=createWavefront(m.color); pulse.position.set(-4.9, m.y, S6_PULSE_Z); setWavefrontDir(pulse, 'right'); pulse.visible=false; stage.add(pulse);
+    const trail=new THREE.Mesh(new THREE.BoxGeometry(1, 0.12, 0.35), new THREE.MeshBasicMaterial({color:m.trailColor, transparent:true, opacity:0.55, depthTest:false, depthWrite:false}));
+    trail.position.set(-4.9, m.y, S6_PULSE_Z); trail.renderOrder=19; trail.scale.x=0.001; trail.visible=false; stage.add(trail);
+    sc6.racers.push({m, pulse, trail, done:false});
+  });
+}
+function s6_start(){ sc6.racing=true; sc6.simTime=0; sc6.finishOrder=[]; sc6.strikeAnim=0.4;
+  sc6.racers.forEach(r=>{ r.done=false; r.pulse.visible=true; r.trail.visible=true; r.pulse.position.set(-4.9, r.m.y, S6_PULSE_Z); r.trail.position.set(-4.9, r.m.y, S6_PULSE_Z); r.trail.scale.x=0.001; });
+  if(sc6.flash){ sc6.flash.material.opacity=0.95; sc6.flash.scale.setScalar(1); }
+}
+function s6_tick(dt){
+  if(sc6.strikeAnim>0){ sc6.strikeAnim=Math.max(0, sc6.strikeAnim-dt); if(sc6.hammer){ const t=1-(sc6.strikeAnim/0.4); sc6.hammer.rotation.z=-Math.sin(t*Math.PI)*0.95; } }
+  else if(sc6.hammer && Math.abs(sc6.hammer.rotation.z)>0.001){ sc6.hammer.rotation.z*=0.85; if(Math.abs(sc6.hammer.rotation.z)<0.005) sc6.hammer.rotation.z=0; }
+  if(sc6.flash && sc6.flash.material.opacity>0){ sc6.flash.material.opacity-=dt*3; sc6.flash.scale.multiplyScalar(1+dt*3.5); if(sc6.flash.material.opacity<0) sc6.flash.material.opacity=0; }
+  if(!sc6.racing) return;
+  const speedMult=sc6.slowMo? 0.4:1.0; sc6.simTime+=dt*speedMult; const t=sc6.simTime;
+  let allDone=true;
+  sc6.racers.forEach(r=>{ const x=clamp(-4.9 + r.m.disp*t, -4.9, 5.0); r.pulse.position.x=x; const span=Math.max(0.05, x+4.9); r.trail.scale.x=span; r.trail.position.x=-4.9+span/2; if(x>=5.0 && !r.done){ r.done=true; sc6.finishOrder.push(r.m.name); } if(x<5.0) allDone=false; });
+  if(allDone) sc6.racing=false;
+}
+function s6_hud(){ const rows=S6_MEDIA.map(m=>({l:m.name+' ('+m.cat+')', v:m.speed+' m/s', c:'#'+m.color.toString(16).padStart(6,'0')})); rows.push({l:'Finish order', v: sc6.finishOrder.length? sc6.finishOrder.map((n,i)=>(i+1)+'. '+n).join('  '):'—', c:'#4dffa0'}); return rows; }
+
+/* SCENE 7 */
+const sc7={pulse:null, dot:null, mountainGrp:null, rulerGrp:null, sourceX:-6};
+function s7_distToX(d){ return lerp(-3, 6.5, clamp((d-50)/(680-50),0,1)); }
+function s7_build(){
+  sc7.sourceX = -6;
+  const src=figure(0xffc857); src.position.set(sc7.sourceX,-0.9,0); stage.add(src);
+  const mtn=new THREE.Group();
+  const peak = new THREE.Mesh(new THREE.ConeGeometry(2.2, 3.0, 5), new THREE.MeshStandardMaterial({color:0x5a4a3a, roughness:0.95, flatShading:true}));
+  peak.position.y = 0.4; peak.rotation.y = Math.PI/5; mtn.add(peak);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.8, 0.9, 5), new THREE.MeshStandardMaterial({color:0xf0f4fa, roughness:0.85, flatShading:true}));
+  cap.position.y = 1.55; cap.rotation.y = Math.PI/5; mtn.add(cap);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.8,0.3,10), new THREE.MeshStandardMaterial({color:0x3a3228, roughness:1.0}));
+  base.position.y = -1.0; mtn.add(base);
+  stage.add(mtn);
+  sc7.mountainGrp = mtn;
+  const dot=createWavefront(0x5bc8ff); dot.visible=false; stage.add(dot); sc7.dot=dot;
+  sc7.rulerGrp = makeRuler(1); sc7.rulerGrp.position.set(0, -1.35, 0); stage.add(sc7.rulerGrp);
+  s7_layout();
+}
+function s7_layout(){
+  const d = parseFloat(el('t7-dist')?.value || 50);
+  const mx = s7_distToX(d);
+  if(sc7.mountainGrp) sc7.mountainGrp.position.set(mx, -0.9, 0);
+  if(sc7.rulerGrp){
+    const span = mx - sc7.sourceX;
+    while(sc7.rulerGrp.children.length) sc7.rulerGrp.remove(sc7.rulerGrp.children[0]);
+    const newRuler = makeRuler(Math.max(0.5, span), sc7.challengeActive ? null : d);
+    while(newRuler.children.length) sc7.rulerGrp.add(newRuler.children[0]);
+    sc7.rulerGrp.position.x = (sc7.sourceX + mx)/2;
+    sc7.rulerGrp.position.y = -1.35;
+  }
+  if(sc7.dot) sc7.dot.position.set(sc7.sourceX, 0.3, 0);
+  if(sc7.pulse && !sc7.pulse.done) sc7.pulse.wx = mx;
+}
+function s7_shout(){
+  const d=parseFloat(el('t7-dist').value);
+  const mx = s7_distToX(d);
+  const v=340, total=2*d/v;
+  sc7.pulse={t0:performance.now(), total, d, wx:mx, done:false};
+  sc7.dot.visible=true; sc7.dot.position.set(sc7.sourceX,0.3,0);
+  setWavefrontDir(sc7.dot,'right');
+}
+function s7_tick(){
+  if(!sc7.pulse) return;
+  const p=sc7.pulse;
+  const els=(performance.now()-p.t0)/1000;
+  const half=p.total/2;
+  if(els<half){ sc7.dot.position.x=lerp(sc7.sourceX, p.wx, els/half); setWavefrontDir(sc7.dot,'right'); }
+  else if(els<p.total){ sc7.dot.position.x=lerp(p.wx, sc7.sourceX, (els-half)/half); setWavefrontDir(sc7.dot,'left'); }
+  else { sc7.dot.position.x=sc7.sourceX; if(!p.done) p.done=true; }
+}
+function s7_hud(){
+  const d=parseFloat(el('t7-dist')?.value||50);
+  let tstr='—', dstr='—';
+  if(sc7.pulse){
+    const els = sc7.pulse.done ? sc7.pulse.total : (performance.now()-sc7.pulse.t0)/1000;
+    tstr = fmt(Math.min(els,sc7.pulse.total),3)+' s';
+    dstr = sc7.pulse.done ? fmt(sc7.pulse.d,0)+' m' : '—';
+  }
+  const rows = [];
+  if(sc7.challengeActive){
+    rows.push({l:'Distance to mountain', v:'??? (hidden)', c:'#b57aff'});
+  } else {
+    rows.push({l:'Distance to mountain', v:fmt(d,0)+' m', c:'#ffc857'});
+  }
+  rows.push({l:'Round-trip time (2d/v)', v:tstr, c:'#5bc8ff'});
+  return rows;
+}
+
+/* SCENE 8 */
+const sc8={cone:null, rings:[], acc:0, waveLine:null, wavePts:64, waveBaseY:0.9};
+function s8_build(){
+  sc8.rings=[]; sc8.acc=0;
+  const bodyMat=mat(0x445566,{metalness:0.6,roughness:0.35});
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(1.0,1.5,32), mat(0xbbddff,{metalness:0.2,roughness:0.5,side:THREE.DoubleSide}));
+  cone.rotation.z=Math.PI/2; cone.position.set(-3.2,-0.1,0); stage.add(cone); sc8.cone=cone;
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(1.0,0.09,12,40), bodyMat); rim.rotation.y=Math.PI/2; rim.position.set(-2.45,-0.1,0); stage.add(rim);
+  const stand=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.35,1.4,12), bodyMat); stand.position.set(-3.2,-1.1,0); stage.add(stand);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array((sc8.wavePts+1)*3),3));
+  const line=new THREE.Line(geo, new THREE.LineBasicMaterial({color:0xffc857}));
+  stage.add(line); sc8.waveLine=line;
+  const axisLine=new THREE.Mesh(new THREE.BoxGeometry(6.2,0.02,0.02), new THREE.MeshBasicMaterial({color:0x445566})); axisLine.position.set(0.8,sc8.waveBaseY,0); stage.add(axisLine);
+  const loudLbl=makeTextSprite('Amplitude (height) = LOUDNESS',{color:'#ffc857',height:0.26}); loudLbl.position.set(0.8,sc8.waveBaseY+1.55,0); stage.add(loudLbl);
+  const pitchLbl=makeTextSprite('Frequency (spacing) = PITCH',{color:'#5bc8ff',height:0.26}); pitchLbl.position.set(0.8,sc8.waveBaseY-1.55,0); stage.add(pitchLbl);
+}
+function s8_freqAmp(){ return {f:parseFloat(el('t8-freq')?.value||440), amp:parseFloat(el('t8-amp')?.value||0.12)}; }
+function s8_tick(dt){
+  const {f,amp}=s8_freqAmp();
+  const visFreq=f/220;
+  const phase=(performance.now()/1000)*visFreq*Math.PI*2;
+  if(sc8.cone) sc8.cone.position.x=-3.2+Math.sin(phase)*amp*1.4;
+  if(sc8.waveLine){
+    const posAttr=sc8.waveLine.geometry.attributes.position;
+    const waveLen=6.0, startX=-2.2, k=f/140, t=performance.now()/1000;
+    for(let i=0;i<=sc8.wavePts;i++){
+      const xf=i/sc8.wavePts, x=startX+xf*waveLen;
+      const y=sc8.waveBaseY+Math.sin(xf*k*Math.PI*2 - t*visFreq*Math.PI*2)*amp*5.5;
+      posAttr.setXYZ(i,x,y,0);
+    }
+    posAttr.needsUpdate=true;
+  }
+  sc8.acc+=dt;
+  const ringPeriod=1/Math.max(0.4,visFreq);
+  if(sc8.acc>=ringPeriod){ sc8.acc=0; sc8.rings.push(spawnExpandingPulse(new THREE.Vector3(-2.35,-0.1,0), 0xffc857)); }
+  tickPulses(sc8.rings, 1.1, 3.5+amp*10);
+  if(ToneEngine.isPlaying('s8')) ToneEngine.update('s8', clamp(f,20,4000), clamp(amp,0.02,0.3));
+}
+function s8_toggleTone(){
+  const {f,amp}=s8_freqAmp();
+  if(ToneEngine.isPlaying('s8')){ ToneEngine.stop('s8'); el('t8-play').textContent='🔊 Play Tone'; el('t8-play').classList.remove('on'); }
+  else { ToneEngine.start('s8', clamp(f,20,4000), clamp(amp,0.02,0.3)); el('t8-play').textContent='⏸ Stop Tone'; el('t8-play').classList.add('on'); }
+}
+function s8_stopTone(){ ToneEngine.stop('s8'); const b=el('t8-play'); if(b){ b.textContent='🔊 Play Tone'; b.classList.remove('on'); } }
+function s8_hud(){
+  const {f,amp}=s8_freqAmp();
+  const loud=amp>=0.16?'Loud':(amp<=0.09?'Quiet':'Moderate');
+  const pitch=f>=950?'High':(f<=380?'Low':'Mid');
+  return [
+    {l:'Frequency f', v:fmt(f,0)+' Hz', c:'#5bc8ff'},
+    {l:'Amplitude', v:fmt(amp,2), c:'#ffc857'},
+    {l:'Pitch', v:pitch, c:pitch==='High'?'#b57aff':(pitch==='Low'?'#ff5e72':'#ddeeff')},
+    {l:'Loudness', v:loud, c:loud==='Loud'?'#4dffa0':(loud==='Quiet'?'#ff5e72':'#ddeeff')}
+  ];
+}
+
+/* SCENE 9 */
+const sc9={boatX:0, seabedDepths:[], seabedMeshes:[], seabedAreas:[], seabedGroup:null, pulse:null, dot:null, pingActive:false, pingT0:0, pingDuration:0, pingPhase:0, trueDepthUnderBoat:0, measuredDepth:null, pingDepthAtFire:null, speedInWater:1500, challengeActive:false, targetDepth:null, answered:false, seaMin:-6.5, seaMax:6.5};
+const SEA_TOP_Y = 1.8;
+const SEA_BOTTOM_Y = -2.2;
+const BEDROCK_Y = SEA_BOTTOM_Y;
+const SEA_WIDTH = 14;
+const SEA_DEPTH_RANGE = { min: 100, max: 900 };
+const SEA_DEPTH_LEVELS = [200, 400, 600, 800];
+const SEABED_COLOR = 0x8a6a22;
+function makeSeabedTexture(){
+  const size=128;
+  const canvas=document.createElement('canvas'); canvas.width=size; canvas.height=size;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#6f5216'; ctx.fillRect(0,0,size,size);
+  for(let i=0;i<1100;i++){
+    const x=Math.random()*size, y=Math.random()*size, r=0.5+Math.random()*1.8;
+    const dark = Math.random()<0.5;
+    ctx.fillStyle = dark ? `rgba(74,54,10,${0.2+Math.random()*0.35})` : `rgba(168,133,48,${0.18+Math.random()*0.32})`;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+  const tex=new THREE.CanvasTexture(canvas);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(3,2);
+  return tex;
+}
+const BOAT_FLOAT_Y = SEA_TOP_Y + 0.03;
+function s9_buildShip(){
+  const grp=new THREE.Group();
+  const prof=new THREE.Shape();
+  prof.moveTo(-0.95,-0.06);
+  prof.lineTo(0.55,-0.06);
+  prof.quadraticCurveTo(0.98,-0.03,1.08,0.09);
+  prof.lineTo(0.95,0.22);
+  prof.lineTo(-0.95,0.22);
+  prof.closePath();
+  const hullGeo=new THREE.ExtrudeGeometry(prof,{depth:0.6, bevelEnabled:true, bevelThickness:0.025, bevelSize:0.025, bevelSegments:2, steps:1});
+  hullGeo.translate(0,0,-0.3);
+  const hull=new THREE.Mesh(hullGeo, new THREE.MeshStandardMaterial({color:0x24303c, roughness:0.55, metalness:0.25}));
+  grp.add(hull);
+  const stripe=new THREE.Mesh(new THREE.BoxGeometry(1.9,0.05,0.64), new THREE.MeshStandardMaterial({color:0xd8433a, roughness:0.6}));
+  stripe.position.set(-0.05,-0.03,0); grp.add(stripe);
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(1.85,0.05,0.58), new THREE.MeshStandardMaterial({color:0xc7b989, roughness:0.85}));
+  deck.position.set(-0.02,0.235,0); grp.add(deck);
+  const cabinLower=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.28,0.5), new THREE.MeshStandardMaterial({color:0xf1efe6, roughness:0.5}));
+  cabinLower.position.set(-0.35,0.4,0); grp.add(cabinLower);
+  const windows=new THREE.Mesh(new THREE.BoxGeometry(0.565,0.07,0.51), new THREE.MeshStandardMaterial({color:0x1b2733, roughness:0.3}));
+  windows.position.set(-0.35,0.47,0); grp.add(windows);
+  const cabinUpper=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.2,0.4), new THREE.MeshStandardMaterial({color:0xf1efe6, roughness:0.5}));
+  cabinUpper.position.set(-0.38,0.64,0); grp.add(cabinUpper);
+  const funnel=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.09,0.28,12), new THREE.MeshStandardMaterial({color:0xb5342a, roughness:0.6}));
+  funnel.position.set(-0.62,0.63,0); grp.add(funnel);
+  const funnelCap=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.075,0.03,12), new THREE.MeshStandardMaterial({color:0x222222}));
+  funnelCap.position.set(-0.62,0.775,0); grp.add(funnelCap);
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.75,8), new THREE.MeshStandardMaterial({color:0x333333, metalness:0.6}));
+  mast.position.set(0.25,0.62,0); grp.add(mast);
+  const boom=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.45,8), new THREE.MeshStandardMaterial({color:0x333333, metalness:0.6}));
+  boom.position.set(0.47,0.4,0); boom.rotation.z=Math.PI/3.4; grp.add(boom);
+  const radar=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.03,0.09), new THREE.MeshStandardMaterial({color:0xdddddd}));
+  radar.position.set(0.25,0.99,0); grp.add(radar);
+  const bowPost=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.16,6), new THREE.MeshStandardMaterial({color:0x333333}));
+  bowPost.position.set(0.9,0.3,0); grp.add(bowPost);
+  return grp;
+}
+function s9_build(){
+  sc9.pulse=null; sc9.pingActive=false; sc9.challengeActive=false; sc9.answered=false; sc9.targetDepth=null; sc9.measuredDepth=null; sc9.pingDepthAtFire=null;
+  const waterColumn=new THREE.Mesh(
+    new THREE.BoxGeometry(SEA_WIDTH, SEA_TOP_Y - SEA_BOTTOM_Y, 5),
+    new THREE.MeshStandardMaterial({color:0x2a72a8, transparent:true, opacity:0.32, roughness:0.15, metalness:0.0, side:THREE.DoubleSide, depthWrite:false})
+  );
+  waterColumn.position.set(0, (SEA_TOP_Y+SEA_BOTTOM_Y)/2, 0); stage.add(waterColumn);
+  const seaSurface=new THREE.Mesh(
+    new THREE.PlaneGeometry(SEA_WIDTH, 5),
+    new THREE.MeshBasicMaterial({color:0x88c8ff, transparent:true, opacity:0.12, side:THREE.DoubleSide, depthWrite:false})
+  );
+  seaSurface.rotation.x=-Math.PI/2; seaSurface.position.set(0, SEA_TOP_Y, 0); stage.add(seaSurface);
+  s9_generateSeabed();
+  const boat = s9_buildShip();
+  boat.position.set(0, BOAT_FLOAT_Y, 0); stage.add(boat); sc9.boat=boat;
+  const dot=createWavefront(0xb57aff); dot.visible=false; stage.add(dot); sc9.dot=dot;
+  s9_layout();
+}
+function s9_generateSeabed(){
+  if(sc9.seabedGroup){ stage.remove(sc9.seabedGroup); }
+  sc9.seabedDepths=[]; sc9.seabedMeshes=[]; sc9.seabedAreas=[];
+  const seabedGroup = new THREE.Group();
+  const seabedMat = new THREE.MeshStandardMaterial({map:makeSeabedTexture(), color:SEABED_COLOR, roughness:0.95, metalness:0.03});
+  const x0 = -SEA_WIDTH/2, x1 = SEA_WIDTH/2;
+  const nAreas = 4;
+  const areaWidth = (x1-x0)/nAreas;
+  const depths = shuffle(SEA_DEPTH_LEVELS);
+  let prevY = null;
+  for(let i=0;i<nAreas;i++){
+    const depth = depths[i];
+    const aX0 = x0 + i*areaWidth, aX1 = aX0 + areaWidth;
+    const cx = (aX0+aX1)/2;
+    sc9.seabedDepths.push(depth);
+    const y = SEA_TOP_Y - (depth / SEA_DEPTH_RANGE.max) * (SEA_TOP_Y - SEA_BOTTOM_Y);
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(areaWidth*1.02, y - BEDROCK_Y, 3.4), seabedMat);
+    pillar.position.set(cx, (BEDROCK_Y + y)/2, 0);
+    pillar.userData.depth = depth;
+    seabedGroup.add(pillar);
+    sc9.seabedMeshes.push(pillar);
+    sc9.seabedAreas.push({x0:aX0, x1:aX1, depth, mesh:pillar});
+    const topEdge=new THREE.Mesh(new THREE.BoxGeometry(areaWidth*1.02, 0.04, 3.42), new THREE.MeshBasicMaterial({color:0xc9a850}));
+    topEdge.position.set(cx, y+0.02, 0);
+    seabedGroup.add(topEdge);
+    if(prevY!==null){
+      const wallH = Math.abs(y - prevY);
+      const wallY = Math.min(y, prevY) + wallH/2;
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(0.08, wallH, 3.4), seabedMat);
+      wall.position.set(aX0, wallY, 0);
+      seabedGroup.add(wall);
+    }
+    prevY = y;
+  }
+  stage.add(seabedGroup);
+  sc9.seabedGroup = seabedGroup;
+}
+function s9_layout(){
+  if(sc9.boat){
+    sc9.boat.position.x = sc9.boatX;
+    sc9.boat.position.y = BOAT_FLOAT_Y + Math.sin(performance.now()/600)*0.03;
+  }
+  let bestDepth = sc9.seabedAreas.length? sc9.seabedAreas[0].depth : SEA_DEPTH_RANGE.min;
+  for(const area of sc9.seabedAreas){
+    if(sc9.boatX >= area.x0 && sc9.boatX <= area.x1){ bestDepth = area.depth; break; }
+  }
+  sc9.trueDepthUnderBoat = bestDepth;
+}
+function s9_sliderChanged(){
+  sc9.boatX = parseFloat(el('t9-boat')?.value || 0);
+  s9_layout();
+}
+function s9_ping(){
+  if(sc9.pingActive) return;
+  sc9.pingActive = true;
+  sc9.pingT0 = performance.now();
+  const travel = 2 * sc9.trueDepthUnderBoat / sc9.speedInWater;
+  sc9.pingDuration = clamp(travel * 8, 0.6, 3.5);
+  sc9.pingRealTravel = travel;
+  sc9.pingDepthAtFire = sc9.trueDepthUnderBoat;
+  sc9.dot.visible = true;
+  sc9.dot.position.set(sc9.boatX, SEA_TOP_Y-0.15, 0);
+  setWavefrontDir(sc9.dot, 'down');
+}
+function s9_tick(){
+  if(sc9.boat) sc9.boat.position.y = BOAT_FLOAT_Y + Math.sin(performance.now()/600)*0.03;
+  if(!sc9.pingActive) return;
+  const els = (performance.now()-sc9.pingT0)/1000;
+  const half = sc9.pingDuration/2;
+  const depthY = SEA_TOP_Y - (sc9.trueDepthUnderBoat / SEA_DEPTH_RANGE.max) * (SEA_TOP_Y - SEA_BOTTOM_Y);
+  if(els < half){
+    sc9.dot.position.y = lerp(SEA_TOP_Y-0.15, depthY, els/half);
+    setWavefrontDir(sc9.dot, 'down');
+  } else if(els < sc9.pingDuration){
+    sc9.dot.position.y = lerp(depthY, SEA_TOP_Y-0.15, (els-half)/half);
+    setWavefrontDir(sc9.dot, 'up');
+  } else {
+    sc9.dot.position.y = SEA_TOP_Y-0.15;
+    sc9.pingActive = false;
+    sc9.measuredDepth = sc9.pingDepthAtFire;
+  }
+}
+function s9_hud(){
+  let depthStr = '—';
+  if(sc9.challengeActive){
+    depthStr = sc9.answered ? fmt(sc9.trueDepthUnderBoat,0)+' m' : '??? (hidden)';
+  } else {
+    depthStr = (sc9.measuredDepth!==null) ? fmt(sc9.measuredDepth,0)+' m' : '— (ping to measure)';
+  }
+  let tStr = '—';
+  if(sc9.pingActive){
+    const els = (performance.now()-sc9.pingT0)/1000;
+    const real = clamp((els/sc9.pingDuration) * sc9.pingRealTravel, 0, sc9.pingRealTravel);
+    tStr = fmt(real,3)+' s';
+  } else if(sc9.pingRealTravel){
+    tStr = fmt(sc9.pingRealTravel,3)+' s';
+  }
+  return [
+    {l:'Speed in water', v:'1500 m/s', c:'#5bc8ff'},
+    {l:'Ping round-trip t', v:tStr, c:'#ffc857'},
+    {l:'Depth under boat', v:depthStr, c:'#4dffa0'},
+  ];
+}
+
+/* SCENE REGISTRY */
+const scenes=[
+  {key:'s1', tab:'1 · Vibration', kpi:'KPI 3.1', title:'Vibrating Sources',
+    blurb:'<p><b>Vibration &amp; Sound Generation</b></p><p>Every sound starts with something vibrating. The speaker cone oscillates back and forth, physically pushing surrounding air particles to generate pressure pulses that propagate through space.</p>',
+    build:s1_build, tick:s1_tick, hud:s1_hud,
+    controlsHTML:`<div class="sw">f=<input type="range" id="t1-freq" min="1" max="10" step="0.5" value="4"></div>
+      <div class="sw">Amp=<input type="range" id="t1-amp" min="0.1" max="0.6" step="0.05" value="0.3"></div>
+      <button class="btn green" id="t1-play">🔊 Play Sound</button>`,
+    wire(){ el('t1-play').onclick=s1_toggleTone; },
+    onLeave(){ ToneEngine.stop('s1'); }},
+
+  {key:'s2', tab:'2 · Longitudinal', kpi:'KPI 3.2 / 3.3', title:'Compressions & Rarefactions',
+    blurb:`<p><b>Longitudinal Wave Motion</b></p>
+      <p>Sound travels as a <b>longitudinal wave</b> — air particles vibrate back and forth parallel to the direction of wave travel.</p>
+      <p><b>Compressions (C)</b>: High-pressure regions where particles are pushed tightly together, highlighted in <b>amber</b> with a moving <b>C</b> label.</p>
+      <p><b>Rarefactions (R)</b>: Low-pressure regions where particles are spread further apart, highlighted in <b>blue</b> with a moving <b>R</b> label.</p>
+      <p><b>Effect of Amplitude</b>: A larger amplitude produces greater particle displacement, resulting in stronger compressions and rarefactions (louder sound).</p>`,
+    build:s2_build, tick:s2_tick, hud:s2_hud,
+    controlsHTML:`<div class="sw">f=<input type="range" id="t2-freq" min="1" max="30" step="0.5" value="8"></div>
+      <div class="sw">Amp=<input type="range" id="t2-amp" min="0.1" max="0.5" step="0.05" value="0.3"></div>
+      <div class="sw"><label style="cursor:pointer;"><input type="checkbox" id="t2-slow"> Slow Motion (0.25x)</label></div>`},
+
+  {key:'s3', tab:'3 · Hearing Range', kpi:'KPI 3.4 / 3.11', title:'Audible Range & Ultrasound',
+    blurb:`<p><b>Human Frequency Range</b></p>
+      <p>Humans can hear sound frequencies between <b>20 Hz</b> and <b>20,000 Hz (20 kHz)</b>.</p>
+      <p><b>Infrasound</b>: Frequencies below 20 Hz (slate region).</p>
+      <p><b>Audible Range</b>: Human hearing range (green region).</p>
+      <p><b>Ultrasound</b>: Frequencies above 20 kHz (violet region).</p>`,
+    build:s3_build, tick:s3_tick, hud:s3_hud,
+    controlsHTML:`<div class="sw">Freq=<input type="range" id="t3-freq" min="0" max="1000" step="1" value="500"></div>
+      <button class="btn green" id="t3-play">🔊 Play Sound</button>`,
+    wire(){ el('t3-play').onclick=s3_toggleTone; },
+    onLeave(){ ToneEngine.stop('s3'); },
+    challenge:{
+      newQuestion(){ this.f=pick([8,50,440,2000,15000,25000,60000,150000]); this.correctIdx=this.f<20?0:(this.f<=20000?1:2);
+        return {prompt:'A source vibrates at <b>'+(this.f>=1000?fmt(this.f/1000,1)+' kHz':this.f+' Hz')+'</b>. Which category is it?', options:['Infrasound (<20 Hz)','Audible (20 Hz–20 kHz)','Ultrasound (>20 kHz)']}; },
+      check(idx){ const ok=idx===this.correctIdx; return {correct:ok, correctIdx:this.correctIdx, message: ok? 'Correct!' : 'Not quite — check the boundaries: 20 Hz and 20,000 Hz.'}; }
+    }},
+
+  {key:'s4', tab:'4 · Medium', kpi:'KPI 3.5', title:'Sound Needs a Medium',
+    blurb:`<p><b>Mechanical Wave Propagation</b></p>
+      <p>Sound is a mechanical wave that requires particles to transmit vibrations. In a vacuum there are no particles, so sound cannot travel.</p>`,
+    build:s4_build, tick:s4_tick, hud:s4_hud,
+    controlsHTML:`<button class="btn green" id="t4-toggle">🌬️ Pump Air Out</button>`,
+    wire(){ el('t4-toggle').onclick=()=>{ sc4.air=!sc4.air; el('t4-toggle').textContent= sc4.air? '🌬️ Pump Air Out':'💨 Let Air Back In'; el('t4-toggle').classList.toggle('on', !sc4.air); }; }},
+
+  {key:'s5', tab:'5 · Measure v', kpi:'KPI 3.6 / 3.8', title:'Measuring the Speed of Sound',
+    blurb:`<p><b>Speed Calculation Equation</b></p>
+      <p>To measure sound speed, fire a pulse over distance d and record arrival time t. Speed is calculated as: <b>v = d / t</b>.</p>
+      <p><b>Challenge Mode</b>: The distance is hidden. Fire the pulse, read the stopwatch, and calculate the distance from <b>d = v · t</b> (v = 340 m/s).</p>`,
+    build:s5_build, tick:s5_tick, hud:s5_hud,
+    controlsHTML:`<div class="sw">d=<input type="range" id="t5-dist" min="50" max="680" step="10" value="340"></div>
+      <button class="btn amber" id="t5-fire">💥 Fire!</button>`,
+    wire(){ el('t5-fire').onclick=s5_fire; el('t5-dist').oninput=s5_layout; },
+    onLeave(){ sc5.challengeActive=false; }},
+
+  {key:'s6', tab:'6 · Media Speeds', kpi:'KPI 3.7', title:'Speed of Sound in Different Media',
+    blurb:`<p><b>One hammer strike, three speeds</b></p>
+      <p>A hammer hits the stone rim of a swimming pool. The vibration is carried <b>simultaneously</b> into the stone of the pool, the water inside it, and the air above.</p>
+      <p>Because the particles in each medium are packed differently, the same sound travels at very different speeds:</p>
+      <p><b>Stone</b> (solid) — <b>~5000 m/s</b> — particles are tightly packed so vibrations pass almost instantly.</p>
+      <p><b>Water</b> (liquid) — <b>~1480 m/s</b> — particles are loosely packed so the wave is slower.</p>
+      <p><b>Air</b> (gas) — <b>~340 m/s</b> — particles are far apart, so the wave takes the longest.</p>
+      <p style="color:#8899bb;">Press <b>🔨 Strike!</b> and watch the finish order: stone, then water, then air.</p>`,
+    build:s6_build, tick:s6_tick, hud:s6_hud,
+    controlsHTML:`<button class="btn green" id="t6-start">🔨 Strike!</button>
+      <div class="sw"><label style="cursor:pointer;"><input type="checkbox" id="t6-slow"> Slow-mo (0.4x)</label></div>`,
+    wire(){ el('t6-start').onclick=s6_start; const chk=el('t6-slow'); if(chk) chk.onchange=()=>{ sc6.slowMo=chk.checked; }; },
+    onLeave(){ sc6.racing=false; },
+    challenge:{
+      newQuestion(){ const pool=[
+          {q:'In which state of matter does sound generally travel FASTEST?', opts:['Solid','Liquid','Gas'], correct:0},
+          {q:'In which state of matter does sound generally travel SLOWEST?', opts:['Solid','Liquid','Gas'], correct:2},
+          {q:'Sound travels faster in liquids than in...', opts:['Solids','Gases'], correct:1}];
+        this.cur=pick(pool);
+        return {prompt:this.cur.q, options:this.cur.opts}; },
+      check(idx){ const ok=idx===this.cur.correct; return {correct:ok, correctIdx:this.cur.correct, message: ok?'Correct! Solids > Liquids > Gases.':'Remember the order: Solids > Liquids > Gases.'}; }
+    }},
+
+  {key:'s7', tab:'7 · Echo', kpi:'KPI 3.10', title:'Echo — Reflection of Sound',
+    blurb:`<p><b>Sound Reflection &amp; Distance</b></p>
+      <p>An echo is a reflected sound wave. The sound travels to the reflecting surface (a mountain here) and back — total distance = 2d. Round-trip time: <b>t = 2d / v</b>.</p>
+      <p><b>Challenge Mode</b>: The distance to the mountain is hidden. Shout, read the round-trip time t, and calculate d from <b>d = v · t / 2</b> (v = 340 m/s).</p>`,
+    build:s7_build, tick:s7_tick, hud:s7_hud,
+    controlsHTML:`<div class="sw">d=<input type="range" id="t7-dist" min="50" max="680" step="10" value="340"></div>
+      <button class="btn amber" id="t7-shout">📣 Shout!</button>`,
+    wire(){ el('t7-shout').onclick=s7_shout; el('t7-dist').oninput=s7_layout; },
+    onLeave(){ sc7.challengeActive=false; }},
+
+  {key:'s8', tab:'8 · Loudness/Pitch', kpi:'KPI 3.9', title:'Amplitude, Frequency, Loudness & Pitch',
+    blurb:`<p><b>Wave Characteristics</b></p>
+      <p><b>Amplitude</b> dictates <b>Loudness</b> (greater height = louder sound).</p>
+      <p><b>Frequency</b> dictates <b>Pitch</b> (more vibrations per second = higher pitch).</p>`,
+    build:s8_build, tick:s8_tick, hud:s8_hud,
+    controlsHTML:`<div class="sw">f=<input type="range" id="t8-freq" min="100" max="2000" step="10" value="440"></div>
+      <div class="sw">Amp=<input type="range" id="t8-amp" min="0.02" max="0.25" step="0.01" value="0.12"></div>
+      <button class="btn green" id="t8-play">🔊 Play Tone</button>`,
+    wire(){ el('t8-play').onclick=s8_toggleTone; },
+    onLeave(){ s8_stopTone(); },
+    challenge:{
+      newQuestion(){ const combos=[
+          {loud:true, high:true, txt:'LOUD and HIGH-pitched'},
+          {loud:true, high:false, txt:'LOUD and LOW-pitched'},
+          {loud:false, high:true, txt:'QUIET and HIGH-pitched'},
+          {loud:false, high:false, txt:'QUIET and LOW-pitched'}];
+        this.cur=pick(combos); this.answered=false;
+        const freqEl=el('t8-freq'), ampEl=el('t8-amp');
+        if(freqEl) freqEl.disabled=false; if(ampEl) ampEl.disabled=false;
+        return {prompt:'Set the sliders to make a sound that is <b>'+this.cur.txt+'</b>, then press Check.'}; },
+      check(){
+        if(this.answered) return {correct:false, message:'You already checked this one — press "🔄 New Challenge" to try another.'};
+        const f=parseFloat(el('t8-freq').value), a=parseFloat(el('t8-amp').value);
+        const isLoud=a>=0.16, isQuiet=a<=0.09, isHigh=f>=950, isLow=f<=380;
+        const loudOK=this.cur.loud? isLoud : isQuiet;
+        const pitchOK=this.cur.high? isHigh : isLow;
+        const ok=loudOK && pitchOK;
+        this.answered=true;
+        const freqEl=el('t8-freq'), ampEl=el('t8-amp');
+        if(freqEl) freqEl.disabled=true; if(ampEl) ampEl.disabled=true;
+        const setDesc='(f = '+fmt(f,0)+' Hz, amplitude = '+fmt(a,2)+')';
+        return {correct:ok, message: (ok? '✅ Correct! ':'❌ Not quite. ') + setDesc + ' ' + (ok? 'That matches '+this.cur.txt+'.' : 'Aim clearly for '+(this.cur.loud?'loud (high amplitude)':'quiet (low amplitude)')+' and '+(this.cur.high?'high pitch (high frequency)':'low pitch (low frequency)')+'.')}; }
+    }},
+
+  {key:'s9', tab:'9 · Ultrasound', kpi:'KPI 3.11 / 3.12', title:'Ultrasound & Sonar',
+    blurb:`<p><b>Echo Ranging &amp; Depth Calculation</b></p>
+      <p>Sonar emits ultrasound pings from a boat into the water (v = 1500 m/s). The ping bounces off the seabed and returns: <b>depth = v × t / 2</b>.</p>
+      <p>The seabed has different depths under the boat as it moves along.</p>
+      <p><b>Challenge Mode</b>: The seabed is hidden. Move the boat to the position where the seabed is at the target depth, then press Check.</p>`,
+    build:s9_build, tick:s9_tick, hud:s9_hud,
+    controlsHTML:`<div class="sw">Boat=<input type="range" id="t9-boat" min="-6.5" max="6.5" step="0.1" value="0"></div>
+      <button class="btn amber" id="t9-ping">📡 Ping!</button>`,
+    wire(){ el('t9-ping').onclick=s9_ping; el('t9-boat').oninput=s9_sliderChanged; },
+    onLeave(){ sc9.challengeActive=false; }}
+];
+
+/* UI WIRING */
+let currentIdx=0, challengeMode=false, score={correct:0,total:0};
+
+function buildTabs(){
+  const wrap=el('tabs'); wrap.innerHTML='';
+  scenes.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='tab-btn'+(i===currentIdx?' active':'');
+    b.textContent=s.tab;
+    b.onclick=()=>loadScene(i);
+    wrap.appendChild(b);
+  });
+}
+function renderHUD(){
+  const rows=scenes[currentIdx].hud();
+  el('hud-rows').innerHTML=rows.map(r=>'<div class="dr"><span class="dl">'+r.l+'</span><span class="dv" style="color:'+(r.c||'#ddeeff')+'">'+r.v+'</span></div>').join('');
+}
+function loadScene(i){
+  if(scenes[currentIdx] && scenes[currentIdx].onLeave) scenes[currentIdx].onLeave();
+  currentIdx=i;
+  clearStage();
+  const s=scenes[i];
+  s.build();
+  el('scene-controls').innerHTML=s.controlsHTML;
+  if(s.wire) s.wire();
+  el('caption-kpi').textContent=s.kpi;
+  el('caption-title').textContent=s.title;
+  el('caption-text').innerHTML=s.blurb;
+  el('caption').style.display='';
+  el('caption').classList.remove('collapsed');
+  el('btn-caption-fold').textContent='▼';
+  buildTabs();
+  renderHUD();
+  challengeMode=false;
+  score={correct:0,total:0};
+  el('chal-score').textContent='Score: 0/0';
+  el('btn-challenge-toggle').classList.remove('on');
+  updateChallengeAvailability();
+}
+function updateChallengeAvailability(){
+  const has = (currentIdx===4) || (currentIdx===6) || (currentIdx===8) || (!!scenes[currentIdx].challenge);
+  el('btn-challenge-toggle').style.display= has? '':'none';
+  el('challenge-wrap').classList.remove('show','s5-pos','collapsed');
+  el('btn-chal-fold').textContent='▼';
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+
+function newChallenge(){
+  el('chal-result').className=''; el('chal-result').style.display='none';
+  el('challenge-wrap').classList.remove('collapsed');
+  el('btn-chal-fold').textContent='▼';
+
+  if(currentIdx===4){ s5_initChallenge(); return; }
+  if(currentIdx===6){ s7_initChallenge(); return; }
+  if(currentIdx===8){ s9_initChallenge(); return; }
+
+  const c=scenes[currentIdx].challenge;
+  if(!c){ el('chal-prompt').textContent='No challenge available for this topic.'; el('chal-body').innerHTML=''; el('btn-chal-check').style.display='none'; return; }
+  const q=c.newQuestion();
+  el('chal-prompt').innerHTML=q.prompt;
+  if(c.afterRender) c.afterRender();
+  if(q.options){
+    el('btn-chal-check').style.display='none';
+    el('chal-body').innerHTML='<div id="chal-options" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">' +
+      q.options.map((o,idx)=>'<button class="btn green" data-idx="'+idx+'">'+o+'</button>').join('') + '</div>';
+    Array.from(el('chal-options').children).forEach(btn=>{
+      btn.onclick=()=>{
+        const idx=parseInt(btn.dataset.idx);
+        const res=c.check(idx);
+        Array.from(el('chal-options').children).forEach((b,i)=>{
+          if(res.correctIdx!==undefined && i===res.correctIdx) b.classList.add('on');
+          else if(i===idx && !res.correct) b.style.borderColor='var(--red)';
+          b.disabled=true;
+        });
+        showChalResult(res);
+      };
+    });
+  } else {
+    el('btn-chal-check').style.display='';
+    el('chal-body').innerHTML='';
+  }
+}
+
+/* *** FIX APPLIED HERE *** — clear the inline display before applying the class */
+function showChalResult(res){
+  score.total++; if(res.correct) score.correct++;
+  el('chal-score').textContent='Score: '+score.correct+'/'+score.total;
+  const box=el('chal-result');
+  box.textContent=res.message;
+  // Clear the inline display:none set by init functions, otherwise it wins over .pass/.fail CSS
+  box.style.display='';
+  box.className=res.correct? 'pass':'fail';
+}
+
+/* ---- Section 5 Challenge ---- */
+function s5_initChallenge(){
+  sc5.challengeActive=true; sc5.answered=false; sc5.pulse=null;
+  if(sc5.dot) sc5.dot.visible=false;
+  const distSlider = el('t5-dist');
+  if(distSlider){ distSlider.style.display='none'; if(distSlider.parentElement && distSlider.parentElement.classList) distSlider.parentElement.style.display='none'; }
+  const target = 50 + Math.round(Math.random()*63) * 10;
+  sc5.challengeTrueDistance = target;
+  if(distSlider) distSlider.value = target;
+  s5_layout();
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  el('chal-prompt').innerHTML = '<p>The <b>distance</b> to the listener is <b>hidden</b>.</p>'
+    + '<p>Press <b>💥 Fire!</b> and read the round-trip time t from the Measurements panel.</p>'
+    + '<p>Then calculate the distance using <b>d = v · t</b> (v = 340 m/s) and enter it below.</p>';
+  el('chal-body').innerHTML =
+    '<div class="chal-inputs-grid">'
+    + '<div class="chal-field"><label>Your calculated distance (m):</label>'
+    + '<input type="number" id="s5-chal-dist" class="chal-input" placeholder="e.g. 340" step="1"></div>'
+    + '</div>';
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function s5_checkChallenge(){
+  if(!sc5.pulse || !sc5.pulse.done) return {correct:false, message:'⚠️ Press "💥 Fire!" first and wait for the pulse to reach the listener.'};
+  const inp = el('s5-chal-dist');
+  if(!inp) return {correct:false, message:'⚠️ Enter your calculated distance.'};
+  const userD = parseFloat(inp.value);
+  if(isNaN(userD)) return {correct:false, message:'⚠️ Please enter a distance in metres.'};
+  const trueD = sc5.challengeTrueDistance;
+  const ok = Math.abs(userD - trueD) <= 15;
+  inp.disabled = true;
+  const fireBtn = el('t5-fire'); if(fireBtn) fireBtn.disabled = true;
+  sc5.answered = true;
+  if(ok){
+    return {correct:true, message:'✅ Correct! The true distance was '+trueD+' m (t = '+fmt(sc5.pulse.travel,3)+' s, d = 340 × t ≈ '+fmt(trueD,0)+' m).'};
+  } else {
+    return {correct:false, message:'❌ Not quite. The true distance was '+trueD+' m. From t = '+fmt(sc5.pulse.travel,3)+' s, d = 340 × t ≈ '+fmt(trueD,0)+' m.'};
+  }
+}
+function s5_exitChallenge(){
+  sc5.challengeActive=false;
+  const distSlider = el('t5-dist');
+  if(distSlider){ distSlider.style.display=''; if(distSlider.parentElement) distSlider.parentElement.style.display=''; distSlider.disabled=false; }
+  const fireBtn = el('t5-fire'); if(fireBtn) fireBtn.disabled=false;
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+/* ---- Section 7 Challenge ---- */
+function s7_initChallenge(){
+  sc7.challengeActive=true; sc7.pulse=null;
+  if(sc7.dot) sc7.dot.visible=false;
+  const distSlider = el('t7-dist');
+  if(distSlider){ distSlider.style.display='none'; if(distSlider.parentElement) distSlider.parentElement.style.display='none'; }
+  const shoutBtn = el('t7-shout'); if(shoutBtn) shoutBtn.disabled = false;
+  const target = 50 + Math.round(Math.random()*63) * 10;
+  sc7.challengeTrueDistance = target;
+  if(distSlider) distSlider.value = target;
+  s7_layout();
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  el('chal-prompt').innerHTML = '<p>The <b>distance</b> to the mountain is <b>hidden</b>.</p>'
+    + '<p>Press <b>📣 Shout!</b> and read the round-trip echo time t from the Measurements panel.</p>'
+    + '<p>Then calculate the distance using <b>d = v · t / 2</b> (v = 340 m/s) and enter it below.</p>';
+  el('chal-body').innerHTML =
+    '<div class="chal-inputs-grid">'
+    + '<div class="chal-field"><label>Your calculated distance (m):</label>'
+    + '<input type="number" id="s7-chal-dist" class="chal-input" placeholder="e.g. 340" step="1"></div>'
+    + '</div>';
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function s7_checkChallenge(){
+  if(!sc7.pulse || !sc7.pulse.done) return {correct:false, message:'⚠️ Press "📣 Shout!" first and wait for the echo to return.'};
+  const inp = el('s7-chal-dist');
+  if(!inp) return {correct:false, message:'⚠️ Enter your calculated distance.'};
+  const userD = parseFloat(inp.value);
+  if(isNaN(userD)) return {correct:false, message:'⚠️ Please enter a distance in metres.'};
+  const trueD = sc7.challengeTrueDistance;
+  const ok = Math.abs(userD - trueD) <= 15;
+  inp.disabled = true;
+  const btn = el('t7-shout'); if(btn) btn.disabled = true;
+  if(ok){
+    return {correct:true, message:'✅ Correct! The true distance was '+trueD+' m (t = '+fmt(sc7.pulse.total,3)+' s, d = 340 × t / 2 ≈ '+fmt(trueD,0)+' m).'};
+  } else {
+    return {correct:false, message:'❌ Not quite. The true distance was '+trueD+' m. From t = '+fmt(sc7.pulse.total,3)+' s, d = 340 × t / 2 ≈ '+fmt(trueD,0)+' m.'};
+  }
+}
+function s7_exitChallenge(){
+  sc7.challengeActive=false;
+  const distSlider = el('t7-dist');
+  if(distSlider){ distSlider.style.display=''; if(distSlider.parentElement) distSlider.parentElement.style.display=''; distSlider.disabled=false; }
+  const btn = el('t7-shout'); if(btn) btn.disabled=false;
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+/* ---- Section 9 Challenge ---- */
+function s9_initChallenge(){
+  sc9.challengeActive=true; sc9.answered=false; sc9.pingActive=false;
+  if(sc9.dot) sc9.dot.visible=false;
+  s9_generateSeabed();
+  s9_layout();
+  if(sc9.seabedGroup) sc9.seabedGroup.visible = false;
+  const boatSlider = el('t9-boat'); if(boatSlider) boatSlider.disabled = false;
+  const idx = randInt(0, sc9.seabedDepths.length-1);
+  sc9.targetDepth = sc9.seabedDepths[idx];
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  el('chal-prompt').innerHTML = '<p>The <b>seabed is hidden</b>. Find the position where the depth is:</p>'
+    + '<p style="font-size:16px;color:#ffc857;font-family:\'Space Mono\';"><b>Target depth = '+sc9.targetDepth+' m</b></p>'
+    + '<p>Move the boat using the <b>Boat slider</b> to that position, then press Check.</p>';
+  el('chal-body').innerHTML = '';
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function s9_checkChallenge(){
+  const actualDepth = sc9.trueDepthUnderBoat;
+  const tolerance = 25;
+  const ok = Math.abs(actualDepth - sc9.targetDepth) <= tolerance;
+  sc9.answered = true;
+  if(sc9.seabedGroup) sc9.seabedGroup.visible = true;
+  const slider = el('t9-boat'); if(slider) slider.disabled = true;
+  if(ok){
+    return {correct:true, message:'✅ Correct! The depth under the boat is '+Math.round(actualDepth)+' m — matching the target of '+sc9.targetDepth+' m.'};
+  } else {
+    return {correct:false, message:'❌ Not quite. The depth under the boat is '+Math.round(actualDepth)+' m, but the target was '+sc9.targetDepth+' m.'};
+  }
+}
+function s9_exitChallenge(){
+  sc9.challengeActive=false;
+  sc9.answered=false;
+  if(sc9.seabedGroup) sc9.seabedGroup.visible = true;
+  const slider = el('t9-boat'); if(slider) slider.disabled=false;
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+el('btn-chal-check').onclick=()=>{
+  if(currentIdx===4){ showChalResult(s5_checkChallenge()); return; }
+  if(currentIdx===6){ showChalResult(s7_checkChallenge()); return; }
+  if(currentIdx===8){ showChalResult(s9_checkChallenge()); return; }
+  const c=scenes[currentIdx].challenge; if(!c) return; showChalResult(c.check());
+};
+el('btn-chal-new').onclick=newChallenge;
+el('btn-chal-exit').onclick=()=>{
+  challengeMode=false;
+  el('btn-challenge-toggle').classList.remove('on');
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  if(currentIdx===4) s5_exitChallenge();
+  if(currentIdx===6) s7_exitChallenge();
+  if(currentIdx===8) s9_exitChallenge();
+};
+el('btn-challenge-toggle').onclick=()=>{
+  challengeMode=!challengeMode;
+  el('btn-challenge-toggle').classList.toggle('on', challengeMode);
+  el('challenge-wrap').classList.toggle('show', challengeMode);
+  if(challengeMode) newChallenge();
+  else {
+    if(currentIdx===4) s5_exitChallenge();
+    if(currentIdx===6) s7_exitChallenge();
+    if(currentIdx===8) s9_exitChallenge();
+  }
+};
+el('btn-reset-scene').onclick=()=>loadScene(currentIdx);
+
+/* MAIN LOOP */
+let lastRender=0;
+function animate(ts){
+  requestAnimationFrame(animate);
+  if(ts-lastRender<33) return; lastRender=ts;
+  scenes[currentIdx].tick(0.033);
+  renderHUD();
+  renderer.render(scene3, cam3);
+}
+loadScene(0);
+animate();
+
+/* QUIZ */
+const QUIZ=[
+  {kpi:'3.1', q:'What causes a sound wave to be produced?', opts:['A vibrating object','A stationary object','Visible light','A magnetic field'], correct:0, exp:'Sound is produced whenever an object vibrates, pushing on the particles of the medium around it.'},
+  {kpi:'3.2', q:'Sound waves are classified as which type of wave?', opts:['Transverse','Longitudinal','Electromagnetic','Standing waves only'], correct:1, exp:'Sound waves are longitudinal — particles vibrate parallel to the direction the wave travels.'},
+  {kpi:'3.3', q:'A region in a sound wave where particles are pushed close together is called a...', opts:['Rarefaction','Node','Compression','Antinode'], correct:2, exp:'A compression is a region of high pressure where particles bunch together.'},
+  {kpi:'3.3', q:'A rarefaction is a region where particles are...', opts:['Spread further apart (low pressure)','Compressed (high pressure)','Perfectly still','Electrically charged'], correct:0, exp:'A rarefaction is a low-pressure region where particles are spread apart.'},
+  {kpi:'3.4', q:'What is the approximate range of frequencies audible to humans?', opts:['2 Hz – 2,000 Hz','20 Hz – 20,000 Hz','200 Hz – 200,000 Hz','0.2 Hz – 2 Hz'], correct:1, exp:'The typical human hearing range is about 20 Hz to 20,000 Hz (20 kHz).'},
+  {kpi:'3.5', q:'Sound CANNOT travel through...', opts:['Air','Water','Steel','A vacuum'], correct:3, exp:'Sound needs a medium (particles) to travel. A vacuum has no particles, so sound cannot pass through it.'},
+  {kpi:'3.6', q:'The approximate speed of sound in air is...', opts:['3×10⁸ m/s','3300 m/s','330–350 m/s','34 m/s'], correct:2, exp:'The speed of sound in air is approximately 330–350 m/s (often rounded to ~340 m/s).'},
+  {kpi:'3.7', q:'Sound generally travels FASTEST in...', opts:['Gases','Liquids','Solids','A vacuum'], correct:2, exp:'Particles are closest together in solids, so vibrations transmit fastest there: solids > liquids > gases.'},
+  {kpi:'3.8', q:'To experimentally determine the speed of sound in air, you need to measure...', opts:['Mass and volume','Distance and time','Voltage and current','Pressure only'], correct:1, exp:'Speed = distance ÷ time, so measuring a known distance and the time sound takes to travel it gives the speed.'},
+  {kpi:'3.9', q:'Increasing the AMPLITUDE of a sound wave makes it...', opts:['Higher pitched','Louder','Quieter','Lower pitched'], correct:1, exp:'Amplitude relates to loudness — a bigger amplitude means a louder sound.'},
+  {kpi:'3.9', q:'Increasing the FREQUENCY of a sound wave makes the pitch...', opts:['Higher','Lower','Louder','Unchanged'], correct:0, exp:'Frequency relates to pitch — a higher frequency means a higher pitch.'},
+  {kpi:'3.10', q:'An echo is best described as...', opts:['The absorption of sound','The reflection of sound waves','The refraction of light','A type of ultrasound only'], correct:1, exp:'An echo is sound reflecting off a surface and returning to the listener.'},
+  {kpi:'3.11', q:'Ultrasound is defined as sound with a frequency...', opts:['Below 20 Hz','Above 20,000 Hz (20 kHz)','Exactly 20,000 Hz','Between 20–200 Hz'], correct:1, exp:'Ultrasound is any sound with a frequency higher than 20 kHz — above human hearing.'},
+  {kpi:'3.12', q:'Sonar calculates depth using which formula (v = speed, t = round-trip time)?', opts:['depth = v × t','depth = v / t','depth = (v × t) / 2','depth = t / v'], correct:2, exp:'The pulse travels down AND back, so depth = (speed × time) / 2.'},
+  {kpi:'3.12', q:'Ultrasound is used in medical scanning mainly because it can...', opts:['Destroy soft tissue','Safely produce images of soft tissue','Only be used on metals','Replace X-rays for broken bones'], correct:1, exp:'Ultrasound reflects off boundaries between different soft tissues, safely producing an image without ionizing radiation.'}];
+let quizIdx=0, quizScore=0, quizAnswered=false;
+function openQuiz(){ quizIdx=0; quizScore=0; el('quiz-modal').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion(); }
+function showQuizQuestion(){
+  quizAnswered=false;
+  const item=QUIZ[quizIdx];
+  el('quiz-progress').textContent='Question '+(quizIdx+1)+'/'+QUIZ.length;
+  el('quiz-kpi').textContent='KPI '+item.kpi;
+  el('quiz-question').textContent=item.q;
+  el('quiz-explain').style.display='none';
+  el('quiz-next').style.display='none';
+  el('quiz-options').innerHTML=item.opts.map((o,i)=>'<button class="quiz-opt" data-idx="'+i+'">'+o+'</button>').join('');
+  Array.from(el('quiz-options').children).forEach(btn=>{
+    btn.onclick=()=>{
+      if(quizAnswered) return; quizAnswered=true;
+      const idx=parseInt(btn.dataset.idx);
+      if(idx===item.correct) quizScore++;
+      Array.from(el('quiz-options').children).forEach((b,i)=>{
+        if(i===item.correct) b.classList.add('correct');
+        else if(i===idx) b.classList.add('wrong');
+      });
+      el('quiz-explain').textContent=item.exp;
+      el('quiz-explain').style.display='block';
+      el('quiz-next').style.display='inline-block';
+      el('quiz-next').textContent=(quizIdx<QUIZ.length-1)? 'Next →' : 'See results →';
+    };
+  });
+}
+el('quiz-next').onclick=()=>{ quizIdx++; if(quizIdx>=QUIZ.length) showQuizFinal(); else showQuizQuestion(); };
+function showQuizFinal(){
+  el('quiz-live').style.display='none'; el('quiz-final').style.display='block';
+  el('quiz-final-score').textContent=quizScore+'/'+QUIZ.length;
+  const pct=quizScore/QUIZ.length;
+  el('quiz-final-msg').textContent=pct>=0.8?'Outstanding physics knowledge! 🎉':(pct>=0.5?'Good job! Review the modules and try again.':'Keep practicing sound concepts!');
+}
+el('quiz-restart').onclick=openQuiz;
+el('quiz-btn').onclick=openQuiz;
+el('quiz-close').onclick=()=>{ el('quiz-modal').classList.remove('show'); };
+el('quiz-modal').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('show'); });
+</script>
+
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fsound_lab.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fsound_lab.html'"/>
+    <p>darawa-io.github.io/ARLABS/sound_lab.html</p>
+  </div>
+</div>
+<script>
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+</script>
+</body>
+</html>
