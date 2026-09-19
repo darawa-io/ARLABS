@@ -827,10 +827,11 @@ function buildCar(){
   cabin.position.set(-0.08, 0.60, 0); car.add(cabin);
   const wheelMat = new THREE.MeshStandardMaterial({color:0x11141c, roughness:0.85});
   const wheelGeo = new THREE.CylinderGeometry(0.155, 0.155, 0.10, 16);
+  wheelGeo.rotateX(Math.PI/2); // axle along the car's Z axis (across the car), so wheels sit flat against the body
   const wheels = [];
   [[0.36,0.30],[0.36,-0.30],[-0.36,0.30],[-0.36,-0.30]].forEach(([x,z])=>{
     const w = new THREE.Mesh(wheelGeo, wheelMat);
-    w.rotation.x = Math.PI/2; w.rotation.z = Math.PI/2; w.position.set(x, 0.155, z);
+    w.position.set(x, 0.155, z);
     car.add(w); wheels.push(w);
   });
   const lightMat = new THREE.MeshStandardMaterial({color:0xfff3c4, emissive:0xffe9a0, emissiveIntensity:2.0});
@@ -870,7 +871,7 @@ function drawLabels(){
   const lapOffset = currentLapOffset(S.d);
   markers.forEach(mk=>{
     const s = w2s(mk.pos);
-    const label = (mk.m + lapOffset) + ' m';
+    const label = Math.round(mk.m + lapOffset) + ' m';
     lctx.font = '500 10px "Space Mono",monospace';
     const tw = lctx.measureText(label).width;
     lctx.fillStyle = 'rgba(4,7,15,0.62)'; lctx.fillRect(s.x - tw/2 - 4, s.y - 12, tw + 8, 16);
@@ -1590,7 +1591,7 @@ function buildARScene(){
   const carBody=document.createElement('a-box'); carBody.setAttribute('width','0.6'); carBody.setAttribute('height','0.2'); carBody.setAttribute('depth','0.32'); carBody.setAttribute('color','#ff6f5e'); carBody.setAttribute('position','0 0.16 0'); carG.appendChild(carBody);
   const cabin=document.createElement('a-box'); cabin.setAttribute('width','0.32'); cabin.setAttribute('height','0.16'); cabin.setAttribute('depth','0.28'); cabin.setAttribute('color','#9fe8ff'); cabin.setAttribute('position','-0.04 0.34 0'); carG.appendChild(cabin);
   [[0.2,0.16],[0.2,-0.16],[-0.2,0.16],[-0.2,-0.16]].forEach(([x,z])=>{
-    const wh=document.createElement('a-cylinder'); wh.setAttribute('radius','0.09'); wh.setAttribute('height','0.06'); wh.setAttribute('rotation','0 0 90'); wh.setAttribute('color','#11141c'); wh.setAttribute('position', `${x} 0.09 ${z}`);
+    const wh=document.createElement('a-cylinder'); wh.setAttribute('radius','0.09'); wh.setAttribute('height','0.06'); wh.setAttribute('rotation','90 0 0'); wh.setAttribute('color','#11141c'); wh.setAttribute('position', `${x} 0.09 ${z}`);
     carG.appendChild(wh);
   });
   sg.appendChild(carG);
@@ -1786,7 +1787,7 @@ function animate(ts){
     }
   }
   updateCarTransform();
-  car.userData.wheels.forEach(w=>{ if(S.moving && S.running) w.rotation.y -= S.speed*dt*2.6; });
+  car.userData.wheels.forEach(w=>{ if(S.moving && S.running) w.rotation.z -= S.speed*dt*2.6; });
 
   drawLabels();
   drawClock();
@@ -2169,6 +2170,7 @@ let lastSampleT = -1;
 let vPeak = 0;
 let vTrough = 0;      // most negative speed seen so far (reverse motion), for the v-t graph scale
 let dTrough = 0;      // most negative distance seen so far, for the s-t graph scale
+let dPeak = 0;        // most positive distance seen so far, for the s-t graph scale
 let aPeak = 0.5;       // largest |acceleration| seen so far, for the a-t graph scale
 let modeStartT = 0;    // S.t when the current mode was engaged (used by "changing" mode)
 const LOOP_LEN = 18;
@@ -2289,10 +2291,11 @@ function buildCar(){
   cabin.position.set(-0.08, 0.60, 0); car.add(cabin);
   const wheelMat = new THREE.MeshStandardMaterial({color:0x11141c, roughness:0.85});
   const wheelGeo = new THREE.CylinderGeometry(0.155, 0.155, 0.10, 16);
+  wheelGeo.rotateX(Math.PI/2); // axle along the car's Z axis (across the car), so wheels sit flat against the body
   const wheels = [];
   [[0.36,0.30],[0.36,-0.30],[-0.36,0.30],[-0.36,-0.30]].forEach(([x,z])=>{
     const w = new THREE.Mesh(wheelGeo, wheelMat);
-    w.rotation.x = Math.PI/2; w.rotation.z = Math.PI/2; w.position.set(x, 0.155, z);
+    w.position.set(x, 0.155, z);
     car.add(w); wheels.push(w);
   });
   const lightMat = new THREE.MeshStandardMaterial({color:0xfff3c4, emissive:0xffe9a0, emissiveIntensity:2.0});
@@ -2349,7 +2352,7 @@ function drawLabels(){
   const lapOffset = currentLapOffset(S.d);
   markers.forEach(mk=>{
     const s = w2s(mk.pos);
-    const label = (mk.m + lapOffset) + ' m';
+    const label = Math.round(mk.m + lapOffset) + ' m';
     lctx.font = '500 10px "Space Mono",monospace';
     const tw = lctx.measureText(label).width;
     lctx.fillStyle = 'rgba(4,7,15,0.62)'; lctx.fillRect(s.x - tw/2 - 4, s.y - 12, tw + 8, 16);
@@ -2461,13 +2464,38 @@ function niceCeil(v){
   }
 }
 
+/* Pick a "nice" axis range that always contains [dataMin, dataMax] (and zero). Tick values are
+   round numbers (1, 2, 5 × 10ⁿ) and the range hugs the data using at most `maxDivs` gridline
+   intervals; the interval count is returned so the graph can draw exactly that many. */
+function niceAxis(dataMin, dataMax, maxDivs, minSpan){
+  if(dataMin > -0.01) dataMin = 0;   // ignore floating-point dust around zero
+  if(dataMax <  0.01) dataMax = 0;
+  let lo = Math.min(dataMin, 0) * 1.1;
+  let hi = Math.max(dataMax, 0) * 1.1;
+  if(hi - lo < minSpan) hi = lo + minSpan;
+  let step = 1, nHi = 1, nLo = 0;
+  outer: for(let k = 0; k < 12; k++){
+    for(const m of [1,2,5]){
+      const cand = m * Math.pow(10, k);
+      nHi = Math.ceil(hi/cand - 1e-9); nLo = Math.ceil(-lo/cand - 1e-9);
+      if(nHi + nLo <= maxDivs){ step = cand; break outer; }
+    }
+  }
+  return { lo: (-nLo*step) || 0, hi: (nHi*step) || 0, divs: nHi + nLo };
+}
+let divsDd = 3, divsV = 5;   // y-gridline intervals of the s–t and v–t graphs
+
 function computeScales(){
   maxT = niceCeil(Math.max(S.t*1.08, 5));
-  maxV = niceCeil(Math.max(vPeak*1.15, 5));
-  maxDd = niceCeil(Math.max(S.d*1.15, 5));
-  maxAa = niceCeil(Math.max(aPeak*1.25, 0.5));
-  minV = vTrough < -0.01 ? -niceCeil(Math.abs(vTrough)*1.15) : 0;
-  minDd = dTrough < -0.01 ? -niceCeil(Math.abs(dTrough)*1.15) : 0;
+  /* The recorded peaks/troughs cover the whole run so far; the live values are folded in too so
+     the moving dot is never outside the plot. Both ends of every axis therefore always fit. */
+  const dHi = Math.max(dPeak, S.d), dLo = Math.min(dTrough, S.d);
+  const vHi = Math.max(vPeak, S.v), vLo = Math.min(vTrough, S.v);
+  const sAx = niceAxis(dLo, dHi, 4, 5);
+  const vAx = niceAxis(vLo, vHi, 6, 5);
+  maxDd = sAx.hi; minDd = sAx.lo; divsDd = sAx.divs;
+  maxV  = vAx.hi; minV  = vAx.lo; divsV  = vAx.divs;
+  maxAa = niceCeil(Math.max(Math.max(aPeak, Math.abs(S.curA))*1.25, 0.5));
 }
 
 function recordPoint(){
@@ -2477,6 +2505,7 @@ function recordPoint(){
     if(S.v > vPeak) vPeak = S.v;
     if(S.v < vTrough) vTrough = S.v;
     if(S.d < dTrough) dTrough = S.d;
+    if(S.d > dPeak) dPeak = S.d;
     if(Math.abs(S.curA) > aPeak) aPeak = Math.abs(S.curA);
     if(S.points.length > 4000) S.points.shift();
   }
@@ -2489,7 +2518,7 @@ const G = {
     PAD: {l:38, r:12, t:10, b:22}, key:'d', showAxisTitles:false,
     lineColor:'#ff9c6a', dotColorFn:()=>'#ff6f5e',
     axisYTitle:'Distance (m)', sym:'s', unit:'m', gradUnit:'m/s', areaUnit:'m·s',
-    getMax:()=>maxDd, getMin:()=>minDd, curVal:()=>S.d, baseH:92,
+    getMax:()=>maxDd, getMin:()=>minDd, getDivs:()=>divsDd, curVal:()=>S.d, baseH:92,
     GW:300, GH:92, plotW:0, plotH:0,
     selected:null, gradA:null, gradB:null, areaA:null, areaB:null,
     readout: document.getElementById('readout-s')
@@ -2499,7 +2528,7 @@ const G = {
     PAD: {l:40, r:14, t:14, b:34}, key:'v', showAxisTitles:true,
     lineColor:'#4fd6ff', dotColorFn:()=>'#ff6f5e',
     axisYTitle:'Speed (m/s)', sym:'v', unit:'m/s', gradUnit:'m/s²', areaUnit:'m',
-    getMax:()=>maxV, getMin:()=>minV, curVal:()=>S.v, baseH:180,
+    getMax:()=>maxV, getMin:()=>minV, getDivs:()=>divsV, curVal:()=>S.v, baseH:180,
     GW:300, GH:180, plotW:0, plotH:0,
     selected:null, gradA:null, gradB:null, areaA:null, areaB:null,
     readout: document.getElementById('readout-v')
@@ -2634,19 +2663,23 @@ function drawGraphGeneric(g){
   const axisFontPx = Math.round((g.showAxisTitles?11:9.5)*fontScale);
   ctx.font = axisFontPx + 'px "Space Mono",monospace';
 
-  const DIVS = g.showAxisTitles ? 5 : 3;
+  const DIVS = g.showAxisTitles ? 5 : 3;                 // x (time) intervals
+  const yDivs = g.getDivs ? g.getDivs() : DIVS;          // y intervals (auto-fitted for s–t and v–t)
 
   if(graphExpanded){
     const SUB = 5;
     const minorT = maxT/(DIVS*SUB);
     const lo0 = g.getMin(), hi0 = g.getMax();
-    const minorV = (hi0-lo0)/(DIVS*SUB);
+    const minorV = (hi0-lo0)/(yDivs*SUB);
     ctx.lineWidth = 1;
     for(let i=1;i<DIVS*SUB;i++){
       if(i % SUB === 0) continue;
       const px = toPxFor(g, minorT*i, 0).x;
       ctx.beginPath(); ctx.moveTo(px, g.PAD.t); ctx.lineTo(px, g.PAD.t+g.plotH);
       ctx.strokeStyle = 'rgba(190,210,255,0.05)'; ctx.stroke();
+    }
+    for(let i=1;i<yDivs*SUB;i++){
+      if(i % SUB === 0) continue;
       const py = toPxFor(g, 0, lo0 + minorV*i).y;
       ctx.beginPath(); ctx.moveTo(g.PAD.l, py); ctx.lineTo(g.GW-g.PAD.r, py);
       ctx.strokeStyle = 'rgba(190,210,255,0.05)'; ctx.stroke();
@@ -2665,8 +2698,8 @@ function drawGraphGeneric(g){
 
   /* horizontal gridlines + y labels, evenly spaced across [lo,hi] */
   const lo = g.getMin(), hi = g.getMax();
-  for(let i=0;i<=DIVS;i++){
-    const val = lo + (hi-lo)*i/DIVS;
+  for(let i=0;i<=yDivs;i++){
+    const val = lo + (hi-lo)*i/yDivs;
     const p2 = toPxFor(g, 0, val);
     ctx.beginPath(); ctx.moveTo(g.PAD.l, p2.y); ctx.lineTo(g.GW-g.PAD.r, p2.y);
     ctx.strokeStyle = 'rgba(190,210,255,0.13)'; ctx.lineWidth=1; ctx.stroke();
@@ -2993,7 +3026,6 @@ function stepPhysics(dt){
   else if(mode==='constant'){ S.v = S.u; }
   else if(mode==='accel'){ a_now = aSet; S.v += a_now*dt; }
   else if(mode==='changing'){ a_now = kSet*(S.t - modeStartT); S.v += a_now*dt; }
-  S.v = Math.max(-16, Math.min(S.v, 16));
   S.d += S.v*dt;
   S.curA = a_now;
 }
@@ -3022,7 +3054,7 @@ function setMode(mode){
 setMode('rest');
 
 function resetSimCore(){
-  S.t = 0; S.d = 0; S.v = 0; S.curA = 0; S.points = []; lastSampleT = -1; vPeak = 0; vTrough = 0; dTrough = 0; aPeak = 0.5;
+  S.t = 0; S.d = 0; S.v = 0; S.curA = 0; S.points = []; lastSampleT = -1; vPeak = 0; vTrough = 0; dTrough = 0; dPeak = 0; aPeak = 0.5;
   S.running = false;
   clearAllGraphTools();
   drawAllGraphs();
@@ -3131,7 +3163,7 @@ function pickChallengeParams(){
 function startChallenge(){
   const p = pickChallengeParams();
   hiddenU = p.u; hiddenA = p.a; challengeT = p.T;
-  S.t = 0; S.d = 0; S.v = hiddenU; S.curA = hiddenA; S.points = []; lastSampleT = -1; vPeak = hiddenU; vTrough = 0; dTrough = 0; aPeak = Math.max(0.5, Math.abs(hiddenA));
+  S.t = 0; S.d = 0; S.v = hiddenU; S.curA = hiddenA; S.points = []; lastSampleT = -1; vPeak = hiddenU; vTrough = 0; dTrough = 0; dPeak = 0; aPeak = Math.max(0.5, Math.abs(hiddenA));
   modeStartT = 0;
   S.running = true;
   challengePhase = 'running';
@@ -3233,7 +3265,7 @@ function animate(ts){
   }
   updateCarTransform();
   updateBrakeLights();
-  car.userData.wheels.forEach(w=>{ if(S.running && Math.abs(S.v)>0.01) w.rotation.y -= S.v*dt*2.6; });
+  car.userData.wheels.forEach(w=>{ if(S.running && Math.abs(S.v)>0.01) w.rotation.z -= S.v*dt*2.6; });
 
   drawLabels();
   drawClock();
