@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Circuit Lab | Current, Resistance &amp; Ohm's Law</title>
 <link rel="icon" type="image/png" href="assets/logo1.png">
+<link rel="icon" type="image/png" href="assets/logo1.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%8A%3C/text%3E%3C/svg%3E">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
@@ -1268,7 +1269,7 @@ el('quiz-modal').addEventListener('click',function(e){ if(e.target===this) this.
 </div>
 <script>
 (function(){
-  const url = window.location.href;
+  const url = 'https://darawa-io.github.io/ARLABS/circuit_basics.html';
   const img = document.getElementById('qr-img');
   img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=' + encodeURIComponent(url);
   img.onerror = function(){ this.src = 'https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=' + encodeURIComponent(url); };
