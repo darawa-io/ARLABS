@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Circuit Lab | Current, Resistance &amp; Ohm's Law</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%8A%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
+:root{--bg:#07090f;--surface:#0d1120;--border:rgba(180,200,255,0.12);--amber:#ffc857;--blue:#5bc8ff;--violet:#b57aff;--green:#4dffa0;--red:#ff5e72;--text:#ddeeff;--muted:rgba(180,210,255,0.55);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.45);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+#tabs{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;max-width:min(780px,calc(100vw - 220px));overflow-x:auto;}
+#tabs::-webkit-scrollbar{height:4px;}
+.tab-btn{flex-shrink:0;padding:6px 10px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.tab-btn:hover{color:#fff;background:rgba(180,200,255,0.08);}
+.tab-btn.active{background:rgba(91,200,255,0.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(91,200,255,0.4);}
+#caption{position:absolute;top:66px;left:16px;z-index:5;max-width:340px;max-height:min(420px,calc(100vh - 180px));overflow-y:auto;background:rgba(10,14,28,0.90);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:all 0.3s ease;}
+#caption::-webkit-scrollbar{width:4px;}
+.caption-head{display:flex;justify-content:space-between;align-items:center;}
+#caption-kpi{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:4px;}
+#caption-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;}
+#caption-text{font-size:11.5px;line-height:1.6;color:rgba(210,225,255,0.85);}
+#caption-text p{margin-bottom:10px;}
+#caption-text p:last-child{margin-bottom:0;}
+#caption-text b{color:#fff;}
+.btn-fold{background:none;border:none;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;font-size:12px;padding:2px 6px;border-radius:4px;}
+.btn-fold:hover{color:#fff;background:rgba(180,200,255,0.1);}
+#caption.collapsed #caption-text{display:none;}
+#hud{position:absolute;top:16px;right:16px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:16px;min-width:230px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.5);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:10px;}
+.dl{font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(180,210,255,0.65);}
+.dv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;text-align:right;}
+#controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:26px;padding:9px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);}
+#scene-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:20px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.18);border-color:var(--green);color:#fff;}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.amber.on{background:rgba(255,200,87,0.22);border-color:var(--amber);color:#fff;}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+.btn:disabled:hover{background:rgba(180,200,255,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+select{background:rgba(180,200,255,0.08);border:1px solid rgba(180,200,255,0.3);color:var(--text);border-radius:8px;padding:5px 8px;font-family:'Space Mono',monospace;font-size:10.5px;outline:none;}
+select option{background:#0d1120;color:#fff;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:100px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--violet);border:none;cursor:pointer;}
+.chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;cursor:pointer;user-select:none;}
+#hint{position:absolute;bottom:66px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.25);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+#challenge-wrap{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);z-index:15;display:none;width:min(620px,calc(100vw - 24px));}
+#challenge-wrap.show{display:block;}
+#challenge-wrap.s5-pos{top:66px;left:16px;bottom:auto;transform:none;width:340px;max-height:min(480px,calc(100vh - 160px));overflow-y:auto;}
+#challenge-bar{background:rgba(10,14,28,0.96);backdrop-filter:blur(22px);border:1px solid rgba(255,200,87,0.4);border-radius:18px;padding:14px 18px;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+#chal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(255,200,87,0.2);padding-bottom:6px;}
+#chal-head span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-weight:700;}
+#chal-score{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--green);}
+#chal-prompt{font-size:12px;line-height:1.5;color:var(--text);margin-bottom:10px;}
+#challenge-wrap.collapsed #chal-body, #challenge-wrap.collapsed #chal-prompt, #challenge-wrap.collapsed #chal-actions, #challenge-wrap.collapsed #chal-result {display:none;}
+.chal-inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+@media (max-width:520px){ .chal-inputs-grid{grid-template-columns:1fr;} }
+.chal-field{display:flex;flex-direction:column;gap:4px;}
+.chal-field label{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);}
+.chal-input,.chal-select{background:rgba(180,200,255,0.08);border:1px solid rgba(180,200,255,0.3);color:var(--text);border-radius:8px;padding:6px 10px;font-family:'Space Mono',monospace;font-size:11.5px;outline:none;width:100%;}
+.chal-input:focus,.chal-select:focus{border-color:var(--blue);box-shadow:0 0 6px rgba(91,200,255,0.4);}
+.chal-input:disabled,.chal-select:disabled{opacity:0.45;cursor:not-allowed;background:rgba(0,0,0,0.3);}
+.chal-select option{background:#0d1120;color:#fff;}
+#chal-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+#chal-result{font-size:11.5px;line-height:1.5;margin-top:8px;padding:8px 12px;border-radius:10px;display:none;}
+#chal-result.pass{display:block;background:rgba(77,255,160,0.12);color:var(--green);border:1px solid rgba(77,255,160,0.35);}
+#chal-result.fail{display:block;background:rgba(255,94,114,0.12);color:var(--red);border:1px solid rgba(255,94,114,0.35);}
+#quiz-btn{position:fixed;bottom:16px;right:16px;width:44px;height:44px;border-radius:13px;border:1px solid rgba(180,120,255,.4);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;font-size:19px;}
+#quiz-btn:hover{border-color:rgba(181,122,255,.8);background:rgba(181,122,255,.12);}
+#quiz-modal{display:none;position:fixed;inset:0;z-index:150;background:rgba(4,6,18,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#quiz-modal.show{display:flex;}
+#quiz-box{background:rgba(9,11,22,.98);border:1px solid rgba(180,120,255,.3);border-radius:20px;padding:26px;text-align:left;position:relative;max-width:480px;width:92%;max-height:82vh;overflow-y:auto;}
+#quiz-close{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.5);font-size:19px;cursor:pointer;}
+#quiz-box h3{font-family:'Syne',sans-serif;font-size:18px;color:#fff;margin-bottom:4px;}
+#quiz-progress{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;}
+#quiz-kpi{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--violet);border:1px solid rgba(181,122,255,.4);border-radius:8px;padding:2px 7px;margin-bottom:10px;}
+#quiz-question{font-size:14.5px;line-height:1.6;color:var(--text);margin-bottom:14px;}
+#quiz-options{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.quiz-opt{text-align:left;padding:10px 14px;border-radius:12px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;}
+.quiz-opt:hover{background:rgba(180,200,255,0.12);}
+.quiz-opt.correct{background:rgba(77,255,160,0.2);border-color:var(--green);}
+.quiz-opt.wrong{background:rgba(255,94,114,0.2);border-color:var(--red);}
+#quiz-explain{font-size:12px;line-height:1.55;color:rgba(200,215,255,0.75);background:rgba(180,200,255,0.05);border-radius:10px;padding:10px 12px;display:none;margin-bottom:12px;}
+#quiz-next{display:none;}
+#quiz-final{display:none;text-align:center;}
+#quiz-final h2{font-family:'Syne',sans-serif;font-size:26px;color:#fff;margin-bottom:8px;}
+#quiz-final p{font-size:13px;color:var(--muted);margin-bottom:16px;}
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(120,180,255,.25);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;transition:all .2s;color:rgba(120,180,255,.55);}
+#qr-btn:hover{border-color:rgba(120,180,255,.55);background:rgba(120,180,255,.14);color:#78b4ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(120,180,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(120,180,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(160,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#78b4ff;}
+#graph-panel{position:absolute;bottom:90px;left:16px;z-index:12;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:12px 14px;width:250px;max-height:min(420px,calc(100vh - 200px));overflow-y:auto;display:none;}
+#graph-panel.show{display:block;}
+#graph-panel h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--violet);text-transform:uppercase;margin-bottom:8px;}
+#graph-canvas{width:100%;height:140px;display:block;background:rgba(0,0,0,0.28);border-radius:8px;}
+#graph-legend{font-size:9.5px;font-family:'Space Mono',monospace;color:var(--muted);margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;}
+#graph-legend span{display:inline-flex;align-items:center;gap:4px;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+#lab-table-wrap{display:none;margin-top:10px;}
+#lab-table-wrap.show{display:block;}
+#graph-panel.no-canvas #graph-canvas,#graph-panel.no-canvas #graph-legend{display:none;}
+.data-table-scroll{max-height:150px;overflow-y:auto;margin-top:4px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,0.25);}
+.data-table{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Space Mono',monospace;}
+.data-table th{background:rgba(180,200,255,0.08);color:var(--muted);text-align:left;padding:4px 6px;font-weight:400;position:sticky;top:0;}
+.data-table td{padding:4px 6px;border-top:1px solid rgba(180,200,255,0.06);color:#fff;}
+#lab-summary{font-size:10px;line-height:1.5;color:rgba(200,215,255,0.8);margin-top:8px;}
+#lab-summary b{color:#fff;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<div id="title"><svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><div id="title-text"><h1>CIRCUIT LAB</h1><p>Current · Resistance · Ohm's Law</p></div></div>
+<div id="tabs"></div>
+<div id="caption"><div class="caption-head"><div id="caption-kpi">KPI</div><button class="btn-fold" id="btn-caption-fold" title="Fold panel">▼</button></div><div id="caption-title">Title</div><div id="caption-text">Description</div></div>
+<div id="hud"><h2>Measurements</h2><div id="hud-rows"></div></div>
+<div id="graph-panel"><h3 id="graph-title">V–I Graph</h3><canvas id="graph-canvas" width="440" height="280"></canvas><div id="graph-legend"></div><div id="lab-table-wrap"><div class="data-table-scroll"><table class="data-table"><thead><tr id="lab-table-head"></tr></thead><tbody id="lab-table-body"></tbody></table></div><div id="lab-summary"></div></div></div>
+<div id="challenge-wrap"><div id="challenge-bar"><div id="chal-head"><span id="chal-title-txt">🎯 Challenge</span><div style="display:flex;align-items:center;gap:8px;"><span id="chal-score">Score: 0/0</span><button class="btn-fold" id="btn-chal-fold" title="Fold challenge panel">▼</button></div></div><div id="chal-prompt">Press "New Challenge" to begin!</div><div id="chal-body"></div><div id="chal-actions"><button class="btn green" id="btn-chal-check">✓ Check Answer</button><button class="btn amber" id="btn-chal-new">🔄 New Challenge</button><button class="btn" id="btn-chal-exit">🚪 Exit Challenge</button></div><div id="chal-result"></div></div></div>
+<div id="controls"><div id="scene-controls"></div><div class="sep"></div><button class="btn amber" id="btn-challenge-toggle">🎯 Challenge Mode</button><button class="btn" id="btn-reset-scene">↺ Reset</button></div>
+<div id="hint">🖐️ drag to rotate · ✌️ pinch / scroll to zoom</div>
+<button id="quiz-btn" title="Take the Circuits quiz">🧠</button>
+<div id="quiz-modal"><div id="quiz-box"><button id="quiz-close">✕</button><div id="quiz-live"><h3>Circuits Quiz</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-kpi">KPI 3.1.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+if(renderer.outputEncoding!==undefined) renderer.outputEncoding = THREE.sRGBEncoding;
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.018);
+const cam3 = new THREE.PerspectiveCamera(50,1,0.1,300);
+function resize(){ const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); cam3.aspect=w/h; cam3.updateProjectionMatrix(); }
+resize(); window.addEventListener('resize', resize);
+scene3.add(new THREE.AmbientLight(0xffffff, 1.15));
+const sun=new THREE.DirectionalLight(0xfff8f0,1.25); sun.position.set(5,10,5); scene3.add(sun);
+const floorM=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x0d1020,roughness:0.95}));
+floorM.rotation.x=-Math.PI/2; floorM.position.y=-2.6; scene3.add(floorM);
+const grid=new THREE.GridHelper(50,34,0x1a2540,0x121c30); grid.position.y=-2.58; scene3.add(grid);
+const stage = new THREE.Group(); scene3.add(stage);
+function clearStage(){ while(stage.children.length) stage.remove(stage.children[0]); }
+function mat(color,opts){ return new THREE.MeshStandardMaterial(Object.assign({color},opts||{})); }
+function emat(color,intensity){ return new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:intensity===undefined?1.2:intensity}); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function el(id){ return document.getElementById(id); }
+function fmt(n,d){ return Number(n).toFixed(d===undefined?1:d); }
+function fmtSci(n,d){ if(!isFinite(n)) return '—'; return Number(n).toExponential(d===undefined?2:d); }
+const orb = { theta: 0.35, phi: 0.22, radius: 14, cx:0, cy:0.1, cz:0 };
+function applyOrbit(){
+  orb.phi = clamp(orb.phi, -Math.PI/5, Math.PI/3.2);
+  orb.radius = clamp(orb.radius, 5, 30);
+  const r=orb.radius,p=orb.phi,t=orb.theta;
+  cam3.position.set(orb.cx+r*Math.cos(p)*Math.sin(t), orb.cy+r*Math.sin(p), orb.cz+r*Math.cos(p)*Math.cos(t));
+  cam3.lookAt(orb.cx,orb.cy,orb.cz);
+}
+applyOrbit();
+let dragStart=null, pinchDist0=0, pinchR0=orb.radius;
+canvas.addEventListener('mousedown',e=>{dragStart={x:e.clientX,y:e.clientY};});
+window.addEventListener('mousemove',e=>{ if(!dragStart) return; orb.theta -= (e.clientX-dragStart.x)*0.005; orb.phi += (e.clientY-dragStart.y)*0.005; applyOrbit(); dragStart={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mouseup',()=>dragStart=null);
+canvas.addEventListener('wheel',e=>{ orb.radius += e.deltaY*0.015; applyOrbit(); e.preventDefault(); },{passive:false});
+canvas.addEventListener('touchstart',e=>{ e.preventDefault(); if(e.touches.length===1) dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; else if(e.touches.length===2){ pinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); pinchR0=orb.radius; dragStart=null; } },{passive:false});
+canvas.addEventListener('touchmove',e=>{ e.preventDefault(); if(e.touches.length===1 && dragStart){ orb.theta -= (e.touches[0].clientX-dragStart.x)*0.005; orb.phi += (e.touches[0].clientY-dragStart.y)*0.005; applyOrbit(); dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; } else if(e.touches.length===2 && pinchDist0>0){ const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); orb.radius = pinchR0*(pinchDist0/nd); applyOrbit(); } },{passive:false});
+canvas.addEventListener('touchend',e=>{ if(e.touches.length===0){dragStart=null;pinchDist0=0;} },{passive:false});
+el('btn-caption-fold').onclick = () => { const cap=el('caption'); cap.classList.toggle('collapsed'); el('btn-caption-fold').textContent = cap.classList.contains('collapsed')?'▲':'▼'; };
+el('btn-chal-fold').onclick = () => { const wrap=el('challenge-wrap'); wrap.classList.toggle('collapsed'); el('btn-chal-fold').textContent = wrap.classList.contains('collapsed')?'▲':'▼'; };
+
+function spawnExpandingPulse(origin,color){ const g=new THREE.SphereGeometry(1,16,12); const m=new THREE.MeshBasicMaterial({color,wireframe:true,transparent:true,opacity:0.85}); const mesh=new THREE.Mesh(g,m); mesh.position.copy(origin); mesh.scale.setScalar(0.1); stage.add(mesh); return {mesh, born:performance.now()}; }
+function tickPulses(arr, maxLife, maxScale){ for(let i=arr.length-1;i>=0;i--){ const p=arr[i]; const age=(performance.now()-p.born)/1000; if(age>maxLife){ stage.remove(p.mesh); arr.splice(i,1); continue; } const f=age/maxLife; p.mesh.scale.setScalar(0.1+f*maxScale); p.mesh.material.opacity=0.85*(1-f); } }
+
+function makeTextSprite(text, opts){
+  opts=opts||{}; const fontSize=opts.fontSize||64; const color=opts.color||'#ffffff'; const bgColor=opts.bgColor||null;
+  const cv=document.createElement('canvas'); const ctx=cv.getContext('2d');
+  ctx.font=`700 ${fontSize}px 'Space Mono', Arial, sans-serif`;
+  const textW=Math.ceil(ctx.measureText(text).width);
+  cv.width=textW+48; cv.height=fontSize+40;
+  if(bgColor){ ctx.fillStyle=bgColor; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(4,4,cv.width-8,cv.height-8,16); else ctx.rect(4,4,cv.width-8,cv.height-8); ctx.fill(); }
+  ctx.font=`700 ${fontSize}px 'Space Mono', Arial, sans-serif`; ctx.fillStyle=color; ctx.textBaseline='middle'; ctx.textAlign='center';
+  ctx.shadowColor='rgba(0,0,0,0.85)'; ctx.shadowBlur=8; ctx.fillText(text, cv.width/2, cv.height/2);
+  const tex=new THREE.CanvasTexture(cv); tex.needsUpdate=true;
+  const m=new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false});
+  const sprite=new THREE.Sprite(m); const h=opts.height||0.45;
+  sprite.scale.set((cv.width/cv.height)*h, h, 1); sprite.renderOrder=999; return sprite;
+}
+
+/* ===== Shared circuit-building helpers ===== */
+function wireSegment(ax,ay,bx,by,color){
+  const dx=bx-ax, dy=by-ay; const len=Math.hypot(dx,dy);
+  const geo=new THREE.BoxGeometry(len,0.06,0.06);
+  const m=mat(color||0x8899bb,{metalness:0.5,roughness:0.45});
+  const mesh=new THREE.Mesh(geo,m);
+  mesh.position.set((ax+bx)/2,(ay+by)/2,0);
+  mesh.rotation.z=Math.atan2(dy,dx);
+  return mesh;
+}
+function loopPoint(t,x0,x1,y0,y1){
+  const tt=((t%1)+1)%1;
+  const corners=[[x0,y1],[x1,y1],[x1,y0],[x0,y0]];
+  const seg=Math.floor(tt*4); const local=(tt*4)-seg;
+  const a=corners[seg], b=corners[(seg+1)%4];
+  return {x:a[0]+(b[0]-a[0])*local, y:a[1]+(b[1]-a[1])*local};
+}
+function buildLoopWires(x0,x1,y0,y1,color){
+  const g=new THREE.Group();
+  g.add(wireSegment(x0,y1,x1,y1,color));
+  g.add(wireSegment(x1,y1,x1,y0,color));
+  g.add(wireSegment(x1,y0,x0,y0,color));
+  g.add(wireSegment(x0,y0,x0,y1,color));
+  return g;
+}
+function batteryMesh(x,y){
+  /* Stylized AA cell: black lower body, copper/orange upper body, silver button (+) on top, flat silver disc (−) on bottom — poles clearly marked. */
+  const g=new THREE.Group();
+  const r=0.3, H=1.9;
+  const blackH=H*0.52, copperH=H*0.40, tipH=H*0.05;
+  let yCursor=-H/2;
+  const black=new THREE.Mesh(new THREE.CylinderGeometry(r,r,blackH,20), mat(0x14161c,{metalness:0.35,roughness:0.4}));
+  black.position.y=yCursor+blackH/2; g.add(black); yCursor+=blackH;
+  const ring=new THREE.Mesh(new THREE.CylinderGeometry(r*1.01,r*1.01,0.03,20), mat(0x555f6e,{metalness:0.7,roughness:0.3}));
+  ring.position.y=yCursor; g.add(ring);
+  const copper=new THREE.Mesh(new THREE.CylinderGeometry(r,r,copperH,20), mat(0xcf7a2e,{metalness:0.35,roughness:0.35}));
+  copper.position.y=yCursor+copperH/2; g.add(copper); yCursor+=copperH;
+  const tip=new THREE.Mesh(new THREE.CylinderGeometry(r*0.45,r,tipH,20), mat(0xb85f14,{metalness:0.35,roughness:0.35}));
+  tip.position.y=yCursor+tipH/2; g.add(tip); yCursor+=tipH;
+  const button=new THREE.Mesh(new THREE.CylinderGeometry(r*0.32,r*0.4,0.1,16), mat(0xd7dde3,{metalness:0.75,roughness:0.25}));
+  button.position.y=yCursor+0.05; g.add(button); yCursor+=0.1;
+  const flatNeg=new THREE.Mesh(new THREE.CylinderGeometry(r,r,0.045,20), mat(0xc3c9d1,{metalness:0.75,roughness:0.25}));
+  flatNeg.position.y=-H/2-0.02; g.add(flatNeg);
+  const lp=makeTextSprite('+',{color:'#1a1006',height:0.4}); lp.position.set(0,H/2-0.28,r+0.02); g.add(lp);
+  const lm=makeTextSprite('-',{color:'#eef4ff',height:0.4}); lm.position.set(0,-H/2+0.28,r+0.02); g.add(lm);
+  g.position.set(x,y,0);
+  g.userData.topY=yCursor+0.1; g.userData.bottomY=-H/2-0.045;
+  return g;
+}
+function resistorMesh(x,y,label){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,1.0,16), mat(0xdcc9a0,{metalness:0.1,roughness:0.6}));
+  g.add(body);
+  const bandColors=[0x8a5a2b,0xff5e72,0xffc857];
+  bandColors.forEach((c,i)=>{ const b=new THREE.Mesh(new THREE.CylinderGeometry(0.226,0.226,0.08,16), mat(c)); b.position.y=-0.28+i*0.28; g.add(b); });
+  const lbl=makeTextSprite(label||'R',{color:'#ffffff',height:0.32}); lbl.position.set(0.6,0,0); g.add(lbl);
+  g.position.set(x,y,0);
+  return g;
+}
+function bulbMesh(x,y){
+  const g=new THREE.Group();
+  const glassMat=new THREE.MeshStandardMaterial({color:0xfff6d8,emissive:0xffcc55,emissiveIntensity:0.15,transparent:true,opacity:0.88,roughness:0.25});
+  const glass=new THREE.Mesh(new THREE.SphereGeometry(0.4,18,14), glassMat); g.add(glass);
+  const filament=new THREE.Mesh(new THREE.TorusKnotGeometry(0.12,0.02,40,6,2,3), emat(0xffe9a8,1.4)); g.add(filament);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.2,0.3,12), mat(0x445566,{metalness:0.6,roughness:0.4})); base.position.y=-0.55; g.add(base);
+  g.position.set(x,y,0);
+  g.userData.glass=glass; g.userData.filament=filament;
+  return g;
+}
+function meterMesh(label,color){
+  const g=new THREE.Group();
+  const box=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), mat(color,{metalness:0.3,roughness:0.5}));
+  g.add(box);
+  const lbl=makeTextSprite(label,{color:'#0a0d16',height:0.34}); lbl.position.set(0,0,0.32); g.add(lbl);
+  g.userData.box=box;
+  return g;
+}
+function makeLoopParticles(n,color,x0,x1,y0,y1){
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const t=i/n; const p=loopPoint(t,x0,x1,y0,y1);
+    const sph=new THREE.Mesh(new THREE.SphereGeometry(0.09,10,8), emat(color,0.9));
+    sph.position.set(p.x,p.y,0); stage.add(sph);
+    arr.push({t,mesh:sph});
+  }
+  return arr;
+}
+function updateLoopParticles(arr,dt,speed,dir,x0,x1,y0,y1){
+  arr.forEach(p=>{ p.t=((p.t+dir*speed*dt)%1+1)%1; const pt=loopPoint(p.t,x0,x1,y0,y1); p.mesh.position.set(pt.x,pt.y,0); });
+}
+function setLoopParticleColor(arr,color){ arr.forEach(p=>{ p.mesh.material.color.set(color); p.mesh.material.emissive.set(color); }); }
+
+const MATERIALS = {
+  copper:   {rho:1.68e-8, color:0xc87d43, name:'Copper'},
+  aluminium:{rho:2.65e-8, color:0xb9c1c9, name:'Aluminium'},
+  iron:     {rho:9.71e-8, color:0x8a8f98, name:'Iron'},
+  nichrome: {rho:1.10e-6, color:0xffcf7a, name:'Nichrome'}
+};
+const E_CHARGE = 1.602e-19;
+
+/* ===== Generic V–I graph panel (canvas-drawn) ===== */
+function drawVIGraph(opts){
+  const canvas=el('graph-canvas'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const padL=44, padB=26, padT=10, padR=10;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const xMax=opts.xMax, yMax=opts.yMax;
+  function mapX(v){ return padL+clamp(v/xMax,0,1)*plotW; }
+  function mapY(i){ return padT+plotH-clamp(i/yMax,0,1)*plotH; }
+  ctx.font="10px 'Space Mono', monospace";
+  for(let k=0;k<=4;k++){
+    const gx=xMax*k/4, gy=yMax*k/4;
+    const px=mapX(gx), py=mapY(gy);
+    ctx.strokeStyle='rgba(180,200,255,0.08)';
+    ctx.beginPath(); ctx.moveTo(px,padT); ctx.lineTo(px,padT+plotH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL,py); ctx.lineTo(padL+plotW,py); ctx.stroke();
+    ctx.fillStyle='rgba(180,200,255,0.45)';
+    ctx.fillText(gx.toFixed(gx<10?1:0), px-6, padT+plotH+14);
+    ctx.fillText(gy.toFixed(gy<10?1:0), 6, py+3);
+  }
+  ctx.strokeStyle='rgba(180,200,255,0.35)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  ctx.fillStyle='rgba(200,215,255,0.65)';
+  ctx.fillText(opts.xLabel||'V (Volts)', padL+plotW/2-22, h-2);
+  ctx.save(); ctx.translate(12,padT+plotH/2+16); ctx.rotate(-Math.PI/2); ctx.fillText(opts.yLabel||'I (A)',0,0); ctx.restore();
+  (opts.curves||[]).forEach(c=>{
+    ctx.strokeStyle=c.color; ctx.lineWidth=2.2; ctx.beginPath();
+    c.points.forEach((p,idx)=>{ const px=mapX(p.v), py=mapY(p.i); if(idx===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); });
+    ctx.stroke();
+  });
+  (opts.recorded||[]).forEach(p=>{
+    ctx.fillStyle=p.color||'#4dffa0';
+    ctx.beginPath(); ctx.arc(mapX(p.v),mapY(p.i),3.5,0,Math.PI*2); ctx.fill();
+  });
+  (opts.liveMarkers||[]).forEach(m=>{
+    ctx.fillStyle=m.color||'#ffc857';
+    ctx.beginPath(); ctx.arc(mapX(m.v),mapY(m.i),5.5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.2; ctx.stroke();
+  });
+}
+function setGraphLegend(items){
+  const lg=el('graph-legend'); if(!lg) return;
+  lg.innerHTML=items.map(it=>'<span><span class="dot" style="background:'+it.color+'"></span>'+it.label+'</span>').join('');
+}
+function showGraphPanel(show,withTable,hideCanvas){
+  el('graph-panel').classList.toggle('show',!!show);
+  el('graph-panel').classList.toggle('no-canvas',!!hideCanvas);
+  el('lab-table-wrap').classList.toggle('show',!!withTable);
+}
+function renderLabTable(headers,rows){
+  el('lab-table-head').innerHTML=headers.map(hh=>'<th>'+hh+'</th>').join('');
+  el('lab-table-body').innerHTML=rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('');
+}
+
+/* ================= SCENE 1 — Electric Current (KPI 3.1.1) ================= */
+const e1={particles:[],pulses:[],running:false,t:0,n:0,challengeActive:false,chalAnswer:0};
+function e1_build(){
+  e1.particles=[]; e1.pulses=[]; e1.running=false; e1.t=0; e1.n=0;
+  const wireLen=8;
+  const wireMesh=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,wireLen,16), mat(0x445566,{metalness:0.6,roughness:0.35}));
+  wireMesh.rotation.z=Math.PI/2; stage.add(wireMesh);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.36,0.045,10,30), emat(0xffc857,1.3));
+  ring.rotation.y=Math.PI/2; stage.add(ring);
+  const lbl=makeTextSprite('marked cross-section', {color:'#ffc857', height:0.3}); lbl.position.set(0,0.95,0); stage.add(lbl);
+  const count=16;
+  for(let i=0;i<count;i++){
+    const grp=new THREE.Group();
+    const sph=new THREE.Mesh(new THREE.SphereGeometry(0.16,14,12), emat(0x3a7bd5,0.55));
+    grp.add(sph);
+    const sign=makeTextSprite('-',{color:'#ffffff',height:0.24});
+    sign.position.set(0,0,0.17); grp.add(sign);
+    const x=-4+(i/count)*8;
+    grp.position.set(x,0,0); stage.add(grp);
+    e1.particles.push({mesh:grp,x});
+  }
+}
+function e1_rate(){ return parseFloat(el('e1-rate')?.value||6); }
+function e1_slow(){ return !!el('e1-slow')?.checked; }
+function e1_tick(dt){
+  const speed=e1_rate()*0.5*(e1_slow()?0.25:1);
+  if(e1.running) e1.t+=dt;
+  e1.particles.forEach(p=>{
+    if(e1.running){
+      const prevX=p.x;
+      p.x+=speed*dt;
+      if(p.x>4) p.x-=8;
+      p.mesh.position.x=p.x;
+      if(prevX<0 && p.x>=0){ e1.n++; e1.pulses.push(spawnExpandingPulse(new THREE.Vector3(0,0,0),0xffc857)); }
+    }
+  });
+  tickPulses(e1.pulses,0.6,2.6);
+}
+function e1_toggleRun(){
+  e1.running=!e1.running;
+  const b=el('e1-start');
+  b.textContent=e1.running?'⏸ Stop Timer':'▶ Start Timer';
+  b.classList.toggle('on',e1.running);
+}
+function e1_hud(){
+  const Q=e1.n*E_CHARGE;
+  const I=e1.t>0?Q/e1.t:0;
+  if(e1.challengeActive){
+    return [{l:'Carriers per second',v:fmt(e1_rate(),1),c:'#ffc857'},{l:'Elapsed time t',v:fmt(e1.t,2)+' s',c:'#5bc8ff'},{l:'Charges counted n',v:e1.n,c:'#4dffa0'}];
+  }
+  return [
+    {l:'Elapsed time t',v:fmt(e1.t,2)+' s',c:'#ffc857'},
+    {l:'Charges counted n',v:e1.n,c:'#5bc8ff'},
+    {l:'Charge Q = n·e',v:fmtSci(Q,2)+' C',c:'#b57aff'},
+    {l:'Current I = Q/t',v:e1.t>0?fmtSci(I,2)+' A':'—',c:'#4dffa0'}
+  ];
+}
+function e1_initChallenge(){
+  e1.challengeActive=true; e1.running=false; e1.t=0; e1.n=0;
+  const startBtn=el('e1-start'); if(startBtn){ startBtn.disabled=true; startBtn.textContent='▶ Start Timer'; startBtn.classList.remove('on'); }
+  const rateSlider=el('e1-rate'); if(rateSlider) rateSlider.disabled=true;
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  const variant = Math.random()<0.5?'Qt':'net';
+  let promptHtml;
+  if(variant==='Qt'){
+    const Q=randInt(2,20), t=randInt(1,10);
+    e1.chalAnswer=Q/t;
+    promptHtml='<p>A charge of <b>'+Q+' C</b> passes a point in a wire in <b>'+t+' s</b>.</p><p>Calculate the current <b>I</b> using <b>I = Q / t</b>. Give your answer in amperes.</p>';
+  } else {
+    const nUnits=randInt(2,12), t=randInt(1,8);
+    const Q=nUnits*1e19*E_CHARGE;
+    e1.chalAnswer=Q/t;
+    promptHtml='<p>A total of <b>'+nUnits+' × 10¹⁹ electrons</b> pass a point in a wire in <b>'+t+' s</b> (e = 1.6 × 10⁻¹⁹ C).</p><p>Calculate the current <b>I = ne / t</b>. Give your answer in amperes.</p>';
+  }
+  el('chal-prompt').innerHTML=promptHtml;
+  el('chal-body').innerHTML='<div class="chal-inputs-grid"><div class="chal-field"><label>Current I (A):</label><input type="number" id="e1-chal-ans" class="chal-input" placeholder="e.g. 3.5" step="0.01"></div></div>';
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function e1_checkChallenge(){
+  const inp=el('e1-chal-ans'); if(!inp) return {correct:false,message:'⚠️ Enter your answer.'};
+  const val=parseFloat(inp.value); if(isNaN(val)) return {correct:false,message:'⚠️ Please enter a number.'};
+  const ok=Math.abs(val-e1.chalAnswer)<=Math.max(0.06*Math.abs(e1.chalAnswer),0.05);
+  inp.disabled=true;
+  if(ok) return {correct:true,message:'✅ Correct! I = '+fmt(e1.chalAnswer,3)+' A.'};
+  return {correct:false,message:'❌ Not quite. The correct current is I = '+fmt(e1.chalAnswer,3)+' A.'};
+}
+function e1_exitChallenge(){
+  e1.challengeActive=false;
+  const startBtn=el('e1-start'); if(startBtn) startBtn.disabled=false;
+  const rateSlider=el('e1-rate'); if(rateSlider) rateSlider.disabled=false;
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+/* ================= SCENE 2 — Conventional vs Electron Flow (KPI 3.1.2) ================= */
+const e2={mode:'conventional',parts:[],x0:-2.6,x1:2.6,y0:-1.4,y1:1.4};
+function e2_build(){
+  const {x0,x1,y0,y1}=e2;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  stage.add(resistorMesh(x1,0,'R'));
+  e2.mode='conventional';
+  e2.parts=makeLoopParticles(18,0xffc857,x0,x1,y0,y1);
+  const lbl=makeTextSprite('conventional current →',{color:'#ffc857',height:0.3}); lbl.position.set(0,y1+0.7,0); stage.add(lbl); e2.dirLabel=lbl;
+}
+function e2_tick(dt){
+  const {x0,x1,y0,y1}=e2;
+  const dir=e2.mode==='conventional'?1:-1;
+  updateLoopParticles(e2.parts,dt,0.16,dir,x0,x1,y0,y1);
+}
+function e2_toggle(){
+  e2.mode=e2.mode==='conventional'?'electron':'conventional';
+  const color=e2.mode==='conventional'?0xffc857:0x5bc8ff;
+  setLoopParticleColor(e2.parts,color);
+  const b=el('e2-toggle');
+  b.textContent=e2.mode==='conventional'?'⚡ Showing: Conventional Current':'⚡ Showing: Electron Flow';
+  b.classList.toggle('on', e2.mode==='electron');
+}
+function e2_hud(){
+  const isConv=e2.mode==='conventional';
+  return [
+    {l:'Mode',v:isConv?'Conventional Current':'Electron Flow',c:isConv?'#ffc857':'#5bc8ff'},
+    {l:'Charge carrier shown',v:isConv?'Positive (model)':'Electron (−)',c:isConv?'#ffc857':'#5bc8ff'},
+    {l:'External-circuit direction',v:isConv?'+ terminal → − terminal':'− terminal → + terminal',c:'#4dffa0'}
+  ];
+}
+
+/* ================= SCENE 3 — Ammeters & Voltmeters (KPI 3.1.3) ================= */
+const e3={type:'ammeter',position:'series',x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,meterGrp:null,stub1:null,stub2:null};
+function e3_build(){
+  const {x0,x1,y0,y1}=e3;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  stage.add(resistorMesh(x1,0,'R'));
+  e3.meterGrp=new THREE.Group(); stage.add(e3.meterGrp);
+  e3.stubGrp=new THREE.Group(); stage.add(e3.stubGrp);
+  e3_render();
+}
+function e3_isCorrect(){ return (e3.type==='ammeter'&&e3.position==='series')||(e3.type==='voltmeter'&&e3.position==='parallel'); }
+function e3_render(){
+  const {x0,x1,y0,y1}=e3;
+  while(e3.meterGrp.children.length) e3.meterGrp.remove(e3.meterGrp.children[0]);
+  while(e3.stubGrp.children.length) e3.stubGrp.remove(e3.stubGrp.children[0]);
+  const ok=e3_isCorrect();
+  const color=ok?0x4dffa0:0xff5e72;
+  const label=e3.type==='ammeter'?'A':'V';
+  const m=meterMesh(label,color);
+  if(e3.position==='series'){
+    m.position.set((x0+x1)/2, y1, 0);
+  } else {
+    const mx=x1+0.9, my=0;
+    m.position.set(mx,my,0);
+    e3.stubGrp.add(wireSegment(x1,y1-0.001,mx,y1,0x5a6a90));
+    e3.stubGrp.add(wireSegment(mx,y1,mx,y0,0x5a6a90));
+    e3.stubGrp.add(wireSegment(mx,y0,x1,y0+0.001,0x5a6a90));
+  }
+  e3.meterGrp.add(m);
+}
+function e3_tick(){}
+function e3_hud(){
+  const ok=e3_isCorrect();
+  return [
+    {l:'Meter',v:e3.type==='ammeter'?'Ammeter (A)':'Voltmeter (V)',c:'#ffc857'},
+    {l:'Wiring',v:e3.position==='series'?'Series':'Parallel',c:'#5bc8ff'},
+    {l:'Correctly connected?',v:ok?'Yes ✓':'No ✗',c:ok?'#4dffa0':'#ff5e72'}
+  ];
+}
+
+/* ================= SCENE 4 — Resistance & Ohm's Law (Lab 2, KPI 3.1.4/3.1.5) ================= */
+const e4={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,bulb:null,challengeActive:false,hiddenR:null};
+function e4_build(){
+  const {x0,x1,y0,y1}=e4;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  const b=bulbMesh(x1,0); stage.add(b); e4.bulb=b;
+  e4.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
+}
+function e4_V(){ return parseFloat(el('e4-V')?.value||6); }
+function e4_R(){ if(e4.challengeActive) return e4.hiddenR; return parseFloat(el('e4-R')?.value||6); }
+function e4_tick(dt){
+  const V=e4_V(), R=e4_R(), I=V/R;
+  updateLoopParticles(e4.parts,dt,clamp(I*0.12,0.02,0.6),1,e4.x0,e4.x1,e4.y0,e4.y1);
+  if(e4.bulb){
+    const glow=clamp(I*0.9,0.05,3.2);
+    e4.bulb.userData.glass.material.emissiveIntensity=glow;
+    e4.bulb.userData.filament.material.emissiveIntensity=1+glow;
+    e4.bulb.rotation.y+=dt*0.4;
+  }
+}
+function e4_hud(){
+  const V=e4_V(), R=e4_R(), I=V/R;
+  if(e4.challengeActive){
+    return [{l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},{l:'Current I',v:fmt(I,3)+' A',c:'#5bc8ff'},{l:'Resistance R',v:'? (calculate!)',c:'#ff5e72'}];
+  }
+  return [
+    {l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},
+    {l:'Resistance R',v:fmt(R,1)+' Ω',c:'#5bc8ff'},
+    {l:'Current I = V/R',v:fmt(I,3)+' A',c:'#4dffa0'}
+  ];
+}
+function e4_initChallenge(){
+  e4.challengeActive=true;
+  const rSelect=el('e4-R'); if(rSelect){ rSelect.style.display='none'; if(rSelect.parentElement) rSelect.parentElement.style.display='none'; }
+  const options=[3,4,5,6,8,10,12,15,20];
+  e4.hiddenR=pick(options);
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  el('chal-prompt').innerHTML='<p>The resistor value is <b>hidden</b> — it is a "mystery resistor".</p><p>Drag the <b>voltage slider</b> to any value, read the current <b>I</b> from the Measurements panel, then calculate <b>R = V / I</b> and enter it below.</p>';
+  el('chal-body').innerHTML='<div class="chal-inputs-grid"><div class="chal-field"><label>Resistance R (Ω):</label><input type="number" id="e4-chal-ans" class="chal-input" placeholder="e.g. 6" step="0.1"></div></div>';
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function e4_checkChallenge(){
+  const inp=el('e4-chal-ans'); if(!inp) return {correct:false,message:'⚠️ Enter your answer.'};
+  const val=parseFloat(inp.value); if(isNaN(val)) return {correct:false,message:'⚠️ Please enter a number.'};
+  const ok=Math.abs(val-e4.hiddenR)<=Math.max(0.08*e4.hiddenR,0.3);
+  inp.disabled=true;
+  if(ok) return {correct:true,message:'✅ Correct! The mystery resistor was R = '+fmt(e4.hiddenR,1)+' Ω.'};
+  return {correct:false,message:'❌ Not quite. The mystery resistor was R = '+fmt(e4.hiddenR,1)+' Ω.'};
+}
+function e4_exitChallenge(){
+  e4.challengeActive=false;
+  const rSelect=el('e4-R'); if(rSelect){ rSelect.style.display=''; if(rSelect.parentElement) rSelect.parentElement.style.display=''; }
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+/* ================= SCENE 5 — Ohmic vs Non-Ohmic (KPI 3.1.6) ================= */
+const e5={type:'resistor',x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,comp:null};
+function e5_build(){
+  const {x0,x1,y0,y1}=e5;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  e5.comp=e5.type==='resistor'?resistorMesh(x1,0,'R'):bulbMesh(x1,0);
+  stage.add(e5.comp);
+  e5.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
+}
+function e5_V(){ return parseFloat(el('e5-V')?.value||6); }
+function e5_R(V){ return e5.type==='resistor'?4:(2+0.5*V); }
+function e5_curve(){ const pts=[]; for(let v=0;v<=12;v+=0.4){ const R=e5_R(v); pts.push({v,i:v/R}); } return pts; }
+function e5_tick(dt){
+  const V=e5_V(), R=e5_R(V), I=V/R;
+  updateLoopParticles(e5.parts,dt,clamp(I*0.12,0.02,0.6),1,e5.x0,e5.x1,e5.y0,e5.y1);
+  if(e5.type==='lamp' && e5.comp && e5.comp.userData.glass){
+    const glow=clamp(I*0.7,0.05,3);
+    e5.comp.userData.glass.material.emissiveIntensity=glow;
+    e5.comp.userData.filament.material.emissiveIntensity=1+glow;
+    e5.comp.rotation.y+=dt*0.4;
+  }
+  const isOhmic=e5.type==='resistor';
+  drawVIGraph({curves:[{points:e5_curve(),color:isOhmic?'#5bc8ff':'#ffc857'}],liveMarkers:[{v:V,i:clamp(I,0,4),color:'#4dffa0'}],xMax:12,yMax:4,xLabel:'V (Volts)',yLabel:'I (A)'});
+  setGraphLegend([
+    {color:isOhmic?'#5bc8ff':'#ffc857', label:isOhmic?'Resistor: straight line (I ∝ V)':'Lamp: curve bends as V rises'},
+    {color:'#4dffa0', label:'Current operating point'}
+  ]);
+}
+function e5_hud(){
+  const V=e5_V(), R=e5_R(V), I=V/R;
+  return [
+    {l:'Component',v:e5.type==='resistor'?'Fixed Resistor (Ohmic)':'Filament Lamp (Non-ohmic)',c:'#ffc857'},
+    {l:'Voltage V',v:fmt(V,1)+' V',c:'#5bc8ff'},
+    {l:'Current I',v:fmt(I,2)+' A',c:'#4dffa0'},
+    {l:'Instantaneous R = V/I',v:fmt(R,2)+' Ω',c:'#b57aff'}
+  ];
+}
+function e5_setType(type){
+  e5.type=type;
+  clearStageKeep(); // rebuild meshes only
+}
+function clearStageKeep(){ clearStage(); e5_build(); }
+
+/* ================= SCENE 6 — Resistivity & Factors (Lab 3, KPI 3.1.7/3.1.8/3.1.9) ================= */
+const e6={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,wireMesh:null,bulb:null,parts:[],challengeActive:false,chalType:null,chalMaterial:null,chalAnswer:0};
+function e6_lengthM(){ return parseFloat(el('e6-l')?.value||2); }
+function e6_diamMm(){ return parseFloat(el('e6-d')?.value||1); }
+function e6_material(){ return el('e6-mat')?.value||'nichrome'; }
+function e6_compute(){
+  const l=e6_lengthM(), d=e6_diamMm(), matKey=e6_material();
+  const rho=MATERIALS[matKey].rho;
+  const r=(d/1000)/2;
+  const A=Math.PI*r*r;
+  const R=rho*l/A;
+  return {l,d,matKey,rho,A,R};
+}
+function e6_build(){
+  clearStage();
+  e6.parts=[];
+  const {x0,x1,y0,y1}=e6;
+  stage.add(wireSegment(x1,y1,x1,y0,0x5a6a90));
+  stage.add(wireSegment(x1,y0,x0,y0,0x5a6a90));
+  stage.add(wireSegment(x0,y0,x0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  const bulb=bulbMesh(x1,0); stage.add(bulb); e6.bulb=bulb;
+  const {l,d,matKey}=e6_compute();
+  const visRad=lerp(0.06,0.32,clamp((d-0.2)/(3-0.2),0,1));
+  const color=MATERIALS[matKey].color;
+  const topLen=x1-x0;
+  const lFrac=clamp((l-0.5)/(5-0.5),0,1);
+  const visLen=lerp(0.8,4.4,lFrac);
+  const leadLen=(topLen-visLen)/2;
+  if(leadLen>0.03){
+    stage.add(wireSegment(x0,y1,x0+leadLen,y1,0x5a6a90));
+    stage.add(wireSegment(x1-leadLen,y1,x1,y1,0x5a6a90));
+  }
+  const wireMesh=new THREE.Mesh(new THREE.CylinderGeometry(visRad,visRad,visLen,20), mat(color,{metalness:0.55,roughness:0.4}));
+  wireMesh.rotation.z=Math.PI/2;
+  wireMesh.position.set((x0+x1)/2,y1,0);
+  stage.add(wireMesh); e6.wireMesh=wireMesh;
+  const lbl=makeTextSprite(MATERIALS[matKey].name+' sample wire',{color:'#ffffff',height:0.3});
+  lbl.position.set((x0+x1)/2, y1+visRad+0.4, 0); stage.add(lbl);
+  const n=14;
+  for(let i=0;i<n;i++){
+    const sph=new THREE.Mesh(new THREE.SphereGeometry(Math.max(visRad*0.55,0.06),10,8), emat(0xbcefff,0.9));
+    const t=i/n;
+    const p=loopPoint(t,x0,x1,y0,y1);
+    sph.position.set(p.x,p.y,0); stage.add(sph);
+    e6.parts.push({mesh:sph,t});
+  }
+}
+function e6_tick(dt){
+  const {R}=e6_compute();
+  const V=6;
+  const I=V/R;
+  const speed=clamp(I*0.35,0.015,0.5);
+  const {x0,x1,y0,y1}=e6;
+  updateLoopParticles(e6.parts,dt,speed,1,x0,x1,y0,y1);
+  if(e6.bulb){
+    const glow=clamp(I*0.25,0.05,3);
+    e6.bulb.userData.glass.material.emissiveIntensity=glow;
+    e6.bulb.userData.filament.material.emissiveIntensity=1+glow;
+    e6.bulb.rotation.y+=dt*0.4;
+  }
+}
+function e6_hud(){
+  const {l,d,matKey,rho,A,R}=e6_compute();
+  if(e6.challengeActive){
+    return [{l:'Length l',v:fmt(l,2)+' m',c:'#ffc857'},{l:'Diameter d',v:fmt(d,2)+' mm',c:'#5bc8ff'},{l:'Material',v:'? (identify or calculate)',c:'#ff5e72'}];
+  }
+  return [
+    {l:'Material',v:MATERIALS[matKey].name,c:'#ffc857'},
+    {l:'Length l',v:fmt(l,2)+' m',c:'#5bc8ff'},
+    {l:'Diameter d',v:fmt(d,2)+' mm',c:'#5bc8ff'},
+    {l:'Area A = πr²',v:fmtSci(A,2)+' m²',c:'#b57aff'},
+    {l:'Resistivity ρ',v:fmtSci(rho,2)+' Ωm',c:'#b57aff'},
+    {l:'Resistance R = ρl/A',v:fmt(R,3)+' Ω',c:'#4dffa0'}
+  ];
+}
+function e6_initChallenge(){
+  e6.challengeActive=true;
+  const matSel=el('e6-mat'); if(matSel){ matSel.disabled=true; }
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  const variant=Math.random()<0.5?'calcR':'identify';
+  e6.chalType=variant;
+  const matKeys=Object.keys(MATERIALS);
+  const matKey=pick(matKeys);
+  e6.chalMaterial=matKey;
+  const l=randInt(1,5), d=(randInt(2,20)/10);
+  const rho=MATERIALS[matKey].rho;
+  const A=Math.PI*Math.pow((d/1000)/2,2);
+  const R=rho*l/A;
+  if(variant==='calcR'){
+    e6.chalAnswer=R;
+    el('chal-prompt').innerHTML='<p>A <b>'+MATERIALS[matKey].name+'</b> wire (ρ = '+fmtSci(rho,2)+' Ωm) has length <b>l = '+l+' m</b> and diameter <b>d = '+fmt(d,1)+' mm</b>.</p><p>Calculate its resistance using <b>R = ρl / A</b>, where A = π(d/2)². Give your answer in ohms.</p>';
+    el('chal-body').innerHTML='<div class="chal-inputs-grid"><div class="chal-field"><label>Resistance R (Ω):</label><input type="number" id="e6-chal-ans" class="chal-input" placeholder="e.g. 2.5" step="0.01"></div></div>';
+  } else {
+    el('chal-prompt').innerHTML='<p>A wire has length <b>l = '+l+' m</b>, diameter <b>d = '+fmt(d,1)+' mm</b>, and measured resistance <b>R = '+fmt(R,3)+' Ω</b>.</p><p>Calculate its resistivity <b>ρ = RA / l</b>, then choose the material it is most likely made from.</p>';
+    el('chal-body').innerHTML='<div class="chal-inputs-grid"><div class="chal-field"><label>Material:</label><select id="e6-chal-select" class="chal-select">'+
+      matKeys.map(k=>'<option value="'+k+'">'+MATERIALS[k].name+'</option>').join('')+'</select></div></div>';
+  }
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function e6_checkChallenge(){
+  if(e6.chalType==='calcR'){
+    const inp=el('e6-chal-ans'); if(!inp) return {correct:false,message:'⚠️ Enter your answer.'};
+    const val=parseFloat(inp.value); if(isNaN(val)) return {correct:false,message:'⚠️ Please enter a number.'};
+    const ok=Math.abs(val-e6.chalAnswer)<=Math.max(0.1*e6.chalAnswer,0.02);
+    inp.disabled=true;
+    if(ok) return {correct:true,message:'✅ Correct! R ≈ '+fmt(e6.chalAnswer,3)+' Ω.'};
+    return {correct:false,message:'❌ Not quite. R ≈ '+fmt(e6.chalAnswer,3)+' Ω.'};
+  } else {
+    const sel=el('e6-chal-select'); if(!sel) return {correct:false,message:'⚠️ Choose a material.'};
+    const ok=sel.value===e6.chalMaterial;
+    sel.disabled=true;
+    if(ok) return {correct:true,message:'✅ Correct! The wire was '+MATERIALS[e6.chalMaterial].name+' (ρ = '+fmtSci(MATERIALS[e6.chalMaterial].rho,2)+' Ωm).'};
+    return {correct:false,message:'❌ Not quite. The wire was '+MATERIALS[e6.chalMaterial].name+' (ρ = '+fmtSci(MATERIALS[e6.chalMaterial].rho,2)+' Ωm).'};
+  }
+}
+function e6_exitChallenge(){
+  e6.challengeActive=false;
+  const matSel=el('e6-mat'); if(matSel) matSel.disabled=false;
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+/* ================= SCENE 7 — Lab 2: Verify Ohm's Law (virtual experiment) ================= */
+const e7={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,resistor:null,R:5,records:[]};
+function e7_build(){
+  clearStage();
+  const {x0,x1,y0,y1}=e7;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  e7.R=parseFloat(el('e7-Rsel')?.value||5);
+  e7.resistor=resistorMesh(x1,0,'R');
+  stage.add(e7.resistor);
+  e7.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
+  e7.records=[];
+  e7_renderTable();
+}
+function e7_V(){ return parseFloat(el('e7-V')?.value||3); }
+function e7_tick(dt){
+  const V=e7_V(), R=e7.R, I=V/R;
+  updateLoopParticles(e7.parts,dt,clamp(I*0.12,0.02,0.6),1,e7.x0,e7.x1,e7.y0,e7.y1);
+  const curve=[]; for(let v=0;v<=12;v+=0.5) curve.push({v,i:v/R});
+  drawVIGraph({
+    curves:[{points:curve,color:'#5bc8ff'}],
+    recorded:e7.records.map(r=>({v:r.V,i:r.I,color:'#4dffa0'})),
+    liveMarkers:[{v:V,i:clamp(I,0,4),color:'#ffc857'}],
+    xMax:12,yMax:4,xLabel:'V (Volts)',yLabel:'I (A)'
+  });
+  setGraphLegend([{color:'#5bc8ff',label:'True V–I relationship'},{color:'#4dffa0',label:'Recorded readings'},{color:'#ffc857',label:'Slider position'}]);
+}
+function e7_hud(){
+  const V=e7_V(), I=V/e7.R;
+  return [{l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},{l:'Current I',v:fmt(I,3)+' A',c:'#5bc8ff'},{l:'Data points recorded',v:e7.records.length,c:'#4dffa0'}];
+}
+function e7_record(){
+  const V=e7_V(), I=V/e7.R;
+  e7.records.push({V,I,R:V/I});
+  if(e7.records.length>10) e7.records.shift();
+  e7_renderTable();
+}
+function e7_renderTable(){
+  const rows=e7.records.map((r,i)=>[i+1, fmt(r.V,1), fmt(r.I,3), fmt(r.R,2)]);
+  renderLabTable(['#','V (V)','I (A)','R = V/I (Ω)'], rows);
+  const summaryEl=el('lab-summary');
+  if(e7.records.length>=2){
+    const avgR=e7.records.reduce((s,r)=>s+r.R,0)/e7.records.length;
+    const maxDev=Math.max(...e7.records.map(r=>Math.abs(r.R-avgR)));
+    const pct=(maxDev/avgR*100).toFixed(1);
+    summaryEl.innerHTML='<b>Average R ≈ '+fmt(avgR,2)+' Ω</b> — the ratio V/I stays constant (within '+pct+'%) as V changes. This confirms <b>Ohm\'s Law</b>: V is directly proportional to I.';
+  } else {
+    summaryEl.innerHTML='Record at least 2 readings at different voltages to check whether R = V/I stays constant.';
+  }
+}
+function e7_clear(){ e7.records=[]; e7_renderTable(); }
+
+/* ================= SCENE 8 — Lab 3: Resistivity of Different Metal Wires (virtual experiment) ================= */
+const LAB3_DIMS={l:1.5,d:0.2};
+const e8={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,wireMesh:null,bulb:null,records:[]};
+function e8_material(){ return el('e8-mat')?.value||'nichrome'; }
+function e8_V(){ return parseFloat(el('e8-V')?.value||6); }
+function e8_calc(matKey,V){
+  const rho=MATERIALS[matKey].rho;
+  const l=LAB3_DIMS.l, d=LAB3_DIMS.d;
+  const A=Math.PI*Math.pow((d/1000)/2,2);
+  const R=rho*l/A;
+  const I=V/R;
+  return {rho,l,d,A,R,I};
+}
+function e8_build(){
+  clearStage();
+  const {x0,x1,y0,y1}=e8;
+  stage.add(wireSegment(x1,y1,x1,y0,0x5a6a90));
+  stage.add(wireSegment(x1,y0,x0,y0,0x5a6a90));
+  stage.add(wireSegment(x0,y0,x0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  const bulb=bulbMesh(x1,0); stage.add(bulb); e8.bulb=bulb;
+  const matKey=e8_material();
+  const visRad=0.16;
+  const color=MATERIALS[matKey].color;
+  const topLen=x1-x0;
+  const wireMesh=new THREE.Mesh(new THREE.CylinderGeometry(visRad,visRad,topLen,20), mat(color,{metalness:0.55,roughness:0.4}));
+  wireMesh.rotation.z=Math.PI/2; wireMesh.position.set((x0+x1)/2,y1,0);
+  stage.add(wireMesh); e8.wireMesh=wireMesh;
+  const lbl=makeTextSprite(MATERIALS[matKey].name+' sample (l='+LAB3_DIMS.l+'m, d='+LAB3_DIMS.d+'mm)',{color:'#ffffff',height:0.26});
+  lbl.position.set((x0+x1)/2, y1+visRad+0.4, 0); stage.add(lbl);
+  e8.parts=makeLoopParticles(14,0xbcefff,x0,x1,y0,y1);
+  e8_renderTable();
+}
+function e8_tick(dt){
+  const matKey=e8_material(), V=e8_V();
+  const {I}=e8_calc(matKey,V);
+  updateLoopParticles(e8.parts,dt,clamp(I*0.3,0.015,0.5),1,e8.x0,e8.x1,e8.y0,e8.y1);
+  if(e8.bulb){
+    const glow=clamp(I*0.25,0.05,3);
+    e8.bulb.userData.glass.material.emissiveIntensity=glow;
+    e8.bulb.userData.filament.material.emissiveIntensity=1+glow;
+    e8.bulb.rotation.y+=dt*0.4;
+  }
+}
+function e8_hud(){
+  const matKey=e8_material(), V=e8_V();
+  const {rho,l,d,A,R,I}=e8_calc(matKey,V);
+  return [
+    {l:'Material',v:MATERIALS[matKey].name,c:'#ffc857'},
+    {l:'Length l',v:l+' m',c:'#5bc8ff'},
+    {l:'Diameter d',v:d+' mm',c:'#5bc8ff'},
+    {l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},
+    {l:'Current I',v:fmt(I,3)+' A',c:'#4dffa0'}
+  ];
+}
+function e8_record(){
+  const matKey=e8_material(), V=e8_V();
+  const {rho,l,d,A}=e8_calc(matKey,V);
+  const {I}=e8_calc(matKey,V);
+  const noise=1+(Math.random()-0.5)*0.06;
+  const Imeas=I*noise;
+  const Rmeas=V/Imeas;
+  const rhoMeas=Rmeas*A/l;
+  const pctDiff=Math.abs(rhoMeas-rho)/rho*100;
+  e8.records=(e8.records||[]).filter(r=>r.matKey!==matKey);
+  e8.records.push({matKey,l,d,V,I:Imeas,R:Rmeas,rho:rhoMeas,rhoTrue:rho,pctDiff});
+  e8_renderTable();
+}
+function e8_renderTable(){
+  const rows=(e8.records||[]).map(r=>[MATERIALS[r.matKey].name, fmt(r.l,1), fmt(r.d,1), fmt(r.V,1), fmt(r.I,3), fmt(r.R,2), fmtSci(r.rho,2), fmt(r.pctDiff,1)+'%']);
+  renderLabTable(['Material','l (m)','d (mm)','V (V)','I (A)','R (Ω)','ρ calc (Ωm)','% diff'], rows);
+  const summaryEl=el('lab-summary');
+  if((e8.records||[]).length>=2){
+    summaryEl.innerHTML='Compare your calculated ρ values with the accepted values: Copper 1.68×10⁻⁸, Aluminium 2.65×10⁻⁸, Iron 9.71×10⁻⁸, Nichrome 1.10×10⁻⁶ Ωm. Small % differences come from simulated experimental error.';
+  } else {
+    summaryEl.innerHTML='Select a material and press Record. Then switch materials and repeat to compare resistivities.';
+  }
+}
+function e8_clear(){ e8.records=[]; e8_renderTable(); }
+
+/* ===== SCENES CONFIG ===== */
+const scenes=[
+  {key:'e1', tab:'1 · Current', kpi:'KPI 3.1.1', title:'What Is Electric Current?',
+    blurb:`<p><b>What Is Electric Current?</b></p>
+      <p>Electric current is the flow of electric charge through a conductor. Whenever charge carriers — usually electrons in a metal wire — drift past a fixed point, we say a current is flowing.</p>
+      <p>Current is defined as the rate of flow of charge: <b>I = Q/t</b>. Since the moving charge is carried by <b>n</b> individual charge carriers, each with charge <b>e</b>, this can also be written <b>I = ne/t</b>, where e = 1.6 × 10⁻¹⁹ C is the charge on a single electron.</p>
+      <p>Current is measured in <b>amperes (A)</b>: one ampere equals one coulomb of charge passing a given cross-section every second.</p>
+      <p>Press <b>▶ Start Timer</b> and watch the charge carriers cross the amber ring — each crossing is counted so you can build up Q and t and calculate I for yourself.</p>`,
+    build:e1_build, tick:e1_tick, hud:e1_hud,
+    controlsHTML:`<div class="sw">rate=<input type="range" id="e1-rate" min="1" max="14" step="0.5" value="6"></div>
+      <button class="btn green" id="e1-start">▶ Start Timer</button>
+      <label class="chk"><input type="checkbox" id="e1-slow"> Slow Motion (0.25x)</label>`,
+    wire(){ el('e1-start').onclick=e1_toggleRun; },
+    onLeave(){ e1.running=false; }},
+
+  {key:'e2', tab:'2 · Direction', kpi:'KPI 3.1.2', title:'Conventional Current vs Electron Flow',
+    blurb:`<p><b>Conventional Current vs Electron Flow</b></p>
+      <p>In a complete circuit, charge flows continuously from the battery, around the external circuit, and back again.</p>
+      <p><b>Conventional current</b> is defined as the direction that positive charge would move: out of the battery's <b>positive (+)</b> terminal, through the external circuit, and into the <b>negative (−)</b> terminal.</p>
+      <p>In a real metal wire it is negatively charged <b>electrons</b> that physically move — and they travel in the <b>opposite</b> direction, from the negative terminal to the positive terminal.</p>
+      <p>Use the toggle button to switch between the two views and see the direction of travel reverse.</p>`,
+    build:e2_build, tick:e2_tick, hud:e2_hud,
+    controlsHTML:`<button class="btn amber" id="e2-toggle">⚡ Showing: Conventional Current</button>`,
+    wire(){ el('e2-toggle').onclick=e2_toggle; },
+    challenge:{
+      pool:[
+        {q:'Conventional current in the external circuit flows from the battery\'s ___ terminal to its ___ terminal.', opts:['positive → negative','negative → positive'], correct:0},
+        {q:'Electron flow in the external circuit travels from the battery\'s ___ terminal to its ___ terminal.', opts:['negative → positive','positive → negative'], correct:0},
+        {q:'Conventional current direction is defined as the direction that ___ would move.', opts:['positive charges','electrons','neutrons','photons'], correct:0},
+        {q:'Compared with conventional current, electron flow travels in the ___ direction.', opts:['opposite','same','perpendicular'], correct:0}
+      ],
+      newQuestion(){ this.cur=pick(this.pool); return {prompt:this.cur.q, options:this.cur.opts}; },
+      check(idx){ const ok=idx===this.cur.correct; return {correct:ok, correctIdx:this.cur.correct, message: ok?'Correct!':'Not quite — remember: conventional current and electron flow move in opposite directions.'}; }
+    }},
+
+  {key:'e3', tab:'3 · Meters', kpi:'KPI 3.1.3', title:'Ammeters & Voltmeters',
+    blurb:`<p><b>Measuring Current and Voltage</b></p>
+      <p>To investigate a circuit we need to measure both the current flowing and the voltage (potential difference) across a component.</p>
+      <p>An <b>ammeter</b> measures current, so it must be connected <b>in series</b> — directly in the path of the charge flow — so the same current that flows through the component also flows through the meter.</p>
+      <p>A <b>voltmeter</b> measures potential difference, so it must be connected <b>in parallel</b> — across the component — to compare the "electrical height" at its two ends without diverting the current.</p>
+      <p>Use the buttons below to choose a meter and a wiring position, and see whether the connection is correct.</p>`,
+    build:e3_build, tick:e3_tick, hud:e3_hud,
+    controlsHTML:`<div class="sw">Meter:</div>
+      <button class="btn" id="e3-type-a">Ammeter</button><button class="btn" id="e3-type-v">Voltmeter</button>
+      <div class="sep"></div><div class="sw">Wiring:</div>
+      <button class="btn" id="e3-pos-s">Series</button><button class="btn" id="e3-pos-p">Parallel</button>`,
+    wire(){
+      function refresh(){
+        el('e3-type-a').classList.toggle('on', e3.type==='ammeter');
+        el('e3-type-v').classList.toggle('on', e3.type==='voltmeter');
+        el('e3-pos-s').classList.toggle('on', e3.position==='series');
+        el('e3-pos-p').classList.toggle('on', e3.position==='parallel');
+        e3_render();
+      }
+      el('e3-type-a').onclick=()=>{ e3.type='ammeter'; refresh(); };
+      el('e3-type-v').onclick=()=>{ e3.type='voltmeter'; refresh(); };
+      el('e3-pos-s').onclick=()=>{ e3.position='series'; refresh(); };
+      el('e3-pos-p').onclick=()=>{ e3.position='parallel'; refresh(); };
+      refresh();
+    },
+    challenge:{
+      pool:[
+        {q:'To measure the current flowing through a resistor, an ammeter must be connected in...', opts:['Series with the resistor','Parallel with the resistor'], correct:0},
+        {q:'To measure the voltage across a resistor, a voltmeter must be connected in...', opts:['Parallel with the resistor','Series with the resistor'], correct:0},
+        {q:'Which instrument is connected in parallel across a component?', opts:['Voltmeter','Ammeter'], correct:0},
+        {q:'Which instrument is connected in series within the circuit?', opts:['Ammeter','Voltmeter'], correct:0}
+      ],
+      newQuestion(){ this.cur=pick(this.pool); return {prompt:this.cur.q, options:this.cur.opts}; },
+      check(idx){ const ok=idx===this.cur.correct; return {correct:ok, correctIdx:this.cur.correct, message: ok?'Correct!':'Remember: Ammeters → series. Voltmeters → parallel.'}; }
+    }},
+
+  {key:'e4', tab:'4 · Ohm\'s Law', kpi:'KPI 3.1.4 / 3.1.5', title:'Resistance & Ohm\'s Law',
+    blurb:`<p><b>Resistance and Ohm's Law</b></p>
+      <p><b>Resistance</b> is the opposition a conductor offers to the flow of current, measured in <b>ohms (Ω)</b>. Some materials let charge flow easily (low resistance); others resist it more (high resistance).</p>
+      <p><b>Ohm's law</b> states that, at constant temperature, the current through a conductor is directly proportional to the potential difference across it: <b>ΔV = IR</b>, or equivalently <b>R = ΔV / I</b>.</p>
+      <p>Drag the voltage slider to change the battery's potential difference and watch the current — and the bulb's brightness — respond. Because R stays fixed, the ratio V/I stays constant: this is exactly what Lab 2 asks you to verify.</p>`,
+    build:e4_build, tick:e4_tick, hud:e4_hud,
+    controlsHTML:`<div class="sw">V=<input type="range" id="e4-V" min="0" max="12" step="0.5" value="6"></div>
+      <div class="sw">R=<select id="e4-R"><option value="3">3 Ω</option><option value="4">4 Ω</option><option value="6" selected>6 Ω</option><option value="8">8 Ω</option><option value="10">10 Ω</option><option value="12">12 Ω</option></select></div>`,
+    wire(){},
+    challenge:{custom:true, idx:3}},
+
+  {key:'e5', tab:'5 · Ohmic', kpi:'KPI 3.1.6', title:'Ohmic & Non-Ohmic Materials',
+    blurb:`<p><b>Ohmic and Non-Ohmic Materials</b></p>
+      <p>A material is <b>ohmic</b> if it obeys Ohm's law: its resistance stays constant no matter what voltage or current is applied. A graph of current against voltage for an ohmic conductor is a straight line through the origin.</p>
+      <p>A material is <b>non-ohmic</b> if its resistance changes as the voltage or current changes, producing a curved current–voltage graph.</p>
+      <p>A <b>filament lamp</b> is a classic non-ohmic example: as more current flows, the filament heats up, its resistance increases, and current no longer rises in direct proportion to voltage.</p>
+      <p>Switch between the fixed resistor and the filament lamp and watch how each one behaves as you raise the voltage.</p>`,
+    build:e5_build, tick:e5_tick, hud:e5_hud, showGraph:true,
+    controlsHTML:`<div class="sw">V=<input type="range" id="e5-V" min="0.5" max="12" step="0.5" value="6"></div>
+      <button class="btn" id="e5-r">Resistor (Ohmic)</button><button class="btn" id="e5-l">Filament Lamp (Non-ohmic)</button>`,
+    wire(){
+      el('graph-title').textContent='V–I Graph — Ohmic vs Non-Ohmic';
+      function refresh(){ el('e5-r').classList.toggle('on', e5.type==='resistor'); el('e5-l').classList.toggle('on', e5.type==='lamp'); }
+      el('e5-r').onclick=()=>{ e5_setType('resistor'); refresh(); };
+      el('e5-l').onclick=()=>{ e5_setType('lamp'); refresh(); };
+      refresh();
+    },
+    challenge:{
+      pool:[
+        {q:'A component that has constant resistance regardless of the voltage applied is called...', opts:['Ohmic','Non-ohmic'], correct:0},
+        {q:'A filament lamp\'s resistance ___ as its temperature increases.', opts:['increases','decreases','stays the same'], correct:0},
+        {q:'Which of these is an example of a non-ohmic (nonlinear) component?', opts:['A filament lamp','A fixed resistor at constant temperature'], correct:0},
+        {q:'On a current–voltage graph, an ohmic conductor produces a...', opts:['Straight line through the origin','Curved line'], correct:0}
+      ],
+      newQuestion(){ this.cur=pick(this.pool); return {prompt:this.cur.q, options:this.cur.opts}; },
+      check(idx){ const ok=idx===this.cur.correct; return {correct:ok, correctIdx:this.cur.correct, message: ok?'Correct!':'Remember: ohmic materials give a straight-line, non-ohmic materials give a curve.'}; }
+    }},
+
+  {key:'e6', tab:'6 · Resistivity', kpi:'KPI 3.1.7 / 3.1.8 / 3.1.9', title:'Resistivity & Factors Affecting Resistance',
+    blurb:`<p><b>Resistivity and the Factors Affecting Resistance</b></p>
+      <p>The resistance of a wire depends on four things: its <b>length</b>, its <b>cross-sectional area</b>, the <b>material</b> it is made from, and its <b>temperature</b>.</p>
+      <p>Resistance is <b>directly proportional</b> to length (a longer wire gives a longer path for charge to travel) and <b>inversely proportional</b> to cross-sectional area (a thicker wire gives charge carriers more room to flow).</p>
+      <p><b>Resistivity (ρ)</b>, measured in <b>ohm-metres (Ωm)</b>, is a property of the material itself — the resistance of a 1 m length with a 1 m² cross-section. Putting it together: <b>R = ρl / A</b>.</p>
+      <p>Adjust the wire's length and thickness, and try different materials, to see how each factor changes the resistance — this is the idea behind Lab 3.</p>`,
+    build:e6_build, tick:e6_tick, hud:e6_hud,
+    controlsHTML:`<div class="sw">l=<input type="range" id="e6-l" min="0.5" max="5" step="0.1" value="2"></div>
+      <div class="sw">d=<input type="range" id="e6-d" min="0.2" max="3" step="0.1" value="1"></div>
+      <div class="sw">material=<select id="e6-mat"><option value="copper">Copper</option><option value="aluminium">Aluminium</option><option value="iron">Iron</option><option value="nichrome" selected>Nichrome</option></select></div>`,
+    wire(){
+      el('e6-l').oninput=()=>e6_build();
+      el('e6-d').oninput=()=>e6_build();
+      el('e6-mat').onchange=()=>e6_build();
+    },
+    challenge:{custom:true, idx:5}},
+
+  {key:'e7', tab:'7 · Lab: Ohm\'s Law', kpi:'Lab 2', title:'Virtual Experiment — Verify Ohm\'s Law',
+    blurb:`<p><b>Lab 2 — Verify Ohm's Law</b></p>
+      <p>In this experiment you will test whether the current through a resistor is directly proportional to the voltage across it.</p>
+      <p>Choose a resistor, set a voltage with the slider, and press <b>📝 Record Data Point</b> to log the reading. Repeat for several different voltages.</p>
+      <p>For each reading, calculate <b>R = V / I</b>. If Ohm's law holds, R should stay roughly constant, and the V–I graph on the left should form a straight line through the origin.</p>`,
+    build:e7_build, tick:e7_tick, hud:e7_hud, showGraph:true, graphTable:true,
+    controlsHTML:`<div class="sw">V=<input type="range" id="e7-V" min="0.5" max="12" step="0.5" value="3"></div>
+      <div class="sw">Resistor=<select id="e7-Rsel"><option value="3">3 Ω</option><option value="5" selected>5 Ω</option><option value="8">8 Ω</option><option value="12">12 Ω</option></select></div>
+      <button class="btn green" id="e7-record">📝 Record Data Point</button>
+      <button class="btn" id="e7-clear">🗑 Clear Table</button>`,
+    wire(){
+      el('graph-title').textContent='Lab 2 — Verify Ohm\'s Law';
+      el('e7-record').onclick=e7_record;
+      el('e7-clear').onclick=e7_clear;
+      el('e7-Rsel').onchange=e7_build;
+    }},
+
+  {key:'e8', tab:'8 · Lab: Resistivity', kpi:'Lab 3', title:'Virtual Experiment — Resistivity of Metal Wires',
+    blurb:`<p><b>Lab 3 — Resistivity of Different Metal Wires</b></p>
+      <p>Four wire samples of equal length and diameter, but made from different metals, are available for testing.</p>
+      <p>Select a material, choose a voltage, and press <b>📝 Record Measurement</b> to measure the current and calculate resistivity using <b>ρ = RA / l</b>, where R = V/I.</p>
+      <p>Test all four materials and compare your calculated resistivities with the accepted values — this reveals why some metals conduct electricity much better than others.</p>`,
+    build:e8_build, tick:e8_tick, hud:e8_hud, showGraph:true, graphTable:true, hideGraphCanvas:true,
+    controlsHTML:`<div class="sw">material=<select id="e8-mat"><option value="copper">Copper</option><option value="aluminium">Aluminium</option><option value="iron">Iron</option><option value="nichrome" selected>Nichrome</option></select></div>
+      <div class="sw">V=<input type="range" id="e8-V" min="1" max="12" step="0.5" value="6"></div>
+      <button class="btn green" id="e8-record">📝 Record Measurement</button>
+      <button class="btn" id="e8-clear">🗑 Clear Table</button>`,
+    wire(){
+      el('graph-title').textContent='Lab 3 — Resistivity Data';
+      el('e8-mat').onchange=()=>e8_build();
+      el('e8-record').onclick=e8_record;
+      el('e8-clear').onclick=e8_clear;
+    }}
+];
+
+/* ===== UI WIRING ===== */
+let currentIdx=0, challengeMode=false, score={correct:0,total:0};
+
+function buildTabs(){
+  const wrap=el('tabs'); wrap.innerHTML='';
+  scenes.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='tab-btn'+(i===currentIdx?' active':'');
+    b.textContent=s.tab;
+    b.onclick=()=>loadScene(i);
+    wrap.appendChild(b);
+  });
+}
+function renderHUD(){
+  const rows=scenes[currentIdx].hud();
+  el('hud-rows').innerHTML=rows.map(r=>'<div class="dr"><span class="dl">'+r.l+'</span><span class="dv" style="color:'+(r.c||'#ddeeff')+'">'+r.v+'</span></div>').join('');
+}
+function loadScene(i){
+  if(scenes[currentIdx] && scenes[currentIdx].onLeave) scenes[currentIdx].onLeave();
+  currentIdx=i;
+  clearStage();
+  const s=scenes[i];
+  s.build();
+  el('scene-controls').innerHTML=s.controlsHTML;
+  showGraphPanel(!!s.showGraph, !!s.graphTable, !!s.hideGraphCanvas);
+  if(s.wire) s.wire();
+  el('caption-kpi').textContent=s.kpi;
+  el('caption-title').textContent=s.title;
+  el('caption-text').innerHTML=s.blurb;
+  el('caption').style.display='';
+  el('caption').classList.remove('collapsed');
+  el('btn-caption-fold').textContent='▼';
+  buildTabs();
+  renderHUD();
+  challengeMode=false;
+  score={correct:0,total:0};
+  el('chal-score').textContent='Score: 0/0';
+  el('btn-challenge-toggle').classList.remove('on');
+  updateChallengeAvailability();
+}
+function isCustomChallengeIdx(i){ return i===0 || i===3 || i===5; }
+function updateChallengeAvailability(){
+  const has = isCustomChallengeIdx(currentIdx) || !!scenes[currentIdx].challenge;
+  el('btn-challenge-toggle').style.display= has? '':'none';
+  el('challenge-wrap').classList.remove('show','s5-pos','collapsed');
+  el('btn-chal-fold').textContent='▼';
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+
+function newChallenge(){
+  el('chal-result').className=''; el('chal-result').style.display='none';
+  el('challenge-wrap').classList.remove('collapsed');
+  el('btn-chal-fold').textContent='▼';
+
+  if(currentIdx===0){ e1_initChallenge(); return; }
+  if(currentIdx===3){ e4_initChallenge(); return; }
+  if(currentIdx===5){ e6_initChallenge(); return; }
+
+  const c=scenes[currentIdx].challenge;
+  if(!c){ el('chal-prompt').textContent='No challenge available for this topic.'; el('chal-body').innerHTML=''; el('btn-chal-check').style.display='none'; return; }
+  const q=c.newQuestion();
+  el('chal-prompt').innerHTML=q.prompt;
+  if(q.options){
+    el('btn-chal-check').style.display='none';
+    el('chal-body').innerHTML='<div id="chal-options" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">' +
+      q.options.map((o,idx)=>'<button class="btn green" data-idx="'+idx+'">'+o+'</button>').join('') + '</div>';
+    Array.from(el('chal-options').children).forEach(btn=>{
+      btn.onclick=()=>{
+        const idx=parseInt(btn.dataset.idx);
+        const res=c.check(idx);
+        Array.from(el('chal-options').children).forEach((b,i)=>{
+          if(res.correctIdx!==undefined && i===res.correctIdx) b.classList.add('on');
+          else if(i===idx && !res.correct) b.style.borderColor='var(--red)';
+          b.disabled=true;
+        });
+        showChalResult(res);
+      };
+    });
+  } else {
+    el('btn-chal-check').style.display='';
+    el('chal-body').innerHTML='';
+  }
+}
+function showChalResult(res){
+  score.total++; if(res.correct) score.correct++;
+  el('chal-score').textContent='Score: '+score.correct+'/'+score.total;
+  const box=el('chal-result');
+  box.textContent=res.message;
+  box.style.display='';
+  box.className=res.correct? 'pass':'fail';
+}
+
+el('btn-chal-check').onclick=()=>{
+  if(currentIdx===0){ showChalResult(e1_checkChallenge()); return; }
+  if(currentIdx===3){ showChalResult(e4_checkChallenge()); return; }
+  if(currentIdx===5){ showChalResult(e6_checkChallenge()); return; }
+  const c=scenes[currentIdx].challenge; if(!c) return; showChalResult(c.check());
+};
+el('btn-chal-new').onclick=newChallenge;
+el('btn-chal-exit').onclick=()=>{
+  challengeMode=false;
+  el('btn-challenge-toggle').classList.remove('on');
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  if(currentIdx===0) e1_exitChallenge();
+  if(currentIdx===3) e4_exitChallenge();
+  if(currentIdx===5) e6_exitChallenge();
+};
+el('btn-challenge-toggle').onclick=()=>{
+  challengeMode=!challengeMode;
+  el('btn-challenge-toggle').classList.toggle('on', challengeMode);
+  el('challenge-wrap').classList.toggle('show', challengeMode);
+  if(challengeMode) newChallenge();
+  else {
+    if(currentIdx===0) e1_exitChallenge();
+    if(currentIdx===3) e4_exitChallenge();
+    if(currentIdx===5) e6_exitChallenge();
+  }
+};
+el('btn-reset-scene').onclick=()=>loadScene(currentIdx);
+
+/* MAIN LOOP */
+let lastRender=0;
+function animate(ts){
+  requestAnimationFrame(animate);
+  if(ts-lastRender<33) return; lastRender=ts;
+  scenes[currentIdx].tick(0.033);
+  renderHUD();
+  renderer.render(scene3, cam3);
+}
+loadScene(0);
+animate();
+
+/* QUIZ */
+const QUIZ=[
+  {kpi:'3.1.1', q:'What is one ampere of current equivalent to?', opts:['One coulomb of charge passing a point every second','One joule of energy per second','One volt per ohm','One watt per second'], correct:0, exp:'By definition, 1 A = 1 coulomb of charge passing a given cross-section every second.'},
+  {kpi:'3.1.1', q:'The formula for electric current in terms of charge is...', opts:['I = Q/t','I = Qt','I = t/Q','I = Q + t'], correct:0, exp:'Current is the rate of flow of charge: I = Q/t (also I = ne/t).'},
+  {kpi:'3.1.2', q:'Conventional current in a circuit flows in the direction that...', opts:['positive charges would move','electrons actually move','neither charge moves','only occurs in AC circuits'], correct:0, exp:'Conventional current is defined as the direction positive charge carriers would flow.'},
+  {kpi:'3.1.2', q:'In the external circuit, conventional current flows from the battery\'s...', opts:['positive terminal to the negative terminal','negative terminal to the positive terminal','positive terminal back to itself','neutral point outward'], correct:0, exp:'Conventional current flows from + through the external circuit to −.'},
+  {kpi:'3.1.3', q:'Which instrument is always connected in series in a circuit?', opts:['Ammeter','Voltmeter','Both are always in parallel','Neither'], correct:0, exp:'An ammeter must carry the same current as the component, so it is wired in series.'},
+  {kpi:'3.1.3', q:'A voltmeter is connected...', opts:['In parallel across the component','In series with the component','Nowhere near the component','Only inside the battery'], correct:0, exp:'Voltmeters measure potential difference, so they are connected in parallel.'},
+  {kpi:'3.1.4', q:'Resistance is best described as...', opts:['Opposition to the flow of current','A measure of voltage supplied','The rate of charge flow','A type of energy'], correct:0, exp:'Resistance is the opposition a conductor offers to the flow of current, measured in ohms.'},
+  {kpi:'3.1.5', q:'Ohm\'s law states that, at constant temperature...', opts:['V is directly proportional to I','V is inversely proportional to I','R is proportional to V only','I is independent of V'], correct:0, exp:'Ohm\'s law: the current through a conductor is directly proportional to the potential difference across it.'},
+  {kpi:'3.1.5', q:'Ohm\'s law is expressed mathematically as...', opts:['ΔV = IR','ΔV = I/R','ΔV = I + R','ΔV = R/I'], correct:0, exp:'Rearranged, this also gives R = ΔV/I.'},
+  {kpi:'3.1.6', q:'A material with constant resistance over a wide range of voltages is described as...', opts:['Ohmic','Non-ohmic','Magnetic','Insulating only'], correct:0, exp:'Ohmic materials obey Ohm\'s law and give a straight-line I–V graph.'},
+  {kpi:'3.1.6', q:'A filament lamp is an example of a(n)...material.', opts:['Non-ohmic','Ohmic','Superconducting','Zero-resistance'], correct:0, exp:'Its resistance rises with temperature, giving a curved (nonlinear) I–V graph.'},
+  {kpi:'3.1.7', q:'The resistance of a cylindrical wire is directly proportional to its...', opts:['Length','Cross-sectional area','Colour','Weight'], correct:0, exp:'A longer wire means a longer path for charge carriers, so resistance increases with length.'},
+  {kpi:'3.1.7', q:'The resistance of a wire is inversely proportional to its...', opts:['Cross-sectional area','Length','Resistivity','Supply voltage'], correct:0, exp:'A thicker wire (larger cross-sectional area) offers less resistance.'},
+  {kpi:'3.1.8', q:'Resistivity is defined as the resistance of a conductor of...', opts:['Length 1 m and cross-sectional area 1 m²','Any length and any area','Length 1 cm only','Zero length'], correct:0, exp:'Resistivity (ρ) is a material property defined for a 1 m length with a 1 m² cross-section, measured in Ωm.'},
+  {kpi:'3.1.9', q:'The equation used to calculate resistance from resistivity is...', opts:['R = ρl/A','R = ρA/l','R = A/(ρl)','R = l/(ρA)'], correct:0, exp:'R = ρl/A — resistance increases with length and resistivity, and decreases with area.'},
+  {kpi:'Lab 2', q:'In an experiment to verify Ohm\'s law, a graph of voltage (y-axis) against current (x-axis) for an ohmic resistor should be...', opts:['A straight line through the origin','A curve bending upward','A horizontal line','A straight line not through the origin'], correct:0, exp:'For an ohmic conductor, V ∝ I, so the graph is a straight line through the origin with gradient R.'}
+];
+let quizIdx=0, quizScore=0, quizAnswered=false;
+function openQuiz(){ quizIdx=0; quizScore=0; el('quiz-modal').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion(); }
+function showQuizQuestion(){
+  quizAnswered=false;
+  const item=QUIZ[quizIdx];
+  el('quiz-progress').textContent='Question '+(quizIdx+1)+'/'+QUIZ.length;
+  el('quiz-kpi').textContent='KPI '+item.kpi;
+  el('quiz-question').textContent=item.q;
+  el('quiz-explain').style.display='none';
+  el('quiz-next').style.display='none';
+  el('quiz-options').innerHTML=item.opts.map((o,i)=>'<button class="quiz-opt" data-idx="'+i+'">'+o+'</button>').join('');
+  Array.from(el('quiz-options').children).forEach(btn=>{
+    btn.onclick=()=>{
+      if(quizAnswered) return; quizAnswered=true;
+      const idx=parseInt(btn.dataset.idx);
+      if(idx===item.correct) quizScore++;
+      Array.from(el('quiz-options').children).forEach((b,i)=>{
+        if(i===item.correct) b.classList.add('correct');
+        else if(i===idx) b.classList.add('wrong');
+      });
+      el('quiz-explain').textContent=item.exp;
+      el('quiz-explain').style.display='block';
+      el('quiz-next').style.display='inline-block';
+      el('quiz-next').textContent=(quizIdx<QUIZ.length-1)? 'Next →' : 'See results →';
+    };
+  });
+}
+el('quiz-next').onclick=()=>{ quizIdx++; if(quizIdx>=QUIZ.length) showQuizFinal(); else showQuizQuestion(); };
+function showQuizFinal(){
+  el('quiz-live').style.display='none'; el('quiz-final').style.display='block';
+  el('quiz-final-score').textContent=quizScore+'/'+QUIZ.length;
+  const pct=quizScore/QUIZ.length;
+  el('quiz-final-msg').textContent=pct>=0.8?'Outstanding grasp of circuits! 🎉':(pct>=0.5?'Good job! Review the modules and try again.':'Keep practicing current & resistance concepts!');
+}
+el('quiz-restart').onclick=openQuiz;
+el('quiz-btn').onclick=openQuiz;
+el('quiz-close').onclick=()=>{ el('quiz-modal').classList.remove('show'); };
+el('quiz-modal').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('show'); });
+</script>
+
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img id="qr-img" alt="QR code"/>
+    <p id="qr-url"></p>
+  </div>
+</div>
+<script>
+(function(){
+  const url = window.location.href;
+  const img = document.getElementById('qr-img');
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=' + encodeURIComponent(url);
+  img.onerror = function(){ this.src = 'https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=' + encodeURIComponent(url); };
+  document.getElementById('qr-url').textContent = url;
+})();
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+</script>
+</body>
+</html>
