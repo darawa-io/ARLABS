@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Magnetism Lab | Poles, Fields &amp; Electromagnets</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B2%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
+:root{--bg:#07090f;--surface:#0d1120;--border:rgba(180,200,255,0.12);--amber:#ffc857;--blue:#5bc8ff;--violet:#b57aff;--green:#4dffa0;--red:#ff5e72;--text:#ddeeff;--muted:rgba(180,210,255,0.55);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100%;width:100%;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#title{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.45);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+#tabs{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;max-width:min(900px,calc(100vw - 200px));overflow-x:auto;}
+#tabs::-webkit-scrollbar{height:4px;}
+.tab-btn{flex-shrink:0;padding:6px 10px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.tab-btn:hover{color:#fff;background:rgba(180,200,255,0.08);}
+.tab-btn.active{background:rgba(91,200,255,0.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(91,200,255,0.4);}
+#caption{position:absolute;top:calc(66px + env(safe-area-inset-top,0px));left:16px;z-index:5;max-width:320px;max-height:min(360px,calc(100vh - 200px));overflow-y:auto;background:rgba(10,14,28,0.90);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:14px;padding:14px 16px;}
+#caption::-webkit-scrollbar{width:4px;}
+.caption-head{display:flex;justify-content:space-between;align-items:center;}
+#caption-kpi{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:4px;}
+#caption-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;}
+#caption-text{font-size:11.5px;line-height:1.6;color:rgba(210,225,255,0.85);}
+#caption-text p{margin-bottom:8px;}
+#caption-text p:last-child{margin-bottom:0;}
+#caption-text b{color:#fff;}
+.btn-fold{background:none;border:none;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;font-size:12px;padding:2px 6px;border-radius:4px;}
+.btn-fold:hover{color:#fff;background:rgba(180,200,255,0.1);}
+#caption.collapsed #caption-text{display:none;}
+#hud{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:14px;min-width:210px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(180,200,255,0.5);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:10px;}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.65);}
+.dv{font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700;text-align:right;}
+#controls{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:26px;padding:9px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);}
+#scene-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:20px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.18);border-color:var(--green);color:#fff;}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.amber.on{background:rgba(255,200,87,0.22);border-color:var(--amber);color:#fff;}
+.btn.red{border-color:rgba(255,94,114,0.4);color:var(--red);background:rgba(255,94,114,0.06);}
+.btn.red:hover{background:rgba(255,94,114,0.16);color:#fff;}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:100px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--violet);border:none;cursor:pointer;}
+.chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px;font-family:'Space Mono',monospace;white-space:nowrap;cursor:pointer;user-select:none;}
+.chk input[type=checkbox]{appearance:none;-webkit-appearance:none;width:15px;height:15px;border-radius:4px;border:1px solid rgba(180,200,255,0.4);background:rgba(180,200,255,0.08);cursor:pointer;position:relative;transition:all .15s;outline:none;flex-shrink:0;}
+.chk input[type=checkbox]:checked{background:var(--violet);border-color:var(--violet);}
+.chk input[type=checkbox]:checked::after{content:'✓';position:absolute;top:-3px;left:2px;color:#fff;font-size:12px;font-weight:700;}
+#hint{position:absolute;bottom:calc(64px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);font-size:9px;color:rgba(180,200,255,0.25);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+#challenge-wrap{position:absolute;bottom:calc(74px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:15;display:none;width:min(560px,calc(100vw - 24px));}
+#challenge-wrap.show{display:block;}
+#challenge-bar{background:rgba(10,14,28,0.96);backdrop-filter:blur(22px);border:1px solid rgba(255,200,87,0.4);border-radius:18px;padding:14px 18px;box-shadow:0 10px 30px rgba(0,0,0,0.5);max-height:64vh;overflow-y:auto;}
+#challenge-bar::-webkit-scrollbar{width:4px;}
+#chal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(255,200,87,0.2);padding-bottom:6px;}
+#chal-head span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-weight:700;}
+#chal-score{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--green);}
+#chal-prompt{font-size:12px;line-height:1.5;color:var(--text);margin-bottom:10px;}
+#chal-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.chal-opt{text-align:left;padding:8px 12px;border-radius:10px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;}
+.chal-opt:hover{background:rgba(180,200,255,0.12);}
+.chal-opt.sel{border-color:var(--violet);background:rgba(181,122,255,0.16);}
+.chal-opt.correct{background:rgba(77,255,160,0.2);border-color:var(--green);}
+.chal-opt.wrong{background:rgba(255,94,114,0.2);border-color:var(--red);}
+#chal-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px;}
+#chal-result{font-size:11px;line-height:1.5;margin-top:8px;padding:8px 12px;border-radius:10px;display:none;}
+#chal-result.pass{display:block;background:rgba(77,255,160,0.12);color:var(--green);border:1px solid rgba(77,255,160,0.35);}
+#chal-result.fail{display:block;background:rgba(255,94,114,0.12);color:var(--red);border:1px solid rgba(255,94,114,0.35);}
+
+/* ---------- Test Yourself section (tab 5) ---------- */
+#quiz-panel{display:none;position:fixed;inset:0;z-index:8;padding:calc(96px + env(safe-area-inset-top,0px)) 16px 24px;overflow-y:auto;}
+#quiz-panel.show{display:block;}
+#quiz-panel-inner{background:rgba(9,11,22,.96);border:1px solid rgba(180,120,255,.3);border-radius:20px;padding:26px;max-width:680px;width:100%;margin:0 auto;box-shadow:0 20px 60px rgba(0,0,0,0.55);}
+#quiz-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;border-bottom:1px solid rgba(180,120,255,.22);padding-bottom:10px;gap:10px;flex-wrap:wrap;}
+#quiz-head h3{font-family:'Syne',sans-serif;font-size:20px;color:#fff;margin:0;}
+#quiz-progress{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:1px;white-space:nowrap;}
+#quiz-kpi{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--violet);border:1px solid rgba(181,122,255,.4);border-radius:8px;padding:2px 7px;margin-bottom:12px;}
+#quiz-question{font-size:15px;line-height:1.65;color:var(--text);margin-bottom:16px;}
+#quiz-options{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.quiz-opt{text-align:left;padding:11px 15px;border-radius:12px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;cursor:pointer;transition:all .15s;}
+.quiz-opt:hover{background:rgba(180,200,255,0.12);}
+.quiz-opt.correct{background:rgba(77,255,160,0.2);border-color:var(--green);}
+.quiz-opt.wrong{background:rgba(255,94,114,0.2);border-color:var(--red);}
+#quiz-explain{font-size:12.5px;line-height:1.6;color:rgba(200,215,255,0.8);background:rgba(180,200,255,0.05);border-radius:10px;padding:11px 13px;display:none;margin-bottom:14px;}
+#quiz-next{display:none;}
+#quiz-final{display:none;text-align:center;padding:24px 0;}
+#quiz-final h2{font-family:'Syne',sans-serif;font-size:34px;color:#fff;margin-bottom:8px;}
+#quiz-final p{font-size:14px;color:var(--muted);margin-bottom:20px;}
+
+#field2d-panel{position:absolute;z-index:9;width:210px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:10px;display:none;}
+#field2d-panel.show{display:block;}
+#field2d-panel.expanded{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:80vw;height:80vh;z-index:60;padding:14px;display:flex;flex-direction:column;}
+#field2d-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+#field2d-head span{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(180,200,255,0.5);text-transform:uppercase;}
+#btn-field2d-expand{display:flex;align-items:center;gap:6px;background:rgba(91,200,255,0.14);border:1px solid rgba(91,200,255,0.45);color:#eaf3ff;cursor:pointer;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;line-height:1;}
+#btn-field2d-expand:hover{background:rgba(91,200,255,0.26);}
+#field2d-panel.expanded #btn-field2d-expand{font-size:15px;padding:10px 18px;background:rgba(255,94,114,0.16);border-color:rgba(255,94,114,0.5);}
+#field2d-panel.expanded #btn-field2d-expand:hover{background:rgba(255,94,114,0.28);}
+#field2d-canvas{width:100%;display:block;border-radius:12px;background:radial-gradient(circle at 50% 50%,rgba(91,200,255,0.06),rgba(5,7,14,0.4));touch-action:none;cursor:grab;height:188px;}
+#field2d-panel.expanded #field2d-canvas{flex:1 1 auto;height:auto;min-height:0;}
+#field2d-hint{font-family:'Space Mono',monospace;font-size:8px;color:rgba(180,200,255,0.35);letter-spacing:0.3px;text-align:center;}
+#field2d-foot{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:5px;}
+#field2d-chk-wrap{font-size:10.5px;}
+#field2d-backdrop{display:none;position:fixed;inset:0;background:rgba(4,6,14,0.6);z-index:55;}
+#field2d-backdrop.show{display:block;}
+#sc2-chal-panel{display:none;position:absolute;top:calc(230px + env(safe-area-inset-top,0px));right:16px;z-index:12;width:260px;max-height:calc(100vh - 330px);overflow-y:auto;background:rgba(10,14,28,0.94);backdrop-filter:blur(20px);border:1px solid rgba(255,200,87,0.35);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,0.45);}
+#sc2-chal-panel.show{display:block;}
+#sc2-chal-panel::-webkit-scrollbar{width:4px;}
+#sc2-chal-head{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-weight:700;margin-bottom:8px;border-bottom:1px solid rgba(255,200,87,0.2);padding-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+#sc2-chal-round{color:var(--green);font-size:10px;}
+#sc2-chal-prompt{font-size:11px;line-height:1.5;color:rgba(210,225,255,0.85);margin-bottom:9px;}
+#sc2-chal-opts{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;}
+.sc2-opt{text-align:left;padding:6px 10px;border-radius:9px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:11.5px;cursor:pointer;transition:all .15s;}
+.sc2-opt:hover{background:rgba(180,200,255,0.12);}
+.sc2-opt.sel{border-color:var(--violet);background:rgba(181,122,255,0.16);}
+.sc2-opt.correct{background:rgba(77,255,160,0.2);border-color:var(--green);}
+.sc2-opt.wrong{background:rgba(255,94,114,0.2);border-color:var(--red);}
+#sc2-chal-result{display:none;font-size:11px;line-height:1.5;padding:7px 10px;border-radius:9px;margin-bottom:9px;}
+#sc2-chal-result.pass{display:block;background:rgba(77,255,160,0.12);color:var(--green);border:1px solid rgba(77,255,160,0.35);}
+#sc2-chal-result.fail{display:block;background:rgba(255,94,114,0.12);color:var(--red);border:1px solid rgba(255,94,114,0.35);}
+#sc2-chal-actions{display:flex;gap:6px;flex-wrap:wrap;}
+#sc2-chal-results-table{margin-top:8px;}
+#sc2-chal-score{font-family:'Space Mono',monospace;font-size:10px;color:var(--green);margin-top:8px;text-align:right;}
+
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(120,180,255,.25);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;transition:all .2s;color:rgba(120,180,255,.55);}
+#qr-btn:hover{border-color:rgba(120,180,255,.55);background:rgba(120,180,255,.14);color:#78b4ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(120,180,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(120,180,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(160,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#78b4ff;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<div id="title"><svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><div id="title-text"><h1>MAGNETISM LAB</h1><p>Poles · Fields · Electromagnets</p></div></div>
+<div id="tabs"></div>
+<div id="caption"><div class="caption-head"><div id="caption-kpi">KPI</div><button class="btn-fold" id="btn-caption-fold" title="Fold panel">▼</button></div><div id="caption-title">Title</div><div id="caption-text">Description</div></div>
+<div id="hud"><h2>Measurements</h2><div id="hud-rows"></div></div>
+<div id="field2d-backdrop"></div>
+<div id="field2d-panel"><div id="field2d-head"><span>🧭 Top View</span><button id="btn-field2d-expand" title="Expand">⤢ Expand</button></div><canvas id="field2d-canvas"></canvas><div id="field2d-foot"><label class="chk" id="field2d-chk-wrap"><input type="checkbox" id="chk-field2d-inside">Show field inside</label><div id="field2d-hint">drag compass · scroll/pinch to zoom</div></div></div>
+
+<div id="sc2-chal-panel">
+  <div id="sc2-chal-head">🎯 Identify the material <span id="sc2-chal-round"></span></div>
+  <p id="sc2-chal-prompt">Add the magnet, observe. Remove it, observe. Then identify the mystery sample.</p>
+  <div id="sc2-chal-opts"></div>
+  <div id="sc2-chal-result"></div>
+  <div id="sc2-chal-actions">
+    <button class="btn green" id="btn-sc2-chal-check">✓ Check</button>
+    <button class="btn amber" id="btn-sc2-chal-next" style="display:none">Next →</button>
+    <button class="btn red" id="btn-sc2-chal-new" style="display:none">🔄 New challenge</button>
+    <button class="btn" id="btn-sc2-chal-close">✕ Close</button>
+  </div>
+  <div id="sc2-chal-results-table"></div>
+  <div id="sc2-chal-score"></div>
+</div>
+
+<div id="challenge-wrap"><div id="challenge-bar">
+  <div id="chal-head"><span>🎯 Quick Check</span><span id="chal-score">Score: 0/0</span></div>
+  <div id="chal-prompt">Prompt</div>
+  <div id="chal-opts"></div>
+  <div id="chal-actions"><button class="btn green" id="btn-chal-check">✓ Check</button><button class="btn amber" id="btn-chal-new">🔄 New</button><button class="btn" id="btn-chal-exit">✕ Close</button></div>
+  <div id="chal-result"></div>
+</div></div>
+<div id="controls"><div id="scene-controls"></div><div class="sep"></div><button class="btn amber" id="btn-challenge-toggle">🎯 Quick Check</button><button class="btn" id="btn-reset-scene">↺ Reset</button></div>
+<div id="hint">🖐️ drag to rotate · scroll / pinch to zoom</div>
+
+<!-- Test Yourself is now a full section (tab 5), not a modal -->
+<div id="quiz-panel">
+  <div id="quiz-panel-inner">
+    <div id="quiz-live">
+      <div id="quiz-head">
+        <h3>🧠 Test Yourself</h3>
+        <span id="quiz-progress">Question 1/16</span>
+      </div>
+      <span id="quiz-kpi">KPI 4.1</span>
+      <div id="quiz-question">Question text</div>
+      <div id="quiz-options"></div>
+      <div id="quiz-explain"></div>
+      <button class="btn green" id="quiz-next">Next →</button>
+    </div>
+    <div id="quiz-final">
+      <h2 id="quiz-final-score">0/16</h2>
+      <p id="quiz-final-msg">Nice work!</p>
+      <button class="btn green" id="quiz-restart">🔄 Try Again</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const canvas=document.getElementById('mainCanvas');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+renderer.setClearColor(0x07090f,0);
+renderer.autoClear=false;
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x07090f,0.02);
+const camera=new THREE.PerspectiveCamera(50,1,0.1,300);
+function resize(){ const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+resize(); window.addEventListener('resize',resize);
+scene.add(new THREE.AmbientLight(0xffffff,1.15));
+const sun=new THREE.DirectionalLight(0xfff8f0,1.2); sun.position.set(5,10,5); scene.add(sun);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x0d1020,roughness:0.95}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-2.4; scene.add(floor);
+const grid=new THREE.GridHelper(50,34,0x1a2540,0x121c30); grid.position.y=-2.38; scene.add(grid);
+const stage=new THREE.Group(); scene.add(stage);
+const xrayScene=new THREE.Scene();
+function clearStage(){ while(stage.children.length){ const c=stage.children[0]; stage.remove(c); } }
+function mat(color,opts){ return new THREE.MeshStandardMaterial(Object.assign({color},opts||{})); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function el(id){ return document.getElementById(id); }
+
+const orb={theta:0.5,phi:0.25,radius:11,cx:0,cy:0.2,cz:0};
+function applyOrbit(){ orb.phi=clamp(orb.phi,-Math.PI/5,Math.PI/3); orb.radius=clamp(orb.radius,5,22);
+  const r=orb.radius,p=orb.phi,t=orb.theta;
+  camera.position.set(orb.cx+r*Math.cos(p)*Math.sin(t), orb.cy+r*Math.sin(p), orb.cz+r*Math.cos(p)*Math.cos(t));
+  camera.lookAt(orb.cx,orb.cy,orb.cz);
+}
+applyOrbit();
+const CAM_DEFAULT={theta:0.5,phi:0.25,radius:11,cx:0,cy:0.2,cz:0};
+function resetOrbit(cam){ Object.assign(orb,CAM_DEFAULT,cam||{}); applyOrbit(); }
+let dragStart=null,pinchD0=0,pinchR0=orb.radius;
+canvas.addEventListener('mousedown',e=>{dragStart={x:e.clientX,y:e.clientY};});
+window.addEventListener('mousemove',e=>{ if(!dragStart) return; orb.theta-=(e.clientX-dragStart.x)*0.005; orb.phi+=(e.clientY-dragStart.y)*0.005; applyOrbit(); dragStart={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mouseup',()=>dragStart=null);
+canvas.addEventListener('wheel',e=>{ orb.radius+=e.deltaY*0.012; applyOrbit(); e.preventDefault(); },{passive:false});
+canvas.addEventListener('touchstart',e=>{ e.preventDefault(); if(e.touches.length===1) dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; else if(e.touches.length===2){ pinchD0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); pinchR0=orb.radius; dragStart=null; } },{passive:false});
+canvas.addEventListener('touchmove',e=>{ e.preventDefault(); if(e.touches.length===1&&dragStart){ orb.theta-=(e.touches[0].clientX-dragStart.x)*0.005; orb.phi+=(e.touches[0].clientY-dragStart.y)*0.005; applyOrbit(); dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; } else if(e.touches.length===2&&pinchD0>0){ const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); orb.radius=pinchR0*(pinchD0/nd); applyOrbit(); } },{passive:false});
+canvas.addEventListener('touchend',e=>{ if(e.touches.length===0){dragStart=null;pinchD0=0;} },{passive:false});
+el('btn-caption-fold').onclick=()=>{ const c=el('caption'); c.classList.toggle('collapsed'); el('btn-caption-fold').textContent=c.classList.contains('collapsed')?'▲':'▼'; };
+
+function makeLabel(text,color,size,bg){
+  const cv=document.createElement('canvas'); const ctx=cv.getContext('2d');
+  ctx.font='700 72px Arial'; const w=Math.ceil(ctx.measureText(text).width)+40;
+  cv.width=w; cv.height=100;
+  const ctx2=cv.getContext('2d'); ctx2.font='700 72px Arial'; ctx2.textAlign='center'; ctx2.textBaseline='middle';
+  if(bg){ ctx2.fillStyle=bg; ctx2.beginPath(); ctx2.roundRect?ctx2.roundRect(2,2,cv.width-4,cv.height-4,18):ctx2.rect(2,2,cv.width-4,cv.height-4); ctx2.fill(); }
+  ctx2.fillStyle=color; ctx2.fillText(text,cv.width/2,cv.height/2+4);
+  const tex=new THREE.CanvasTexture(cv); tex.needsUpdate=true;
+  const m=new THREE.SpriteMaterial({map:tex,transparent:true});
+  const s=new THREE.Sprite(m); const asp=cv.width/cv.height; s.scale.set(size*asp,size,1);
+  return s;
+}
+
+function dipoleField(p,halfSep){
+  const N=new THREE.Vector3(halfSep,0,0), S=new THREE.Vector3(-halfSep,0,0);
+  const dN=new THREE.Vector3().subVectors(p,N); const rN=Math.max(dN.length(),0.18); const fN=dN.clone().normalize().multiplyScalar(1/(rN*rN));
+  const dS=new THREE.Vector3().subVectors(p,S); const rS=Math.max(dS.length(),0.18); const fS=dS.clone().normalize().multiplyScalar(-1/(rS*rS));
+  return fN.add(fS);
+}
+function majorArcPoints(a,c,n){
+  const R=Math.sqrt(a*a+c*c);
+  const phiN=Math.atan2(-c,a), phiS=Math.atan2(-c,-a);
+  let d=phiS-phiN; while(d<=-Math.PI) d+=2*Math.PI; while(d>Math.PI) d-=2*Math.PI;
+  const dMajor = Math.abs(d)<1e-6 ? Math.PI : d-Math.sign(d)*2*Math.PI;
+  const pts=[];
+  for(let i=0;i<=n;i++){ const t=i/n, phi=phiN+dMajor*t; pts.push({x:R*Math.cos(phi), r:c+R*Math.sin(phi)}); }
+  return pts;
+}
+const FIELD_LINE_PARAMS=[{hf:0.10,cf:1.7},{hf:0.30,cf:1.05},{hf:0.50,cf:0.62},{hf:0.70,cf:0.32},{hf:0.88,cf:0.12}];
+const FIELD_PHI_OFFSET=Math.PI/2;
+const FIELD_PHIS=[0,Math.PI/3,2*Math.PI/3,Math.PI,4*Math.PI/3,5*Math.PI/3].map(p=>p+FIELD_PHI_OFFSET);
+const EXTERIOR_LINE_COLOR=0xb8c4d4;
+const INTERIOR_LINE_COLOR=0xe2e8f2;
+function addArcMesh(grp,pts3d,color,opacity,thick){
+  if(pts3d.length<4) return;
+  const curve=new THREE.CatmullRomCurve3(pts3d);
+  const geo=new THREE.TubeGeometry(curve,Math.max(24,pts3d.length),thick||0.018,6,false);
+  grp.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,opacity})));
+  [0.35,0.7].forEach(frac=>{
+    const idx=Math.max(1,Math.min(pts3d.length-2,Math.floor(pts3d.length*frac)));
+    const dirV=new THREE.Vector3().subVectors(pts3d[idx+1]||pts3d[idx],pts3d[idx]).normalize();
+    const cone=new THREE.Mesh(new THREE.ConeGeometry((thick||0.018)*2.8,(thick||0.018)*8,8), new THREE.MeshBasicMaterial({color}));
+    cone.position.copy(pts3d[idx]); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dirV);
+    grp.add(cone);
+  });
+}
+function buildFieldLines(boxHalf,thick,color,opacity){
+  const grp=new THREE.Group(); const thick2=thick/2;
+  FIELD_LINE_PARAMS.forEach(({hf,cf})=>{
+    const h=hf*thick2, c=cf*boxHalf;
+    const arc=majorArcPoints(boxHalf,c,48);
+    FIELD_PHIS.forEach(ph=>{
+      const pts3d=arc.map(p=>{ const rr=h+p.r; return new THREE.Vector3(p.x, rr*Math.cos(ph), rr*Math.sin(ph)); });
+      addArcMesh(grp,pts3d,color,opacity===undefined?0.75:opacity);
+    });
+  });
+  return grp;
+}
+function buildInteriorLines(boxHalf,thick){
+  const grp=new THREE.Group(); const thick2=thick/2;
+  const lineThick=0.010;
+  FIELD_LINE_PARAMS.forEach(({hf})=>{
+    const h=hf*thick2;
+    FIELD_PHIS.forEach(ph=>{
+      const y=h*Math.cos(ph), z=h*Math.sin(ph);
+      const a=new THREE.Vector3(-boxHalf,y,z), b=new THREE.Vector3(boxHalf,y,z);
+      const q1=new THREE.Vector3().lerpVectors(a,b,1/3);
+      const q2=new THREE.Vector3().lerpVectors(a,b,2/3);
+      addArcMesh(grp,[a,q1,q2,b],INTERIOR_LINE_COLOR,1,lineThick);
+    });
+  });
+  return grp;
+}
+function makeBarMagnet(length,thick,flipped){
+  const g=new THREE.Group(); const half=length/2;
+  const cPos=flipped?0x5bc8ff:0xff5e72, cNeg=flipped?0xff5e72:0x5bc8ff;
+  const posH=new THREE.Mesh(new THREE.BoxGeometry(half,thick,thick),mat(cPos,{metalness:0.35,roughness:0.4,transparent:true,opacity:1})); posH.position.x=half/2; g.add(posH);
+  const negH=new THREE.Mesh(new THREE.BoxGeometry(half,thick,thick),mat(cNeg,{metalness:0.35,roughness:0.4,transparent:true,opacity:1})); negH.position.x=-half/2; g.add(negH);
+  g.userData.halves=[posH,negH];
+  const lN=makeLabel('N','#ffffff',0.5); lN.position.set(flipped?-half-0.32:half+0.32,0,0); g.add(lN);
+  const lS=makeLabel('S','#ffffff',0.5); lS.position.set(flipped?half+0.32:-half-0.32,0,0); g.add(lS);
+  g.userData.labels=[lN,lS];
+  g.userData.half=half; g.userData.flipped=flipped;
+  return g;
+}
+function makeVerticalMagnet(length,thick,flipped){
+  const g=new THREE.Group(); const half=length/2;
+  const cTop=flipped?0x5bc8ff:0xff5e72, cBot=flipped?0xff5e72:0x5bc8ff;
+  const topH=new THREE.Mesh(new THREE.BoxGeometry(thick,half,thick),mat(cTop,{metalness:0.35,roughness:0.4,transparent:true,opacity:1})); topH.position.y=half/2; g.add(topH);
+  const botH=new THREE.Mesh(new THREE.BoxGeometry(thick,half,thick),mat(cBot,{metalness:0.35,roughness:0.4,transparent:true,opacity:1})); botH.position.y=-half/2; g.add(botH);
+  g.userData.halves=[topH,botH];
+  const lTop=makeLabel(flipped?'S':'N','#ffffff',0.4); lTop.position.set(0,half+0.3,0); g.add(lTop);
+  const lBot=makeLabel(flipped?'N':'S','#ffffff',0.4); lBot.position.set(0,-half-0.3,0); g.add(lBot);
+  g.userData.labels=[lTop,lBot];
+  g.userData.half=half; g.userData.flipped=flipped;
+  return g;
+}
+function setMagnetXray(magnetGroup,on){
+  (magnetGroup.userData.halves||[]).forEach(m=>{
+    m.material.opacity = on?0.38:1;
+    m.material.depthWrite = !on;
+    m.material.needsUpdate = true;
+  });
+}
+function makeCompass(size){
+  const g=new THREE.Group();
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(size*0.55,size*0.55,size*0.08,24), mat(0xdfe8f5,{metalness:0.5,roughness:0.4,transparent:true,opacity:0.9}));
+  g.add(base);
+  const needle=new THREE.Group();
+  const red=new THREE.Mesh(new THREE.ConeGeometry(size*0.13,size*0.55,10), mat(0xff5e72,{emissive:0x330000,emissiveIntensity:0.3})); red.rotation.z=-Math.PI/2; red.position.x=size*0.28; needle.add(red);
+  const wht=new THREE.Mesh(new THREE.ConeGeometry(size*0.13,size*0.55,10), mat(0xdfe8f5)); wht.rotation.z=Math.PI/2; wht.position.x=-size*0.28; needle.add(wht);
+  needle.position.y=size*0.07; g.add(needle); g.userData.needle=needle;
+  return g;
+}
+function makePaperclip(){
+  const g=new THREE.Group();
+  const torusGeo=new THREE.TorusGeometry(0.07,0.016,6,14,Math.PI*1.55);
+  const m1=new THREE.Mesh(torusGeo,mat(0xcfd8e3,{metalness:0.9,roughness:0.15}));
+  m1.rotation.x=-Math.PI/2; m1.rotation.z=0.4; g.add(m1);
+  const m2=new THREE.Mesh(torusGeo,mat(0xcfd8e3,{metalness:0.9,roughness:0.15}));
+  m2.scale.set(0.6,0.6,0.6);
+  m2.rotation.x=-Math.PI/2; m2.rotation.z=0.4; m2.position.y=0.012; g.add(m2);
+  return g;
+}
+
+/* ---------- SCENE 0 ---------- */
+const MAG_HALF=1.3; const AX=-2.6; const B_TOUCH=AX+MAG_HALF*2; const B_APART=4.0;
+const sc0={magA:null,magB:null,nail:null,orient:'attract',showNail:false,bx:2.6,nailX:-6.2,targetRotY:0};
+function s0_build(){
+  const initRot = (sc0.orient==='attract') ? 0 : Math.PI;
+  sc0.magA=makeBarMagnet(2.6,0.75,true);
+  sc0.magA.position.x=AX; sc0.magA.rotation.y=initRot; sc0.targetRotY=initRot;
+  stage.add(sc0.magA);
+  sc0.magB=makeBarMagnet(2.6,0.75,true); sc0.magB.position.x=B_APART; stage.add(sc0.magB);
+  sc0.bx=B_APART;
+  const nail=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,1.1,14), mat(0x9aa7b8,{metalness:0.85,roughness:0.25}));
+  nail.rotation.z=Math.PI/2; nail.position.set(sc0.nailX,0,0); nail.visible=false; stage.add(nail); sc0.nail=nail;
+}
+function s0_setOrient(o){ sc0.orient=o; sc0.targetRotY = (o==='attract') ? 0 : Math.PI; s0_hideNail(); }
+function s0_tick(dt){
+  if(sc0.magA){ sc0.magA.rotation.y = lerp(sc0.magA.rotation.y, sc0.targetRotY, Math.min(1,dt*4.0)); }
+  const target = sc0.orient==='attract' ? B_TOUCH : B_APART;
+  sc0.bx = lerp(sc0.bx, target, Math.min(1,dt*2.2));
+  sc0.magB.position.x = sc0.bx;
+  const nailTarget = sc0.showNail ? (AX-MAG_HALF-0.55) : sc0.nailX;
+  sc0.nail.position.x = lerp(sc0.nail.position.x,nailTarget,Math.min(1,dt*3));
+}
+function s0_hideNail(){ sc0.showNail=false; if(sc0.nail){ sc0.nail.position.x=sc0.nailX; sc0.nail.visible=false; } const b=el('btn-s0-nail'); if(b) b.classList.remove('on'); }
+function s0_toggleNail(){ sc0.showNail=!sc0.showNail; if(sc0.showNail){ sc0.nail.position.x=sc0.nailX; sc0.nail.visible=true; } el('btn-s0-nail').classList.toggle('on',sc0.showNail); }
+function s0_hud(){ return [
+  {l:'Poles facing each other',v: sc0.orient==='attract'?'S · N (unlike)':'N · N (like)', c:sc0.orient==='attract'?'#4dffa0':'#ff5e72'},
+  {l:'Force between magnets',v: sc0.orient==='attract'?'Attraction':'Repulsion', c:sc0.orient==='attract'?'#4dffa0':'#ff5e72'},
+  {l:'Steel nail',v: sc0.showNail? 'Attracted (always)':'Not present', c:'#5bc8ff'}
+]; }
+function s0_controls(){ return '<button class="btn green" id="btn-s0-attract">🧲 Unlike poles (attract)</button><button class="btn red" id="btn-s0-repel">🧲 Like poles (repel)</button><button class="btn" id="btn-s0-nail">📎 Add steel nail</button>'; }
+function s0_wire(){
+  el('btn-s0-attract').onclick=()=>{ s0_setOrient('attract'); el('btn-s0-attract').classList.add('on'); el('btn-s0-repel').classList.remove('on'); };
+  el('btn-s0-repel').onclick=()=>{ s0_setOrient('repel'); el('btn-s0-repel').classList.add('on'); el('btn-s0-attract').classList.remove('on'); };
+  el('btn-s0-nail').onclick=s0_toggleNail;
+  el('btn-s0-attract').classList.toggle('on', sc0.orient==='attract');
+  el('btn-s0-repel').classList.toggle('on', sc0.orient==='repel');
+}
+
+/* ---------- SCENE 1 ---------- */
+const sc1={
+  magnet:null, magnetA:null, magnetB:null,
+  lines:null, interior:null,
+  compass:null, markers:[],
+  t:0.15, showInside:false,
+  fieldMode:'one'
+};
+function s1_getPoles(){
+  if(sc1.fieldMode==='attract'){
+    return [
+      { pos: new THREE.Vector3(-2.5,0,0), q: 1 },
+      { pos: new THREE.Vector3(-1.1,0,0), q:-1 },
+      { pos: new THREE.Vector3( 1.1,0,0), q: 1 },
+      { pos: new THREE.Vector3( 2.5,0,0), q:-1 }
+    ];
+  } else if(sc1.fieldMode==='repel'){
+    return [
+      { pos: new THREE.Vector3(-2.5,0,0), q:-1 },
+      { pos: new THREE.Vector3(-1.1,0,0), q: 1 },
+      { pos: new THREE.Vector3( 1.1,0,0), q: 1 },
+      { pos: new THREE.Vector3( 2.5,0,0), q:-1 }
+    ];
+  }
+  return null;
+}
+function fieldAtPoint3D(p,poles){
+  const B=new THREE.Vector3();
+  for(let i=0;i<poles.length;i++){
+    const pole=poles[i];
+    const d=new THREE.Vector3().subVectors(p,pole.pos);
+    const r=Math.max(d.length(),0.25);
+    B.addScaledVector(d.normalize(), pole.q/(r*r));
+  }
+  return B;
+}
+function traceFieldLine3D(start,poles,step,maxSteps){
+  const pts=[start.clone()]; const p=start.clone();
+  for(let i=0;i<maxSteps;i++){
+    const f=fieldAtPoint3D(p,poles); const m=f.length();
+    if(m<1e-7) break;
+    f.divideScalar(m); p.addScaledVector(f,step); pts.push(p.clone());
+    let done=false;
+    for(let j=0;j<poles.length;j++){
+      if(poles[j].q<0 && p.distanceTo(poles[j].pos)<0.35){ done=true; break; }
+    }
+    if(done) break;
+    if(p.length()>20) break;
+  }
+  return pts;
+}
+function addFieldLineTube(grp,pts){
+  if(pts.length<4) return;
+  const thick=0.012;
+  const curve=new THREE.CatmullRomCurve3(pts);
+  const geo=new THREE.TubeGeometry(curve,Math.min(100,pts.length),thick,4,false);
+  const m=new THREE.MeshBasicMaterial({color:EXTERIOR_LINE_COLOR,transparent:true,opacity:0.55});
+  grp.add(new THREE.Mesh(geo,m));
+  [0.3,0.6,0.85].forEach(frac=>{
+    const idx=Math.max(1,Math.min(pts.length-2,Math.floor(pts.length*frac)));
+    const dirV=new THREE.Vector3().subVectors(pts[idx+1],pts[idx]).normalize();
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(thick*3,thick*9,6), new THREE.MeshBasicMaterial({color:EXTERIOR_LINE_COLOR,transparent:true,opacity:0.85}));
+    cone.position.copy(pts[idx]);
+    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dirV);
+    grp.add(cone);
+  });
+}
+function buildTwoMagnetLines(poles){
+  const grp=new THREE.Group();
+  const posPoles=poles.filter(p=>p.q>0);
+  const seedR=0.28, step=0.1, maxSteps=280, seedsPerPole=22;
+  posPoles.forEach(pole=>{
+    for(let i=0;i<seedsPerPole;i++){
+      const y=1-(i/(seedsPerPole-1))*2;
+      const r=Math.sqrt(Math.max(0,1-y*y));
+      const theta=Math.PI*(3-Math.sqrt(5))*i;
+      const dir=new THREE.Vector3(Math.cos(theta)*r, y, Math.sin(theta)*r);
+      const start=pole.pos.clone().addScaledVector(dir,seedR);
+      const line=traceFieldLine3D(start,poles,step,maxSteps);
+      if(line.length<8) continue;
+      let maxD=0;
+      for(const pt of line){ const d=pt.distanceTo(pole.pos); if(d>maxD) maxD=d; }
+      if(maxD<1.3) continue;
+      addFieldLineTube(grp,line);
+    }
+  });
+  return grp;
+}
+function s1_rebuildInterior(){
+  if(sc1.interior){ xrayScene.remove(sc1.interior); sc1.interior=null; }
+  if(sc1.showInside && sc1.fieldMode==='one' && sc1.magnet){
+    sc1.interior=buildInteriorLines(1.4,0.8);
+    sc1.interior.visible = sc1.lines && sc1.lines.visible;
+    xrayScene.add(sc1.interior);
+  }
+}
+function s1_applyMode(){
+  if(sc1.magnet){ stage.remove(sc1.magnet); sc1.magnet=null; }
+  if(sc1.magnetA){ stage.remove(sc1.magnetA); sc1.magnetA=null; }
+  if(sc1.magnetB){ stage.remove(sc1.magnetB); sc1.magnetB=null; }
+  if(sc1.lines){ stage.remove(sc1.lines); sc1.lines=null; }
+  if(sc1.interior){ xrayScene.remove(sc1.interior); sc1.interior=null; }
+  if(sc1.fieldMode==='one'){
+    sc1.magnet=makeBarMagnet(2.8,0.8,false);
+    sc1.magnet.position.x=0; stage.add(sc1.magnet);
+    setMagnetXray(sc1.magnet,sc1.showInside);
+    sc1.lines=buildFieldLines(1.4,0.8,EXTERIOR_LINE_COLOR,0.7);
+    stage.add(sc1.lines);
+    s1_rebuildInterior();
+  } else {
+    const attract = sc1.fieldMode==='attract';
+    if(attract){
+      sc1.magnetA=makeBarMagnet(1.4,0.7,true);
+      sc1.magnetB=makeBarMagnet(1.4,0.7,true);
+    } else {
+      sc1.magnetA=makeBarMagnet(1.4,0.7,false);
+      sc1.magnetB=makeBarMagnet(1.4,0.7,true);
+    }
+    sc1.magnetA.position.x=-1.8;
+    sc1.magnetB.position.x= 1.8;
+    stage.add(sc1.magnetA); stage.add(sc1.magnetB);
+    const poles=s1_getPoles();
+    sc1.lines=buildTwoMagnetLines(poles);
+    stage.add(sc1.lines);
+  }
+  s1_updateCompass();
+}
+function s1_setMode(mode){
+  if(sc1.fieldMode===mode) return;
+  sc1.fieldMode=mode;
+  s1_applyMode();
+  el('scene-controls').innerHTML=s1_controls();
+  s1_wire();
+  updateHUD();
+}
+function s1_build(){
+  sc1.markers=[];
+  sc1.compass=makeCompass(0.9); stage.add(sc1.compass);
+  s1_applyMode();
+  sc1_2d.x=1.8; sc1_2d.z=1.2;
+}
+function s1_pathPoint(t){ const a=t*Math.PI*2; const r=2.6; return new THREE.Vector3(r*Math.cos(a), 0, r*Math.sin(a)); }
+function s1_updateCompass(){
+  const p=s1_pathPoint(sc1.t); sc1.compass.position.copy(p);
+  let f;
+  if(sc1.fieldMode==='one'){ f=dipoleField(p,1.4); }
+  else { f=fieldAtPoint3D(p,s1_getPoles()); }
+  const mag=f.length(); f.normalize();
+  sc1.compass.userData.needle.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),f);
+  sc1.compass.userData.field=f; sc1.compass.userData.mag=mag;
+}
+function s1_plot(){
+  if(sc1.markers.length>=8){ const old=sc1.markers.shift(); stage.remove(old); }
+  const m=makeLabel('●','#ffc857',0.28); m.position.copy(sc1.compass.position); stage.add(m); sc1.markers.push(m);
+}
+function s1_clearPlots(){ sc1.markers.forEach(m=>stage.remove(m)); sc1.markers=[]; }
+function s1_toggleLines(){ sc1.lines.visible=!sc1.lines.visible; if(sc1.interior) sc1.interior.visible=sc1.lines.visible; const b=el('btn-s1-lines'); if(b) b.classList.toggle('on',sc1.lines.visible); }
+function s1_tick(){ field2d_draw(); }
+function s1_hud(){
+  const mag=sc1.compass.userData.mag||0;
+  const strength = mag>0.5?'Strong (near pole)': mag>0.15?'Medium':'Weak (far away)';
+  let modeStr = sc1.fieldMode==='one' ? '1 magnet' : (sc1.fieldMode==='attract' ? '2 magnets · unlike' : '2 magnets · like');
+  return [
+    {l:'View',v:modeStr, c:'#5bc8ff'},
+    {l:'Field lines',v: sc1.lines.visible?'Shown':'Hidden', c:'#5bc8ff'},
+    {l:'Compass points along',v:'the field direction', c:'#b57aff'},
+    {l:'Field strength here',v:strength, c: mag>0.5?'#ff5e72':(mag>0.15?'#ffc857':'#4dffa0')},
+    {l:'Points plotted',v:sc1.markers.length, c:'#4dffa0'}
+  ];
+}
+function s1_controls(){
+  const modeOpts =
+    '<option value="one"'+(sc1.fieldMode==='one'?' selected':'')+'>1 magnet</option>'+
+    '<option value="attract"'+(sc1.fieldMode==='attract'?' selected':'')+'>2 magnets · unlike</option>'+
+    '<option value="repel"'+(sc1.fieldMode==='repel'?' selected':'')+'>2 magnets · like</option>';
+  const insideChk = sc1.fieldMode==='one'
+    ? '<label class="chk"><input type="checkbox" id="chk-s1-inside"'+(sc1.showInside?' checked':'')+'>Show field inside</label>'
+    : '';
+  return '<select id="s1-mode" class="btn" style="cursor:pointer;max-width:180px;">'+modeOpts+'</select>'+
+    '<div class="sw">🧭 Compass<input type="range" id="s1-t" min="0" max="1" step="0.005" value="'+sc1.t+'"></div>'+
+    '<button class="btn amber" id="btn-s1-plot">📍 Plot point</button>'+
+    '<button class="btn" id="btn-s1-clear">🗑 Clear</button>'+
+    '<button class="btn'+(sc1.lines&&sc1.lines.visible?' on':'')+'" id="btn-s1-lines">🌀 Field lines</button>'+
+    insideChk;
+}
+function s1_wire(){
+  const modeSel=el('s1-mode'); if(modeSel) modeSel.onchange=e=>s1_setMode(e.target.value);
+  const tSlider=el('s1-t'); if(tSlider) tSlider.oninput=e=>{ sc1.t=parseFloat(e.target.value); s1_updateCompass(); };
+  const plotBtn=el('btn-s1-plot'); if(plotBtn) plotBtn.onclick=s1_plot;
+  const clearBtn=el('btn-s1-clear'); if(clearBtn) clearBtn.onclick=s1_clearPlots;
+  const linesBtn=el('btn-s1-lines'); if(linesBtn) linesBtn.onclick=s1_toggleLines;
+  const insideChk=el('chk-s1-inside');
+  if(insideChk){
+    insideChk.checked=sc1.showInside;
+    insideChk.onchange=e=>{ sc1.showInside=e.target.checked; s1_rebuildInterior(); if(sc1.magnet) setMagnetXray(sc1.magnet,sc1.showInside); };
+  }
+}
+
+/* ---------- 2D top-view panel ---------- */
+const sc1_2d={x:1.8,z:1.2,dragging:false,expanded:false,zoom:1,pinchDist:null,showInside:false};
+function field2d_canvas(){ return el('field2d-canvas'); }
+function field2d_resize(){
+  const cv=field2d_canvas(); if(!cv) return;
+  const cssW=cv.clientWidth, cssH=cv.clientHeight; if(cssW<10||cssH<10) return;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=Math.round(cssW*dpr), h=Math.round(cssH*dpr);
+  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+}
+function field2d_position(){
+  const panel=el('field2d-panel'), hud=el('hud');
+  if(!panel||panel.classList.contains('expanded')) return;
+  const r=hud.getBoundingClientRect();
+  panel.style.top=(r.bottom+12)+'px';
+  panel.style.right='16px';
+}
+function field2d_viewHalf(){ return clamp(field2d_baseHalf()/sc1_2d.zoom, 1.1, 14); }
+function field2d_baseHalf(){ return sc1_2d.expanded ? 6.0 : 4.0; }
+function field2d_setVisible(v){
+  const panel=el('field2d-panel'), backdrop=el('field2d-backdrop');
+  if(!v && sc1_2d.expanded){
+    sc1_2d.expanded=false; panel.classList.remove('expanded'); backdrop.classList.remove('show');
+    const btn=el('btn-field2d-expand'); btn.textContent='⤢ Expand'; btn.title='Expand';
+  }
+  sc1_2d.zoom=1;
+  panel.classList.toggle('show',v);
+  if(v){ field2d_position(); field2d_resize(); field2d_draw(); }
+}
+function field2d_isInsideMagnet(x,z){
+  if(sc1.fieldMode==='one'){
+    return Math.abs(x) < 1.4 && Math.abs(z) < 0.4;
+  }
+  const inA = x > -2.5 && x < -1.1 && Math.abs(z) < 0.35;
+  const inB = x >  1.1 && x <  2.5 && Math.abs(z) < 0.35;
+  return inA || inB;
+}
+function traceFieldLine2D(startX,startZ,poles,stepSize,maxSteps){
+  const pts=[{x:startX,z:startZ}];
+  let x=startX,z=startZ;
+  for(let i=0;i<maxSteps;i++){
+    let bx=0,bz=0;
+    for(const pole of poles){
+      const dx=x-pole.pos.x, dz=z-pole.pos.z;
+      const r=Math.max(Math.hypot(dx,dz),0.22);
+      const r3=r*r*r;
+      bx += pole.q*dx/r3;
+      bz += pole.q*dz/r3;
+    }
+    const bMag=Math.hypot(bx,bz);
+    if(bMag<1e-7) break;
+    x += bx/bMag*stepSize; z += bz/bMag*stepSize;
+    pts.push({x,z});
+    let done=false;
+    for(const pole of poles){
+      if(pole.q<0){
+        const dx=x-pole.pos.x, dz=z-pole.pos.z;
+        if(Math.hypot(dx,dz)<0.3){ done=true; break; }
+      }
+    }
+    if(done) break;
+    if(Math.hypot(x,z)>12) break;
+  }
+  return pts;
+}
+function field2d_draw_twoMagnets(ctx,toPx,scale){
+  const poles=s1_getPoles(); if(!poles) return;
+  const thick=0.7;
+  const posPoles=poles.filter(p=>p.q>0);
+  const seeds=14;
+  const drawArrow=(p0,p1,mid)=>{
+    const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x);
+    const s=Math.max(4,scale*0.032);
+    ctx.save();
+    ctx.translate(mid.x,mid.y);
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.moveTo(s*1.3,0);
+    ctx.lineTo(-s*0.7,s*0.8);
+    ctx.lineTo(-s*0.7,-s*0.8);
+    ctx.closePath();
+    ctx.fillStyle='rgba(184,196,212,0.9)';
+    ctx.fill();
+    ctx.restore();
+  };
+  posPoles.forEach(pole=>{
+    for(let i=0;i<seeds;i++){
+      const angle=(i/seeds)*Math.PI*2;
+      const sx=pole.pos.x+Math.cos(angle)*0.25;
+      const sz=Math.sin(angle)*0.25;
+      const line=traceFieldLine2D(sx,sz,poles,0.08,250);
+      if(line.length<8) continue;
+      let maxD=0;
+      for(const pt of line){ const d=Math.hypot(pt.x-pole.pos.x,pt.z-pole.pos.z); if(d>maxD) maxD=d; }
+      if(maxD<0.9) continue;
+      ctx.strokeStyle='rgba(184,196,212,0.6)';
+      ctx.lineWidth=Math.max(1,scale*0.012);
+      ctx.beginPath();
+      line.forEach((p,i)=>{
+        const px=toPx(p.x,p.z);
+        if(i===0) ctx.moveTo(px.x,px.y); else ctx.lineTo(px.x,px.y);
+      });
+      ctx.stroke();
+      [0.3,0.6,0.85].forEach(fr=>{
+        const idx=Math.max(1,Math.min(line.length-2,Math.floor(line.length*fr)));
+        drawArrow(toPx(line[idx-1].x,line[idx-1].z), toPx(line[idx+1].x,line[idx+1].z), toPx(line[idx].x,line[idx].z));
+      });
+    }
+  });
+  const attract=sc1.fieldMode==='attract';
+  const aL=attract?'#ff5e72':'#5bc8ff';
+  const aR=attract?'#5bc8ff':'#ff5e72';
+  const half=0.7;
+  let p1=toPx(-1.8-half,-thick/2), p2=toPx(-1.8,thick/2);
+  ctx.fillStyle=aL;
+  ctx.fillRect(Math.min(p1.x,p2.x),Math.min(p1.y,p2.y),Math.abs(p2.x-p1.x),Math.abs(p2.y-p1.y));
+  p1=toPx(-1.8,-thick/2); p2=toPx(-1.8+half,thick/2);
+  ctx.fillStyle=aR;
+  ctx.fillRect(Math.min(p1.x,p2.x),Math.min(p1.y,p2.y),Math.abs(p2.x-p1.x),Math.abs(p2.y-p1.y));
+  p1=toPx(1.8-half,-thick/2); p2=toPx(1.8,thick/2);
+  ctx.fillStyle='#ff5e72';
+  ctx.fillRect(Math.min(p1.x,p2.x),Math.min(p1.y,p2.y),Math.abs(p2.x-p1.x),Math.abs(p2.y-p1.y));
+  p1=toPx(1.8,-thick/2); p2=toPx(1.8+half,thick/2);
+  ctx.fillStyle='#5bc8ff';
+  ctx.fillRect(Math.min(p1.x,p2.x),Math.min(p1.y,p2.y),Math.abs(p2.x-p1.x),Math.abs(p2.y-p1.y));
+  ctx.fillStyle='#fff';
+  ctx.font='700 '+Math.max(9,scale*0.22)+'px "Space Mono", monospace';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const aN=attract?'N':'S', aS=attract?'S':'N';
+  let lp=toPx(-1.8-half/2,0); ctx.fillText(aN,lp.x,lp.y);
+  lp=toPx(-1.8+half/2,0); ctx.fillText(aS,lp.x,lp.y);
+  lp=toPx(1.8-half/2,0); ctx.fillText('N',lp.x,lp.y);
+  lp=toPx(1.8+half/2,0); ctx.fillText('S',lp.x,lp.y);
+}
+function field2d_draw(){
+  const panel=el('field2d-panel'); if(!panel||!panel.classList.contains('show')) return;
+  const cv=field2d_canvas(); const ctx=cv&&cv.getContext('2d'); if(!ctx) return;
+  const w=cv.width,h=cv.height; if(!w||!h) return;
+  const viewHalf=field2d_viewHalf();
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2; const scale=Math.min(w,h)/(2*viewHalf);
+  const toPx=(x,z)=>({x:cx+x*scale,y:cy+z*scale});
+  ctx.strokeStyle='rgba(180,200,255,0.07)'; ctx.lineWidth=1;
+  const gMax=Math.ceil(viewHalf);
+  for(let g=-gMax;g<=gMax;g++){ const px=toPx(g,0).x, py=toPx(0,g).y;
+    ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(w,py); ctx.stroke();
+  }
+  const halfSep=1.4, thick=0.8;
+  const arrow=(px0,px1,mid,fillColor)=>{
+    const ang=Math.atan2(px1.y-px0.y,px1.x-px0.x);
+    const s=Math.max(3.5,scale*0.045);
+    ctx.save(); ctx.translate(mid.x,mid.y); ctx.rotate(ang);
+    ctx.beginPath(); ctx.moveTo(s*1.3,0); ctx.lineTo(-s*0.7,s*0.8); ctx.lineTo(-s*0.7,-s*0.8); ctx.closePath();
+    ctx.fillStyle=fillColor||'#e2e8f2'; ctx.fill(); ctx.restore();
+  };
+  if(sc1.fieldMode==='one'){
+    FIELD_LINE_PARAMS.forEach(({hf,cf})=>{
+      const h=hf*(thick/2), c=cf*halfSep;
+      const arc=majorArcPoints(halfSep,c,60);
+      [1,-1].forEach(side=>{
+        const pts=arc.map(p=>({x:p.x,z:side*(h+p.r)}));
+        ctx.strokeStyle='rgba(184,196,212,0.6)';
+        ctx.lineWidth=Math.max(1,scale*0.014);
+        ctx.beginPath();
+        pts.forEach((p,i)=>{ const px=toPx(p.x,p.z); if(i===0) ctx.moveTo(px.x,px.y); else ctx.lineTo(px.x,px.y); });
+        ctx.stroke();
+        [0.4,0.75].forEach(frac=>{
+          const idx=Math.max(1,Math.min(pts.length-2,Math.floor(pts.length*frac)));
+          const p0=toPx(pts[idx-1].x,pts[idx-1].z), p1=toPx(pts[idx+1].x,pts[idx+1].z);
+          arrow(p0,p1,toPx(pts[idx].x,pts[idx].z));
+        });
+      });
+    });
+    const half=1.4;
+    const a=toPx(0,-thick/2), b=toPx(half,thick/2);
+    ctx.fillStyle='#ff5e72'; ctx.fillRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));
+    const c=toPx(-half,-thick/2), d=toPx(0,thick/2);
+    ctx.fillStyle='#5bc8ff'; ctx.fillRect(Math.min(c.x,d.x),Math.min(c.y,d.y),Math.abs(d.x-c.x),Math.abs(d.y-c.y));
+    ctx.fillStyle='#fff'; ctx.font='700 '+Math.max(10,scale*0.26)+'px "Space Mono", monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    const nl=toPx(half*0.5,0), sl=toPx(-half*0.5,0);
+    ctx.fillText('N',nl.x,nl.y); ctx.fillText('S',sl.x,sl.y);
+    if(sc1_2d.showInside){
+      FIELD_LINE_PARAMS.forEach(({hf})=>{ [1,-1].forEach(side=>{
+        const z=side*hf*(thick/2);
+        const a2=toPx(-halfSep,z), b2=toPx(halfSep,z);
+        ctx.strokeStyle='rgba(226,232,242,0.95)'; ctx.lineWidth=Math.max(1.2,scale*0.012);
+        ctx.beginPath(); ctx.moveTo(a2.x,a2.y); ctx.lineTo(b2.x,b2.y); ctx.stroke();
+        arrow(a2,b2,{x:(a2.x+b2.x)/2,y:(a2.y+b2.y)/2},'#e2e8f2');
+      }); });
+    }
+  } else {
+    field2d_draw_twoMagnets(ctx,toPx,scale);
+  }
+  const cp=toPx(sc1_2d.x,sc1_2d.z);
+  let field;
+  if(sc1.fieldMode==='one') field=dipoleField(new THREE.Vector3(sc1_2d.x,0,sc1_2d.z),halfSep);
+  else field=fieldAtPoint3D(new THREE.Vector3(sc1_2d.x,0,sc1_2d.z),s1_getPoles());
+  if(field2d_isInsideMagnet(sc1_2d.x, sc1_2d.z)) field.multiplyScalar(-1);
+  const ang=Math.atan2(field.z,field.x);
+  const rr=Math.max(10,scale*0.3);
+  ctx.save(); ctx.translate(cp.x,cp.y);
+  ctx.beginPath(); ctx.arc(0,0,rr,0,Math.PI*2); ctx.fillStyle='rgba(223,232,245,0.92)'; ctx.fill();
+  ctx.strokeStyle='rgba(10,14,28,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.rotate(ang);
+  ctx.beginPath(); ctx.moveTo(rr*0.85,0); ctx.lineTo(-rr*0.15,rr*0.32); ctx.lineTo(-rr*0.15,-rr*0.32); ctx.closePath(); ctx.fillStyle='#ff5e72'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-rr*0.85,0); ctx.lineTo(rr*0.15,rr*0.32); ctx.lineTo(rr*0.15,-rr*0.32); ctx.closePath(); ctx.fillStyle='#dfe8f5'; ctx.fill();
+  ctx.restore();
+}
+function field2d_toWorld(clientX,clientY){
+  const cv=field2d_canvas(); const rect=cv.getBoundingClientRect();
+  const viewHalf=field2d_viewHalf();
+  const px=(clientX-rect.left)/rect.width, py=(clientY-rect.top)/rect.height;
+  const x=(px-0.5)*2*viewHalf, z=(py-0.5)*2*viewHalf;
+  const r=Math.hypot(x,z), maxR=viewHalf-0.25;
+  if(r>maxR){ const k=maxR/r; return {x:x*k,z:z*k}; }
+  return {x,z};
+}
+function field2d_pointersDist(map){ const pts=[...map.values()]; return Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y); }
+function field2d_wireDrag(){
+  const cv=field2d_canvas(); if(!cv||cv.dataset.wired) return; cv.dataset.wired='1';
+  const pointers=new Map();
+  const move1=e=>{ if(!sc1_2d.dragging) return; const w=field2d_toWorld(e.clientX,e.clientY); sc1_2d.x=w.x; sc1_2d.z=w.z; field2d_draw(); };
+  const end=e=>{ pointers.delete(e.pointerId); if(pointers.size<2) sc1_2d.pinchDist=null; if(pointers.size===0){ sc1_2d.dragging=false; cv.style.cursor='grab'; } };
+  cv.addEventListener('pointerdown',e=>{
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(cv.setPointerCapture) cv.setPointerCapture(e.pointerId);
+    if(pointers.size===1){ sc1_2d.dragging=true; cv.style.cursor='grabbing'; move1(e); }
+    else { sc1_2d.dragging=false; sc1_2d.pinchDist=field2d_pointersDist(pointers); }
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pointers.size>=2){
+      const d=field2d_pointersDist(pointers);
+      if(sc1_2d.pinchDist){ sc1_2d.zoom=clamp(sc1_2d.zoom*(d/sc1_2d.pinchDist),0.3,5); field2d_draw(); }
+      sc1_2d.pinchDist=d;
+    } else { move1(e); }
+    e.preventDefault();
+  });
+  cv.addEventListener('pointerup',end);
+  cv.addEventListener('pointercancel',end);
+  cv.addEventListener('wheel',e=>{ e.preventDefault(); sc1_2d.zoom=clamp(sc1_2d.zoom*(e.deltaY>0?0.9:1.1),0.3,5); field2d_draw(); },{passive:false});
+}
+function field2d_toggleExpand(){
+  const panel=el('field2d-panel'), btn=el('btn-field2d-expand'), backdrop=el('field2d-backdrop');
+  sc1_2d.expanded=!sc1_2d.expanded;
+  sc1_2d.zoom=1;
+  panel.classList.toggle('expanded',sc1_2d.expanded);
+  backdrop.classList.toggle('show',sc1_2d.expanded);
+  btn.textContent=sc1_2d.expanded?'⤡ Restore':'⤢ Expand';
+  btn.title=sc1_2d.expanded?'Restore size':'Expand';
+  if(sc1_2d.expanded){ panel.style.top=''; panel.style.right=''; } else { field2d_position(); }
+  requestAnimationFrame(()=>{ field2d_resize(); field2d_draw(); });
+}
+el('btn-field2d-expand').onclick=field2d_toggleExpand;
+el('chk-field2d-inside').onchange=e=>{ sc1_2d.showInside=e.target.checked; field2d_draw(); };
+el('field2d-backdrop').onclick=()=>{ if(sc1_2d.expanded) field2d_toggleExpand(); };
+window.addEventListener('resize',()=>{ if(curTab===1){ field2d_position(); field2d_resize(); field2d_draw(); } });
+field2d_wireDrag();
+if(window.ResizeObserver){ const field2dRO=new ResizeObserver(()=>{ field2d_resize(); field2d_draw(); }); field2dRO.observe(field2d_canvas()); }
+
+/* ---------- SCENE 2 ---------- */
+const MATERIALS=[
+  {name:'Soft iron',magnetic:true,retains:false,color:0x9aa7b8,shape:'rod'},
+  {name:'Steel',magnetic:true,retains:true,color:0x6f7a8a,shape:'rod'},
+  {name:'Copper',magnetic:false,retains:false,color:0xd07a3a,shape:'rod'},
+  {name:'Aluminium',magnetic:false,retains:false,color:0xc9ccd1,shape:'rod'},
+  {name:'Wood',magnetic:false,retains:false,color:0x8a5a2e,shape:'box'},
+  {name:'Plastic',magnetic:false,retains:false,color:0x3aa0c9,shape:'rod'}
+];
+const S2_CHALLENGE_POOL=[
+  {name:'Steel',magnetic:true,retains:true,shape:'rod'},
+  {name:'Soft iron',magnetic:true,retains:false,shape:'rod'},
+  {name:'Copper',magnetic:false,retains:false,shape:'rod'}
+];
+const S2_MYSTERY_COLOR=0xa898c8;
+const S2_SAMPLE_REST_Y=-0.85;
+const S2_SAMPLE_H=1.4;
+const S2_MAG_ACTIVE_Y=1.5;
+const S2_MAG_REMOVED_Y=4.6;
+const S2_MAG_HALF=1.0;
+const S2_SAMPLE_CONTACT_Y = S2_MAG_ACTIVE_Y - S2_MAG_HALF - S2_SAMPLE_H/2;
+const S2_PAPERCLIP_REST_Y=-2.30;
+const S2_RETAINED_CLIP_OFFSETS={
+  2:{x:-0.10,dy:-0.16},
+  3:{x: 0.10,dy:-0.16},
+  0:{x:-0.13,dy:-0.50},
+  1:{x:-0.16,dy:-0.78},
+  4:{x: 0.13,dy:-0.50},
+  5:{x: 0.16,dy:-0.78}
+};
+const sc2={
+  magnet:null, magnetPresent:false, magnetY:S2_MAG_REMOVED_Y,
+  sample:null, sampleDef:null,
+  paperclips:[], paperclipLift:0,
+  steelMagnetized:false,
+  indLabels:[],
+  isChallenge:false,
+  challengeQueue:[], challengeRound:0, challengeAnswer:null,
+  challengeSelected:null, challengeAnswered:false,
+  challengeResults:[]
+};
+function s2_build(){
+  sc2.magnetPresent=false;
+  sc2.magnetY=S2_MAG_REMOVED_Y;
+  sc2.paperclipLift=0;
+  sc2.steelMagnetized=false;
+  sc2.indLabels=[];
+  sc2.magnet=makeVerticalMagnet(2.0,0.6,false);
+  sc2.magnet.position.set(0,S2_MAG_REMOVED_Y,0);
+  stage.add(sc2.magnet);
+  s2_createPaperclips();
+  s2_selectMaterial(sc2.sampleDef||MATERIALS[0]);
+}
+function s2_createPaperclips(){
+  sc2.paperclips.forEach(p=>{ if(p.parent) p.parent.remove(p); });
+  sc2.paperclips=[];
+  const offs=[-0.55,-0.32,-0.10,0.12,0.34,0.55];
+  offs.forEach((ox,i)=>{
+    const p=makePaperclip();
+    p.position.set(ox, S2_PAPERCLIP_REST_Y, (i%2?0.12:-0.12));
+    p.userData.baseX=ox;
+    p.userData.baseZ=(i%2?0.12:-0.12);
+    p.userData.phase=i*0.7;
+    p.userData.idx=i;
+    stage.add(p); sc2.paperclips.push(p);
+  });
+}
+function s2_makeSampleMesh(def,colorOverride){
+  const color=colorOverride||def.color||0x9aa7b8;
+  const metalness=def.magnetic?0.55:0.15;
+  if(def.shape==='box') return new THREE.Mesh(new THREE.BoxGeometry(0.42,S2_SAMPLE_H,0.42), mat(color,{metalness,roughness:0.45}));
+  return new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,S2_SAMPLE_H,18), mat(color,{metalness,roughness:0.4}));
+}
+function s2_selectMaterial(def,skipRebuild,useMysteryColor){
+  if(!skipRebuild && sc2.sample && sc2.sample.parent) sc2.sample.parent.remove(sc2.sample);
+  sc2.indLabels.forEach(l=>{ if(l.parent) l.parent.remove(l); }); sc2.indLabels=[];
+  sc2.sampleDef=def;
+  sc2.steelMagnetized=false;
+  sc2.paperclipLift=0;
+  const s=s2_makeSampleMesh(def, useMysteryColor?S2_MYSTERY_COLOR:null);
+  s.position.set(0,S2_SAMPLE_REST_Y,0);
+  stage.add(s); sc2.sample=s;
+  sc2.paperclips.forEach(p=>{ p.position.set(p.userData.baseX,S2_PAPERCLIP_REST_Y,p.userData.baseZ); p.rotation.z=0; });
+}
+function s2_toggleMagnet(){
+  sc2.magnetPresent=!sc2.magnetPresent;
+  const btn=el('btn-s2-magnet');
+  if(btn){ btn.classList.toggle('on',sc2.magnetPresent); btn.textContent = sc2.magnetPresent? '🚫 Remove magnet' : '🧲 Add magnet'; }
+}
+function s2_reset(){
+  sc2.magnetPresent=false;
+  sc2.magnetY=S2_MAG_REMOVED_Y;
+  if(sc2.magnet) sc2.magnet.position.y=S2_MAG_REMOVED_Y;
+  sc2.paperclipLift=0;
+  sc2.steelMagnetized=false;
+  sc2.paperclips.forEach(p=>{ p.position.set(p.userData.baseX,S2_PAPERCLIP_REST_Y,p.userData.baseZ); p.rotation.z=0; });
+  if(sc2.sample) sc2.sample.position.y=S2_SAMPLE_REST_Y;
+  sc2.indLabels.forEach(l=>{ if(l.parent) l.parent.remove(l); }); sc2.indLabels=[];
+  const btn=el('btn-s2-magnet');
+  if(btn){ btn.classList.remove('on'); btn.textContent='🧲 Add magnet'; }
+}
+function s2_tick(dt){
+  if(!sc2.sample||!sc2.sampleDef) return;
+  const def=sc2.sampleDef;
+  const isMagnetic=def.magnetic;
+  const isHard=isMagnetic && def.retains;
+  const targetMagY = sc2.magnetPresent ? S2_MAG_ACTIVE_Y : S2_MAG_REMOVED_Y;
+  sc2.magnetY = lerp(sc2.magnetY, targetMagY, Math.min(1,dt*2.5));
+  if(sc2.magnet) sc2.magnet.position.y = sc2.magnetY;
+  if(isHard && sc2.magnetPresent) sc2.steelMagnetized=true;
+  const sampleMagnetized = isMagnetic && (sc2.magnetPresent || (isHard && sc2.steelMagnetized));
+  const targetSampleY = (isMagnetic && sc2.magnetPresent) ? S2_SAMPLE_CONTACT_Y : S2_SAMPLE_REST_Y;
+  sc2.sample.position.y = lerp(sc2.sample.position.y, targetSampleY, Math.min(1,dt*3.5));
+  let liftTarget=0;
+  if(sampleMagnetized){
+    if(sc2.magnetPresent) liftTarget=1.0;
+    else if(isHard && sc2.steelMagnetized) liftTarget=0.55;
+  }
+  sc2.paperclipLift = lerp(sc2.paperclipLift, liftTarget, Math.min(1,dt*2.4));
+  const sampleBottomY = sc2.sample.position.y - S2_SAMPLE_H/2;
+  const retainedState = isHard && sc2.steelMagnetized && !sc2.magnetPresent;
+  const now=performance.now()*0.001;
+  sc2.paperclips.forEach((p,idx)=>{
+    let targetX, targetZ, targetY;
+    if(retainedState){
+      const off = S2_RETAINED_CLIP_OFFSETS[idx] || {x:0,dy:-0.3};
+      targetX = off.x; targetZ = 0;
+      targetY = sampleBottomY + off.dy;
+    } else {
+      const gap = 0.15 + (1-sc2.paperclipLift)*0.55;
+      const liftedY = sampleBottomY - gap;
+      targetY = lerp(S2_PAPERCLIP_REST_Y, liftedY, sc2.paperclipLift);
+      const cluster = sc2.paperclipLift;
+      targetX = p.userData.baseX * (1 - 0.55*cluster);
+      targetZ = p.userData.baseZ * (1 - 0.55*cluster);
+    }
+    p.position.x = lerp(p.position.x, targetX, Math.min(1,dt*3.0));
+    p.position.y = lerp(p.position.y, targetY, Math.min(1,dt*3.5));
+    p.position.z = lerp(p.position.z, targetZ, Math.min(1,dt*3.0));
+    p.rotation.z = lerp(p.rotation.z, Math.sin(now*3+p.userData.phase)*0.15*sc2.paperclipLift, Math.min(1,dt*4));
+  });
+  if(sampleMagnetized && sc2.indLabels.length===0){
+    const lT=makeLabel('N','#ff5e72',0.36);
+    lT.position.set(0.62, sc2.sample.position.y + S2_SAMPLE_H/2 - 0.15, 0); stage.add(lT);
+    const lB=makeLabel('S','#5bc8ff',0.36);
+    lB.position.set(0.62, sc2.sample.position.y - S2_SAMPLE_H/2 + 0.15, 0); stage.add(lB);
+    sc2.indLabels=[lT,lB];
+  } else if(!sampleMagnetized && sc2.indLabels.length){
+    sc2.indLabels.forEach(l=>{ if(l.parent) l.parent.remove(l); }); sc2.indLabels=[];
+  }
+  if(sc2.indLabels.length===2){
+    sc2.indLabels[0].position.y = sc2.sample.position.y + S2_SAMPLE_H/2 - 0.15;
+    sc2.indLabels[1].position.y = sc2.sample.position.y - S2_SAMPLE_H/2 + 0.15;
+  }
+}
+function s2_hud(){
+  const def=sc2.sampleDef||{};
+  const isHard=def.magnetic && def.retains;
+  const sampleMagnetized=def.magnetic && (sc2.magnetPresent || (isHard && sc2.steelMagnetized));
+  let induced;
+  if(sc2.isChallenge){
+    induced = sampleMagnetized ? 'Magnetized' : 'Not magnetized';
+  } else {
+    induced='None';
+    if(sampleMagnetized){
+      if(sc2.magnetPresent) induced = isHard ? 'Induced (magnetizing)' : 'Induced (attracted)';
+      else if(isHard && sc2.steelMagnetized) induced='Retained (permanent magnet)';
+    }
+  }
+  let clipState;
+  if(sc2.paperclipLift<0.1) clipState='Resting on ground';
+  else if(sc2.paperclipLift>0.85) clipState='Lifted (attracted)';
+  else clipState='Lifted — weaker';
+  const nameShown = sc2.isChallenge ? '? (identify)' : (def.name||'-');
+  return [
+    {l:'Sample',v:nameShown, c:'#ffc857'},
+    {l:'Magnetic material?',v:(sc2.isChallenge?'?':(def.magnetic?'Yes':'No')), c:def.magnetic?'#4dffa0':'#ff5e72'},
+    {l:'Magnet present',v:sc2.magnetPresent?'Yes':'No', c:'#5bc8ff'},
+    {l:'Sample magnetism',v:induced, c:'#b57aff'},
+    {l:'Paperclips',v:clipState, c: sc2.paperclipLift>0.1?'#b57aff':'#8899bb'}
+  ];
+}
+function s2_controls(){
+  let html='<select id="s2-select" class="btn" style="cursor:pointer;max-width:130px;">';
+  MATERIALS.forEach((m,i)=>{ html+='<option value="'+i+'">'+m.name+'</option>'; });
+  html+='</select>';
+  html+='<button class="btn" id="btn-s2-magnet">🧲 Add magnet</button>';
+  html+='<button class="btn amber" id="btn-s2-challenge">🎯 Challenge: identify</button>';
+  html+='<button class="btn red" id="btn-s2-reset">↺ Reset sample</button>';
+  return html;
+}
+function s2_wire(){
+  const sel=el('s2-select');
+  if(sel){
+    sel.value = MATERIALS.indexOf(sc2.sampleDef)>=0 ? MATERIALS.indexOf(sc2.sampleDef) : 0;
+    sel.onchange=e=>{ if(sc2.isChallenge) return; s2_selectMaterial(MATERIALS[parseInt(e.target.value)]); };
+  }
+  el('btn-s2-magnet').onclick=s2_toggleMagnet;
+  el('btn-s2-reset').onclick=()=>{ s2_reset(); };
+  el('btn-s2-challenge').onclick=()=>s2_startChallenge();
+}
+function s2_shuffle(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function s2_startChallenge(){
+  sc2.isChallenge=true;
+  sc2.challengeQueue=s2_shuffle([0,1,2]);
+  sc2.challengeRound=0;
+  sc2.challengeResults=[];
+  el('sc2-chal-panel').classList.add('show');
+  const sel=el('s2-select'); if(sel) sel.disabled=true;
+  const btn=el('btn-s2-challenge'); if(btn) btn.style.display='none';
+  s2_loadChallengeRound();
+}
+function s2_loadChallengeRound(){
+  const matIdx=sc2.challengeQueue[sc2.challengeRound];
+  const mat=S2_CHALLENGE_POOL[matIdx];
+  sc2.challengeAnswer=matIdx;
+  sc2.challengeSelected=null;
+  sc2.challengeAnswered=false;
+  s2_selectMaterial(mat, false, true);
+  s2_reset();
+  el('sc2-chal-round').textContent=(sc2.challengeRound+1)+'/3';
+  el('sc2-chal-opts').innerHTML = S2_CHALLENGE_POOL.map((m,i)=>'<button class="sc2-opt" data-i="'+i+'">'+m.name+'</button>').join('');
+  Array.from(el('sc2-chal-opts').children).forEach(b=>{
+    b.onclick=()=>{
+      if(sc2.challengeAnswered) return;
+      sc2.challengeSelected=parseInt(b.dataset.i);
+      Array.from(el('sc2-chal-opts').children).forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+    };
+  });
+  el('sc2-chal-result').style.display='none';
+  el('sc2-chal-result').className='';
+  el('btn-sc2-chal-check').style.display='';
+  el('btn-sc2-chal-next').style.display='none';
+  el('btn-sc2-chal-new').style.display='none';
+  el('sc2-chal-results-table').innerHTML='';
+  el('sc2-chal-score').textContent='';
+}
+function s2_checkChallenge(){
+  if(!sc2.isChallenge || sc2.challengeAnswered || sc2.challengeSelected===null) return;
+  sc2.challengeAnswered=true;
+  const correct=sc2.challengeAnswer;
+  const guess=sc2.challengeSelected;
+  const isCorrect=(guess===correct);
+  sc2.challengeResults.push({materialIdx:correct,guessIdx:guess,correct:isCorrect});
+  const opts=el('sc2-chal-opts');
+  Array.from(opts.children).forEach((b,i)=>{
+    if(i===correct) b.classList.add('correct');
+    else if(i===guess) b.classList.add('wrong');
+  });
+  const ans=S2_CHALLENGE_POOL[correct];
+  let why;
+  if(!ans.magnetic) why='It never lifted the paperclips — a non-magnetic metal.';
+  else if(ans.retains) why='It kept the paperclips lifted (weaker) after the magnet was removed — a hard magnetic material.';
+  else why='It dropped the paperclips when the magnet was removed — a soft magnetic material.';
+  const res=el('sc2-chal-result');
+  res.className=isCorrect?'pass':'fail';
+  res.style.display='block';
+  res.textContent=(isCorrect?'✓ Correct! ':'✗ Not quite. ')+'It was '+ans.name+'. '+why;
+  el('btn-sc2-chal-check').style.display='none';
+  const nextBtn=el('btn-sc2-chal-next');
+  nextBtn.style.display='';
+  nextBtn.textContent=(sc2.challengeRound<2)?'Next material →':'See results →';
+}
+function s2_nextChallengeRound(){
+  if(!sc2.isChallenge) return;
+  sc2.challengeRound++;
+  if(sc2.challengeRound>=3) s2_showChallengeResults();
+  else s2_loadChallengeRound();
+}
+function s2_showChallengeResults(){
+  el('sc2-chal-opts').innerHTML='';
+  el('sc2-chal-result').style.display='none';
+  el('btn-sc2-chal-next').style.display='none';
+  el('btn-sc2-chal-new').style.display='';
+  el('sc2-chal-round').textContent='done';
+  const table=el('sc2-chal-results-table');
+  let html='<div style="font-family:\'Space Mono\',monospace;font-size:10px;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase;margin-bottom:6px;">Results</div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+  html+='<thead><tr style="color:rgba(180,210,255,0.6);font-family:\'Space Mono\',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;">';
+  html+='<th style="text-align:left;padding:4px 3px;border-bottom:1px solid rgba(180,200,255,0.15)">Material</th>';
+  html+='<th style="text-align:left;padding:4px 3px;border-bottom:1px solid rgba(180,200,255,0.15)">Your answer</th>';
+  html+='<th style="text-align:center;padding:4px 3px;border-bottom:1px solid rgba(180,200,255,0.15)">Result</th>';
+  html+='</tr></thead><tbody>';
+  sc2.challengeResults.forEach(r=>{
+    const m=S2_CHALLENGE_POOL[r.materialIdx];
+    const g=S2_CHALLENGE_POOL[r.guessIdx];
+    const color=r.correct?'#4dffa0':'#ff5e72';
+    const symbol=r.correct?'✓ correct':'✗ wrong';
+    html+='<tr>';
+    html+='<td style="padding:5px 3px;border-bottom:1px solid rgba(180,200,255,0.06);color:#fff;font-weight:500">'+m.name+'</td>';
+    html+='<td style="padding:5px 3px;border-bottom:1px solid rgba(180,200,255,0.06);color:rgba(210,225,255,0.8)">'+g.name+'</td>';
+    html+='<td style="padding:5px 3px;border-bottom:1px solid rgba(180,200,255,0.06);text-align:center;color:'+color+';font-weight:700">'+symbol+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  table.innerHTML=html;
+  const correctCount=sc2.challengeResults.filter(r=>r.correct).length;
+  el('sc2-chal-score').textContent='Score: '+correctCount+'/3';
+}
+function s2_closeChallenge(){
+  sc2.isChallenge=false;
+  sc2.challengeAnswer=null;
+  sc2.challengeSelected=null;
+  sc2.challengeAnswered=false;
+  sc2.challengeQueue=[];
+  sc2.challengeResults=[];
+  sc2.challengeRound=0;
+  el('sc2-chal-panel').classList.remove('show');
+  const sel=el('s2-select'); if(sel) sel.disabled=false;
+  const btn=el('btn-s2-challenge'); if(btn) btn.style.display='';
+  s2_selectMaterial(MATERIALS[0]);
+  s2_reset();
+}
+el('btn-sc2-chal-check').onclick=s2_checkChallenge;
+el('btn-sc2-chal-next').onclick=s2_nextChallengeRound;
+el('btn-sc2-chal-new').onclick=()=>{ if(sc2.isChallenge) s2_startChallenge(); };
+el('btn-sc2-chal-close').onclick=s2_closeChallenge;
+
+/* ---------- SCENE 3: Electromagnets ---------- */
+const S3_REST_X = 4.0;
+const S3_RING_TOUCH_X = 2.1;
+const S3_MAGNET_TOUCH_X = 2.9;
+const S3_MAGNET_REPEL_X = 5.6;
+
+const sc3={
+  core:null, coilMesh:null, coilMaterial:null,
+  battery:null, poleLabels:null,
+  rings:[], secondMagnet:null,
+  objectType:'rings',
+  voltage:0, smoothCurrent:0,
+  magnetFlipped:false, targetRotY:0
+};
+
+function makeHelixCurve(radius, xStart, xEnd, turns){
+  const c = new THREE.Curve();
+  c.getPoint = function(t, optionalTarget){
+    const target = optionalTarget || new THREE.Vector3();
+    const x = xStart + (xEnd - xStart) * t;
+    const angle = t * turns * Math.PI * 2;
+    return target.set(x, radius * Math.cos(angle), radius * Math.sin(angle));
+  };
+  return c;
+}
+
+function s3_build(){
+  sc3.rings=[];
+  sc3.voltage=0;
+  sc3.smoothCurrent=0;
+  sc3.magnetFlipped=false;
+  sc3.targetRotY=0;
+
+  const core=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3,0.3,3.2,20),
+    mat(0x8a94a8,{metalness:0.75,roughness:0.3})
+  );
+  core.rotation.z=Math.PI/2;
+  stage.add(core);
+  sc3.core=core;
+
+  const coilTurns=16, coilRadius=0.42, coilXStart=-1.4, coilXEnd=1.4, coilThick=0.05;
+  const helix=makeHelixCurve(coilRadius, coilXStart, coilXEnd, coilTurns);
+  const coilGeo=new THREE.TubeGeometry(helix, coilTurns*24, coilThick, 8, false);
+  const coilMat=new THREE.MeshStandardMaterial({
+    color:0xdc9433, metalness:0.55, roughness:0.35,
+    emissive:0x000000, emissiveIntensity:0
+  });
+  sc3.coilMesh=new THREE.Mesh(coilGeo, coilMat);
+  stage.add(sc3.coilMesh);
+  sc3.coilMaterial=coilMat;
+
+  const battery=new THREE.Mesh(
+    new THREE.BoxGeometry(1.0,0.45,0.5),
+    mat(0x334455,{metalness:0.5,roughness:0.5})
+  );
+  battery.position.set(0,-1.85,0);
+  stage.add(battery); sc3.battery=battery;
+  const termPos=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,0.12,10), mat(0xe85555,{emissive:0x330000,emissiveIntensity:0.4}));
+  termPos.rotation.z=Math.PI/2; termPos.position.set(-0.5,-1.85,0); stage.add(termPos);
+  const termNeg=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,0.12,10), mat(0x222222));
+  termNeg.rotation.z=Math.PI/2; termNeg.position.set(0.5,-1.85,0); stage.add(termNeg);
+  const plusLbl=makeLabel('+','#e85555',0.32); plusLbl.position.set(-0.5,-1.55,0); stage.add(plusLbl);
+  const minusLbl=makeLabel('−','#dddddd',0.32); minusLbl.position.set(0.5,-1.55,0); stage.add(minusLbl);
+
+  const wireMat=new THREE.MeshStandardMaterial({ color:0xdc9433, metalness:0.55, roughness:0.35 });
+  const leftWireCurve=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-1.4, coilRadius, 0),
+    new THREE.Vector3(-1.45, 0.1, 0),
+    new THREE.Vector3(-1.2, -1.0, 0),
+    new THREE.Vector3(-0.5, -1.85, 0)
+  ]);
+  stage.add(new THREE.Mesh(new THREE.TubeGeometry(leftWireCurve, 40, 0.045, 8, false), wireMat));
+  const rightWireCurve=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(1.4, coilRadius, 0),
+    new THREE.Vector3(1.45, 0.1, 0),
+    new THREE.Vector3(1.2, -1.0, 0),
+    new THREE.Vector3(0.5, -1.85, 0)
+  ]);
+  stage.add(new THREE.Mesh(new THREE.TubeGeometry(rightWireCurve, 40, 0.045, 8, false), wireMat));
+
+  const lLeftN=makeLabel('N','#ff5e72',0.5); lLeftN.position.set(-1.85,0.62,0); lLeftN.visible=false; stage.add(lLeftN);
+  const lLeftS=makeLabel('S','#5bc8ff',0.5); lLeftS.position.set(-1.85,0.62,0); lLeftS.visible=false; stage.add(lLeftS);
+  const lRightN=makeLabel('N','#ff5e72',0.5); lRightN.position.set(1.85,0.62,0); lRightN.visible=false; stage.add(lRightN);
+  const lRightS=makeLabel('S','#5bc8ff',0.5); lRightS.position.set(1.85,0.62,0); lRightS.visible=false; stage.add(lRightS);
+  sc3.poleLabels={lLeftN,lLeftS,lRightN,lRightS};
+
+  sc3.secondMagnet=makeBarMagnet(1.8,0.5,false);
+  sc3.secondMagnet.position.set(S3_REST_X,0,0);
+  sc3.targetRotY=0;
+  stage.add(sc3.secondMagnet);
+
+  for(let i=0;i<3;i++){
+    const r=new THREE.Mesh(
+      new THREE.TorusGeometry(0.22,0.035,8,20),
+      mat(0xcfd8e3,{metalness:0.9,roughness:0.15})
+    );
+    r.userData.baseY=(i-1)*0.42;
+    r.userData.baseX=S3_REST_X;
+    r.position.set(S3_REST_X, r.userData.baseY, 0);
+    r.rotation.y=Math.PI/2;
+    stage.add(r);
+    sc3.rings.push(r);
+  }
+
+  s3_applyObjectVisibility();
+}
+
+function s3_applyObjectVisibility(){
+  const isRings=sc3.objectType==='rings';
+  sc3.rings.forEach(r=>r.visible=isRings);
+  if(sc3.secondMagnet) sc3.secondMagnet.visible=!isRings;
+}
+function s3_setObjectType(type){
+  sc3.objectType=type;
+  s3_applyObjectVisibility();
+}
+function s3_flipMagnet(){
+  sc3.magnetFlipped=!sc3.magnetFlipped;
+  sc3.targetRotY=sc3.magnetFlipped?Math.PI:0;
+}
+
+function s3_tick(dt){
+  sc3.smoothCurrent = lerp(sc3.smoothCurrent, sc3.voltage, Math.min(1,dt*4.0));
+  const fieldStrength = clamp(sc3.smoothCurrent/10, -1, 1);
+  const absField = Math.abs(fieldStrength);
+
+  if(sc3.coilMaterial){
+    const glowOn=absField>0.03;
+    sc3.coilMaterial.emissive.set(glowOn?0xffaa33:0x000000);
+    sc3.coilMaterial.emissiveIntensity = absField*0.9;
+  }
+
+  const showLabels = absField > 0.08;
+  if(sc3.poleLabels){
+    const positive = fieldStrength > 0;
+    sc3.poleLabels.lLeftN.visible = showLabels && !positive;
+    sc3.poleLabels.lLeftS.visible = showLabels && positive;
+    sc3.poleLabels.lRightN.visible = showLabels && positive;
+    sc3.poleLabels.lRightS.visible = showLabels && !positive;
+  }
+
+  const ringAttract = clamp((absField-0.15)/0.55, 0, 1);
+  sc3.rings.forEach((r)=>{
+    const targetX = lerp(r.userData.baseX, S3_RING_TOUCH_X, ringAttract);
+    const clusterY = r.userData.baseY * (1 - ringAttract*0.55);
+    r.position.x = lerp(r.position.x, targetX, Math.min(1,dt*3.5));
+    r.position.y = lerp(r.position.y, clusterY, Math.min(1,dt*3.5));
+  });
+
+  if(sc3.secondMagnet){
+    sc3.secondMagnet.rotation.y = lerp(sc3.secondMagnet.rotation.y, sc3.targetRotY, Math.min(1,dt*4.0));
+
+    const inducedAttract = 0.4;
+    const polarityDefined = absField > 0.03;
+    const emRightIsN = fieldStrength > 0;
+    const attracting = polarityDefined && (emRightIsN !== sc3.magnetFlipped);
+    const repelling  = polarityDefined && (emRightIsN === sc3.magnetFlipped);
+
+    if(repelling){
+      const t = clamp(absField/0.9, 0, 1);
+      const targetX = lerp(S3_REST_X, S3_MAGNET_REPEL_X, t);
+      if(sc3.secondMagnet.position.x < targetX - 0.001){
+        sc3.secondMagnet.position.x = lerp(sc3.secondMagnet.position.x, targetX, Math.min(1,dt*3.0));
+      }
+    } else {
+      const strength = inducedAttract + (attracting ? absField : 0);
+      const t = clamp(strength/1.4, 0, 1);
+      const targetX = lerp(S3_REST_X, S3_MAGNET_TOUCH_X, t);
+      sc3.secondMagnet.position.x = lerp(sc3.secondMagnet.position.x, targetX, Math.min(1,dt*3.0));
+    }
+  }
+}
+
+function s3_hud(){
+  const fieldStrength = clamp(sc3.smoothCurrent/10, -1, 1);
+  const absField = Math.abs(fieldStrength);
+  let currentState;
+  if(absField<0.05) currentState='Off';
+  else if(fieldStrength>0) currentState='Flowing →';
+  else currentState='Flowing ←';
+  let strength;
+  if(absField<0.05) strength='None';
+  else if(absField<0.4) strength='Weak';
+  else if(absField<0.75) strength='Medium';
+  else strength='Strong';
+
+  let leftPole='—', rightPole='—';
+  if(absField>0.08){
+    if(fieldStrength>0){ leftPole='S'; rightPole='N'; }
+    else { leftPole='N'; rightPole='S'; }
+  }
+
+  const rows=[
+    {l:'Voltage',v:sc3.voltage.toFixed(1)+' V', c:'#5bc8ff'},
+    {l:'Current',v:currentState, c:absField>0.05?'#4dffa0':'#8899bb'},
+    {l:'Field strength',v:strength, c: absField>0.75?'#ff5e72':(absField>0.4?'#ffc857':(absField>0.05?'#4dffa0':'#8899bb'))},
+    {l:'Core poles L / R',v:leftPole+' / '+rightPole, c:'#b57aff'}
+  ];
+  if(sc3.objectType==='rings'){
+    rows.push({l:'Object',v:'Metallic rings', c:'#cfd8e3'});
+    rows.push({l:'Attraction',v: absField>0.15?'Attracted':'None', c: absField>0.15?'#4dffa0':'#8899bb'});
+  } else {
+    const polarityDefined = absField > 0.03;
+    const emRightIsN = fieldStrength > 0;
+    const attracting = polarityDefined && (emRightIsN !== sc3.magnetFlipped);
+    const repelling  = polarityDefined && (emRightIsN === sc3.magnetFlipped);
+    let behavior;
+    if(repelling) behavior='Repelled';
+    else if(attracting) behavior='Attracted';
+    else behavior='Weak induced attraction';
+    const bColor = repelling ? '#ff5e72' : (attracting ? '#4dffa0' : '#ffc857');
+    rows.push({l:'Object',v:'2nd bar magnet', c:'#cfd8e3'});
+    rows.push({l:'2nd magnet faces core',v: sc3.magnetFlipped?'N pole':'S pole', c:'#b57aff'});
+    rows.push({l:'Interaction',v:behavior, c:bColor});
+  }
+  return rows;
+}
+
+function s3_controls(){
+  const isRings=sc3.objectType==='rings';
+  return ''+
+    '<div class="sw">⚡ Voltage <input type="range" id="s3-voltage" min="-10" max="10" step="0.1" value="'+sc3.voltage+'">'+
+    '<span id="s3-voltage-label" style="display:inline-block;min-width:46px;font-family:\'Space Mono\',monospace;color:#5bc8ff;font-weight:700;font-size:11px;">'+sc3.voltage.toFixed(1)+'V</span></div>'+
+    '<button class="btn amber" id="btn-s3-flip-current">🔄 Reverse current</button>'+
+    '<div class="sep"></div>'+
+    '<button class="btn '+(isRings?'on':'')+'" id="btn-s3-obj-rings">⭕ Metallic rings</button>'+
+    '<button class="btn '+(!isRings?'on':'')+'" id="btn-s3-obj-magnet">🧲 2nd magnet</button>'+
+    (!isRings?'<button class="btn red" id="btn-s3-flip-magnet">↕ Flip 2nd magnet</button>':'');
+}
+
+function s3_wire(){
+  const slider=el('s3-voltage');
+  if(slider){
+    slider.value=sc3.voltage;
+    slider.oninput=e=>{
+      sc3.voltage=parseFloat(e.target.value);
+      const lbl=el('s3-voltage-label'); if(lbl) lbl.textContent=sc3.voltage.toFixed(1)+'V';
+    };
+  }
+  const flipCurrentBtn=el('btn-s3-flip-current');
+  if(flipCurrentBtn) flipCurrentBtn.onclick=()=>{
+    sc3.voltage=-sc3.voltage;
+    const s=el('s3-voltage'); if(s) s.value=sc3.voltage;
+    const lbl=el('s3-voltage-label'); if(lbl) lbl.textContent=sc3.voltage.toFixed(1)+'V';
+  };
+  const ringsBtn=el('btn-s3-obj-rings');
+  if(ringsBtn) ringsBtn.onclick=()=>{
+    s3_setObjectType('rings');
+    el('scene-controls').innerHTML=s3_controls();
+    s3_wire();
+  };
+  const magnetBtn=el('btn-s3-obj-magnet');
+  if(magnetBtn) magnetBtn.onclick=()=>{
+    s3_setObjectType('magnet');
+    el('scene-controls').innerHTML=s3_controls();
+    s3_wire();
+  };
+  const flipMagnetBtn=el('btn-s3-flip-magnet');
+  if(flipMagnetBtn) flipMagnetBtn.onclick=s3_flipMagnet;
+}
+
+/* ---------- Quiz section (tab 5) ---------- */
+const QUIZ=[
+ {kpi:'4.1', q:'Two bar magnets are placed S pole facing S pole. What happens?', opts:['Attraction','Repulsion','No force at all','They fuse together'], correct:1, exp:'Like poles (S–S or N–N) repel each other.'},
+ {kpi:'4.1', q:'Which term describes a material that has not been magnetized?', opts:['Induced','Permanent','Unmagnetized','Ferrous'], correct:2, exp:'A material with no overall magnetic effect is described as unmagnetized.'},
+ {kpi:'4.2', q:'Magnetic forces between two magnets happen because of an interaction between...', opts:['Their masses','Their magnetic fields','Their electric charges','Their temperatures'], correct:1, exp:'Magnetic forces arise from the interaction between the magnetic fields of the two magnets.'},
+ {kpi:'4.3', q:'When a paperclip touches a magnet and becomes magnetic itself, this is called...', opts:['Induced magnetism','Permanent magnetism','Electromagnetism','Demagnetization'], correct:0, exp:'Induced magnetism is when a magnetic material becomes a magnet because it is in a magnetic field.'},
+ {kpi:'4.4', q:'A material used to make TEMPORARY magnets is...', opts:['Steel','Soft iron','Copper','Plastic'], correct:1, exp:'Soft iron magnetizes easily but loses its magnetism quickly, making it ideal for temporary magnets.'},
+ {kpi:'4.4', q:'A material used to make PERMANENT magnets is...', opts:['Soft iron','Steel','Wood','Aluminium'], correct:1, exp:'Steel is harder to magnetize, but once magnetized it keeps its magnetism, making good permanent magnets.'},
+ {kpi:'4.5', q:'Which of these is a NON-magnetic material?', opts:['Iron','Steel','Cobalt','Aluminium'], correct:3, exp:'Aluminium is not attracted to a magnet; iron, steel and cobalt are magnetic materials.'},
+ {kpi:'4.6', q:'A magnetic field is defined as a region in which...', opts:['A magnetic pole experiences a force','Only electric charges move','Light bends','Sound cannot travel'], correct:0, exp:'A magnetic field is the region around a magnet where a magnetic pole feels a force.'},
+ {kpi:'4.7', q:'Around a bar magnet, field lines form loops that run, outside the magnet, from...', opts:['S pole to N pole','N pole to S pole','Side to side only','The middle outward in straight lines'], correct:1, exp:'By convention, field lines outside a magnet run from the N pole to the S pole.'},
+ {kpi:'4.8', q:'The relative strength of a magnetic field is shown by the...', opts:['Color of the field lines','Spacing between the field lines','Length of the magnet only','Number of poles'], correct:1, exp:'Field lines drawn closer together represent a stronger field; further apart represents a weaker field.'},
+ {kpi:'4.9', q:'The direction of a magnetic field at a point is defined as the direction of the force on a...', opts:['S pole placed at that point','N pole placed at that point','Electron at that point','Piece of copper at that point'], correct:1, exp:'By definition, field direction at a point is the direction of the force on a north (N) pole placed there.'},
+ {kpi:'4.10', q:'A simple way to plot the field lines of a magnet is to...', opts:['Weigh the magnet at different points','Move a small plotting compass step by step and mark the direction each time','Measure its temperature nearby','Listen for a buzzing sound'], correct:1, exp:'Moving a small compass around the magnet and recording the direction it points at each position traces out the field lines.'},
+ {kpi:'4.11', q:'A key advantage of an electromagnet over a permanent magnet is that it can be...', opts:['Made without any metal','Switched on and off using a current','Used without electricity','Made permanently stronger with no limit'], correct:1, exp:'Unlike a permanent magnet, an electromagnet\'s magnetism can be switched on and off by controlling the current.'},
+ {kpi:'4.11', q:'A permanent magnet, rather than an electromagnet, is best suited to...', opts:['A scrapyard lifting crane','A pocket compass','A junkyard electromagnetic crane','A door lock that must release on demand'], correct:1, exp:'A compass needs a constant, unswitched magnetic field, which is exactly what a permanent magnet provides.'},
+ {kpi:'4.2', q:'Two magnets pushed together nose-to-nose (N to N) resist being pushed together because...', opts:['Their fields overlap and interact to repel','Air pressure builds up between them','They are electrically charged the same','Friction between the magnets increases'], correct:0, exp:'The overlapping magnetic fields of the two like poles interact to produce a repulsive force.'},
+ {kpi:'4.5', q:'A magnetic material placed far outside a magnet\'s field will experience...', opts:['A very strong pull','No significant force','Instant repulsion','Permanent magnetization'], correct:1, exp:'Outside the region where the field is strong enough to have an effect, there is no significant force.'}
+];
+let quizIdx=0, quizScore=0, quizAnswered=false;
+
+function s4_build(){ /* no 3D scene for this tab */ }
+function s4_tick(){ /* nothing to animate */ }
+function s4_hud(){ return []; }
+function s4_controls(){ return ''; }
+function s4_wire(){ /* nothing to wire in the scene-controls bar */ }
+
+function quizStart(){
+  quizIdx=0; quizScore=0;
+  el('quiz-live').style.display='';
+  el('quiz-final').style.display='none';
+  showQuizQuestion();
+}
+function showQuizQuestion(){
+  quizAnswered=false;
+  const item=QUIZ[quizIdx];
+  el('quiz-progress').textContent='Question '+(quizIdx+1)+'/'+QUIZ.length;
+  el('quiz-kpi').textContent='KPI '+item.kpi;
+  el('quiz-question').textContent=item.q;
+  el('quiz-explain').style.display='none';
+  el('quiz-next').style.display='none';
+  el('quiz-options').innerHTML=item.opts.map((o,i)=>'<button class="quiz-opt" data-idx="'+i+'">'+o+'</button>').join('');
+  Array.from(el('quiz-options').children).forEach(btn=>{
+    btn.onclick=()=>{
+      if(quizAnswered) return;
+      quizAnswered=true;
+      const idx=parseInt(btn.dataset.idx);
+      if(idx===item.correct) quizScore++;
+      Array.from(el('quiz-options').children).forEach((b,i)=>{
+        if(i===item.correct) b.classList.add('correct');
+        else if(i===idx) b.classList.add('wrong');
+      });
+      el('quiz-explain').textContent=item.exp;
+      el('quiz-explain').style.display='block';
+      el('quiz-next').style.display='inline-block';
+      el('quiz-next').textContent=(quizIdx<QUIZ.length-1)?'Next →':'See results →';
+    };
+  });
+}
+function showQuizFinal(){
+  el('quiz-live').style.display='none';
+  el('quiz-final').style.display='block';
+  el('quiz-final-score').textContent=quizScore+'/'+QUIZ.length;
+  const pct=quizScore/QUIZ.length;
+  el('quiz-final-msg').textContent=pct>=0.8?'Outstanding! You\'ve mastered magnetism. 🧲':(pct>=0.5?'Good job — revisit a few sections and try again.':'Keep exploring the sections, then try again!');
+}
+el('quiz-next').onclick=()=>{
+  quizIdx++;
+  if(quizIdx>=QUIZ.length) showQuizFinal();
+  else showQuizQuestion();
+};
+el('quiz-restart').onclick=quizStart;
+
+/* ---------- SVG diagrams for quiz diagrams ---------- */
+const SVG_FIELD_ABCD =
+  '<svg viewBox="0 0 320 200" style="width:100%;max-width:300px;display:block;margin:6px auto;background:rgba(180,200,255,0.05);border-radius:8px;">' +
+  '<rect x="120" y="90" width="40" height="20" fill="#ff5e72" rx="2"/>' +
+  '<rect x="160" y="90" width="40" height="20" fill="#5bc8ff" rx="2"/>' +
+  '<text x="140" y="105" fill="#fff" font-size="11" font-family="monospace" text-anchor="middle" font-weight="700">N</text>' +
+  '<text x="180" y="105" fill="#fff" font-size="11" font-family="monospace" text-anchor="middle" font-weight="700">S</text>' +
+  '<circle cx="160" cy="35" r="3" fill="#ffc857"/>' +
+  '<text x="168" y="39" fill="#ffc857" font-size="13" font-family="monospace" font-weight="700">A</text>' +
+  '<circle cx="280" cy="100" r="3" fill="#ffc857"/>' +
+  '<text x="288" y="104" fill="#ffc857" font-size="13" font-family="monospace" font-weight="700">B</text>' +
+  '<circle cx="160" cy="165" r="3" fill="#ffc857"/>' +
+  '<text x="168" y="169" fill="#ffc857" font-size="13" font-family="monospace" font-weight="700">C</text>' +
+  '<circle cx="40" cy="100" r="3" fill="#ffc857"/>' +
+  '<text x="48" y="104" fill="#ffc857" font-size="13" font-family="monospace" font-weight="700">D</text>' +
+  '</svg>';
+const SVG_FIELD_PQ =
+  '<svg viewBox="0 0 320 200" style="width:100%;max-width:300px;display:block;margin:6px auto;background:rgba(180,200,255,0.05);border-radius:8px;">' +
+  '<rect x="120" y="90" width="40" height="20" fill="#ff5e72" rx="2"/>' +
+  '<rect x="160" y="90" width="40" height="20" fill="#5bc8ff" rx="2"/>' +
+  '<text x="140" y="105" fill="#fff" font-size="11" font-family="monospace" text-anchor="middle" font-weight="700">N</text>' +
+  '<text x="180" y="105" fill="#fff" font-size="11" font-family="monospace" text-anchor="middle" font-weight="700">S</text>' +
+  '<circle cx="150" cy="55" r="3" fill="#ffc857"/>' +
+  '<text x="158" y="59" fill="#ffc857" font-size="13" font-family="monospace" font-weight="700">P</text>' +
+  '<circle cx="290" cy="180" r="3" fill="#ffc857"/>' +
+  '<text x="298" y="184" fill="#ffc857" font-size="13" font-family="monospace" font-weight="700">Q</text>' +
+  '</svg>';
+
+/* ---------- TABS (numbered, with Test Yourself as tab 5) ---------- */
+const TABS=[
+  {kpi:'4.1', title:'1. Poles & Forces', cap:'<p><b>Like poles repel, unlike poles attract.</b> Two N poles (or two S poles) push each other apart; an N and an S pull together.</p><p>A magnet also attracts <b>magnetic materials</b> (like a steel nail) even though the nail isn\'t a magnet — this attraction only ever pulls, it never pushes.</p>', build:s0_build, tick:s0_tick, hud:s0_hud, controls:s0_controls, wire:s0_wire,
+   challenges:[
+    {q:'Two magnets are placed N-pole facing N-pole. What happens?', opts:['They attract','They repel','Nothing happens','They both lose their magnetism'], correct:1, exp:'Like poles (N–N or S–S) always repel each other.'},
+    {q:'A bar magnet is brought near an unmagnetized steel nail. The nail will be...', opts:['Repelled','Attracted','Unaffected','Attracted only if it is an N pole'], correct:1, exp:'A magnet always attracts magnetic materials, regardless of which pole is used — the material becomes induced.'}
+   ]},
+  {kpi:'4.2 · 4.6–4.10', title:'2. Field Around a Magnet', cam:{theta:0.32,phi:0.16,radius:10.5}, cap:'<p>Magnetic forces happen because of an interaction between two <b>magnetic fields</b> — the region around a magnet where a pole feels a force.</p><p>Field lines run from N to S outside the magnet; where they are <b>closer together the field is stronger</b>. A compass needle always points along the field direction at that point.</p><p>Use the selector to view <b>1 magnet</b>, or two magnets placed side-by-side — with either unlike poles facing each other (attract) or like poles facing (repel).</p>', build:s1_build, tick:s1_tick, hud:s1_hud, controls:s1_controls, wire:s1_wire,
+   challenges:[
+    {q:'A magnetic field is best defined as...', opts:['A region where a magnetic pole feels a force','The metal a magnet is made from','The space inside a magnet only','A type of electric current'], correct:0, exp:'A magnetic field is a region around a magnet in which a magnetic pole experiences a force.'},
+    {q:'Field lines around a bar magnet always point...', opts:['From S to N outside the magnet','From N to S outside the magnet','Randomly in all directions','Only sideways'], correct:1, exp:'By convention, field lines run from the N pole to the S pole outside the magnet.'},
+    {q:'Where field lines are drawn close together, the field is...', opts:['Weaker','Stronger','Zero','Reversed'], correct:1, exp:'Closer spacing of field lines represents a stronger magnetic field.'},
+    {q:'A compass needle placed in a magnetic field points...', opts:['Always due north, ignoring the magnet','In the direction of the field at that point','Away from the nearest pole only','Randomly'], correct:1, exp:'The compass N pole aligns with, and shows, the field direction at that point.'},
+    {q:'<div>The diagram shows a bar magnet (N on the left, S on the right) with four points A, B, C, D around it.</div>'+SVG_FIELD_ABCD+
+       '<div style="margin-top:6px;">Which statement about the field direction at A, B, C and D is correct?</div>',
+     opts:[
+      'At A and C the field points right; at B and D it points left.',
+      'At A and C the field points left; at B and D it points right.',
+      'At A the field points up; at C it points down.',
+      'At all four points the field points away from the magnet.'
+     ], correct:0,
+     exp:'Field lines run from N to S outside the magnet. Directly above and below the magnet they flow from the N side to the S side (rightward). To the left of the N pole they point away from N (leftward); to the right of the S pole they point toward S (leftward).'},
+    {q:'<div>The diagram shows the same bar magnet with two points P and Q.</div>'+SVG_FIELD_PQ+
+       '<div style="margin-top:6px;">At which point is the magnetic field stronger?</div>',
+     opts:[
+      'Point P (close to the magnet)',
+      'Point Q (far from the magnet)',
+      'The field is the same at P and Q',
+      'Cannot be determined from the diagram'
+     ], correct:0,
+     exp:'The field is strongest near the poles, where the field lines are packed closest together. Point P is close to the magnet; Q is far away, so the field at P is stronger.'}
+   ]},
+  {kpi:'4.3 · 4.4 · 4.5', title:'3. Materials & Induction', cam:{theta:0.28,phi:0.10,radius:11.5}, cap:'<p><b>Magnetic materials</b> (iron, steel, cobalt, nickel) are attracted to a magnet; <b>non-magnetic materials</b> (copper, wood, plastic) are not affected at all.</p><p>When a magnetic material enters a magnet\'s field it becomes an <b>induced magnet</b> itself, so it can attract paperclips. <b>Soft iron</b> is a temporary magnet — it loses its magnetism almost immediately when the magnet is removed. <b>Steel</b> is harder to magnetize but, once magnetized, keeps its magnetism, becoming a permanent magnet.</p><p>Use <b>Add / Remove magnet</b> and watch both the sample and the paperclips. Try the <b>Challenge</b> to identify three hidden metal samples from their behaviour.</p>', build:s2_build, tick:s2_tick, hud:s2_hud, controls:s2_controls, wire:s2_wire,
+   challenges:[
+    {q:'Which of these is a magnetic material?', opts:['Copper','Wood','Iron','Plastic'], correct:2, exp:'Iron (along with steel, cobalt and nickel) is magnetic; copper, wood and plastic are not.'},
+    {q:'A soft iron nail is held near a strong magnet, then the magnet is taken away. The nail...', opts:['Stays magnetized permanently','Loses its magnetism almost at once','Becomes non-magnetic material','Repels the magnet'], correct:1, exp:'Soft iron makes a temporary magnet — induced magnetism disappears quickly once the field is removed.'},
+    {q:'Compared with soft iron, steel is...', opts:['Easier to magnetize and loses magnetism quickly','Harder to magnetize but keeps its magnetism (permanent magnet)','Not magnetic at all','Identical in every property'], correct:1, exp:'Steel is harder to magnetize than soft iron, but once magnetized it retains its magnetism, making good permanent magnets.'}
+   ]},
+  {kpi:'4.11', title:'4. Electromagnets & Uses', cam:{theta:0.18,phi:0.16,radius:12.5,cx:1.3,cy:-0.15,cz:0}, cap:'<p>An <b>electromagnet</b> is a coil of wire wound around a soft-iron core. It is only magnetic while current flows — switch the current off and it is no longer a magnet.</p><p>The two ends of the coil wire run down to the battery terminals. Use the <b>Voltage</b> slider to control the current magnitude (and thus the field strength), and <b>Reverse current</b> to swap the electromagnet\'s poles — the pole labels on the core update automatically.</p><p>Switch between <b>metallic rings</b> (always attracted to either pole) and a <b>second bar magnet</b> (attracted when poles are unlike; repelled when like poles face each other). The second magnet\'s poles can be flipped with the <b>Flip 2nd magnet</b> button.</p><p><b>Permanent magnets</b> are used where a constant field is needed. <b>Electromagnets</b> are used where the field must be switched or varied: scrapyard cranes, electric bells and relays, motors, and MRI scanners.</p>', build:s3_build, tick:s3_tick, hud:s3_hud, controls:s3_controls, wire:s3_wire,
+   challenges:[
+    {q:'An electromagnet is magnetic...', opts:['All the time, like a permanent magnet','Only while current flows through its coil','Only when it is cold','Only when painted red and blue'], correct:1, exp:'An electromagnet\'s core is only magnetized while current flows through the surrounding coil.'},
+    {q:'Which use best suits an electromagnet rather than a permanent magnet?', opts:['A pocket compass','A fridge door magnet','A crane that lifts and releases scrap steel','A magnetic bookmark'], correct:2, exp:'A scrapyard crane needs to switch its magnetism on to lift steel and off to release it — a job for an electromagnet.'}
+   ]},
+  {kpi:'Review', title:'5. Test Yourself', build:s4_build, tick:s4_tick, hud:s4_hud, controls:s4_controls, wire:s4_wire, challenges:[]}
+];
+let curTab=0, chalIdx=0, chalScore=0, chalTotal=0, chalSelected=null, chalAnswered=false, chalOpen=false;
+
+function buildTabs(){
+  el('tabs').innerHTML=TABS.map((t,i)=>'<button class="tab-btn'+(i===curTab?' active':'')+'" data-i="'+i+'">'+t.title+'</button>').join('');
+  Array.from(el('tabs').children).forEach(b=>b.onclick=()=>loadScene(parseInt(b.dataset.i)));
+}
+
+function loadScene(i){
+  curTab=i;
+  clearStage();
+  chalIdx=0; chalOpen=false;
+  el('challenge-wrap').classList.remove('show');
+  if(sc1.interior){ xrayScene.remove(sc1.interior); sc1.interior=null; }
+  if(i!==2){
+    el('sc2-chal-panel').classList.remove('show');
+    if(sc2.isChallenge){
+      sc2.isChallenge=false;
+      const sel=el('s2-select'); if(sel) sel.disabled=false;
+    }
+  }
+  const isQuiz = (i===4);
+  const t=TABS[i];
+  el('caption-kpi').textContent='KPI '+t.kpi;
+  el('caption-title').textContent=t.title;
+  el('caption-text').innerHTML=t.cap;
+  el('scene-controls').innerHTML=t.controls();
+  resetOrbit(t.cam);
+  t.build(); t.wire(); buildTabs(); updateHUD();
+  field2d_setVisible(i===1);
+  // Hide the 3D-scene ground for both the Field tab and the Quiz tab
+  floor.visible = !isQuiz && i!==1;
+  grid.visible = !isQuiz && i!==1;
+  // Toggle quiz-tab-only UI
+  el('caption').style.display = isQuiz ? 'none' : '';
+  el('hud').style.display = isQuiz ? 'none' : '';
+  el('controls').style.display = isQuiz ? 'none' : '';
+  el('hint').style.display = isQuiz ? 'none' : '';
+  el('quiz-panel').classList.toggle('show', isQuiz);
+  if(isQuiz) quizStart();
+}
+function updateHUD(){
+  const rows=TABS[curTab].hud();
+  el('hud-rows').innerHTML=rows.map(r=>'<div class="dr"><span class="dl">'+r.l+'</span><span class="dv" style="color:'+r.c+'">'+r.v+'</span></div>').join('');
+}
+el('btn-reset-scene').onclick=()=>{ if(curTab===2 && sc2.isChallenge) s2_closeChallenge(); loadScene(curTab); };
+
+function showChallenge(){
+  chalOpen=true; el('challenge-wrap').classList.add('show'); chalAnswered=false; chalSelected=null;
+  const item=TABS[curTab].challenges[chalIdx];
+  el('chal-prompt').innerHTML=item.q;
+  el('chal-opts').innerHTML=item.opts.map((o,i)=>'<button class="chal-opt" data-i="'+i+'">'+o+'</button>').join('');
+  el('chal-result').style.display='none'; el('chal-result').className='';
+  Array.from(el('chal-opts').children).forEach(btn=>{
+    btn.onclick=()=>{ if(chalAnswered) return; chalSelected=parseInt(btn.dataset.i);
+      Array.from(el('chal-opts').children).forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel'); };
+  });
+  el('chal-score').textContent='Score: '+chalScore+'/'+chalTotal;
+}
+el('btn-challenge-toggle').onclick=()=>{ if(chalOpen){ el('challenge-wrap').classList.remove('show'); chalOpen=false; } else { showChallenge(); } };
+el('btn-chal-exit').onclick=()=>{ el('challenge-wrap').classList.remove('show'); chalOpen=false; };
+el('btn-chal-check').onclick=()=>{
+  if(chalAnswered||chalSelected===null) return; chalAnswered=true; chalTotal++;
+  const item=TABS[curTab].challenges[chalIdx];
+  if(chalSelected===item.correct) chalScore++;
+  Array.from(el('chal-opts').children).forEach((b,i)=>{ if(i===item.correct) b.classList.add('correct'); else if(i===chalSelected) b.classList.add('wrong'); });
+  const res=el('chal-result'); res.style.display='block'; res.className=(chalSelected===item.correct)?'pass':'fail'; res.textContent=item.exp;
+  el('chal-score').textContent='Score: '+chalScore+'/'+chalTotal;
+};
+el('btn-chal-new').onclick=()=>{ chalIdx=(chalIdx+1)%TABS[curTab].challenges.length; showChallenge(); };
+
+let lastT=performance.now();
+function animate(){
+  const now=performance.now(); const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  const t=TABS[curTab]; if(t.tick) t.tick(dt);
+  updateHUD();
+  renderer.clear();
+  renderer.render(scene,camera);
+  if(curTab===1 && sc1.interior && sc1.interior.visible){
+    renderer.clearDepth();
+    renderer.render(xrayScene,camera);
+  }
+  requestAnimationFrame(animate);
+}
+buildTabs(); loadScene(0); animate();
+</script>
+
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fmagnetism_lab.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fmagnetism_lab.html'"/>
+    <p>darawa-io.github.io/ARLABS/magnetism_lab.html</p>
+  </div>
+</div>
+<script>
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+</script>
+</body>
+</html>
