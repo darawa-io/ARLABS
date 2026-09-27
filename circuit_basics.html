@@ -1671,8 +1671,16 @@ function animate(ts){
 animate();
 
 /* QUIZ ENGINE (data lives in QUIZ1 / QUIZ2, defined above with the scenes config) */
-let quizData=[], quizIdx=0, quizScore=0, quizAnswered=false;
-function openQuiz(data){ quizData=data; quizIdx=0; quizScore=0; el('quiz-section').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion(); }
+let quizData=[], quizSource=[], quizIdx=0, quizScore=0, quizAnswered=false;
+function shuffleArr(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function openQuiz(data){
+  quizSource=data;
+  quizData=shuffleArr(data).map(item=>{
+    const order=shuffleArr(item.opts.map((_,i)=>i));
+    return {kpi:item.kpi, q:item.q, exp:item.exp, opts:order.map(i=>item.opts[i]), correct:order.indexOf(item.correct)};
+  });
+  quizIdx=0; quizScore=0; el('quiz-section').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion();
+}
 function showQuizQuestion(){
   quizAnswered=false;
   const item=quizData[quizIdx];
@@ -1705,7 +1713,7 @@ function showQuizFinal(){
   const pct=quizScore/quizData.length;
   el('quiz-final-msg').textContent=pct>=0.8?'Outstanding grasp! 🎉':(pct>=0.5?'Good job! Review the modules and try again.':'Keep practicing these concepts!');
 }
-el('quiz-restart').onclick=()=>openQuiz(quizData);
+el('quiz-restart').onclick=()=>openQuiz(quizSource);
 </script>
 
 <button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
