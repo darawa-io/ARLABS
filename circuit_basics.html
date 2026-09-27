@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Circuit Lab | Current, Resistance &amp; Ohm's Law</title>
+<title>Circuit Lab | Current, Resistance, Ohm's Law, Energy &amp; Power</title>
 <link rel="icon" type="image/png" href="assets/logo1.png">
 <link rel="icon" type="image/png" href="assets/logo1.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%8A%3C/text%3E%3C/svg%3E">
@@ -128,11 +128,72 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .data-table td{padding:4px 6px;border-top:1px solid rgba(180,200,255,0.06);color:#fff;}
 #lab-summary{font-size:10px;line-height:1.5;color:rgba(200,215,255,0.8);margin-top:8px;}
 #lab-summary b{color:#fff;}
+
+/* ── CHAPTER HOME SCREEN ─────────────────────────────── */
+#home{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,transform .5s;padding:20px;}
+#home.out{opacity:0;transform:scale(1.04);pointer-events:none;}
+.home-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0;width:100%;}
+.home-title{text-align:center;margin-bottom:40px;}
+.home-logo{width:44px;height:48px;opacity:0.75;display:block;margin:0 auto 12px;}
+.home-title h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(20px,4vw,34px);letter-spacing:3px;color:#fff;text-shadow:0 0 40px rgba(120,180,255,.4);}
+.home-title p{font-family:'Space Mono',monospace;font-size:clamp(9px,1.2vw,11px);letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-top:8px;}
+.chapter-cards{display:flex;gap:clamp(16px,2.5vw,32px);align-items:stretch;flex-wrap:wrap;justify-content:center;max-width:900px;}
+.chap-card{position:relative;width:clamp(240px,32vw,340px);background:rgba(10,14,28,.85);backdrop-filter:blur(24px);border:1px solid rgba(120,180,255,.15);border-radius:22px;padding:26px 24px 22px;cursor:pointer;transition:transform .25s,border-color .25s,box-shadow .25s;display:flex;flex-direction:column;gap:12px;}
+.chap-card:hover{transform:translateY(-6px) scale(1.02);border-color:rgba(120,180,255,.45);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(120,180,255,.12);}
+.chap-card:active{transform:translateY(-2px) scale(1.005);}
+.chap-num{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(120,180,255,.4);text-transform:uppercase;}
+.chap-card h2{font-family:'Syne',sans-serif;font-size:clamp(15px,1.6vw,19px);font-weight:700;color:#fff;line-height:1.3;}
+.chap-card p{font-size:clamp(10.5px,1vw,12px);color:rgba(200,220,255,.6);line-height:1.6;}
+.chap-formula{font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(255,200,87,.85);padding:7px 10px;border-radius:8px;background:rgba(255,200,87,.06);border:1px solid rgba(255,200,87,.18);text-align:center;line-height:1.7;}
+.chap-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;border-radius:12px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.25);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#78b4ff;transition:background .2s,border-color .2s;margin-top:4px;}
+.chap-card:hover .chap-btn{background:rgba(120,180,255,.22);border-color:#78b4ff;}
+.chap-card.ch2 .chap-num,.chap-card.ch2 h2{color:rgba(255,220,170,1);}
+.chap-card.ch2:hover{border-color:rgba(255,200,87,.45);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(255,200,87,.15);}
+.chap-card.ch2 .chap-btn{color:#ffc857;border-color:rgba(255,200,87,.28);background:rgba(255,200,87,.08);}
+.chap-card.ch2:hover .chap-btn{background:rgba(255,200,87,.2);border-color:#ffc857;}
+.chap-card.ch2 .chap-formula{color:rgba(255,220,170,.9);background:rgba(255,180,80,.07);border-color:rgba(255,180,80,.2);}
+.home-footer{margin-top:34px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(120,180,255,.25);letter-spacing:2px;text-transform:uppercase;text-align:center;}
+#back-to-chapters{position:fixed;bottom:20px;left:20px;z-index:40;display:none;padding:8px 18px;border-radius:30px;background:rgba(6,10,22,.92);backdrop-filter:blur(16px);border:1px solid rgba(120,180,255,.3);color:#78b4ff;font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:1px;}
+#back-to-chapters:hover{background:rgba(120,180,255,.18);border-color:#78b4ff;}
+#back-to-chapters.show{display:block;}
+#lab-ui{display:none;}
+#lab-ui.show{display:contents;}
 </style>
 </head>
 <body>
 <canvas id="mainCanvas"></canvas>
-<div id="title"><svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><div id="title-text"><h1>CIRCUIT LAB</h1><p>Current · Resistance · Ohm's Law</p></div></div>
+
+<!-- Chapter selection home screen -->
+<div id="home">
+  <div class="home-inner">
+    <div class="home-title">
+      <svg class="home-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+      <h1>CIRCUIT LAB</h1>
+      <p>Current · Resistance · Ohm's Law · Energy &amp; Power</p>
+    </div>
+    <div class="chapter-cards">
+      <div class="chap-card ch1" onclick="enterChapter(1)">
+        <div class="chap-num">Part 1 · KPI 3.1</div>
+        <h2>Current, Resistance<br>&amp; Ohm's Law</h2>
+        <p>Charge flow, conventional current vs electron flow, ammeters &amp; voltmeters, Ohm's law, ohmic/non-ohmic materials and resistivity — 6 interactive modules plus 2 virtual labs.</p>
+        <div class="chap-formula">ΔV = IR &nbsp;·&nbsp; R = ρl/A</div>
+        <div class="chap-btn"><span>▶</span> Enter Chapter</div>
+      </div>
+      <div class="chap-card ch2" onclick="enterChapter(2)">
+        <div class="chap-num">Part 2 · KPI 3.2</div>
+        <h2>Electric Energy<br>&amp; Power</h2>
+        <p>See electrical energy transform into heat, define electric power, derive P = VI = I²R = V²/R, and run a virtual lab measuring power and energy dissipation.</p>
+        <div class="chap-formula">P = E/t &nbsp;·&nbsp; P = VI = I²R = V²/R</div>
+        <div class="chap-btn"><span>▶</span> Enter Chapter</div>
+      </div>
+    </div>
+    <div class="home-footer">Select a chapter to begin · 🖐️ drag to rotate · ✌️ pinch / scroll to zoom</div>
+  </div>
+</div>
+<button id="back-to-chapters" title="Back to chapter menu">← Chapters</button>
+
+<div id="lab-ui">
+<div id="title"><svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg><div id="title-text"><h1>CIRCUIT LAB</h1><p id="title-sub">Current · Resistance · Ohm's Law</p></div></div>
 <div id="tabs"></div>
 <div id="left-stack">
 <div id="caption"><div class="caption-head"><div id="caption-kpi">KPI</div><button class="btn-fold" id="btn-caption-fold" title="Fold panel">▼</button></div><div id="caption-title">Title</div><div id="caption-text">Description</div></div>
@@ -144,6 +205,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div id="hint">🖐️ drag to rotate · ✌️ pinch / scroll to zoom</div>
 <button id="quiz-btn" title="Take the Circuits quiz">🧠</button>
 <div id="quiz-modal"><div id="quiz-box"><button id="quiz-close">✕</button><div id="quiz-live"><h3>Circuits Quiz</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-kpi">KPI 3.1.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div></div>
+</div><!-- /#lab-ui -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -904,8 +966,287 @@ function e8_renderTable(){
 }
 function e8_clear(){ e8.records=[]; e8_renderTable(); }
 
+/* ================= SCENE 9 — Joule Heating (KPI 3.2.1) ================= */
+const e9={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,resistor:null,lattice:[],heatParticles:[],heatSpawnAcc:0,t:0};
+function e9_build(){
+  clearStage();
+  const {x0,x1,y0,y1}=e9;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  e9.resistor=resistorMesh(x1,0,'R');
+  stage.add(e9.resistor);
+  e9.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
+  e9.lattice=[];
+  for(let i=-1;i<=1;i++){
+    for(let j=-1;j<=1;j++){
+      const sph=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6), mat(0x778899,{metalness:0.4,roughness:0.5}));
+      sph.position.set(x1+i*0.13, j*0.16, 0.18);
+      sph.userData.baseY=sph.position.y;
+      stage.add(sph);
+      e9.lattice.push(sph);
+    }
+  }
+  e9.heatParticles=[]; e9.heatSpawnAcc=0; e9.t=0;
+}
+function e9_V(){ return parseFloat(el('e9-V')?.value||6); }
+function e9_R(){ return parseFloat(el('e9-R')?.value||4); }
+function e9_tick(dt){
+  const V=e9_V(), R=e9_R(), I=V/R, P=I*I*R;
+  e9.t+=dt;
+  updateLoopParticles(e9.parts,dt,clamp(I*0.12,0.02,0.6),1,e9.x0,e9.x1,e9.y0,e9.y1);
+  e9.lattice.forEach((sph,idx)=>{
+    const amp=clamp(P*0.012,0,0.06);
+    sph.position.y=sph.userData.baseY+Math.sin(e9.t*8+idx)*amp;
+    const heat=clamp(P/25,0,1);
+    sph.material.color.setRGB(0.47+heat*0.5, 0.53-heat*0.42, 0.6-heat*0.55);
+  });
+  if(e9.resistor) e9.resistor.rotation.y+=dt*0.15;
+  if(el('e9-heat')?.checked){
+    e9.heatSpawnAcc+=dt*clamp(P*1.1,0.3,9);
+    while(e9.heatSpawnAcc>1){
+      e9.heatSpawnAcc-=1;
+      const g=new THREE.SphereGeometry(0.045,6,6);
+      const m=new THREE.MeshBasicMaterial({color:0xff7a3c,transparent:true,opacity:0.75});
+      const sp=new THREE.Mesh(g,m);
+      sp.position.set(e9.x1+(Math.random()-0.5)*0.5, 0.3+Math.random()*0.15, (Math.random()-0.5)*0.35);
+      stage.add(sp);
+      e9.heatParticles.push({mesh:sp,born:performance.now(),vy:0.45+Math.random()*0.4});
+    }
+  }
+  for(let i=e9.heatParticles.length-1;i>=0;i--){
+    const hp=e9.heatParticles[i];
+    const age=(performance.now()-hp.born)/1000;
+    if(age>1.6){ stage.remove(hp.mesh); e9.heatParticles.splice(i,1); continue; }
+    hp.mesh.position.y+=hp.vy*dt;
+    hp.mesh.material.opacity=0.75*(1-age/1.6);
+    hp.mesh.scale.setScalar(1+age*0.6);
+  }
+}
+function e9_hud(){
+  const V=e9_V(), R=e9_R(), I=V/R, P=I*I*R;
+  return [
+    {l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},
+    {l:'Resistance R',v:fmt(R,1)+' Ω',c:'#5bc8ff'},
+    {l:'Current I = V/R',v:fmt(I,3)+' A',c:'#b57aff'},
+    {l:'Heat power P = I²R',v:fmt(P,2)+' W',c:'#ff5e72'}
+  ];
+}
+
+/* ================= SCENE 10 — Electric Power P = E/t (KPI 3.2.2) ================= */
+const e10={running:false,t:0,E:0,bulb:null,disc:null,challengeActive:false,chalMode:null,chalGiven:{},chalAnswer:0};
+function e10_build(){
+  clearStage();
+  e10.running=false; e10.t=0; e10.E=0;
+  const bulb=bulbMesh(0,0); stage.add(bulb); e10.bulb=bulb;
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.08,24), mat(0x445566,{metalness:0.6,roughness:0.3}));
+  disc.rotation.x=Math.PI/2; disc.position.set(0,-1.2,1.0);
+  stage.add(disc); e10.disc=disc;
+  const marker=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.4,0.05), emat(0xffc857,1.2));
+  marker.position.set(0,0.2,0); disc.add(marker); e10.marker=marker;
+  const lbl=makeTextSprite('energy meter',{color:'#5bc8ff',height:0.28}); lbl.position.set(0,-1.55,1.0); stage.add(lbl);
+}
+function e10_tick(dt){
+  const P=e10.challengeActive? (e10.chalMode==='findP'? e10.chalGiven.P||0 : e10.chalGiven.P) : parseFloat(el('e10-P')?.value||40);
+  if(e10.running){ e10.t+=dt; e10.E+=P*dt; }
+  if(e10.disc) e10.disc.rotation.z+=dt*clamp(P*0.05,0.05,3);
+  if(e10.bulb){
+    const glow=clamp(P/60,0.05,3);
+    e10.bulb.userData.glass.material.emissiveIntensity=glow;
+    e10.bulb.userData.filament.material.emissiveIntensity=1+glow;
+  }
+}
+function e10_toggleRun(){
+  e10.running=!e10.running;
+  const b=el('e10-start');
+  b.textContent=e10.running?'⏸ Stop':'▶ Start';
+  b.classList.toggle('on',e10.running);
+}
+function e10_hud(){
+  const P=parseFloat(el('e10-P')?.value||40);
+  if(e10.challengeActive){
+    if(e10.chalMode==='findP') return [{l:'Energy E',v:e10.chalGiven.E+' J',c:'#4dffa0'},{l:'Time t',v:e10.chalGiven.t+' s',c:'#5bc8ff'},{l:'Power P',v:'? (calculate!)',c:'#ff5e72'}];
+    return [{l:'Power P',v:e10.chalGiven.P+' W',c:'#ffc857'},{l:'Time t',v:e10.chalGiven.t+' s',c:'#5bc8ff'},{l:'Energy E',v:'? (calculate!)',c:'#ff5e72'}];
+  }
+  return [
+    {l:'Power P (set)',v:fmt(P,1)+' W',c:'#ffc857'},
+    {l:'Elapsed time t',v:fmt(e10.t,1)+' s',c:'#5bc8ff'},
+    {l:'Energy E = P×t',v:fmt(e10.E,1)+' J',c:'#4dffa0'}
+  ];
+}
+function e10_initChallenge(){
+  e10.challengeActive=true; e10.running=false; e10.t=0; e10.E=0;
+  const startBtn=el('e10-start'); if(startBtn){ startBtn.disabled=true; startBtn.textContent='▶ Start'; startBtn.classList.remove('on'); }
+  const pSlider=el('e10-P'); if(pSlider) pSlider.disabled=true;
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  const variant=Math.random()<0.5?'findP':'findE';
+  e10.chalMode=variant;
+  if(variant==='findP'){
+    const E=randInt(50,2000), t=randInt(5,60);
+    e10.chalGiven={E,t}; e10.chalAnswer=E/t;
+    el('chal-prompt').innerHTML='<p>An appliance transforms <b>'+E+' J</b> of electrical energy in <b>'+t+' s</b>.</p><p>Calculate its power output using <b>P = E / t</b>. Give your answer in watts.</p>';
+  } else {
+    const P=randInt(5,150), t=randInt(5,120);
+    e10.chalGiven={P,t}; e10.chalAnswer=P*t;
+    el('chal-prompt').innerHTML='<p>An appliance rated at <b>'+P+' W</b> runs for <b>'+t+' s</b>.</p><p>Calculate the energy transformed using <b>E = P × t</b>. Give your answer in joules.</p>';
+  }
+  el('chal-body').innerHTML='<div class="chal-inputs-grid"><div class="chal-field"><label>'+(variant==='findP'?'Power P (W):':'Energy E (J):')+'</label><input type="number" id="e10-chal-ans" class="chal-input" placeholder="e.g. 100" step="0.1"></div></div>';
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function e10_checkChallenge(){
+  const inp=el('e10-chal-ans'); if(!inp) return {correct:false,message:'⚠️ Enter your answer.'};
+  const val=parseFloat(inp.value); if(isNaN(val)) return {correct:false,message:'⚠️ Please enter a number.'};
+  const ok=Math.abs(val-e10.chalAnswer)<=Math.max(0.06*Math.abs(e10.chalAnswer),0.5);
+  inp.disabled=true;
+  const unit=e10.chalMode==='findP'?' W':' J';
+  if(ok) return {correct:true,message:'✅ Correct! The answer is '+fmt(e10.chalAnswer,2)+unit+'.'};
+  return {correct:false,message:'❌ Not quite. The answer is '+fmt(e10.chalAnswer,2)+unit+'.'};
+}
+function e10_exitChallenge(){
+  e10.challengeActive=false;
+  const startBtn=el('e10-start'); if(startBtn) startBtn.disabled=false;
+  const pSlider=el('e10-P'); if(pSlider) pSlider.disabled=false;
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+/* ================= SCENE 11 — Deriving P = VI = I²R = V²/R (KPI 3.2.3) ================= */
+const e11={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,bulb:null,challengeActive:false,chalGiven:{},chalAnswer:0,chalFormula:''};
+function e11_build(){
+  clearStage();
+  const {x0,x1,y0,y1}=e11;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  const b=bulbMesh(x1,0); stage.add(b); e11.bulb=b;
+  e11.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
+}
+function e11_V(){ return e11.challengeActive? e11.chalGiven.V : parseFloat(el('e11-V')?.value||6); }
+function e11_R(){ return e11.challengeActive? e11.chalGiven.R : parseFloat(el('e11-R')?.value||4); }
+function e11_tick(dt){
+  const V=e11_V(), R=e11_R(), I=V/R, P=V*I;
+  updateLoopParticles(e11.parts,dt,clamp(I*0.12,0.02,0.6),1,e11.x0,e11.x1,e11.y0,e11.y1);
+  if(e11.bulb){
+    const glow=clamp(P*0.12,0.05,3.2);
+    e11.bulb.userData.glass.material.emissiveIntensity=glow;
+    e11.bulb.userData.filament.material.emissiveIntensity=1+glow;
+    e11.bulb.rotation.y+=dt*0.4;
+  }
+}
+function e11_hud(){
+  const V=e11_V(), R=e11_R(), I=V/R, P1=V*I, P2=I*I*R, P3=(V*V)/R;
+  if(e11.challengeActive){
+    return [{l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},{l:'Resistance R',v:fmt(R,1)+' Ω',c:'#5bc8ff'},{l:'Current I = V/R',v:fmt(I,3)+' A',c:'#b57aff'},{l:'Power P',v:'? (use '+e11.chalFormula+')',c:'#ff5e72'}];
+  }
+  return [
+    {l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},
+    {l:'Resistance R',v:fmt(R,1)+' Ω',c:'#5bc8ff'},
+    {l:'Current I = V/R',v:fmt(I,3)+' A',c:'#b57aff'},
+    {l:'P = VI',v:fmt(P1,2)+' W',c:'#4dffa0'},
+    {l:'P = I²R',v:fmt(P2,2)+' W',c:'#4dffa0'},
+    {l:'P = V²/R',v:fmt(P3,2)+' W',c:'#4dffa0'}
+  ];
+}
+function e11_initChallenge(){
+  e11.challengeActive=true;
+  const vSlider=el('e11-V'), rSelect=el('e11-R');
+  if(vSlider) vSlider.disabled=true;
+  if(rSelect) rSelect.disabled=true;
+  el('caption').style.display='none';
+  el('challenge-wrap').classList.add('s5-pos');
+  const f=pick(['VI','I2R','V2R']);
+  e11.chalFormula = f==='VI'?'P = VI':(f==='I2R'?'P = I²R':'P = V²/R');
+  const V=randInt(2,20), R=pick([2,4,5,6,8,10,12,15,20]);
+  const I=V/R, P=V*I;
+  e11.chalGiven={V,R}; e11.chalAnswer=P;
+  let given;
+  if(f==='VI') given='voltage <b>V = '+V+' V</b> and current <b>I = '+fmt(I,2)+' A</b>';
+  else if(f==='I2R') given='current <b>I = '+fmt(I,2)+' A</b> and resistance <b>R = '+R+' Ω</b>';
+  else given='voltage <b>V = '+V+' V</b> and resistance <b>R = '+R+' Ω</b>';
+  el('chal-prompt').innerHTML='<p>A resistor has '+given+'.</p><p>Calculate the power dissipated using <b>'+e11.chalFormula+'</b>. Give your answer in watts.</p>';
+  el('chal-body').innerHTML='<div class="chal-inputs-grid"><div class="chal-field"><label>Power P (W):</label><input type="number" id="e11-chal-ans" class="chal-input" placeholder="e.g. 12" step="0.01"></div></div>';
+  el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+  el('chal-result').className=''; el('chal-result').style.display='none';
+}
+function e11_checkChallenge(){
+  const inp=el('e11-chal-ans'); if(!inp) return {correct:false,message:'⚠️ Enter your answer.'};
+  const val=parseFloat(inp.value); if(isNaN(val)) return {correct:false,message:'⚠️ Please enter a number.'};
+  const ok=Math.abs(val-e11.chalAnswer)<=Math.max(0.06*e11.chalAnswer,0.05);
+  inp.disabled=true;
+  if(ok) return {correct:true,message:'✅ Correct! P = '+fmt(e11.chalAnswer,2)+' W.'};
+  return {correct:false,message:'❌ Not quite. P = '+fmt(e11.chalAnswer,2)+' W.'};
+}
+function e11_exitChallenge(){
+  e11.challengeActive=false;
+  const vSlider=el('e11-V'), rSelect=el('e11-R');
+  if(vSlider) vSlider.disabled=false;
+  if(rSelect) rSelect.disabled=false;
+  el('caption').style.display='';
+  el('challenge-wrap').classList.remove('show','s5-pos');
+  el('btn-challenge-toggle').classList.remove('on');
+}
+
+/* ================= SCENE 12 — Lab 4: Power & Energy Dissipation ================= */
+const e12={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,resistor:null,R:4,records:[]};
+function e12_build(){
+  clearStage();
+  const {x0,x1,y0,y1}=e12;
+  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
+  stage.add(batteryMesh(x0,0));
+  e12.R=parseFloat(el('e12-Rsel')?.value||4);
+  e12.resistor=resistorMesh(x1,0,'R');
+  stage.add(e12.resistor);
+  e12.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
+  e12.records=[];
+  e12_renderTable();
+}
+function e12_V(){ return parseFloat(el('e12-V')?.value||6); }
+function e12_t(){ return parseFloat(el('e12-t')?.value||30); }
+function e12_tick(dt){
+  const V=e12_V(), R=e12.R, I=V/R, P=V*I;
+  updateLoopParticles(e12.parts,dt,clamp(I*0.12,0.02,0.6),1,e12.x0,e12.x1,e12.y0,e12.y1);
+  const curve=[]; for(let v=0;v<=20;v+=1) curve.push({v:v*v, i:(v*v)/R});
+  const yMax=400/R;
+  drawVIGraph({
+    curves:[{points:curve,color:'#5bc8ff'}],
+    recorded:e12.records.map(r=>({v:r.V*r.V,i:r.P,color:'#4dffa0'})),
+    liveMarkers:[{v:V*V,i:clamp(P,0,yMax),color:'#ffc857'}],
+    xMax:400,yMax:yMax,xLabel:'V² (V²)',yLabel:'P (W)'
+  });
+  setGraphLegend([{color:'#5bc8ff',label:'True P = V²/R relationship'},{color:'#4dffa0',label:'Recorded readings'},{color:'#ffc857',label:'Slider position'}]);
+}
+function e12_hud(){
+  const V=e12_V(), R=e12.R, I=V/R, P=V*I, t=e12_t(), E=P*t;
+  return [
+    {l:'Voltage V',v:fmt(V,1)+' V',c:'#ffc857'},
+    {l:'Resistance R',v:fmt(R,1)+' Ω',c:'#5bc8ff'},
+    {l:'Current I = V/R',v:fmt(I,3)+' A',c:'#b57aff'},
+    {l:'Power P = VI',v:fmt(P,2)+' W',c:'#4dffa0'},
+    {l:'Time t (for E)',v:fmt(t,0)+' s',c:'#5bc8ff'},
+    {l:'Energy E = Pt',v:fmt(E,1)+' J',c:'#ff5e72'}
+  ];
+}
+function e12_record(){
+  const V=e12_V(), R=e12.R, I=V/R, P=V*I, t=e12_t(), E=P*t;
+  e12.records.push({V,I,R,P,t,E});
+  if(e12.records.length>10) e12.records.shift();
+  e12_renderTable();
+}
+function e12_renderTable(){
+  const rows=e12.records.map((r,i)=>[i+1, fmt(r.V,1), fmt(r.I,3), fmt(r.P,2), fmt(r.t,0), fmt(r.E,1)]);
+  renderLabTable(['#','V (V)','I (A)','P = VI (W)','t (s)','E = Pt (J)'], rows);
+  const summaryEl=el('lab-summary');
+  if(e12.records.length>=2){
+    summaryEl.innerHTML='Notice that <b>P grows with V²</b> for a fixed R (doubling V roughly quadruples P) — exactly what <b>P = V²/R</b> predicts. Meanwhile <b>E</b> keeps growing the longer the appliance runs, since <b>E = P × t</b>.';
+  } else {
+    summaryEl.innerHTML='Set a voltage and running time, then press Record to log a reading. Try several different voltages to see how P depends on V.';
+  }
+}
+function e12_clear(){ e12.records=[]; e12_renderTable(); }
+
 /* ===== SCENES CONFIG ===== */
-const scenes=[
+const CH1_SCENES=[
   {key:'e1', tab:'1 · Current', kpi:'KPI 3.1.1', title:'What Is Electric Current?',
     blurb:`<p><b>What Is Electric Current?</b></p>
       <p>Electric current is the flow of electric charge through a conductor. Whenever charge carriers — usually electrons in a metal wire — drift past a fixed point, we say a current is flowing.</p>
@@ -917,7 +1258,8 @@ const scenes=[
       <button class="btn green" id="e1-start">▶ Start Timer</button>
       <label class="chk"><input type="checkbox" id="e1-slow"> Slow Motion (0.25x)</label>`,
     wire(){ el('e1-start').onclick=e1_toggleRun; },
-    onLeave(){ e1.running=false; }},
+    onLeave(){ e1.running=false; },
+    chalInit:e1_initChallenge, chalCheck:e1_checkChallenge, chalExit:e1_exitChallenge},
 
   {key:'e2', tab:'2 · Direction', kpi:'KPI 3.1.2', title:'Conventional Current vs Electron Flow',
     blurb:`<p><b>Conventional Current vs Electron Flow</b></p>
@@ -984,7 +1326,7 @@ const scenes=[
     controlsHTML:`<div class="sw">V=<input type="range" id="e4-V" min="0" max="12" step="0.5" value="6"></div>
       <div class="sw">R=<select id="e4-R"><option value="3">3 Ω</option><option value="4">4 Ω</option><option value="6" selected>6 Ω</option><option value="8">8 Ω</option><option value="10">10 Ω</option><option value="12">12 Ω</option></select></div>`,
     wire(){},
-    challenge:{custom:true, idx:3}},
+    chalInit:e4_initChallenge, chalCheck:e4_checkChallenge, chalExit:e4_exitChallenge},
 
   {key:'e5', tab:'5 · Ohmic', kpi:'KPI 3.1.6', title:'Ohmic & Non-Ohmic Materials',
     blurb:`<p><b>Ohmic and Non-Ohmic Materials</b></p>
@@ -1028,7 +1370,7 @@ const scenes=[
       el('e6-d').oninput=()=>e6_build();
       el('e6-mat').onchange=()=>e6_build();
     },
-    challenge:{custom:true, idx:5}},
+    chalInit:e6_initChallenge, chalCheck:e6_checkChallenge, chalExit:e6_exitChallenge},
 
   {key:'e7', tab:'7 · Lab: Ohm\'s Law', kpi:'Lab 2', title:'Virtual Experiment — Verify Ohm\'s Law',
     blurb:`<p><b>Lab 2 — Verify Ohm's Law</b></p>
@@ -1065,8 +1407,101 @@ const scenes=[
     }}
 ];
 
+const CH2_SCENES=[
+  {key:'e9', tab:'1 · Joule Heating', kpi:'KPI 3.2.1', title:'Electrical Energy → Thermal Energy',
+    blurb:`<p><b>How Electrical Energy Becomes Heat</b></p>
+      <p>As electrons drift through a resistor under an applied voltage, they continually collide with the vibrating ions of the material's lattice.</p>
+      <p>Each collision transfers some of the electrons' kinetic energy to the lattice, increasing its vibration — this is exactly what we perceive as a rise in <b>temperature</b>. Electrical energy delivered by the battery is transformed into <b>thermal (heat) energy</b> in the resistor.</p>
+      <p>This effect — called <b>Joule heating</b> (or resistive heating) — is why resistors, filament lamps and heating elements all warm up when current flows through them.</p>
+      <p>Adjust V and R and watch the lattice ions vibrate harder, and heat rise off the resistor, as the dissipated power P = I²R increases.</p>`,
+    build:e9_build, tick:e9_tick, hud:e9_hud,
+    controlsHTML:`<div class="sw">V=<input type="range" id="e9-V" min="0" max="12" step="0.5" value="6"></div>
+      <div class="sw">R=<select id="e9-R"><option value="2">2 Ω</option><option value="4" selected>4 Ω</option><option value="6">6 Ω</option><option value="10">10 Ω</option></select></div>
+      <label class="chk"><input type="checkbox" id="e9-heat" checked> Show Heat Particles</label>`,
+    wire(){},
+    challenge:{
+      pool:[
+        {q:'As charge carriers drift through a resistor, they repeatedly collide with the vibrating ions of the lattice. This transfers electrical energy into...', opts:['Thermal (heat) energy','Chemical energy','Nuclear energy','No energy transfer occurs'], correct:0},
+        {q:'The process by which a current-carrying resistor warms up is often called...', opts:['Joule heating (resistive heating)','Electrolysis','Electromagnetic induction','The photoelectric effect'], correct:0},
+        {q:'If the current through a fixed resistor doubles, the rate of heat production (P = I²R)...', opts:['Quadruples','Doubles','Stays the same','Halves'], correct:0},
+        {q:'A heating element in a kettle is designed with a resistance that is...', opts:['High, so a lot of electrical energy converts to heat','Zero, so no energy is wasted','Negative, to reverse current flow','Irrelevant to how much heat is produced'], correct:0}
+      ],
+      newQuestion(){ this.cur=pick(this.pool); return {prompt:this.cur.q, options:this.cur.opts}; },
+      check(idx){ const ok=idx===this.cur.correct; return {correct:ok, correctIdx:this.cur.correct, message: ok?'Correct!':'Remember: collisions between charge carriers and the lattice convert electrical energy into heat.'}; }
+    }},
+
+  {key:'e10', tab:'2 · Power P=E/t', kpi:'KPI 3.2.2', title:'Defining Electric Power',
+    blurb:`<p><b>Electric Power</b></p>
+      <p>Electric power is the <b>rate</b> at which electrical energy is transferred by a circuit: <b>P = E / t</b>, measured in joules per second, or <b>watts (W)</b>.</p>
+      <p>A higher-power appliance transforms energy faster — the energy-meter dial spins faster, and more energy <b>E</b> accumulates for every second that passes.</p>
+      <p>Set a power rating with the slider, press <b>▶ Start</b>, and watch the accumulated energy <b>E = P × t</b> climb as time passes.</p>`,
+    build:e10_build, tick:e10_tick, hud:e10_hud,
+    controlsHTML:`<div class="sw">P=<input type="range" id="e10-P" min="5" max="150" step="1" value="40"></div>
+      <button class="btn green" id="e10-start">▶ Start</button>`,
+    wire(){ el('e10-start').onclick=e10_toggleRun; },
+    onLeave(){ e10.running=false; },
+    chalInit:e10_initChallenge, chalCheck:e10_checkChallenge, chalExit:e10_exitChallenge},
+
+  {key:'e11', tab:'3 · P=VI=I²R=V²/R', kpi:'KPI 3.2.3', title:'Deriving the Power Equations',
+    blurb:`<p><b>Deriving P = VI = I²R = V²/R</b></p>
+      <p>Starting from the definition of power and energy, <b>P = E/t</b> and <b>E = QV</b>, and using <b>Q = It</b>:</p>
+      <p><b>P = E/t = QV/t = (It)V/t = IV</b></p>
+      <p>Substituting Ohm's law (<b>V = IR</b>, or <b>I = V/R</b>) into <b>P = VI</b> gives two more equivalent forms: <b>P = I²R</b> and <b>P = V²/R</b>.</p>
+      <p>Adjust V and R below and check the Measurements panel — all three formulas always give the <b>same</b> value for P, because they describe the same physical quantity from different starting variables.</p>`,
+    build:e11_build, tick:e11_tick, hud:e11_hud,
+    controlsHTML:`<div class="sw">V=<input type="range" id="e11-V" min="0.5" max="20" step="0.5" value="6"></div>
+      <div class="sw">R=<select id="e11-R"><option value="2">2 Ω</option><option value="4" selected>4 Ω</option><option value="6">6 Ω</option><option value="8">8 Ω</option><option value="10">10 Ω</option><option value="15">15 Ω</option><option value="20">20 Ω</option></select></div>`,
+    wire(){},
+    chalInit:e11_initChallenge, chalCheck:e11_checkChallenge, chalExit:e11_exitChallenge},
+
+  {key:'e12', tab:'4 · Lab: Power & Energy', kpi:'KPI 3.2.4', title:'Virtual Experiment — Power & Energy Dissipation',
+    blurb:`<p><b>Lab 4 — Calculating Power and Energy Dissipated</b></p>
+      <p>Choose a resistor and a supply voltage, and set how long the circuit will run for. Press <b>📝 Record Reading</b> to log <b>V, I, P</b> and <b>E</b> for that setup.</p>
+      <p>Power is calculated with <b>P = VI</b>, and the energy transformed over the chosen time with <b>E = Pt</b>. The graph plots your readings as <b>P against V²</b> — a straight line through the origin confirms <b>P = V²/R</b> (with slope 1/R).</p>
+      <p>Try several voltages with the same resistor, then switch resistors and compare.</p>`,
+    build:e12_build, tick:e12_tick, hud:e12_hud, showGraph:true, graphTable:true,
+    controlsHTML:`<div class="sw">V=<input type="range" id="e12-V" min="0.5" max="20" step="0.5" value="6"></div>
+      <div class="sw">R=<select id="e12-Rsel"><option value="2">2 Ω</option><option value="4" selected>4 Ω</option><option value="6">6 Ω</option><option value="10">10 Ω</option></select></div>
+      <div class="sw">t=<input type="range" id="e12-t" min="5" max="120" step="5" value="30"> s</div>
+      <button class="btn green" id="e12-record">📝 Record Reading</button>
+      <button class="btn" id="e12-clear">🗑 Clear Table</button>`,
+    wire(){
+      el('graph-title').textContent='Lab 4 — P vs V² (confirms P=V²/R)';
+      el('e12-record').onclick=e12_record;
+      el('e12-clear').onclick=e12_clear;
+      el('e12-Rsel').onchange=e12_build;
+    }}
+];
+
 /* ===== UI WIRING ===== */
+let scenes=CH1_SCENES;
 let currentIdx=0, challengeMode=false, score={correct:0,total:0};
+
+function enterChapter(which){
+  scenes = which===1?CH1_SCENES:CH2_SCENES;
+  el('title-sub').textContent = which===1?"Current · Resistance · Ohm's Law":'Electric Energy & Power';
+  el('home').classList.add('out');
+  el('back-to-chapters').classList.add('show');
+  setTimeout(()=>{
+    el('home').style.display='none';
+    el('lab-ui').classList.add('show');
+    currentIdx=0;
+    loadScene(0);
+  },320);
+}
+function backToChapters(){
+  const s=scenes[currentIdx];
+  if(s && s.onLeave) s.onLeave();
+  challengeMode=false;
+  el('challenge-wrap').classList.remove('show','s5-pos','collapsed');
+  el('btn-challenge-toggle').classList.remove('on');
+  el('lab-ui').classList.remove('show');
+  el('back-to-chapters').classList.remove('show');
+  clearStage();
+  el('home').style.display='';
+  requestAnimationFrame(()=>el('home').classList.remove('out'));
+}
+el('back-to-chapters').onclick=backToChapters;
 
 function buildTabs(){
   const wrap=el('tabs'); wrap.innerHTML='';
@@ -1105,9 +1540,9 @@ function loadScene(i){
   el('btn-challenge-toggle').classList.remove('on');
   updateChallengeAvailability();
 }
-function isCustomChallengeIdx(i){ return i===0 || i===3 || i===5; }
 function updateChallengeAvailability(){
-  const has = isCustomChallengeIdx(currentIdx) || !!scenes[currentIdx].challenge;
+  const s=scenes[currentIdx];
+  const has = !!s.chalInit || !!s.challenge;
   el('btn-challenge-toggle').style.display= has? '':'none';
   el('challenge-wrap').classList.remove('show','s5-pos','collapsed');
   el('btn-chal-fold').textContent='▼';
@@ -1119,11 +1554,10 @@ function newChallenge(){
   el('challenge-wrap').classList.remove('collapsed');
   el('btn-chal-fold').textContent='▼';
 
-  if(currentIdx===0){ e1_initChallenge(); return; }
-  if(currentIdx===3){ e4_initChallenge(); return; }
-  if(currentIdx===5){ e6_initChallenge(); return; }
+  const s=scenes[currentIdx];
+  if(s.chalInit){ s.chalInit(); return; }
 
-  const c=scenes[currentIdx].challenge;
+  const c=s.challenge;
   if(!c){ el('chal-prompt').textContent='No challenge available for this topic.'; el('chal-body').innerHTML=''; el('btn-chal-check').style.display='none'; return; }
   const q=c.newQuestion();
   el('chal-prompt').innerHTML=q.prompt;
@@ -1158,19 +1592,17 @@ function showChalResult(res){
 }
 
 el('btn-chal-check').onclick=()=>{
-  if(currentIdx===0){ showChalResult(e1_checkChallenge()); return; }
-  if(currentIdx===3){ showChalResult(e4_checkChallenge()); return; }
-  if(currentIdx===5){ showChalResult(e6_checkChallenge()); return; }
-  const c=scenes[currentIdx].challenge; if(!c) return; showChalResult(c.check());
+  const s=scenes[currentIdx];
+  if(s.chalCheck){ showChalResult(s.chalCheck()); return; }
+  const c=s.challenge; if(!c) return; showChalResult(c.check());
 };
 el('btn-chal-new').onclick=newChallenge;
 el('btn-chal-exit').onclick=()=>{
   challengeMode=false;
   el('btn-challenge-toggle').classList.remove('on');
   el('challenge-wrap').classList.remove('show','s5-pos');
-  if(currentIdx===0) e1_exitChallenge();
-  if(currentIdx===3) e4_exitChallenge();
-  if(currentIdx===5) e6_exitChallenge();
+  const s=scenes[currentIdx];
+  if(s.chalExit) s.chalExit();
 };
 el('btn-challenge-toggle').onclick=()=>{
   challengeMode=!challengeMode;
@@ -1178,9 +1610,8 @@ el('btn-challenge-toggle').onclick=()=>{
   el('challenge-wrap').classList.toggle('show', challengeMode);
   if(challengeMode) newChallenge();
   else {
-    if(currentIdx===0) e1_exitChallenge();
-    if(currentIdx===3) e4_exitChallenge();
-    if(currentIdx===5) e6_exitChallenge();
+    const s=scenes[currentIdx];
+    if(s.chalExit) s.chalExit();
   }
 };
 el('btn-reset-scene').onclick=()=>loadScene(currentIdx);
@@ -1194,7 +1625,6 @@ function animate(ts){
   renderHUD();
   renderer.render(scene3, cam3);
 }
-loadScene(0);
 animate();
 
 /* QUIZ */
@@ -1214,7 +1644,19 @@ const QUIZ=[
   {kpi:'3.1.7', q:'The resistance of a wire is inversely proportional to its...', opts:['Cross-sectional area','Length','Resistivity','Supply voltage'], correct:0, exp:'A thicker wire (larger cross-sectional area) offers less resistance.'},
   {kpi:'3.1.8', q:'Resistivity is defined as the resistance of a conductor of...', opts:['Length 1 m and cross-sectional area 1 m²','Any length and any area','Length 1 cm only','Zero length'], correct:0, exp:'Resistivity (ρ) is a material property defined for a 1 m length with a 1 m² cross-section, measured in Ωm.'},
   {kpi:'3.1.9', q:'The equation used to calculate resistance from resistivity is...', opts:['R = ρl/A','R = ρA/l','R = A/(ρl)','R = l/(ρA)'], correct:0, exp:'R = ρl/A — resistance increases with length and resistivity, and decreases with area.'},
-  {kpi:'Lab 2', q:'In an experiment to verify Ohm\'s law, a graph of voltage (y-axis) against current (x-axis) for an ohmic resistor should be...', opts:['A straight line through the origin','A curve bending upward','A horizontal line','A straight line not through the origin'], correct:0, exp:'For an ohmic conductor, V ∝ I, so the graph is a straight line through the origin with gradient R.'}
+  {kpi:'Lab 2', q:'In an experiment to verify Ohm\'s law, a graph of voltage (y-axis) against current (x-axis) for an ohmic resistor should be...', opts:['A straight line through the origin','A curve bending upward','A horizontal line','A straight line not through the origin'], correct:0, exp:'For an ohmic conductor, V ∝ I, so the graph is a straight line through the origin with gradient R.'},
+  {kpi:'3.2.1', q:'As current flows through a resistor, charge carriers collide with the vibrating lattice ions. This transforms electrical energy into...', opts:['Thermal energy','Chemical energy','Nuclear energy','Sound energy only'], correct:0, exp:'These collisions transfer energy to the lattice, increasing its vibration — this is Joule (resistive) heating.'},
+  {kpi:'3.2.1', q:'The warming of a toaster\'s heating element while current flows is an example of...', opts:['Electrical energy transforming into thermal energy','Thermal energy transforming into electrical energy','Chemical energy being stored','Current flowing without any energy transfer'], correct:0, exp:'Resistive heating converts electrical energy delivered by the supply into heat in the element.'},
+  {kpi:'3.2.2', q:'Electric power is defined as...', opts:['The rate at which electrical energy is transferred','The total energy used by a circuit','The charge stored in a circuit','The resistance per unit length'], correct:0, exp:'Power is the rate of energy transfer, P = E/t, measured in watts (W).'},
+  {kpi:'3.2.2', q:'The equation for electric power in terms of energy and time is...', opts:['P = E/t','P = Et','P = t/E','P = E − t'], correct:0, exp:'P = E/t: power is energy transferred per unit time.'},
+  {kpi:'3.2.2', q:'The SI unit of electric power is the...', opts:['Watt (W)','Joule (J)','Coulomb (C)','Ohm (Ω)'], correct:0, exp:'One watt equals one joule of energy transferred per second (1 W = 1 J/s).'},
+  {kpi:'3.2.3', q:'Starting from P = E/t and E = QV, substituting Q = It gives the equation...', opts:['P = VI','P = V/I','P = I/V','P = V + I'], correct:0, exp:'P = E/t = QV/t = (It)V/t = VI.'},
+  {kpi:'3.2.3', q:'Combining P = VI with Ohm\'s law (V = IR) gives the alternative power equation...', opts:['P = I²R','P = IR²','P = I/R','P = R/I'], correct:0, exp:'Substituting V = IR into P = VI gives P = I(IR) = I²R.'},
+  {kpi:'3.2.3', q:'Combining P = VI with Ohm\'s law (I = V/R) gives the alternative power equation...', opts:['P = V²/R','P = VR²','P = R/V','P = V/R²'], correct:0, exp:'Substituting I = V/R into P = VI gives P = V(V/R) = V²/R.'},
+  {kpi:'3.2.3', q:'For a fixed resistor, if the current I is doubled, the power dissipated P = I²R...', opts:['Quadruples','Doubles','Stays the same','Halves'], correct:0, exp:'Since P ∝ I², doubling I multiplies P by 2² = 4.'},
+  {kpi:'3.2.4', q:'A 60 W appliance runs for 2 minutes (120 s). The energy it transforms is...', opts:['7200 J','60 J','120 J','0.5 J'], correct:0, exp:'E = P × t = 60 × 120 = 7200 J.'},
+  {kpi:'3.2.4', q:'A resistor dissipates 4 A of current through a 5 Ω resistance. The power dissipated is...', opts:['80 W','20 W','9 W','1.25 W'], correct:0, exp:'P = I²R = 4² × 5 = 80 W.'},
+  {kpi:'3.2.4', q:'A 12 V supply drives current through a 6 Ω resistor. The power dissipated, using P = V²/R, is...', opts:['24 W','2 W','72 W','6 W'], correct:0, exp:'P = V²/R = 12²/6 = 144/6 = 24 W.'}
 ];
 let quizIdx=0, quizScore=0, quizAnswered=false;
 function openQuiz(){ quizIdx=0; quizScore=0; el('quiz-modal').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion(); }
