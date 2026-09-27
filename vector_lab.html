@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Vector Lab | Scalars, Vectors &amp; Resultants</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
+:root{--bg:#07090f;--surface:#0d1120;--border:rgba(180,200,255,0.12);--amber:#ffc857;--blue:#5bc8ff;--violet:#b57aff;--green:#4dffa0;--red:#ff5e72;--text:#ddeeff;--text-strong:#ffffff;--text-soft:rgba(210,225,255,0.85);--text-faint:rgba(180,200,255,0.45);--muted:rgba(180,210,255,0.55);--panel-bg:rgba(10,14,28,0.92);--panel-bg-strong:rgba(9,11,22,0.98);--modal-bg:rgba(4,6,18,.82);--track-bg:rgba(180,200,255,0.15);--icon-muted:rgba(255,255,255,.5);}
+body.light-theme{--bg:#f2f4fa;--surface:#ffffff;--border:rgba(20,30,60,0.16);--amber:#a8720a;--blue:#0064c8;--violet:#7a2fe0;--green:#0a8f52;--red:#c81e37;--text:#12172a;--text-strong:#05070d;--text-soft:rgba(20,30,60,0.82);--text-faint:rgba(20,30,60,0.55);--muted:rgba(20,30,60,0.62);--panel-bg:rgba(255,255,255,0.92);--panel-bg-strong:rgba(255,255,255,0.97);--modal-bg:rgba(210,215,230,0.78);--track-bg:rgba(20,30,60,0.18);--icon-muted:rgba(10,20,40,.55);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;cursor:crosshair;}
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:10px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text-strong);letter-spacing:.5px;}
+#title-text p{font-size:9px;color:var(--text-faint);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;font-family:'Space Mono',monospace;}
+#tabs{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:4px;background:var(--panel-bg);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;max-width:min(780px,calc(100vw - 220px));overflow-x:auto;}
+#tabs::-webkit-scrollbar{height:4px;}
+.tab-btn{flex-shrink:0;padding:6px 10px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.tab-btn:hover{color:var(--text-strong);background:rgba(180,200,255,0.08);}
+.tab-btn.active{background:rgba(91,200,255,0.18);color:var(--text-strong);box-shadow:inset 0 0 0 1px rgba(91,200,255,0.4);}
+#caption{position:absolute;top:66px;left:16px;z-index:5;max-width:330px;max-height:min(420px,calc(100vh - 180px));overflow-y:auto;background:var(--panel-bg);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:all 0.3s ease;}
+#caption::-webkit-scrollbar{width:4px;}
+.caption-head{display:flex;justify-content:space-between;align-items:center;}
+#caption-kpi{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:4px;}
+#caption-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text-strong);margin-bottom:8px;}
+#caption-text{font-size:11.5px;line-height:1.6;color:var(--text-soft);}
+#caption-text p{margin-bottom:10px;}
+#caption-text p:last-child{margin-bottom:0;}
+#caption-text b{color:var(--text-strong);}
+.btn-fold{background:none;border:none;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;font-size:12px;padding:2px 6px;border-radius:4px;}
+.btn-fold:hover{color:var(--text-strong);background:rgba(180,200,255,0.1);}
+#caption.collapsed #caption-text{display:none;}
+#hud{position:absolute;top:16px;right:16px;background:var(--panel-bg);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:16px;min-width:240px;z-index:10;}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--text-faint);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:10px;}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-soft);}
+.dv{font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700;text-align:right;}
+#controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:var(--panel-bg);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:26px;padding:9px 16px;z-index:10;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);}
+#scene-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:20px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:var(--text-strong);}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.green.on{background:rgba(77,255,160,0.18);border-color:var(--green);color:var(--text-strong);}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.btn.amber.on{background:rgba(255,200,87,0.22);border-color:var(--amber);color:var(--text-strong);}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+.btn:disabled:hover{background:rgba(180,200,255,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:var(--track-bg);outline:none;cursor:pointer;width:100px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--violet);border:none;cursor:pointer;}
+input[type=range]:disabled::-webkit-slider-thumb{background:#556;box-shadow:none;}
+.chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;cursor:pointer;user-select:none;}
+.chk input[type=checkbox]{appearance:none;-webkit-appearance:none;width:15px;height:15px;border-radius:4px;border:1px solid rgba(180,200,255,0.4);background:rgba(180,200,255,0.08);cursor:pointer;position:relative;transition:all .15s;outline:none;flex-shrink:0;}
+.chk input[type=checkbox]:checked{background:var(--violet);border-color:var(--violet);}
+.chk input[type=checkbox]:checked::after{content:'✓';position:absolute;top:-3px;left:2px;color:var(--text-strong);font-size:12px;font-weight:700;}
+#hint{position:absolute;bottom:66px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text-faint);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+#challenge-wrap{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);z-index:15;display:none;width:min(620px,calc(100vw - 24px));}
+#challenge-wrap.show{display:block;}
+#challenge-bar{background:var(--panel-bg-strong);backdrop-filter:blur(22px);border:1px solid rgba(255,200,87,0.4);border-radius:18px;padding:14px 18px;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+#chal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(255,200,87,0.2);padding-bottom:6px;}
+#chal-head span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-weight:700;}
+#chal-score{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--green);}
+#chal-prompt{font-size:12px;line-height:1.5;color:var(--text);margin-bottom:10px;}
+#challenge-wrap.collapsed #chal-body, #challenge-wrap.collapsed #chal-prompt, #challenge-wrap.collapsed #chal-opts, #challenge-wrap.collapsed #chal-actions, #challenge-wrap.collapsed #chal-result {display:none;}
+.chal-inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+@media (max-width:520px){ .chal-inputs-grid{grid-template-columns:1fr;} }
+.chal-field{display:flex;flex-direction:column;gap:4px;}
+.chal-field label{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);}
+.chal-input,.chal-select{background:rgba(180,200,255,0.08);border:1px solid rgba(180,200,255,0.3);color:var(--text);border-radius:8px;padding:6px 10px;font-family:'Space Mono',monospace;font-size:11.5px;outline:none;width:100%;}
+.chal-input:focus,.chal-select:focus{border-color:var(--blue);box-shadow:0 0 6px rgba(91,200,255,0.4);}
+.chal-input:disabled,.chal-select:disabled{opacity:0.45;cursor:not-allowed;background:rgba(0,0,0,0.3);}
+.chal-select option{background:var(--surface);color:var(--text);}
+#chal-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+#chal-result{font-size:11.5px;line-height:1.5;margin-top:8px;padding:8px 12px;border-radius:10px;display:none;}
+#chal-result.pass{display:block;background:rgba(77,255,160,0.12);color:var(--green);border:1px solid rgba(77,255,160,0.35);}
+#chal-result.fail{display:block;background:rgba(255,94,114,0.12);color:var(--red);border:1px solid rgba(255,94,114,0.35);}
+#quiz-modal{display:none;position:fixed;inset:0;z-index:50;background:var(--modal-bg);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#quiz-modal.show{display:flex;}
+#quiz-box{background:var(--panel-bg-strong);border:1px solid rgba(180,120,255,.3);border-radius:20px;padding:26px;text-align:left;position:relative;max-width:480px;width:92%;max-height:82vh;overflow-y:auto;}
+#quiz-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--icon-muted);font-size:19px;cursor:pointer;}
+#quiz-box h3{font-family:'Syne',sans-serif;font-size:18px;color:var(--text-strong);margin-bottom:4px;}
+#quiz-progress{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;}
+#quiz-kpi{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--violet);border:1px solid rgba(181,122,255,.4);border-radius:8px;padding:2px 7px;margin-bottom:10px;}
+#quiz-question{font-size:14.5px;line-height:1.6;color:var(--text);margin-bottom:14px;}
+#quiz-options{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.quiz-opt{text-align:left;padding:10px 14px;border-radius:12px;border:1px solid rgba(180,200,255,0.2);background:rgba(180,200,255,0.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;}
+.quiz-opt:hover{background:rgba(180,200,255,0.12);}
+.quiz-opt.correct{background:rgba(77,255,160,0.2);border-color:var(--green);}
+.quiz-opt.wrong{background:rgba(255,94,114,0.2);border-color:var(--red);}
+#quiz-explain{font-size:12px;line-height:1.55;color:var(--text-soft);background:rgba(180,200,255,0.05);border-radius:10px;padding:10px 12px;display:none;margin-bottom:12px;}
+#quiz-next{display:none;}
+#quiz-final{display:none;text-align:center;}
+#quiz-final h2{font-family:'Syne',sans-serif;font-size:26px;color:var(--text-strong);margin-bottom:8px;}
+#quiz-final p{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.work-box{position:absolute;left:16px;bottom:16px;max-width:280px;background:var(--panel-bg);border:1px solid rgba(255,200,87,0.3);border-radius:12px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--amber);z-index:9;display:none;}
+.work-box.show{display:block;}
+.scn-pick{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+#theme-toggle{position:fixed;top:80px;right:16px;width:42px;height:42px;border-radius:12px;border:1px solid var(--border);background:var(--panel-bg);backdrop-filter:blur(16px);cursor:pointer;font-size:19px;z-index:200;color:var(--text);display:flex;align-items:center;justify-content:center;transition:top .15s ease, transform .2s ease;}
+#theme-toggle:hover{transform:scale(1.06);}
+
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(120,180,255,.25);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;transition:all .2s;color:rgba(120,180,255,.55);}
+#qr-btn:hover{border-color:rgba(120,180,255,.55);background:rgba(120,180,255,.14);color:#78b4ff;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(4,8,20,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,10,22,.97);border:1px solid rgba(120,180,255,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(120,180,255,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(120,180,255,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(120,180,255,.38);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(160,200,255,.38);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#78b4ff;}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+  <div id="title-text"><h1>VECTOR LAB</h1><p>Scalars · Vectors · Resultants</p></div>
+</div>
+<div id="tabs"></div>
+<div id="caption"><div class="caption-head"><div id="caption-kpi">KPI</div><button class="btn-fold" id="btn-caption-fold" title="Fold panel">▼</button></div><div id="caption-title">Title</div><div id="caption-text">Description</div></div>
+<div id="hud"><h2>Measurements</h2><div id="hud-rows"></div></div>
+<div class="work-box" id="work-box"></div>
+<div id="challenge-wrap"><div id="challenge-bar"><div id="chal-head"><span id="chal-title-txt">🎯 Challenge</span><div style="display:flex;align-items:center;gap:8px;"><span id="chal-score">Score: 0/0</span><button class="btn-fold" id="btn-chal-fold" title="Fold challenge panel">▼</button></div></div><div id="chal-prompt">Press "New Challenge" to begin!</div><div id="chal-opts" style="display:none;margin-bottom:8px;"><label class="chk"><input type="checkbox" id="t5-chal-angle">Angle</label></div><div id="chal-body"></div><div id="chal-actions"><button class="btn green" id="btn-chal-check">✓ Check Answer</button><button class="btn amber" id="btn-chal-new">🔄 New Challenge</button><button class="btn" id="btn-chal-exit">🚪 Exit Challenge</button></div><div id="chal-result"></div></div></div>
+<div id="controls"><div id="scene-controls"></div><div class="sep"></div><button class="btn amber" id="btn-challenge-toggle">🎯 Challenge Mode</button><button class="btn" id="btn-reset-scene">↺ Reset</button></div>
+<div id="hint">🖐️ drag the arrow tips to change the vectors · click a vector to see its coordinates</div>
+<button id="theme-toggle" title="Toggle light / dark theme">🌙</button>
+<div id="quiz-modal"><div id="quiz-box"><button id="quiz-close">✕</button><div id="quiz-live"><h3>Vector Lab Quiz</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-kpi">4.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div></div>
+
+<script>
+'use strict';
+function el(id){ return document.getElementById(id); }
+function fmt(n,d){ return Number(n).toFixed(d===undefined?1:d); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function randFloat(a,b,step){ const n=Math.round((a+Math.random()*(b-a))/step)*step; return Math.round(n*100)/100; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function norm360(a){ a=a%360; if(a<0) a+=360; return a; }
+
+/* ---------- CANVAS / WORLD SETUP ---------- */
+const canvas=el('mainCanvas'), ctx=canvas.getContext('2d');
+let DPR=Math.min(window.devicePixelRatio||1,2);
+function resize(){
+  canvas.width=innerWidth*DPR; canvas.height=innerHeight*DPR;
+  canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize(); window.addEventListener('resize',resize);
+
+function getOrigin(){ const v=scenes[currentIdx].view; return {x:innerWidth*v.ox, y:innerHeight*v.oy}; }
+function getScale(){ return scenes[currentIdx].view.scale; }
+function toScreen(wx,wy){ const o=getOrigin(),s=getScale(); return {x:o.x+wx*s, y:o.y-wy*s}; }
+function toWorld(sx,sy){ const o=getOrigin(),s=getScale(); return {x:(sx-o.x)/s, y:(o.y-sy)/s}; }
+
+/* ---------- THEME-AWARE PALETTE ---------- */
+let isLight=false;
+const PALETTE={
+  dark:{blue:'#5bc8ff',violet:'#b57aff',green:'#4dffa0',amber:'#ffc857',red:'#ff5e72',grey:'#8899bb',muted:'rgba(180,200,255,0.35)',text:'#ddeeff',
+        gridLine:'rgba(180,200,255,0.07)',axis:'rgba(180,200,255,0.28)',tick:'rgba(180,200,255,0.4)',
+        labelBg:'rgba(7,9,15,0.75)',handleRing:'rgba(7,9,15,0.88)',handleStroke:'#ffffff',rightAngle:'rgba(255,255,255,0.55)'},
+  light:{blue:'#0064c8',violet:'#7a2fe0',green:'#0a8f52',amber:'#a8720a',red:'#c81e37',grey:'#4c5a72',muted:'rgba(20,30,60,0.45)',text:'#12172a',
+        gridLine:'rgba(20,30,60,0.10)',axis:'rgba(20,30,60,0.32)',tick:'rgba(20,30,60,0.5)',
+        labelBg:'rgba(255,255,255,0.9)',handleRing:'rgba(255,255,255,0.92)',handleStroke:'#12172a',rightAngle:'rgba(10,20,40,0.55)'}
+};
+function COL(){ return isLight?PALETTE.light:PALETTE.dark; }
+
+function drawGrid(){
+  const o=getOrigin(), s=getScale(), w=innerWidth, h=innerHeight;
+  const leftW=-o.x/s, rightW=(w-o.x)/s, topW=o.y/s, botW=-(h-o.y)/s;
+  ctx.save();
+  ctx.strokeStyle=COL().gridLine; ctx.lineWidth=1;
+  const sx0=Math.floor(leftW), sx1=Math.ceil(rightW);
+  for(let i=sx0;i<=sx1;i++){ const p=toScreen(i,0); ctx.beginPath(); ctx.moveTo(p.x,0); ctx.lineTo(p.x,h); ctx.stroke(); }
+  const sy0=Math.floor(botW), sy1=Math.ceil(topW);
+  for(let j=sy0;j<=sy1;j++){ const p=toScreen(0,j); ctx.beginPath(); ctx.moveTo(0,p.y); ctx.lineTo(w,p.y); ctx.stroke(); }
+  ctx.strokeStyle=COL().axis; ctx.lineWidth=1.5;
+  const p0=toScreen(0,0);
+  ctx.beginPath(); ctx.moveTo(0,p0.y); ctx.lineTo(w,p0.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p0.x,0); ctx.lineTo(p0.x,h); ctx.stroke();
+  ctx.font="10px 'Space Mono',monospace"; ctx.fillStyle=COL().tick;
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let i=sx0;i<=sx1;i+=2){ if(i===0) continue; const p=toScreen(i,0); ctx.fillText(String(i),p.x,p0.y+4); }
+  ctx.textAlign='right'; ctx.textBaseline='bottom';
+  for(let j=sy0;j<=sy1;j+=2){ if(j===0) continue; const p=toScreen(0,j); ctx.fillText(String(j),p0.x-4,p.y-2); }
+  ctx.restore();
+}
+function drawVector(x1,y1,x2,y2,color,lw,dash){
+  const p1=toScreen(x1,y1), p2=toScreen(x2,y2);
+  const width=lw||3.2;
+  const fullLen=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+  const hw=0.36;
+  const hl=Math.min(13,fullLen*0.55);
+  const ang=Math.atan2(p2.y-p1.y,p2.x-p1.x);
+  const retract=hl*Math.cos(hw);
+  const lex=p2.x-retract*Math.cos(ang), ley=p2.y-retract*Math.sin(ang);
+  ctx.save(); ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=width; ctx.lineCap='round';
+  if(dash) ctx.setLineDash(dash); else ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(lex,ley); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(p2.x,p2.y);
+  ctx.lineTo(p2.x-hl*Math.cos(ang-hw), p2.y-hl*Math.sin(ang-hw));
+  ctx.lineTo(p2.x-hl*Math.cos(ang+hw), p2.y-hl*Math.sin(ang+hw));
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function labelAt(wx,wy,text,color){
+  const p=toScreen(wx,wy);
+  ctx.save(); ctx.font="700 12.5px 'Space Mono',monospace"; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.lineWidth=3.5; ctx.lineJoin='round'; ctx.strokeStyle=COL().labelBg; ctx.strokeText(text,p.x,p.y);
+  ctx.fillStyle=color; ctx.fillText(text,p.x,p.y); ctx.restore();
+}
+function vectorLabel(x1,y1,x2,y2,text,color,side){
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  const dxv=x2-x1, dyv=y2-y1, len=Math.hypot(dxv,dyv)||1;
+  let nx=-dyv/len, ny=dxv/len; if(side===-1){ nx=-nx; ny=-ny; }
+  labelAt(mx+nx*0.42, my+ny*0.42, text, color);
+}
+function drawAngleArc(cx,cy,r,a1,a2,color,text){
+  let diff=a2-a1; while(diff>Math.PI) diff-=2*Math.PI; while(diff<-Math.PI) diff+=2*Math.PI;
+  const N=24; ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath();
+  for(let i=0;i<=N;i++){ const t=i/N, ang=a1+diff*t; const wx=cx+r*Math.cos(ang), wy=cy+r*Math.sin(ang); const p=toScreen(wx,wy); if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); }
+  ctx.stroke(); ctx.restore();
+  if(text){ const mid=a1+diff*0.5; labelAt(cx+(r+0.55)*Math.cos(mid), cy+(r+0.55)*Math.sin(mid), text, color); }
+}
+function drawRightAngleMarker(cx,cy,size){
+  const p1=toScreen(cx-size,cy), p2=toScreen(cx-size,cy+size), p3=toScreen(cx,cy+size);
+  ctx.save(); ctx.strokeStyle=COL().rightAngle; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.lineTo(p3.x,p3.y); ctx.stroke(); ctx.restore();
+}
+function drawEmoji(wx,wy,glyph,size){
+  const p=toScreen(wx,wy);
+  ctx.save(); ctx.font=(size||26)+"px sans-serif"; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(glyph,p.x,p.y); ctx.restore();
+}
+function drawHandleDot(sx,sy,color){
+  ctx.save();
+  ctx.beginPath(); ctx.arc(sx,sy,9,0,Math.PI*2); ctx.fillStyle=COL().handleRing; ctx.fill();
+  ctx.beginPath(); ctx.arc(sx,sy,7,0,Math.PI*2); ctx.fillStyle=color; ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle=COL().handleStroke; ctx.stroke();
+  ctx.restore();
+}
+function ptSegDist(px,py,x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1; const len2=dx*dx+dy*dy;
+  let t = len2? ((px-x1)*dx+(py-y1)*dy)/len2 : 0;
+  t=clamp(t,0,1);
+  const cx=x1+t*dx, cy=y1+t*dy;
+  return Math.hypot(px-cx,py-cy);
+}
+
+/* ---------- DRAG HANDLING + VECTOR CLICK SELECTION ---------- */
+let dragHandle=null, selectedVecId=null, pointerDownPos=null, didDrag=false;
+function pointerXY(e){ const r=canvas.getBoundingClientRect(); return {sx:e.clientX-r.left, sy:e.clientY-r.top}; }
+canvas.addEventListener('pointerdown',e=>{
+  const {sx,sy}=pointerXY(e);
+  pointerDownPos={sx,sy}; didDrag=false;
+  const handles=(scenes[currentIdx].getHandles && scenes[currentIdx].getHandles())||[];
+  let best=null,bestD=30;
+  handles.forEach(h=>{ const p=h.getPos(); const s=toScreen(p.x,p.y); const d=Math.hypot(s.x-sx,s.y-sy); if(d<bestD){bestD=d;best=h;} });
+  if(best){ dragHandle=best; try{canvas.setPointerCapture(e.pointerId);}catch(err){} }
+});
+canvas.addEventListener('pointermove',e=>{
+  const {sx,sy}=pointerXY(e);
+  if(dragHandle){ didDrag=true; const w=toWorld(sx,sy); dragHandle.setPos(w.x,w.y); return; }
+  if(pointerDownPos && Math.hypot(sx-pointerDownPos.sx,sy-pointerDownPos.sy)>4) didDrag=true;
+});
+function endDrag(){
+  if(dragHandle && didDrag && scenes[currentIdx].onDragEnd) scenes[currentIdx].onDragEnd();
+  dragHandle=null;
+}
+canvas.addEventListener('pointerup',endDrag);
+canvas.addEventListener('pointercancel',endDrag);
+canvas.addEventListener('pointerleave',endDrag);
+canvas.addEventListener('click',e=>{
+  if(didDrag) return;
+  const {sx,sy}=pointerXY(e);
+  const w=toWorld(sx,sy);
+  if(scenes[currentIdx].onCanvasClick && scenes[currentIdx].onCanvasClick(w.x,w.y)) return;
+  const vecs=(scenes[currentIdx].getVectors && scenes[currentIdx].getVectors())||[];
+  let best=null,bestD=14;
+  vecs.forEach(v=>{
+    const p1=toScreen(v.x1,v.y1), p2=toScreen(v.x2,v.y2);
+    const d=ptSegDist(sx,sy,p1.x,p1.y,p2.x,p2.y);
+    if(d<bestD){ bestD=d; best=v; }
+  });
+  selectedVecId = best ? (selectedVecId===best.id ? null : best.id) : null;
+});
+function drawSelectedVectorCoords(){
+  if(!selectedVecId) return;
+  const vecs=(scenes[currentIdx].getVectors && scenes[currentIdx].getVectors())||[];
+  const v=vecs.find(v=>v.id===selectedVecId);
+  if(!v) return;
+  const text=v.coordText || ('('+fmt(v.x2,1)+', '+fmt(v.y2,1)+')');
+  ctx.save();
+  const p=toScreen(v.x2,v.y2);
+  ctx.beginPath(); ctx.arc(p.x,p.y,11,0,Math.PI*2); ctx.strokeStyle=v.color; ctx.lineWidth=2; ctx.stroke();
+  ctx.restore();
+  labelAt(v.x2,v.y2+0.55,text,v.color);
+}
+
+el('btn-caption-fold').onclick=()=>{ const cap=el('caption'); cap.classList.toggle('collapsed'); el('btn-caption-fold').textContent=cap.classList.contains('collapsed')?'▲':'▼'; };
+el('btn-chal-fold').onclick=()=>{ const wrap=el('challenge-wrap'); wrap.classList.toggle('collapsed'); el('btn-chal-fold').textContent=wrap.classList.contains('collapsed')?'▲':'▼'; };
+
+/* ============================================================
+   SCENE 1 — Scalars vs Vectors
+   ============================================================ */
+const sc1={start:{x:0,y:0}, p1:{x:-3,y:2}, p2:{x:4,y:-2.5}};
+const sc1anim={playing:false, phase:0, t:0, speed:1.6};
+function s1_resetIcon(){ sc1anim.playing=false; sc1anim.phase=0; sc1anim.t=0; }
+function s1_build(){ s1_randomize(); }
+function s1_randomize(){ sc1.p1={x:randFloat(-6,-1,0.5),y:randFloat(0.5,5,0.5)}; sc1.p2={x:randFloat(1,7,0.5),y:randFloat(-5,-0.5,0.5)}; s1_resetIcon(); }
+function s1_getHandles(){ return [
+  {getPos:()=>sc1.p1, setPos:(x,y)=>{sc1.p1.x=clamp(x,-8,8); sc1.p1.y=clamp(y,-8,8); s1_resetIcon();}, color:COL().blue},
+  {getPos:()=>sc1.p2, setPos:(x,y)=>{sc1.p2.x=clamp(x,-8,8); sc1.p2.y=clamp(y,-8,8); s1_resetIcon();}, color:COL().green}
+]; }
+function s1_tick(dtMs){
+  if(!sc1anim.playing) return;
+  const dt=dtMs/1000;
+  const legLen = sc1anim.phase===0
+    ? Math.hypot(sc1.p1.x-sc1.start.x, sc1.p1.y-sc1.start.y)
+    : Math.hypot(sc1.p2.x-sc1.p1.x, sc1.p2.y-sc1.p1.y);
+  sc1anim.t += legLen>0 ? (sc1anim.speed*dt)/legLen : 1;
+  if(sc1anim.t>=1){
+    if(sc1anim.phase===0){ sc1anim.phase=1; sc1anim.t=0; }
+    else { sc1anim.t=1; sc1anim.playing=false; }
+  }
+}
+function s1_iconPos(){
+  if(sc1anim.phase===0) return {x:lerp(sc1.start.x,sc1.p1.x,sc1anim.t), y:lerp(sc1.start.y,sc1.p1.y,sc1anim.t)};
+  return {x:lerp(sc1.p1.x,sc1.p2.x,sc1anim.t), y:lerp(sc1.p1.y,sc1.p2.y,sc1anim.t)};
+}
+function s1_draw(){
+  drawEmoji(sc1.start.x,sc1.start.y,'🚩',22);
+  drawVector(sc1.start.x,sc1.start.y,sc1.p1.x,sc1.p1.y,COL().grey,3,[7,5]);
+  drawVector(sc1.p1.x,sc1.p1.y,sc1.p2.x,sc1.p2.y,COL().grey,3,[7,5]);
+  vectorLabel(sc1.start.x,sc1.start.y,sc1.p1.x,sc1.p1.y,'leg 1',COL().grey);
+  vectorLabel(sc1.p1.x,sc1.p1.y,sc1.p2.x,sc1.p2.y,'leg 2',COL().grey);
+  drawVector(sc1.start.x,sc1.start.y,sc1.p2.x,sc1.p2.y,COL().green,4);
+  vectorLabel(sc1.start.x,sc1.start.y,sc1.p2.x,sc1.p2.y,'displacement',COL().green,-1);
+  drawEmoji(sc1.p2.x,sc1.p2.y,'🏁',22);
+  const ip=s1_iconPos();
+  drawEmoji(ip.x,ip.y,'🚶',26);
+}
+function s1_getVectors(){ return [
+  {id:'leg1', x1:sc1.start.x,y1:sc1.start.y, x2:sc1.p1.x,y2:sc1.p1.y, color:COL().grey},
+  {id:'leg2', x1:sc1.p1.x,y1:sc1.p1.y, x2:sc1.p2.x,y2:sc1.p2.y, color:COL().grey},
+  {id:'disp', x1:sc1.start.x,y1:sc1.start.y, x2:sc1.p2.x,y2:sc1.p2.y, color:COL().green}
+]; }
+function s1_hud(){
+  const dist=Math.hypot(sc1.p1.x-sc1.start.x,sc1.p1.y-sc1.start.y)+Math.hypot(sc1.p2.x-sc1.p1.x,sc1.p2.y-sc1.p1.y);
+  const disp=Math.hypot(sc1.p2.x-sc1.start.x,sc1.p2.y-sc1.start.y);
+  const ang=norm360(Math.atan2(sc1.p2.y-sc1.start.y,sc1.p2.x-sc1.start.x)*180/Math.PI);
+  return [
+    {l:'Distance travelled', v:fmt(dist,1)+' units', c:COL().grey},
+    {l:'— a SCALAR (size only)', v:'', c:COL().muted},
+    {l:'Displacement magnitude', v:fmt(disp,1)+' units', c:COL().green},
+    {l:'Displacement direction', v:fmt(ang,0)+'° from +x axis', c:COL().amber},
+    {l:'— a VECTOR (size + direction)', v:'', c:COL().muted}
+  ];
+}
+const SV_LIST=[
+  {q:'Distance',a:'Scalar'},{q:'Displacement',a:'Vector'},{q:'Speed',a:'Scalar'},{q:'Velocity',a:'Vector'},
+  {q:'Mass',a:'Scalar'},{q:'Force',a:'Vector'},{q:'Time',a:'Scalar'},{q:'Acceleration',a:'Vector'},
+  {q:'Weight',a:'Vector'},{q:'Energy',a:'Scalar'},{q:'Momentum',a:'Vector'},{q:'Temperature',a:'Scalar'},
+  {q:'Volume',a:'Scalar'},{q:'Density',a:'Scalar'}
+];
+const s1_challenge={
+  newQuestion(){ this.cur=pick(SV_LIST); return {prompt:'Is <b>'+this.cur.q+'</b> a scalar or a vector quantity?', options:['Scalar','Vector']}; },
+  check(idx){ const chosen=['Scalar','Vector'][idx]; const ok=chosen===this.cur.a;
+    return {correct:ok, correctIdx:this.cur.a==='Scalar'?0:1,
+      message: ok? '✅ Correct! '+this.cur.q+' is a '+this.cur.a.toLowerCase()+' — '+(this.cur.a==='Scalar'?'it only has a magnitude.':'it has both magnitude and direction.')
+                 : '❌ Not quite. '+this.cur.q+' is actually a '+this.cur.a.toLowerCase()+' — '+(this.cur.a==='Scalar'?'it only has a magnitude, no direction.':'it needs both a magnitude and a direction.')}; }
+};
+
+/* ============================================================
+   SCENE 2 — Vectors along the same line
+   ============================================================ */
+const sc2={dirA:1, dirB:-1};
+function s2_build(){ sc2.dirA=1; sc2.dirB=-1; el('t2-Amag') && (el('t2-Amag').value=6); el('t2-Bmag') && (el('t2-Bmag').value=4); s2_syncButtons(); }
+function s2_syncButtons(){ const ba=el('t2-dirA'), bb=el('t2-dirB'); if(ba) ba.textContent = sc2.dirA>0?'A points ▶ Right':'A points ◀ Left'; if(bb) bb.textContent = sc2.dirB>0?'B points ▶ Right':'B points ◀ Left'; }
+function s2_vals(){ return {A:parseFloat(el('t2-Amag')?.value||6), B:parseFloat(el('t2-Bmag')?.value||4)}; }
+function s2_draw(){
+  const {A,B}=s2_vals();
+  const Ax=A*sc2.dirA, Bx=B*sc2.dirB, net=Ax+Bx;
+  drawVector(-9,0,9,0,'rgba(180,200,255,0.18)',1);
+  drawVector(0,1.1,Ax,1.1,COL().blue,4);
+  vectorLabel(0,1.1,Ax,1.1,'A',COL().blue);
+  drawVector(Ax,0.35,Ax+Bx,0.35,COL().violet,4);
+  vectorLabel(Ax,0.35,Ax+Bx,0.35,'B',COL().violet);
+  drawVector(0,-1.1,net,-1.1,COL().amber,5);
+  vectorLabel(0,-1.1,net,-1.1,'R',COL().amber,-1);
+}
+function s2_getVectors(){
+  const {A,B}=s2_vals(); const Ax=A*sc2.dirA, Bx=B*sc2.dirB, net=Ax+Bx;
+  const signed=(mag,sign)=> (sign>=0?'+':'−')+fmt(Math.abs(mag),1);
+  return [
+    {id:'A', x1:0,y1:1.1, x2:Ax,y2:1.1, color:COL().blue, coordText:signed(A,sc2.dirA)},
+    {id:'B', x1:Ax,y1:0.35, x2:Ax+Bx,y2:0.35, color:COL().violet, coordText:signed(B,sc2.dirB)},
+    {id:'R', x1:0,y1:-1.1, x2:net,y2:-1.1, color:COL().amber, coordText:signed(net,net)}
+  ];
+}
+function s2_hud(){
+  const {A,B}=s2_vals(); const Ax=A*sc2.dirA, Bx=B*sc2.dirB, net=Ax+Bx;
+  return [
+    {l:'Vector A', v:fmt(A,1)+' ('+(sc2.dirA>0?'Right':'Left')+')', c:COL().blue},
+    {l:'Vector B', v:fmt(B,1)+' ('+(sc2.dirB>0?'Right':'Left')+')', c:COL().violet},
+    {l:'Resultant R = A + B', v:fmt(Math.abs(net),1)+' ('+(net===0?'Balanced':(net>0?'Right':'Left'))+')', c:COL().amber}
+  ];
+}
+const s2_challenge={
+  newQuestion(){
+    this.FA=randInt(1,12)*5; this.FB=randInt(1,12)*5;
+    this.dA=pick(['Left','Right']); this.dB=pick(['Left','Right']);
+    const sA=this.dA==='Right'?1:-1, sB=this.dB==='Right'?1:-1;
+    this.net=this.FA*sA+this.FB*sB;
+    this.correctMag=Math.abs(this.net); this.correctDir=this.net>=0?'Right':'Left';
+    return {prompt:'Two forces act along the same rope: <b>'+this.FA+' N</b> pulling <b>'+this.dA+'</b>, and <b>'+this.FB+' N</b> pulling <b>'+this.dB+'</b>. Find the resultant force (magnitude and direction).',
+      fields:[{id:'c2-mag',label:'Magnitude (N)',placeholder:'e.g. 15',step:'0.5'},{id:'c2-dir',label:'Direction',type:'select',options:['Left','Right']}]}; },
+  check(ans){
+    const mag=parseFloat(ans['c2-mag']); const dir=ans['c2-dir'];
+    if(isNaN(mag)) return {correct:false,message:'⚠️ Enter a numeric magnitude.'};
+    const magOK=Math.abs(mag-this.correctMag)<=0.5, dirOK=dir===this.correctDir;
+    const ok=magOK&&dirOK;
+    return {correct:ok, message: ok? '✅ Correct! Resultant = '+this.correctMag+' N '+this.correctDir+' ('+this.FA+' − '+this.FB+' style subtraction/addition along the line).'
+      : '❌ Not quite. The resultant is '+this.correctMag+' N to the '+this.correctDir+'. ('+this.FA+' N '+this.dA+' combined with '+this.FB+' N '+this.dB+'.)'}; }
+};
+
+/* ============================================================
+   SCENE 3 — Head-to-Tail graphical addition
+   ============================================================ */
+const sc3={A:{x:4,y:0}, B:{x:0,y:-3}, showAngles:false};
+function s3_build(){ sc3.A={x:4,y:0}; sc3.B={x:0,y:-3}; }
+function s3_keep90(){ const cb=el('t3-90'); return cb? cb.checked : true; }
+function s3_randomize(){
+  if(s3_keep90()){
+    const mA=randFloat(3,7,0.5), mB=randFloat(2.5,6,0.5);
+    const sA=Math.random()<0.5?-1:1, sB=Math.random()<0.5?-1:1;
+    if(Math.random()<0.5){ sc3.A={x:sA*mA,y:0}; sc3.B={x:0,y:sB*mB}; }
+    else { sc3.A={x:0,y:sA*mA}; sc3.B={x:sB*mB,y:0}; }
+  } else {
+    sc3.A={x:randFloat(-6,6,0.5),y:randFloat(-5,5,0.5)};
+    sc3.B={x:randFloat(-6,6,0.5),y:randFloat(-5,5,0.5)};
+  }
+}
+function s3_expHandles(){ return [
+  {getPos:()=>sc3.A, setPos:(x,y)=>{sc3.A.x=clamp(x,-8,8); sc3.A.y=clamp(y,-8,8);}, color:COL().blue},
+  {getPos:()=>({x:sc3.A.x+sc3.B.x, y:sc3.A.y+sc3.B.y}), setPos:(x,y)=>{ sc3.B.x=clamp(x,-8,8)-sc3.A.x; sc3.B.y=clamp(y,-8,8)-sc3.A.y; }, color:COL().violet}
+]; }
+function s3_expDraw(){
+  const A=sc3.A, B=sc3.B, Rx=A.x+B.x, Ry=A.y+B.y;
+  drawVector(0,0,Rx,Ry,COL().amber,3,[8,6]);
+  vectorLabel(0,0,Rx,Ry,'R',COL().amber,-1);
+  drawVector(0,0,A.x,A.y,COL().blue,4);
+  vectorLabel(0,0,A.x,A.y,'A',COL().blue);
+  drawVector(A.x,A.y,Rx,Ry,COL().violet,4);
+  vectorLabel(A.x,A.y,Rx,Ry,'B',COL().violet);
+  if(sc3.showAngles){
+    drawAngleArc(0,0,1.1,0,Math.atan2(A.y,A.x),COL().blue,'');
+    drawAngleArc(0,0,1.5,0,Math.atan2(Ry,Rx),COL().amber,'θ');
+  }
+}
+function s3_expVectors(){
+  const A=sc3.A, B=sc3.B, Rx=A.x+B.x, Ry=A.y+B.y;
+  return [
+    {id:'A', x1:0,y1:0, x2:A.x,y2:A.y, color:COL().blue},
+    {id:'B', x1:A.x,y1:A.y, x2:Rx,y2:Ry, color:COL().violet},
+    {id:'R', x1:0,y1:0, x2:Rx,y2:Ry, color:COL().amber}
+  ];
+}
+function s3_hud(){
+  if(challengeMode) return s3ch_hud();
+  const A=sc3.A, B=sc3.B, Rx=A.x+B.x, Ry=A.y+B.y;
+  const magA=Math.hypot(A.x,A.y), angA=norm360(Math.atan2(A.y,A.x)*180/Math.PI);
+  const magB=Math.hypot(B.x,B.y), angB=norm360(Math.atan2(B.y,B.x)*180/Math.PI);
+  const magR=Math.hypot(Rx,Ry), angR=norm360(Math.atan2(Ry,Rx)*180/Math.PI);
+  return [
+    {l:'|A|, angle', v:fmt(magA,1)+' @ '+fmt(angA,0)+'°', c:COL().blue},
+    {l:'|B|, angle', v:fmt(magB,1)+' @ '+fmt(angB,0)+'°', c:COL().violet},
+    {l:'|R|, angle (resultant)', v:fmt(magR,1)+' @ '+fmt(angR,0)+'°', c:COL().amber}
+  ];
+}
+function s3_draw(){ if(challengeMode) s3ch_draw(); else s3_expDraw(); }
+function s3_getHandles(){ return challengeMode? s3ch_getHandles() : s3_expHandles(); }
+function s3_getVectors(){ return challengeMode? [] : s3_expVectors(); }
+function s3_onDragEnd(){ if(challengeMode) s3ch_trySnap(); }
+
+/* --- Scene 3 challenge: separate, freely-draggable rigid vectors --- */
+const s3ch={ vecA:{tail:{x:-5,y:2},dx:3,dy:1}, vecB:{tail:{x:2,y:-3},dx:2,dy:3}, snapped:false, chainOrder:null, clicks:[] };
+function s3ch_newVectors(){
+  function randMag(){ return randFloat(2.5,7,0.5); }
+  function randVec(){
+    const mag=randMag();
+    const angDeg=randInt(0,23)*15;
+    const rad=angDeg*Math.PI/180;
+    return {dx:Math.round(mag*Math.cos(rad)*10)/10, dy:Math.round(mag*Math.sin(rad)*10)/10};
+  }
+  let vA,vB;
+  if(s3_keep90()){
+    const mA=randMag(), mB=randMag();
+    const sA=Math.random()<0.5?-1:1, sB=Math.random()<0.5?-1:1;
+    if(Math.random()<0.5){ vA={dx:sA*mA,dy:0}; vB={dx:0,dy:sB*mB}; }
+    else { vA={dx:0,dy:sA*mA}; vB={dx:sB*mB,dy:0}; }
+  } else { vA=randVec(); vB=randVec(); }
+  s3ch.vecA={tail:{x:randFloat(-7.5,-2,0.5), y:randFloat(-4.5,4.5,0.5)}, dx:vA.dx, dy:vA.dy};
+  s3ch.vecB={tail:{x:randFloat(2,7.5,0.5), y:randFloat(-4.5,4.5,0.5)}, dx:vB.dx, dy:vB.dy};
+  s3ch.snapped=false; s3ch.chainOrder=null; s3ch.clicks=[];
+}
+function s3ch_pts(){
+  const A=s3ch.vecA,B=s3ch.vecB;
+  return {
+    Atail:{x:A.tail.x,y:A.tail.y}, Ahead:{x:A.tail.x+A.dx,y:A.tail.y+A.dy},
+    Btail:{x:B.tail.x,y:B.tail.y}, Bhead:{x:B.tail.x+B.dx,y:B.tail.y+B.dy}
+  };
+}
+function s3ch_freeEnds(){
+  const p=s3ch_pts();
+  if(s3ch.chainOrder==='AB') return {start:{id:'Atail',...p.Atail}, end:{id:'Bhead',...p.Bhead}};
+  if(s3ch.chainOrder==='BA') return {start:{id:'Btail',...p.Btail}, end:{id:'Ahead',...p.Ahead}};
+  return null;
+}
+function s3ch_trySnap(){
+  const p=s3ch_pts(), snapDist=0.7;
+  const dAH_BT=Math.hypot(p.Ahead.x-p.Btail.x,p.Ahead.y-p.Btail.y);
+  const dBH_AT=Math.hypot(p.Bhead.x-p.Atail.x,p.Bhead.y-p.Atail.y);
+  s3ch.clicks=[];
+  if(dAH_BT<snapDist && dAH_BT<=dBH_AT){
+    s3ch.vecB.tail.x+=(p.Ahead.x-p.Btail.x); s3ch.vecB.tail.y+=(p.Ahead.y-p.Btail.y);
+    s3ch.snapped=true; s3ch.chainOrder='AB';
+  } else if(dBH_AT<snapDist){
+    s3ch.vecA.tail.x+=(p.Bhead.x-p.Atail.x); s3ch.vecA.tail.y+=(p.Bhead.y-p.Atail.y);
+    s3ch.snapped=true; s3ch.chainOrder='BA';
+  } else { s3ch.snapped=false; s3ch.chainOrder=null; }
+}
+function s3ch_getHandles(){
+  const A=s3ch.vecA,B=s3ch.vecB, lim=8.5;
+  return [
+    {getPos:()=>({x:A.tail.x,y:A.tail.y}), setPos:(x,y)=>{A.tail.x=clamp(x,-lim,lim); A.tail.y=clamp(y,-lim,lim);}, color:COL().blue},
+    {getPos:()=>({x:A.tail.x+A.dx,y:A.tail.y+A.dy}), setPos:(x,y)=>{A.tail.x=clamp(x-A.dx,-lim,lim); A.tail.y=clamp(y-A.dy,-lim,lim);}, color:COL().blue},
+    {getPos:()=>({x:B.tail.x,y:B.tail.y}), setPos:(x,y)=>{B.tail.x=clamp(x,-lim,lim); B.tail.y=clamp(y,-lim,lim);}, color:COL().violet},
+    {getPos:()=>({x:B.tail.x+B.dx,y:B.tail.y+B.dy}), setPos:(x,y)=>{B.tail.x=clamp(x-B.dx,-lim,lim); B.tail.y=clamp(y-B.dy,-lim,lim);}, color:COL().violet}
+  ];
+}
+function s3ch_draw(){
+  const p=s3ch_pts();
+  drawVector(p.Atail.x,p.Atail.y,p.Ahead.x,p.Ahead.y,COL().blue,4);
+  vectorLabel(p.Atail.x,p.Atail.y,p.Ahead.x,p.Ahead.y,'A',COL().blue);
+  drawVector(p.Btail.x,p.Btail.y,p.Bhead.x,p.Bhead.y,COL().violet,4);
+  vectorLabel(p.Btail.x,p.Btail.y,p.Bhead.x,p.Bhead.y,'B',COL().violet);
+  if(s3ch.snapped){
+    const joint = s3ch.chainOrder==='AB'? p.Ahead : p.Bhead;
+    const jp=toScreen(joint.x,joint.y);
+    ctx.save(); ctx.beginPath(); ctx.arc(jp.x,jp.y,10,0,Math.PI*2); ctx.strokeStyle=COL().green; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
+  }
+  if(s3ch.clicks.length===2){
+    const c0=s3ch.clicks[0], c1=s3ch.clicks[1];
+    drawVector(c0.x,c0.y,c1.x,c1.y,COL().amber,3,[8,6]);
+    vectorLabel(c0.x,c0.y,c1.x,c1.y,'R',COL().amber,-1);
+  }
+  s3ch.clicks.forEach((c,i)=>{
+    const s=toScreen(c.x,c.y);
+    ctx.save(); ctx.beginPath(); ctx.arc(s.x,s.y,10,0,Math.PI*2); ctx.strokeStyle=COL().amber; ctx.lineWidth=2.5; ctx.stroke(); ctx.restore();
+    labelAt(c.x,c.y-0.55,i===0?'START':'END',COL().amber);
+  });
+}
+function s3ch_hud(){
+  const rows=[{l:'Vector A (fixed length/direction)', v:fmt(Math.hypot(s3ch.vecA.dx,s3ch.vecA.dy),1)+' units', c:COL().blue},
+              {l:'Vector B (fixed length/direction)', v:fmt(Math.hypot(s3ch.vecB.dx,s3ch.vecB.dy),1)+' units', c:COL().violet},
+              {l:'Connected head-to-tail?', v:s3ch.snapped?'Yes ✓':'Not yet', c:s3ch.snapped?COL().green:COL().muted}];
+  if(s3ch.snapped) rows.push({l:'Points selected', v:s3ch.clicks.length+' / 2', c:COL().amber});
+  return rows;
+}
+function s3ch_labelFor(id){
+  return {Atail:'the tail of vector A', Ahead:'the head of vector A', Btail:'the tail of vector B', Bhead:'the head of vector B'}[id]||id;
+}
+function s3_onCanvasClick(wx,wy){
+  if(!challengeMode) return false;
+  if(!s3ch.snapped) return true;
+  const p=s3ch_pts();
+  const candidates=[{id:'Atail',...p.Atail},{id:'Ahead',...p.Ahead},{id:'Btail',...p.Btail},{id:'Bhead',...p.Bhead}];
+  let best=null,bestD=0.55;
+  candidates.forEach(c=>{ const d=Math.hypot(wx-c.x,wy-c.y); if(d<bestD){bestD=d;best=c;} });
+  if(!best) return true;
+  if(s3ch.clicks.length>=2) s3ch.clicks=[];
+  s3ch.clicks.push(best);
+  return true;
+}
+const s3_challenge={
+  newQuestion(){ s3ch_newVectors();
+    return {prompt:'Two vectors <b>A</b> (blue) and <b>B</b> (violet) are shown — <b>not</b> placed head-to-tail. Their length and direction are fixed; drag them (grab either end) until the head of one meets the tail of the other — they will snap together. Then click the <b>tail of the first vector</b> and the <b>head of the second vector</b> to mark the resultant, and press Check.'}; },
+  check(){
+    if(!s3ch.snapped) return {correct:false, message:'⚠️ The vectors are not connected head-to-tail yet. Drag one so its head meets the tail of the other, then try again.'};
+    if(s3ch.clicks.length<2) return {correct:false, message:'⚠️ Click the starting point and the ending point of the resultant (two clicks), then press Check.'};
+    const free=s3ch_freeEnds();
+    const c0=s3ch.clicks[0], c1=s3ch.clicks[1];
+    const startOK=c0.id===free.start.id, endOK=c1.id===free.end.id;
+    if(startOK && endOK){
+      const mag=Math.hypot(free.end.x-free.start.x, free.end.y-free.start.y);
+      const ang=norm360(Math.atan2(free.end.y-free.start.y, free.end.x-free.start.x)*180/Math.PI);
+      return {correct:true, message:'✅ Correct! The resultant runs from '+s3ch_labelFor(free.start.id)+' to '+s3ch_labelFor(free.end.id)+' — magnitude '+fmt(mag,1)+' units at '+fmt(ang,0)+'°.'};
+    }
+    const parts=[];
+    if(!startOK) parts.push('the first click should be '+s3ch_labelFor(free.start.id)+' (you chose '+s3ch_labelFor(c0.id)+')');
+    if(!endOK) parts.push('the second click should be '+s3ch_labelFor(free.end.id)+' (you chose '+s3ch_labelFor(c1.id)+')');
+    return {correct:false, message:'❌ Not quite — '+parts.join('; and ')+'.'};
+  }
+};
+
+/* ============================================================
+   SCENE 4 — Parallelogram Law
+   ============================================================ */
+const sc4={A:{x:4,y:0}, B:{x:0,y:3}};
+function s4_build(){ sc4.A={x:4,y:0}; sc4.B={x:0,y:3}; }
+function s4_keep90(){ const cb=el('t4-90'); return cb? cb.checked : true; }
+function s4_randomize(){
+  if(s4_keep90()){
+    const mA=randFloat(3,7,0.5), mB=randFloat(3,7,0.5);
+    const sA=Math.random()<0.5?-1:1, sB=Math.random()<0.5?-1:1;
+    if(Math.random()<0.5){ sc4.A={x:sA*mA,y:0}; sc4.B={x:0,y:sB*mB}; }
+    else { sc4.A={x:0,y:sA*mA}; sc4.B={x:sB*mB,y:0}; }
+  } else {
+    sc4.A={x:randFloat(-6,6,0.5),y:randFloat(-5,5,0.5)};
+    sc4.B={x:randFloat(-6,6,0.5),y:randFloat(-5,5,0.5)};
+  }
+}
+function s4_expHandles(){ return [
+  {getPos:()=>sc4.A, setPos:(x,y)=>{sc4.A.x=clamp(x,-8,8); sc4.A.y=clamp(y,-8,8);}, color:COL().blue},
+  {getPos:()=>sc4.B, setPos:(x,y)=>{sc4.B.x=clamp(x,-8,8); sc4.B.y=clamp(y,-8,8);}, color:COL().violet}
+]; }
+function s4_expDraw(){
+  const A=sc4.A, B=sc4.B, Rx=A.x+B.x, Ry=A.y+B.y;
+  drawVector(A.x,A.y,Rx,Ry,COL().muted,2,[6,5]);
+  drawVector(B.x,B.y,Rx,Ry,COL().muted,2,[6,5]);
+  drawVector(0,0,A.x,A.y,COL().blue,4); vectorLabel(0,0,A.x,A.y,'A',COL().blue);
+  drawVector(0,0,B.x,B.y,COL().violet,4); vectorLabel(0,0,B.x,B.y,'B',COL().violet);
+  drawVector(0,0,Rx,Ry,COL().amber,5); vectorLabel(0,0,Rx,Ry,'R',COL().amber,-1);
+}
+function s4_expVectors(){
+  const A=sc4.A, B=sc4.B, Rx=A.x+B.x, Ry=A.y+B.y;
+  return [
+    {id:'A', x1:0,y1:0, x2:A.x,y2:A.y, color:COL().blue},
+    {id:'B', x1:0,y1:0, x2:B.x,y2:B.y, color:COL().violet},
+    {id:'R', x1:0,y1:0, x2:Rx,y2:Ry, color:COL().amber}
+  ];
+}
+function s4_hud(){
+  if(challengeMode) return s4ch_hud();
+  const A=sc4.A, B=sc4.B, Rx=A.x+B.x, Ry=A.y+B.y;
+  return [
+    {l:'|A|, angle', v:fmt(Math.hypot(A.x,A.y),1)+' @ '+fmt(norm360(Math.atan2(A.y,A.x)*180/Math.PI),0)+'°', c:COL().blue},
+    {l:'|B|, angle', v:fmt(Math.hypot(B.x,B.y),1)+' @ '+fmt(norm360(Math.atan2(B.y,B.x)*180/Math.PI),0)+'°', c:COL().violet},
+    {l:'|R| (diagonal), angle', v:fmt(Math.hypot(Rx,Ry),1)+' @ '+fmt(norm360(Math.atan2(Ry,Rx)*180/Math.PI),0)+'°', c:COL().amber}
+  ];
+}
+function s4_draw(){ if(challengeMode) s4ch_draw(); else s4_expDraw(); }
+function s4_getHandles(){ return challengeMode? s4ch_getHandles() : s4_expHandles(); }
+function s4_getVectors(){ return challengeMode? [] : s4_expVectors(); }
+function s4_onDragEnd(){ if(challengeMode) s4ch_trySnap(); }
+
+/* --- Scene 4 challenge: place tail-to-tail, mark start, guess the tip --- */
+const s4ch={ vecA:{tail:{x:-5,y:1},dx:4,dy:2}, vecB:{tail:{x:3,y:-2},dx:-2,dy:3}, snapped:false, clicks:[] };
+function s4ch_randVec(){
+  let dx,dy;
+  do{ dx=randInt(-6,6); dy=randInt(-6,6); } while(dx===0 && dy===0);
+  return {dx,dy};
+}
+function s4ch_newVectors(){
+  let vA,vB;
+  if(s4_keep90()){
+    const mA=randInt(2,6)*(Math.random()<0.5?-1:1), mB=randInt(2,6)*(Math.random()<0.5?-1:1);
+    if(Math.random()<0.5){ vA={dx:mA,dy:0}; vB={dx:0,dy:mB}; }
+    else { vA={dx:0,dy:mA}; vB={dx:mB,dy:0}; }
+  } else { vA=s4ch_randVec(); vB=s4ch_randVec(); }
+  s4ch.vecA={tail:{x:randFloat(-7,-1,0.5), y:randFloat(-4,4,0.5)}, dx:vA.dx, dy:vA.dy};
+  s4ch.vecB={tail:{x:randFloat(1,7,0.5), y:randFloat(-4,4,0.5)}, dx:vB.dx, dy:vB.dy};
+  s4ch.snapped=false; s4ch.clicks=[];
+}
+function s4ch_trySnap(){
+  const d=Math.hypot(s4ch.vecB.tail.x-s4ch.vecA.tail.x, s4ch.vecB.tail.y-s4ch.vecA.tail.y);
+  if(d<0.7){ s4ch.vecB.tail.x=s4ch.vecA.tail.x; s4ch.vecB.tail.y=s4ch.vecA.tail.y; s4ch.snapped=true; }
+  else { s4ch.snapped=false; }
+  s4ch.clicks=[];
+}
+function s4ch_getHandles(){
+  const A=s4ch.vecA,B=s4ch.vecB, lim=8.5;
+  return [
+    {getPos:()=>({x:A.tail.x,y:A.tail.y}), setPos:(x,y)=>{A.tail.x=clamp(x,-lim,lim); A.tail.y=clamp(y,-lim,lim);}, color:COL().blue},
+    {getPos:()=>({x:A.tail.x+A.dx,y:A.tail.y+A.dy}), setPos:(x,y)=>{A.tail.x=clamp(x-A.dx,-lim,lim); A.tail.y=clamp(y-A.dy,-lim,lim);}, color:COL().blue},
+    {getPos:()=>({x:B.tail.x,y:B.tail.y}), setPos:(x,y)=>{B.tail.x=clamp(x,-lim,lim); B.tail.y=clamp(y,-lim,lim);}, color:COL().violet},
+    {getPos:()=>({x:B.tail.x+B.dx,y:B.tail.y+B.dy}), setPos:(x,y)=>{B.tail.x=clamp(x-B.dx,-lim,lim); B.tail.y=clamp(y-B.dy,-lim,lim);}, color:COL().violet}
+  ];
+}
+function s4ch_draw(){
+  const A=s4ch.vecA,B=s4ch.vecB;
+  const Ahead={x:A.tail.x+A.dx,y:A.tail.y+A.dy}, Bhead={x:B.tail.x+B.dx,y:B.tail.y+B.dy};
+  drawVector(A.tail.x,A.tail.y,Ahead.x,Ahead.y,COL().blue,4);
+  vectorLabel(A.tail.x,A.tail.y,Ahead.x,Ahead.y,'A',COL().blue);
+  drawVector(B.tail.x,B.tail.y,Bhead.x,Bhead.y,COL().violet,4);
+  vectorLabel(B.tail.x,B.tail.y,Bhead.x,Bhead.y,'B',COL().violet);
+  if(s4ch.snapped){
+    const jp=toScreen(A.tail.x,A.tail.y);
+    ctx.save(); ctx.beginPath(); ctx.arc(jp.x,jp.y,10,0,Math.PI*2); ctx.strokeStyle=COL().green; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
+  }
+  if(s4ch.clicks.length===2){
+    drawVector(s4ch.clicks[0].x,s4ch.clicks[0].y, s4ch.clicks[1].x,s4ch.clicks[1].y, COL().amber,3,[8,6]);
+    vectorLabel(s4ch.clicks[0].x,s4ch.clicks[0].y, s4ch.clicks[1].x,s4ch.clicks[1].y,'R',COL().amber,-1);
+  }
+  s4ch.clicks.forEach((c,i)=>{
+    const s=toScreen(c.x,c.y);
+    ctx.save(); ctx.beginPath(); ctx.arc(s.x,s.y,10,0,Math.PI*2); ctx.strokeStyle=COL().amber; ctx.lineWidth=2.5; ctx.stroke(); ctx.restore();
+    labelAt(c.x,c.y-0.55,i===0?'START':'GUESS',COL().amber);
+  });
+}
+function s4ch_hud(){
+  const rows=[{l:'Vector A (integer components)', v:'('+s4ch.vecA.dx+', '+s4ch.vecA.dy+')', c:COL().blue},
+              {l:'Vector B (integer components)', v:'('+s4ch.vecB.dx+', '+s4ch.vecB.dy+')', c:COL().violet},
+              {l:'Tails joined?', v:s4ch.snapped?'Yes ✓':'Not yet', c:s4ch.snapped?COL().green:COL().muted}];
+  if(s4ch.snapped) rows.push({l:'Points selected', v:s4ch.clicks.length+' / 2', c:COL().amber});
+  return rows;
+}
+function s4_onCanvasClick(wx,wy){
+  if(!challengeMode) return false;
+  if(!s4ch.snapped) return true;
+  if(s4ch.clicks.length>=2) s4ch.clicks=[];
+  if(s4ch.clicks.length===0){
+    const tail=s4ch.vecA.tail;
+    const d=Math.hypot(wx-tail.x, wy-tail.y);
+    if(d<0.55) s4ch.clicks.push({x:tail.x,y:tail.y});
+    return true;
+  }
+  s4ch.clicks.push({x:wx,y:wy});
+  return true;
+}
+const s4_challenge={
+  newQuestion(){ s4ch_newVectors();
+    return {prompt:'Two vectors <b>A</b> (blue) and <b>B</b> (violet) have fixed, whole-number components. Drag them (grab either end) until their <b>tails</b> meet at the same point — they will snap together. Then click the joined tails to mark the start of the resultant, and tap anywhere on the grid where you think the tip of the resultant should be — complete the parallelogram! Press Check.'}; },
+  check(){
+    if(!s4ch.snapped) return {correct:false, message:'⚠️ Place the vectors tail-to-tail first — drag one until its tail meets the tail of the other.'};
+    if(s4ch.clicks.length<1) return {correct:false, message:'⚠️ Click the joined tails first to mark the start of the resultant.'};
+    if(s4ch.clicks.length<2) return {correct:false, message:'⚠️ Now tap on the grid where you think the tip of the resultant should be.'};
+    const tail=s4ch.clicks[0], guess=s4ch.clicks[1];
+    const trueTip={x:s4ch.vecA.tail.x+s4ch.vecA.dx+s4ch.vecB.dx, y:s4ch.vecA.tail.y+s4ch.vecA.dy+s4ch.vecB.dy};
+    const d=Math.hypot(guess.x-trueTip.x, guess.y-trueTip.y);
+    const ok=d<=0.75;
+    const mag=Math.hypot(trueTip.x-tail.x, trueTip.y-tail.y);
+    const ang=norm360(Math.atan2(trueTip.y-tail.y, trueTip.x-tail.x)*180/Math.PI);
+    return {correct:ok, message: ok
+      ? '✅ Correct! Completing the parallelogram, the resultant reaches ('+fmt(trueTip.x,1)+', '+fmt(trueTip.y,1)+') — magnitude '+fmt(mag,1)+' units at '+fmt(ang,0)+'°.'
+      : '❌ Not quite. Your guess was '+fmt(d,1)+' units away from the true tip at ('+fmt(trueTip.x,1)+', '+fmt(trueTip.y,1)+'). Remember: complete the parallelogram — the tip is where a line parallel to A (through the head of B) meets a line parallel to B (through the head of A).'};
+  }
+};
+
+/* ============================================================
+   SCENE 5 — Pythagoras for perpendicular vectors
+   ============================================================ */
+function s5_vals(){ return {A:parseFloat(el('t5-A')?.value||4), B:parseFloat(el('t5-B')?.value||3)}; }
+function s5_build(){ el('t5-A') && (el('t5-A').value=4); el('t5-B') && (el('t5-B').value=3); el('t5-work') && (el('t5-work').checked=false); }
+function s5_draw(){
+  const {A,B}=s5_vals(); const R=Math.hypot(A,B), theta=Math.atan2(B,A)*180/Math.PI;
+  drawEmoji(-0.5,-0.5,'📦',22);
+  drawVector(0,0,A,0,COL().blue,4); vectorLabel(0,0,A,0,'A',COL().blue);
+  drawVector(A,0,A,B,COL().violet,4); vectorLabel(A,0,A,B,'B',COL().violet);
+  drawVector(0,0,A,B,COL().amber,5); vectorLabel(0,0,A,B,'R',COL().amber,-1);
+  drawRightAngleMarker(A,0,Math.min(0.4,B*0.3||0.3));
+  drawAngleArc(0,0,1.3,0,Math.atan2(B,A),COL().green,'θ');
+  const work=el('work-box');
+  if(el('t5-work')?.checked){
+    work.classList.add('show');
+    work.innerHTML='R = √(A² + B²)<br>R = √('+fmt(A,1)+'² + '+fmt(B,1)+'²)<br>R = '+fmt(R,2)+' units<br><br>θ = tan⁻¹(B / A)<br>θ = tan⁻¹('+fmt(B,1)+' / '+fmt(A,1)+')<br>θ = '+fmt(theta,1)+'°';
+  } else { work.classList.remove('show'); }
+}
+function s5_getVectors(){
+  const {A,B}=s5_vals();
+  return [
+    {id:'A', x1:0,y1:0, x2:A,y2:0, color:COL().blue},
+    {id:'B', x1:A,y1:0, x2:A,y2:B, color:COL().violet},
+    {id:'R', x1:0,y1:0, x2:A,y2:B, color:COL().amber}
+  ];
+}
+function s5_hud(){
+  const {A,B}=s5_vals(); const R=Math.hypot(A,B), theta=Math.atan2(B,A)*180/Math.PI;
+  return [
+    {l:'Vector A', v:fmt(A,1)+' units', c:COL().blue},
+    {l:'Vector B (⊥ to A)', v:fmt(B,1)+' units', c:COL().violet},
+    {l:'Resultant R = √(A²+B²)', v:fmt(R,2)+' units', c:COL().amber},
+    {l:'Angle θ from A', v:fmt(theta,1)+'°', c:COL().green}
+  ];
+}
+const PYTH_CTX=[
+  {unit:'N', noun:'force', vA:'Force A', vB:'Force B', tail:'A box on a table is pulled by two forces at right angles: '},
+  {unit:'m/s', noun:'velocity', vA:'Velocity A', vB:'Velocity B', tail:'An object experiences two perpendicular velocity components: '}
+];
+const s5_challenge={
+  wantAngle(){ const cb=el('t5-chal-angle'); return !!(cb && cb.checked); },
+  newQuestion(){
+    this.ctxD=pick(PYTH_CTX);
+    const triples=[[3,4],[6,8],[5,12],[8,15],[9,12]];
+    let A,B;
+    if(Math.random()<0.5){ const t=pick(triples); A=t[0]; B=t[1]; if(Math.random()<0.5){const tmp=A;A=B;B=tmp;} }
+    else { A=randFloat(2,11,0.5); B=randFloat(2,11,0.5); }
+    this.A=A; this.B=B; this.corrR=Math.hypot(A,B); this.corrTheta=Math.atan2(B,A)*180/Math.PI;
+    this.withAngle=this.wantAngle();
+    const ask = this.withAngle
+      ? 'Calculate the resultant magnitude and the angle θ it makes with the first ('+A+' '+this.ctxD.unit+') direction.'
+      : 'Calculate the resultant magnitude.';
+    const fields=[{id:'c5-r',label:'Resultant ('+this.ctxD.unit+')',placeholder:'e.g. 5.0',step:'0.1'}];
+    if(this.withAngle) fields.push({id:'c5-theta',label:'Angle θ (°)',placeholder:'e.g. 37',step:'0.5'});
+    return {prompt:this.ctxD.tail+'<b>'+A+' '+this.ctxD.unit+'</b> in one direction and <b>'+B+' '+this.ctxD.unit+'</b> at right angles to it. '+ask,
+      fields:fields}; },
+  check(ans){
+    const r=parseFloat(ans['c5-r']);
+    if(isNaN(r)) return {correct:false,message:'⚠️ Enter the resultant magnitude.'};
+    const rOK=Math.abs(r-this.corrR)<=0.3;
+    if(!this.withAngle){
+      return {correct:rOK, message:(rOK?'✅ Correct! ':'❌ Not quite. ')+'R = √('+this.A+'² + '+this.B+'²) = '+fmt(this.corrR,2)+' '+this.ctxD.unit+'.'};
+    }
+    const th=parseFloat(ans['c5-theta']);
+    if(isNaN(th)) return {correct:false,message:'⚠️ Enter both the resultant and the angle.'};
+    const thOK=Math.abs(th-this.corrTheta)<=3;
+    const ok=rOK&&thOK;
+    return {correct:ok, message:(ok?'✅ Correct! ':'❌ Not quite. ')+'R = √('+this.A+'² + '+this.B+'²) = '+fmt(this.corrR,2)+' '+this.ctxD.unit+', θ = tan⁻¹('+this.B+'/'+this.A+') = '+fmt(this.corrTheta,1)+'°.'}; }
+};
+
+/* ============================================================
+   SCENE 6 — Real-world applications
+   ============================================================ */
+const SCN=[
+  {key:'river', icon:'🚤', tag:'River Crossing', nameA:'Boat speed (still water)', nameB:'River current speed', unit:'m/s',
+   ctxText:(A,B)=>'A motorboat heads straight across a river at <b>'+A+' m/s</b>. The river current flows downstream at <b>'+B+' m/s</b>, at right angles to the boat\'s heading.',
+   ask:'the boat\'s resultant speed over the ground and the angle θ it makes with its original heading (straight across).'},
+  {key:'plane', icon:'✈️', tag:'Aircraft & Wind', nameA:'Aircraft airspeed', nameB:'Wind speed', unit:'m/s',
+   ctxText:(A,B)=>'An aircraft flies due East with an airspeed of <b>'+A+' m/s</b>. A crosswind blows due North at <b>'+B+' m/s</b>.',
+   ask:'the resultant ground speed of the aircraft and the angle θ it makes with due East.'},
+  {key:'forces', icon:'⭕', tag:'Two Forces', nameA:'Force A', nameB:'Force B', unit:'N',
+   ctxText:(A,B)=>'Two forces act on a ring at the same point: <b>'+A+' N</b> and <b>'+B+' N</b>, at right angles to each other.',
+   ask:'the resultant force on the ring and the angle θ it makes with Force A.'}
+];
+const sc6={scenario:0};
+function s6_vals(){ return {A:parseFloat(el('t6-A')?.value||6), B:parseFloat(el('t6-B')?.value||3)}; }
+function s6_build(){ sc6.scenario=0; el('t6-A') && (el('t6-A').value=6); el('t6-B') && (el('t6-B').value=3); s6_syncLabels(); }
+function s6_syncLabels(){ const s=SCN[sc6.scenario]; if(el('t6-labA')) el('t6-labA').textContent=s.nameA+'='; if(el('t6-labB')) el('t6-labB').textContent=s.nameB+'='; document.querySelectorAll('.scn-pick .btn').forEach((b,i)=>b.classList.toggle('on', i===sc6.scenario)); }
+function s6_draw(){
+  const {A,B}=s6_vals(); const s=SCN[sc6.scenario];
+  drawEmoji(-0.6,-0.6,s.icon,28);
+  drawVector(0,0,A,0,COL().blue,4); vectorLabel(0,0,A,0,'A',COL().blue);
+  drawVector(A,0,A,B,COL().violet,4); vectorLabel(A,0,A,B,'B',COL().violet);
+  drawVector(0,0,A,B,COL().amber,5); vectorLabel(0,0,A,B,'R',COL().amber,-1);
+  drawRightAngleMarker(A,0,Math.min(0.4,B*0.3||0.3));
+  drawAngleArc(0,0,1.3,0,Math.atan2(B,A),COL().green,'θ');
+}
+function s6_getVectors(){
+  const {A,B}=s6_vals();
+  return [
+    {id:'A', x1:0,y1:0, x2:A,y2:0, color:COL().blue},
+    {id:'B', x1:A,y1:0, x2:A,y2:B, color:COL().violet},
+    {id:'R', x1:0,y1:0, x2:A,y2:B, color:COL().amber}
+  ];
+}
+function s6_hud(){
+  const {A,B}=s6_vals(); const s=SCN[sc6.scenario]; const R=Math.hypot(A,B), theta=Math.atan2(B,A)*180/Math.PI;
+  return [
+    {l:s.nameA, v:fmt(A,1)+' '+s.unit, c:COL().blue},
+    {l:s.nameB, v:fmt(B,1)+' '+s.unit, c:COL().violet},
+    {l:'Resultant magnitude', v:fmt(R,2)+' '+s.unit, c:COL().amber},
+    {l:'Angle θ', v:fmt(theta,1)+'°', c:COL().green}
+  ];
+}
+const s6_challenge={
+  newQuestion(){
+    const sIdx=randInt(0,SCN.length-1); this.s=SCN[sIdx];
+    const A=randFloat(2,11,0.5), B=randFloat(2,11,0.5);
+    this.A=A; this.B=B; this.corrR=Math.hypot(A,B); this.corrTheta=Math.atan2(B,A)*180/Math.PI;
+    return {prompt:this.s.ctxText(A,B)+' Calculate '+this.s.ask,
+      fields:[{id:'c6-r',label:'Resultant ('+this.s.unit+')',placeholder:'e.g. 8.0',step:'0.1'},{id:'c6-theta',label:'Angle θ (°)',placeholder:'e.g. 30',step:'0.5'}]}; },
+  check(ans){
+    const r=parseFloat(ans['c6-r']), th=parseFloat(ans['c6-theta']);
+    if(isNaN(r)||isNaN(th)) return {correct:false,message:'⚠️ Enter both values.'};
+    const ok=Math.abs(r-this.corrR)<=0.3 && Math.abs(th-this.corrTheta)<=3;
+    return {correct:ok, message:(ok?'✅ Correct! ':'❌ Not quite. ')+'R = √('+this.A+'² + '+this.B+'²) = '+fmt(this.corrR,2)+' '+this.s.unit+', θ = tan⁻¹('+this.B+'/'+this.A+') = '+fmt(this.corrTheta,1)+'°.'}; }
+};
+
+/* ============================================================
+   SCENE DEFINITIONS + TAB / HUD / CHALLENGE ENGINE
+   ============================================================ */
+const scenes=[
+  {key:'s1', tab:'1 · Scalar vs Vector', kpi:'Prior Idea', title:'Scalars vs. Vectors',
+    blurb:`<p><b>Scalars</b> have <b>magnitude only</b> — a size, with no direction (e.g. distance, speed, mass, time).</p>
+      <p><b>Vectors</b> have <b>magnitude AND direction</b> (e.g. displacement, velocity, force).</p>
+      <p>Drag the two flags below to change the walking route. The grey dashed path is the total <b>distance</b> walked (scalar). The green arrow is the <b>displacement</b> — the straight-line vector from start to finish.</p>`,
+    view:{ox:0.46,oy:0.58,scale:34}, build:s1_build, draw:s1_draw, getHandles:s1_getHandles, getVectors:s1_getVectors, hud:s1_hud, tick:s1_tick,
+    controlsHTML:`<button class="btn green" id="t1-play">▶ Play</button><button class="btn" id="t1-rand">🔀 Randomize Path</button>`,
+    wire(){ el('t1-rand').onclick=s1_randomize; el('t1-play').onclick=()=>{ sc1anim.playing=true; sc1anim.phase=0; sc1anim.t=0; }; },
+    challenge:s1_challenge},
+
+  {key:'s2', tab:'2 · Same-Line Vectors', kpi:'Adding Vectors Mathematically', title:'Vectors Along the Same Line',
+    blurb:`<p>When two vectors act along the <b>same straight line</b>, you can add or subtract their magnitudes directly.</p>
+      <p><b>Same direction</b> → add the magnitudes.</p>
+      <p><b>Opposite directions</b> → subtract the smaller from the larger; the resultant points in the direction of the bigger one.</p>
+      <p>Adjust the sliders and direction buttons below to build your own tug-of-war.</p>`,
+    view:{ox:0.5,oy:0.55,scale:26}, build:s2_build, draw:s2_draw, getHandles:()=>[], getVectors:s2_getVectors, hud:s2_hud,
+    controlsHTML:`<div class="sw">A=<input type="range" id="t2-Amag" min="0" max="10" step="0.5" value="6"></div>
+      <button class="btn" id="t2-dirA">A points ▶ Right</button>
+      <div class="sw">B=<input type="range" id="t2-Bmag" min="0" max="10" step="0.5" value="4"></div>
+      <button class="btn" id="t2-dirB">B points ◀ Left</button>`,
+    wire(){ el('t2-dirA').onclick=()=>{sc2.dirA*=-1; s2_syncButtons();}; el('t2-dirB').onclick=()=>{sc2.dirB*=-1; s2_syncButtons();}; s2_syncButtons(); },
+    challenge:s2_challenge},
+
+  {key:'s3', tab:'3 · Head-to-Tail', kpi:'Adding Vectors Graphically', title:'Graphical Addition — Head-to-Tail Method',
+    blurb:`<p>Draw vector <b>A</b>, then place the <b>tail</b> of vector <b>B</b> at the <b>head</b> of A. The resultant <b>R</b> runs from the tail of A to the head of B, so that <b>A + B = R</b>.</p>
+      <p>Drag the tip of A (blue) and the tip of B (violet) to explore. Measure R's magnitude and direction from the Measurements panel — just as you would with a ruler and protractor on paper.</p>`,
+    view:{ox:0.46,oy:0.58,scale:34}, build:s3_build, draw:s3_draw, getHandles:s3_getHandles, getVectors:s3_getVectors, hud:s3_hud, onDragEnd:s3_onDragEnd, onCanvasClick:s3_onCanvasClick,
+    controlsHTML:`<button class="btn" id="t3-rand">🔀 Randomize Vectors</button>
+      <label class="chk"><input type="checkbox" id="t3-90" checked>Keep it at 90°</label>
+      <label class="chk"><input type="checkbox" id="t3-angles">Show angle arcs</label>`,
+    wire(){ el('t3-rand').onclick=s3_randomize; el('t3-angles').onchange=e=>{sc3.showAngles=e.target.checked;}; },
+    challenge:s3_challenge},
+
+  {key:'s4', tab:'4 · Parallelogram Law', kpi:'Adding Vectors Graphically', title:'The Parallelogram Law',
+    blurb:`<p>Draw vectors <b>A</b> and <b>B</b> from the <b>same starting point</b> (adjacent sides of a parallelogram). Complete the parallelogram — the <b>diagonal</b> through that common point is the resultant <b>R</b>.</p>
+      <p>Drag either arrow tip. Notice the dashed construction lines forming the parallelogram — this gives the exact same resultant as the head-to-tail method.</p>`,
+    view:{ox:0.42,oy:0.6,scale:34}, build:s4_build, draw:s4_draw, getHandles:s4_getHandles, getVectors:s4_getVectors, hud:s4_hud, onDragEnd:s4_onDragEnd, onCanvasClick:s4_onCanvasClick,
+    controlsHTML:`<button class="btn" id="t4-rand">🔀 Randomize Vectors</button>
+      <label class="chk"><input type="checkbox" id="t4-90" checked>Keep it at 90°</label>`,
+    wire(){ el('t4-rand').onclick=s4_randomize; },
+    challenge:s4_challenge},
+
+  {key:'s5', tab:'5 · Pythagoras', kpi:'IGCSE 4.1 — Calculation', title:'Resultant of Perpendicular Vectors',
+    blurb:`<p>When two vectors <b>A</b> and <b>B</b> act at <b>right angles</b>, use the <b>Pythagorean theorem</b> to calculate the resultant:</p>
+      <p style="text-align:center;"><b>R = √(A² + B²)</b></p>
+      <p>The direction θ (from A) is found using trigonometry: <b>θ = tan⁻¹(B / A)</b>.</p>
+      <p>Move the sliders and tick "Show working" to see the calculation update live.</p>`,
+    view:{ox:0.4,oy:0.62,scale:32}, build:s5_build, draw:s5_draw, getHandles:()=>[], getVectors:s5_getVectors, hud:s5_hud,
+    controlsHTML:`<div class="sw">A=<input type="range" id="t5-A" min="0.5" max="10" step="0.5" value="4"></div>
+      <div class="sw">B=<input type="range" id="t5-B" min="0.5" max="10" step="0.5" value="3"></div>
+      <label class="chk"><input type="checkbox" id="t5-work">Show working</label>`,
+    wire(){},
+    challenge:s5_challenge},
+
+  {key:'s6', tab:'6 · Applications', kpi:'Application Objectives', title:'Applying Vector Addition to Real Situations',
+    blurb:`<p>The same Pythagoras method applies to <b>forces</b> and <b>velocities</b> in real situations: a boat crossing a river, an aircraft flying through wind, or two forces pulling on a ring.</p>
+      <p>Pick a scenario, adjust the two perpendicular values, and see the resultant vector and its angle.</p>`,
+    view:{ox:0.4,oy:0.62,scale:32}, build:s6_build, draw:s6_draw, getHandles:()=>[], getVectors:s6_getVectors, hud:s6_hud,
+    controlsHTML:`<div class="scn-pick">
+        <button class="btn on" data-i="0">🚤 River</button>
+        <button class="btn" data-i="1">✈️ Aircraft</button>
+        <button class="btn" data-i="2">⭕ Forces</button>
+      </div>
+      <div class="sep"></div>
+      <div class="sw"><span id="t6-labA">Boat speed=</span><input type="range" id="t6-A" min="0.5" max="12" step="0.5" value="6"></div>
+      <div class="sw"><span id="t6-labB">River current=</span><input type="range" id="t6-B" min="0.5" max="12" step="0.5" value="3"></div>`,
+    wire(){ document.querySelectorAll('.scn-pick .btn').forEach(b=>{ b.onclick=()=>{ sc6.scenario=parseInt(b.dataset.i); s6_syncLabels(); }; }); s6_syncLabels(); },
+    challenge:s6_challenge},
+
+  {key:'s7', tab:'7 · Self-Check', kpi:'4.1', title:'Self-Assessment Quiz', quiz:true, blurb:'',
+    view:{ox:0.5,oy:0.5,scale:30}, build(){}, draw(){}, getHandles:()=>[], hud(){ return []; },
+    controlsHTML:''}
+];
+
+let currentIdx=0, challengeMode=false, score={correct:0,total:0}, currentQ=null;
+
+function buildTabs(){
+  const wrap=el('tabs'); wrap.innerHTML='';
+  scenes.forEach((s,i)=>{ const b=document.createElement('button'); b.className='tab-btn'+(i===currentIdx?' active':''); b.textContent=s.tab; b.onclick=()=>loadScene(i); wrap.appendChild(b); });
+}
+function renderHUD(){
+  const rows=scenes[currentIdx].hud();
+  el('hud-rows').innerHTML=rows.map(r=>'<div class="dr"><span class="dl">'+r.l+'</span><span class="dv" style="color:'+(r.c||COL().text)+'">'+r.v+'</span></div>').join('');
+  positionThemeToggle();
+}
+function positionThemeToggle(){
+  const hud=el('hud'), btn=el('theme-toggle');
+  if(hud.style.display==='none'){ btn.style.top='16px'; return; }
+  const r=hud.getBoundingClientRect();
+  btn.style.top=(r.bottom+12)+'px';
+}
+window.addEventListener('resize',positionThemeToggle);
+function loadScene(i){
+  currentIdx=i; const s=scenes[i];
+  s.build();
+  el('scene-controls').innerHTML=s.controlsHTML;
+  if(s.wire) s.wire();
+  el('caption-kpi').textContent=s.kpi;
+  el('caption-title').textContent=s.title;
+  el('caption-text').innerHTML=s.blurb;
+  el('work-box').classList.remove('show');
+  selectedVecId=null;
+  buildTabs();
+  renderHUD();
+  challengeMode=false; score={correct:0,total:0};
+  el('chal-score').textContent='Score: 0/0';
+  el('btn-challenge-toggle').classList.remove('on');
+  el('challenge-wrap').classList.remove('show','collapsed');
+  el('btn-chal-fold').textContent='▼';
+  el('chal-opts').style.display = (s.key==='s5') ? '' : 'none';
+  el('t5-chal-angle').checked=false;
+  el('btn-challenge-toggle').style.display = s.challenge? '' : 'none';
+  if(s.quiz){
+    el('caption').style.display='none'; el('hud').style.display='none'; el('hint').style.display='none'; el('controls').style.display='none';
+    el('quiz-modal').classList.add('show'); openQuiz();
+  } else {
+    el('caption').style.display=''; el('hud').style.display=''; el('hint').style.display=''; el('controls').style.display='';
+    el('quiz-modal').classList.remove('show');
+  }
+}
+function newChallenge(){
+  const c=scenes[currentIdx].challenge;
+  el('chal-result').style.display='none'; el('chal-result').className='';
+  if(!c){ el('chal-prompt').textContent='No challenge available for this topic.'; el('chal-body').innerHTML=''; el('btn-chal-check').style.display='none'; return; }
+  const q=c.newQuestion(); currentQ=q;
+  el('chal-prompt').innerHTML=q.prompt;
+  if(q.options){
+    el('btn-chal-check').style.display='none';
+    el('chal-body').innerHTML='<div id="chal-options" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'+q.options.map((o,idx)=>'<button class="btn green" data-idx="'+idx+'">'+o+'</button>').join('')+'</div>';
+    Array.from(el('chal-options').children).forEach(btn=>{
+      btn.onclick=()=>{
+        const idx=parseInt(btn.dataset.idx); const res=c.check(idx);
+        Array.from(el('chal-options').children).forEach((b,i)=>{ if(res.correctIdx!==undefined && i===res.correctIdx) b.classList.add('on'); else if(i===idx && !res.correct) b.style.borderColor='var(--red)'; b.disabled=true; });
+        showChalResult(res);
+      };
+    });
+  } else if(q.fields){
+    el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+    el('chal-body').innerHTML='<div class="chal-inputs-grid">'+q.fields.map(f=>{
+      if(f.type==='select') return '<div class="chal-field"><label>'+f.label+'</label><select id="'+f.id+'" class="chal-select">'+f.options.map(o=>'<option value="'+o+'">'+o+'</option>').join('')+'</select></div>';
+      return '<div class="chal-field"><label>'+f.label+'</label><input type="number" id="'+f.id+'" class="chal-input" placeholder="'+(f.placeholder||'')+'" step="'+(f.step||'any')+'"></div>';
+    }).join('')+'</div>';
+  } else {
+    el('btn-chal-check').style.display=''; el('btn-chal-check').disabled=false;
+    el('chal-body').innerHTML='';
+  }
+}
+function showChalResult(res){
+  score.total++; if(res.correct) score.correct++;
+  el('chal-score').textContent='Score: '+score.correct+'/'+score.total;
+  const box=el('chal-result'); box.textContent=res.message; box.style.display=''; box.className=res.correct?'pass':'fail';
+}
+el('btn-chal-check').onclick=()=>{
+  const c=scenes[currentIdx].challenge; if(!c||!currentQ) return;
+  let answer;
+  if(currentQ.fields){ answer={}; currentQ.fields.forEach(f=>{ const e=el(f.id); answer[f.id]= e? e.value : ''; }); }
+  const res=c.check(answer);
+  showChalResult(res);
+  if(currentQ.fields){ currentQ.fields.forEach(f=>{ const e=el(f.id); if(e) e.disabled=true; }); el('btn-chal-check').disabled=true; }
+};
+el('btn-chal-new').onclick=newChallenge;
+el('btn-chal-exit').onclick=()=>{ challengeMode=false; el('btn-challenge-toggle').classList.remove('on'); el('challenge-wrap').classList.remove('show'); };
+el('btn-challenge-toggle').onclick=()=>{
+  challengeMode=!challengeMode;
+  el('btn-challenge-toggle').classList.toggle('on',challengeMode);
+  el('challenge-wrap').classList.toggle('show',challengeMode);
+  if(challengeMode) newChallenge();
+};
+el('t5-chal-angle').addEventListener('change',()=>{
+  if(challengeMode && scenes[currentIdx].key==='s5') newChallenge();
+});
+el('btn-reset-scene').onclick=()=>loadScene(currentIdx);
+
+/* MAIN LOOP */
+let lastRender=0;
+function animate(ts){
+  requestAnimationFrame(animate);
+  if(ts-lastRender<33) return; lastRender=ts;
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  if(!scenes[currentIdx].quiz){
+    if(scenes[currentIdx].tick) scenes[currentIdx].tick(33);
+    drawGrid();
+    scenes[currentIdx].draw();
+    const handles=(scenes[currentIdx].getHandles && scenes[currentIdx].getHandles())||[];
+    handles.forEach(h=>{ const p=h.getPos(); const s=toScreen(p.x,p.y); drawHandleDot(s.x,s.y,h.color||COL().amber); });
+    drawSelectedVectorCoords();
+  }
+  renderHUD();
+}
+el('theme-toggle').onclick=()=>{
+  isLight=!isLight;
+  document.body.classList.toggle('light-theme',isLight);
+  el('theme-toggle').textContent=isLight?'☀️':'🌙';
+};
+loadScene(0);
+animate();
+
+/* ---------------- QUIZ ---------------- */
+const QUIZ=[
+  {kpi:'Prior', q:'A scalar quantity has...', opts:['Magnitude only','Magnitude and direction','Direction only','Neither magnitude nor direction'], correct:0, exp:'A scalar is fully described by a size (magnitude) alone — no direction is needed.'},
+  {kpi:'Prior', q:'A vector quantity has...', opts:['Magnitude only','Magnitude AND direction','Direction only','A fixed value of zero'], correct:1, exp:'A vector needs both a magnitude and a direction to be fully described.'},
+  {kpi:'Prior', q:'Which of these is a VECTOR quantity?', opts:['Speed','Mass','Velocity','Time'], correct:2, exp:'Velocity has both a speed (magnitude) and a direction, making it a vector. Speed, mass and time are scalars.'},
+  {kpi:'Prior', q:'Which of these is a SCALAR quantity?', opts:['Force','Displacement','Distance','Acceleration'], correct:2, exp:'Distance is just a total length travelled — no direction is attached, so it is a scalar.'},
+  {kpi:'4.1', q:'A resultant vector is best described as...', opts:['The sum of two or more vectors','A vector that always equals zero','A quantity used only for scalars','The average of two vectors'], correct:0, exp:'The resultant is the single vector equivalent to the combined effect of two or more vectors added together.'},
+  {kpi:'4.1', q:'In the head-to-tail method, the resultant is drawn from...', opts:['The tail of the first vector to the head of the last vector','The head of the first vector to the tail of the last','Wherever is most convenient','The midpoint of both vectors'], correct:0, exp:'Place vectors tip-to-tail in sequence; the resultant runs from the very first tail to the very last head.'},
+  {kpi:'4.1', q:'In the parallelogram law, with A and B drawn as adjacent sides from a common vertex, the resultant is...', opts:['One of the adjacent sides','The diagonal passing through the common vertex','The diagonal that misses the common vertex','The perimeter of the shape'], correct:1, exp:'Completing the parallelogram, the diagonal starting at the shared vertex represents the resultant vector.'},
+  {kpi:'4.1', q:'For two vectors A and B acting at right angles, the magnitude of the resultant R is...', opts:['R = A + B','R = A − B','R = √(A² + B²)','R = A × B'], correct:2, exp:'Perpendicular vectors form a right-angled triangle, so Pythagoras\' theorem gives R = √(A² + B²).'},
+  {kpi:'4.1', q:'Two forces of 3 N and 4 N act at right angles to each other. What is the magnitude of the resultant?', opts:['7 N','1 N','5 N','12 N'], correct:2, exp:'√(3² + 4²) = √(9+16) = √25 = 5 N — the classic 3-4-5 triangle.'},
+  {kpi:'4.1', q:'Two vectors act along the same line, in the SAME direction. To find the resultant, you should...', opts:['Add their magnitudes','Subtract the smaller from the larger','Use Pythagoras\' theorem','Multiply the two magnitudes'], correct:0, exp:'Vectors pointing the same way along a line simply add together.'},
+  {kpi:'4.1', q:'Two vectors act along the same line, in OPPOSITE directions. To find the resultant, you should...', opts:['Add their magnitudes','Subtract the smaller magnitude from the larger','Use Pythagoras\' theorem','Ignore the smaller vector'], correct:1, exp:'Opposing vectors on a line partly cancel — subtract the smaller from the larger; the result points in the direction of the larger.'},
+  {kpi:'4.1', q:'A boat that can travel at 6 m/s in still water heads straight across a river flowing at 8 m/s. What is its resultant speed relative to the ground?', opts:['14 m/s','2 m/s','10 m/s','48 m/s'], correct:2, exp:'√(6² + 8²) = √(36+64) = √100 = 10 m/s — another 6-8-10 right triangle.'},
+  {kpi:'4.1', q:'On a scale vector diagram, the MAGNITUDE of the resultant is measured using a...', opts:['Thermometer','Ruler','Stopwatch','Voltmeter'], correct:1, exp:'A ruler measures the length of the resultant arrow, which (using the chosen scale) gives its magnitude.'},
+  {kpi:'4.1', q:'On a scale vector diagram, the DIRECTION of the resultant is measured using a...', opts:['Ruler','Protractor','Balance','Ammeter'], correct:1, exp:'A protractor measures the angle the resultant arrow makes, giving its direction.'},
+  {kpi:'4.1', q:'The IGCSE syllabus point 4.1 restricts the CALCULATION method (using Pythagoras) to two vectors that are...', opts:['Parallel to each other','At right angles to each other','At any angle to each other','Always equal in magnitude'], correct:1, exp:'Pythagoras\' theorem only directly applies when the two vectors meet at 90°; other angles need graphical (scale diagram) methods.'}
+];
+let quizIdx=0, quizScore=0, quizAnswered=false;
+function openQuiz(){ quizIdx=0; quizScore=0; el('quiz-modal').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion(); }
+function showQuizQuestion(){
+  quizAnswered=false; const item=QUIZ[quizIdx];
+  el('quiz-progress').textContent='Question '+(quizIdx+1)+'/'+QUIZ.length;
+  el('quiz-kpi').textContent=item.kpi;
+  el('quiz-question').textContent=item.q;
+  el('quiz-explain').style.display='none'; el('quiz-next').style.display='none';
+  el('quiz-options').innerHTML=item.opts.map((o,i)=>'<button class="quiz-opt" data-idx="'+i+'">'+o+'</button>').join('');
+  Array.from(el('quiz-options').children).forEach(btn=>{
+    btn.onclick=()=>{
+      if(quizAnswered) return; quizAnswered=true;
+      const idx=parseInt(btn.dataset.idx); if(idx===item.correct) quizScore++;
+      Array.from(el('quiz-options').children).forEach((b,i)=>{ if(i===item.correct) b.classList.add('correct'); else if(i===idx) b.classList.add('wrong'); });
+      el('quiz-explain').textContent=item.exp; el('quiz-explain').style.display='block';
+      el('quiz-next').style.display='inline-block'; el('quiz-next').textContent=(quizIdx<QUIZ.length-1)?'Next →':'See results →';
+    };
+  });
+}
+el('quiz-next').onclick=()=>{ quizIdx++; if(quizIdx>=QUIZ.length) showQuizFinal(); else showQuizQuestion(); };
+function showQuizFinal(){
+  el('quiz-live').style.display='none'; el('quiz-final').style.display='block';
+  el('quiz-final-score').textContent=quizScore+'/'+QUIZ.length;
+  const pct=quizScore/QUIZ.length;
+  el('quiz-final-msg').textContent=pct>=0.8?'Outstanding grasp of vectors! 🎉':(pct>=0.5?'Good work! Revisit the modules and try again.':'Keep practicing — work through the tabs again.');
+}
+el('quiz-restart').onclick=openQuiz;
+el('quiz-close').onclick=()=>{ loadScene(0); };
+el('quiz-modal').addEventListener('click',function(e){ if(e.target===this) loadScene(0); });
+</script>
+
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=78b4ff&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fvector_lab.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fvector_lab.html'"/>
+    <p>darawa-io.github.io/ARLABS/vector_lab.html</p>
+  </div>
+</div>
+<script>
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+</script>
+</body>
+</html>
