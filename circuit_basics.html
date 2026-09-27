@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Circuit Lab | Current, Resistance, Ohm's Law, Energy &amp; Power</title>
 <link rel="icon" type="image/png" href="assets/logo1.png">
-<link rel="icon" type="image/png" href="assets/logo1.png">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%8A%3C/text%3E%3C/svg%3E">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
 :root{--bg:#07090f;--surface:#0d1120;--border:rgba(180,200,255,0.12);--amber:#ffc857;--blue:#5bc8ff;--violet:#b57aff;--green:#4dffa0;--red:#ff5e72;--text:#ddeeff;--muted:rgba(180,210,255,0.55);}
@@ -81,13 +79,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 #chal-result{font-size:11.5px;line-height:1.5;margin-top:8px;padding:8px 12px;border-radius:10px;display:none;}
 #chal-result.pass{display:block;background:rgba(77,255,160,0.12);color:var(--green);border:1px solid rgba(77,255,160,0.35);}
 #chal-result.fail{display:block;background:rgba(255,94,114,0.12);color:var(--red);border:1px solid rgba(255,94,114,0.35);}
-#quiz-btn{position:fixed;bottom:16px;right:16px;width:44px;height:44px;border-radius:13px;border:1px solid rgba(180,120,255,.4);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;font-size:19px;}
-#quiz-btn:hover{border-color:rgba(181,122,255,.8);background:rgba(181,122,255,.12);}
-#quiz-modal{display:none;position:fixed;inset:0;z-index:150;background:rgba(4,6,18,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
-#quiz-modal.show{display:flex;}
-#quiz-box{background:rgba(9,11,22,.98);border:1px solid rgba(180,120,255,.3);border-radius:20px;padding:26px;text-align:left;position:relative;max-width:480px;width:92%;max-height:82vh;overflow-y:auto;}
-#quiz-close{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.5);font-size:19px;cursor:pointer;}
-#quiz-box h3{font-family:'Syne',sans-serif;font-size:18px;color:#fff;margin-bottom:4px;}
+#quiz-section{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:8;background:rgba(9,11,22,.98);border:1px solid rgba(180,120,255,.3);border-radius:20px;padding:26px;text-align:left;max-width:480px;width:min(480px,calc(100vw - 32px));max-height:min(560px,calc(100vh - 160px));overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+#quiz-section.show{display:block;}
+#quiz-section h3{font-family:'Syne',sans-serif;font-size:18px;color:#fff;margin-bottom:4px;}
 #quiz-progress{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;}
 #quiz-kpi{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--violet);border:1px solid rgba(181,122,255,.4);border-radius:8px;padding:2px 7px;margin-bottom:10px;}
 #quiz-question{font-size:14.5px;line-height:1.6;color:var(--text);margin-bottom:14px;}
@@ -203,8 +197,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div id="challenge-wrap"><div id="challenge-bar"><div id="chal-head"><span id="chal-title-txt">🎯 Challenge</span><div style="display:flex;align-items:center;gap:8px;"><span id="chal-score">Score: 0/0</span><button class="btn-fold" id="btn-chal-fold" title="Fold challenge panel">▼</button></div></div><div id="chal-prompt">Press "New Challenge" to begin!</div><div id="chal-body"></div><div id="chal-actions"><button class="btn green" id="btn-chal-check">✓ Check Answer</button><button class="btn amber" id="btn-chal-new">🔄 New Challenge</button><button class="btn" id="btn-chal-exit">🚪 Exit Challenge</button></div><div id="chal-result"></div></div></div>
 <div id="controls"><div id="scene-controls"></div><div class="sep"></div><button class="btn amber" id="btn-challenge-toggle">🎯 Challenge Mode</button><button class="btn" id="btn-reset-scene">↺ Reset</button></div>
 <div id="hint">🖐️ drag to rotate · ✌️ pinch / scroll to zoom</div>
-<button id="quiz-btn" title="Take the Circuits quiz">🧠</button>
-<div id="quiz-modal"><div id="quiz-box"><button id="quiz-close">✕</button><div id="quiz-live"><h3>Circuits Quiz</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-kpi">KPI 3.1.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div></div>
+<div id="quiz-section"><div id="quiz-live"><h3>Self Assessment</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-kpi">KPI 3.1.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div>
 </div><!-- /#lab-ui -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1245,6 +1238,40 @@ function e12_renderTable(){
 }
 function e12_clear(){ e12.records=[]; e12_renderTable(); }
 
+/* QUIZ DATA (per-chapter, used by the Self Assessment section in each chapter) */
+const QUIZ1=[
+  {kpi:'3.1.1', q:'What is one ampere of current equivalent to?', opts:['One coulomb of charge passing a point every second','One joule of energy per second','One volt per ohm','One watt per second'], correct:0, exp:'By definition, 1 A = 1 coulomb of charge passing a given cross-section every second.'},
+  {kpi:'3.1.1', q:'The formula for electric current in terms of charge is...', opts:['I = Q/t','I = Qt','I = t/Q','I = Q + t'], correct:0, exp:'Current is the rate of flow of charge: I = Q/t (also I = ne/t).'},
+  {kpi:'3.1.2', q:'Conventional current in a circuit flows in the direction that...', opts:['positive charges would move','electrons actually move','neither charge moves','only occurs in AC circuits'], correct:0, exp:'Conventional current is defined as the direction positive charge carriers would flow.'},
+  {kpi:'3.1.2', q:'In the external circuit, conventional current flows from the battery\'s...', opts:['positive terminal to the negative terminal','negative terminal to the positive terminal','positive terminal back to itself','neutral point outward'], correct:0, exp:'Conventional current flows from + through the external circuit to −.'},
+  {kpi:'3.1.3', q:'Which instrument is always connected in series in a circuit?', opts:['Ammeter','Voltmeter','Both are always in parallel','Neither'], correct:0, exp:'An ammeter must carry the same current as the component, so it is wired in series.'},
+  {kpi:'3.1.3', q:'A voltmeter is connected...', opts:['In parallel across the component','In series with the component','Nowhere near the component','Only inside the battery'], correct:0, exp:'Voltmeters measure potential difference, so they are connected in parallel.'},
+  {kpi:'3.1.4', q:'Resistance is best described as...', opts:['Opposition to the flow of current','A measure of voltage supplied','The rate of charge flow','A type of energy'], correct:0, exp:'Resistance is the opposition a conductor offers to the flow of current, measured in ohms.'},
+  {kpi:'3.1.5', q:'Ohm\'s law states that, at constant temperature...', opts:['V is directly proportional to I','V is inversely proportional to I','R is proportional to V only','I is independent of V'], correct:0, exp:'Ohm\'s law: the current through a conductor is directly proportional to the potential difference across it.'},
+  {kpi:'3.1.5', q:'Ohm\'s law is expressed mathematically as...', opts:['ΔV = IR','ΔV = I/R','ΔV = I + R','ΔV = R/I'], correct:0, exp:'Rearranged, this also gives R = ΔV/I.'},
+  {kpi:'3.1.6', q:'A material with constant resistance over a wide range of voltages is described as...', opts:['Ohmic','Non-ohmic','Magnetic','Insulating only'], correct:0, exp:'Ohmic materials obey Ohm\'s law and give a straight-line I–V graph.'},
+  {kpi:'3.1.6', q:'A filament lamp is an example of a(n)...material.', opts:['Non-ohmic','Ohmic','Superconducting','Zero-resistance'], correct:0, exp:'Its resistance rises with temperature, giving a curved (nonlinear) I–V graph.'},
+  {kpi:'3.1.7', q:'The resistance of a cylindrical wire is directly proportional to its...', opts:['Length','Cross-sectional area','Colour','Weight'], correct:0, exp:'A longer wire means a longer path for charge carriers, so resistance increases with length.'},
+  {kpi:'3.1.7', q:'The resistance of a wire is inversely proportional to its...', opts:['Cross-sectional area','Length','Resistivity','Supply voltage'], correct:0, exp:'A thicker wire (larger cross-sectional area) offers less resistance.'},
+  {kpi:'3.1.8', q:'Resistivity is defined as the resistance of a conductor of...', opts:['Length 1 m and cross-sectional area 1 m²','Any length and any area','Length 1 cm only','Zero length'], correct:0, exp:'Resistivity (ρ) is a material property defined for a 1 m length with a 1 m² cross-section, measured in Ωm.'},
+  {kpi:'3.1.9', q:'The equation used to calculate resistance from resistivity is...', opts:['R = ρl/A','R = ρA/l','R = A/(ρl)','R = l/(ρA)'], correct:0, exp:'R = ρl/A — resistance increases with length and resistivity, and decreases with area.'},
+  {kpi:'Lab 2', q:'In an experiment to verify Ohm\'s law, a graph of voltage (y-axis) against current (x-axis) for an ohmic resistor should be...', opts:['A straight line through the origin','A curve bending upward','A horizontal line','A straight line not through the origin'], correct:0, exp:'For an ohmic conductor, V ∝ I, so the graph is a straight line through the origin with gradient R.'}
+];
+const QUIZ2=[
+  {kpi:'3.2.1', q:'As current flows through a resistor, charge carriers collide with the vibrating lattice ions. This transforms electrical energy into...', opts:['Thermal energy','Chemical energy','Nuclear energy','Sound energy only'], correct:0, exp:'These collisions transfer energy to the lattice, increasing its vibration — this is Joule (resistive) heating.'},
+  {kpi:'3.2.1', q:'The warming of a toaster\'s heating element while current flows is an example of...', opts:['Electrical energy transforming into thermal energy','Thermal energy transforming into electrical energy','Chemical energy being stored','Current flowing without any energy transfer'], correct:0, exp:'Resistive heating converts electrical energy delivered by the supply into heat in the element.'},
+  {kpi:'3.2.2', q:'Electric power is defined as...', opts:['The rate at which electrical energy is transferred','The total energy used by a circuit','The charge stored in a circuit','The resistance per unit length'], correct:0, exp:'Power is the rate of energy transfer, P = E/t, measured in watts (W).'},
+  {kpi:'3.2.2', q:'The equation for electric power in terms of energy and time is...', opts:['P = E/t','P = Et','P = t/E','P = E − t'], correct:0, exp:'P = E/t: power is energy transferred per unit time.'},
+  {kpi:'3.2.2', q:'The SI unit of electric power is the...', opts:['Watt (W)','Joule (J)','Coulomb (C)','Ohm (Ω)'], correct:0, exp:'One watt equals one joule of energy transferred per second (1 W = 1 J/s).'},
+  {kpi:'3.2.3', q:'Starting from P = E/t and E = QV, substituting Q = It gives the equation...', opts:['P = VI','P = V/I','P = I/V','P = V + I'], correct:0, exp:'P = E/t = QV/t = (It)V/t = VI.'},
+  {kpi:'3.2.3', q:'Combining P = VI with Ohm\'s law (V = IR) gives the alternative power equation...', opts:['P = I²R','P = IR²','P = I/R','P = R/I'], correct:0, exp:'Substituting V = IR into P = VI gives P = I(IR) = I²R.'},
+  {kpi:'3.2.3', q:'Combining P = VI with Ohm\'s law (I = V/R) gives the alternative power equation...', opts:['P = V²/R','P = VR²','P = R/V','P = V/R²'], correct:0, exp:'Substituting I = V/R into P = VI gives P = V(V/R) = V²/R.'},
+  {kpi:'3.2.3', q:'For a fixed resistor, if the current I is doubled, the power dissipated P = I²R...', opts:['Quadruples','Doubles','Stays the same','Halves'], correct:0, exp:'Since P ∝ I², doubling I multiplies P by 2² = 4.'},
+  {kpi:'3.2.4', q:'A 60 W appliance runs for 2 minutes (120 s). The energy it transforms is...', opts:['7200 J','60 J','120 J','0.5 J'], correct:0, exp:'E = P × t = 60 × 120 = 7200 J.'},
+  {kpi:'3.2.4', q:'A resistor dissipates 4 A of current through a 5 Ω resistance. The power dissipated is...', opts:['80 W','20 W','9 W','1.25 W'], correct:0, exp:'P = I²R = 4² × 5 = 80 W.'},
+  {kpi:'3.2.4', q:'A 12 V supply drives current through a 6 Ω resistor. The power dissipated, using P = V²/R, is...', opts:['24 W','2 W','72 W','6 W'], correct:0, exp:'P = V²/R = 12²/6 = 144/6 = 24 W.'}
+];
+
 /* ===== SCENES CONFIG ===== */
 const CH1_SCENES=[
   {key:'e1', tab:'1 · Current', kpi:'KPI 3.1.1', title:'What Is Electric Current?',
@@ -1404,7 +1431,14 @@ const CH1_SCENES=[
       el('e8-mat').onchange=()=>e8_build();
       el('e8-record').onclick=e8_record;
       el('e8-clear').onclick=e8_clear;
-    }}
+    }},
+
+  {key:'sa1', tab:'9 · Self Assessment', kpi:'Self Assessment', title:'Self Assessment — Chapter 1', isQuiz:true, hideHud:true,
+    blurb:`<p><b>Self Assessment</b></p>
+      <p>Check your understanding of current, resistance, Ohm's law and resistivity with a ${QUIZ1.length}-question quiz covering KPI 3.1.1–3.1.9 and Lab 2.</p>
+      <p>Answer each question, review the explanation, then move to the next. Your score appears at the end.</p>`,
+    build(){}, tick(){}, hud(){ return []; }, controlsHTML:'',
+    wire(){ openQuiz(QUIZ1); }}
 ];
 
 const CH2_SCENES=[
@@ -1470,7 +1504,14 @@ const CH2_SCENES=[
       el('e12-record').onclick=e12_record;
       el('e12-clear').onclick=e12_clear;
       el('e12-Rsel').onchange=e12_build;
-    }}
+    }},
+
+  {key:'sa2', tab:'5 · Self Assessment', kpi:'Self Assessment', title:'Self Assessment — Chapter 2', isQuiz:true, hideHud:true,
+    blurb:`<p><b>Self Assessment</b></p>
+      <p>Check your understanding of Joule heating, electric power and the P = VI = I²R = V²/R equations with a ${QUIZ2.length}-question quiz covering KPI 3.2.1–3.2.4.</p>
+      <p>Answer each question, review the explanation, then move to the next. Your score appears at the end.</p>`,
+    build(){}, tick(){}, hud(){ return []; }, controlsHTML:'',
+    wire(){ openQuiz(QUIZ2); }}
 ];
 
 /* ===== UI WIRING ===== */
@@ -1522,6 +1563,8 @@ function loadScene(i){
   currentIdx=i;
   clearStage();
   const s=scenes[i];
+  el('quiz-section').classList.remove('show');
+  el('hud').style.display = s.hideHud ? 'none' : '';
   s.build();
   el('scene-controls').innerHTML=s.controlsHTML;
   showGraphPanel(!!s.showGraph, !!s.graphTable, !!s.hideGraphCanvas);
@@ -1627,43 +1670,13 @@ function animate(ts){
 }
 animate();
 
-/* QUIZ */
-const QUIZ=[
-  {kpi:'3.1.1', q:'What is one ampere of current equivalent to?', opts:['One coulomb of charge passing a point every second','One joule of energy per second','One volt per ohm','One watt per second'], correct:0, exp:'By definition, 1 A = 1 coulomb of charge passing a given cross-section every second.'},
-  {kpi:'3.1.1', q:'The formula for electric current in terms of charge is...', opts:['I = Q/t','I = Qt','I = t/Q','I = Q + t'], correct:0, exp:'Current is the rate of flow of charge: I = Q/t (also I = ne/t).'},
-  {kpi:'3.1.2', q:'Conventional current in a circuit flows in the direction that...', opts:['positive charges would move','electrons actually move','neither charge moves','only occurs in AC circuits'], correct:0, exp:'Conventional current is defined as the direction positive charge carriers would flow.'},
-  {kpi:'3.1.2', q:'In the external circuit, conventional current flows from the battery\'s...', opts:['positive terminal to the negative terminal','negative terminal to the positive terminal','positive terminal back to itself','neutral point outward'], correct:0, exp:'Conventional current flows from + through the external circuit to −.'},
-  {kpi:'3.1.3', q:'Which instrument is always connected in series in a circuit?', opts:['Ammeter','Voltmeter','Both are always in parallel','Neither'], correct:0, exp:'An ammeter must carry the same current as the component, so it is wired in series.'},
-  {kpi:'3.1.3', q:'A voltmeter is connected...', opts:['In parallel across the component','In series with the component','Nowhere near the component','Only inside the battery'], correct:0, exp:'Voltmeters measure potential difference, so they are connected in parallel.'},
-  {kpi:'3.1.4', q:'Resistance is best described as...', opts:['Opposition to the flow of current','A measure of voltage supplied','The rate of charge flow','A type of energy'], correct:0, exp:'Resistance is the opposition a conductor offers to the flow of current, measured in ohms.'},
-  {kpi:'3.1.5', q:'Ohm\'s law states that, at constant temperature...', opts:['V is directly proportional to I','V is inversely proportional to I','R is proportional to V only','I is independent of V'], correct:0, exp:'Ohm\'s law: the current through a conductor is directly proportional to the potential difference across it.'},
-  {kpi:'3.1.5', q:'Ohm\'s law is expressed mathematically as...', opts:['ΔV = IR','ΔV = I/R','ΔV = I + R','ΔV = R/I'], correct:0, exp:'Rearranged, this also gives R = ΔV/I.'},
-  {kpi:'3.1.6', q:'A material with constant resistance over a wide range of voltages is described as...', opts:['Ohmic','Non-ohmic','Magnetic','Insulating only'], correct:0, exp:'Ohmic materials obey Ohm\'s law and give a straight-line I–V graph.'},
-  {kpi:'3.1.6', q:'A filament lamp is an example of a(n)...material.', opts:['Non-ohmic','Ohmic','Superconducting','Zero-resistance'], correct:0, exp:'Its resistance rises with temperature, giving a curved (nonlinear) I–V graph.'},
-  {kpi:'3.1.7', q:'The resistance of a cylindrical wire is directly proportional to its...', opts:['Length','Cross-sectional area','Colour','Weight'], correct:0, exp:'A longer wire means a longer path for charge carriers, so resistance increases with length.'},
-  {kpi:'3.1.7', q:'The resistance of a wire is inversely proportional to its...', opts:['Cross-sectional area','Length','Resistivity','Supply voltage'], correct:0, exp:'A thicker wire (larger cross-sectional area) offers less resistance.'},
-  {kpi:'3.1.8', q:'Resistivity is defined as the resistance of a conductor of...', opts:['Length 1 m and cross-sectional area 1 m²','Any length and any area','Length 1 cm only','Zero length'], correct:0, exp:'Resistivity (ρ) is a material property defined for a 1 m length with a 1 m² cross-section, measured in Ωm.'},
-  {kpi:'3.1.9', q:'The equation used to calculate resistance from resistivity is...', opts:['R = ρl/A','R = ρA/l','R = A/(ρl)','R = l/(ρA)'], correct:0, exp:'R = ρl/A — resistance increases with length and resistivity, and decreases with area.'},
-  {kpi:'Lab 2', q:'In an experiment to verify Ohm\'s law, a graph of voltage (y-axis) against current (x-axis) for an ohmic resistor should be...', opts:['A straight line through the origin','A curve bending upward','A horizontal line','A straight line not through the origin'], correct:0, exp:'For an ohmic conductor, V ∝ I, so the graph is a straight line through the origin with gradient R.'},
-  {kpi:'3.2.1', q:'As current flows through a resistor, charge carriers collide with the vibrating lattice ions. This transforms electrical energy into...', opts:['Thermal energy','Chemical energy','Nuclear energy','Sound energy only'], correct:0, exp:'These collisions transfer energy to the lattice, increasing its vibration — this is Joule (resistive) heating.'},
-  {kpi:'3.2.1', q:'The warming of a toaster\'s heating element while current flows is an example of...', opts:['Electrical energy transforming into thermal energy','Thermal energy transforming into electrical energy','Chemical energy being stored','Current flowing without any energy transfer'], correct:0, exp:'Resistive heating converts electrical energy delivered by the supply into heat in the element.'},
-  {kpi:'3.2.2', q:'Electric power is defined as...', opts:['The rate at which electrical energy is transferred','The total energy used by a circuit','The charge stored in a circuit','The resistance per unit length'], correct:0, exp:'Power is the rate of energy transfer, P = E/t, measured in watts (W).'},
-  {kpi:'3.2.2', q:'The equation for electric power in terms of energy and time is...', opts:['P = E/t','P = Et','P = t/E','P = E − t'], correct:0, exp:'P = E/t: power is energy transferred per unit time.'},
-  {kpi:'3.2.2', q:'The SI unit of electric power is the...', opts:['Watt (W)','Joule (J)','Coulomb (C)','Ohm (Ω)'], correct:0, exp:'One watt equals one joule of energy transferred per second (1 W = 1 J/s).'},
-  {kpi:'3.2.3', q:'Starting from P = E/t and E = QV, substituting Q = It gives the equation...', opts:['P = VI','P = V/I','P = I/V','P = V + I'], correct:0, exp:'P = E/t = QV/t = (It)V/t = VI.'},
-  {kpi:'3.2.3', q:'Combining P = VI with Ohm\'s law (V = IR) gives the alternative power equation...', opts:['P = I²R','P = IR²','P = I/R','P = R/I'], correct:0, exp:'Substituting V = IR into P = VI gives P = I(IR) = I²R.'},
-  {kpi:'3.2.3', q:'Combining P = VI with Ohm\'s law (I = V/R) gives the alternative power equation...', opts:['P = V²/R','P = VR²','P = R/V','P = V/R²'], correct:0, exp:'Substituting I = V/R into P = VI gives P = V(V/R) = V²/R.'},
-  {kpi:'3.2.3', q:'For a fixed resistor, if the current I is doubled, the power dissipated P = I²R...', opts:['Quadruples','Doubles','Stays the same','Halves'], correct:0, exp:'Since P ∝ I², doubling I multiplies P by 2² = 4.'},
-  {kpi:'3.2.4', q:'A 60 W appliance runs for 2 minutes (120 s). The energy it transforms is...', opts:['7200 J','60 J','120 J','0.5 J'], correct:0, exp:'E = P × t = 60 × 120 = 7200 J.'},
-  {kpi:'3.2.4', q:'A resistor dissipates 4 A of current through a 5 Ω resistance. The power dissipated is...', opts:['80 W','20 W','9 W','1.25 W'], correct:0, exp:'P = I²R = 4² × 5 = 80 W.'},
-  {kpi:'3.2.4', q:'A 12 V supply drives current through a 6 Ω resistor. The power dissipated, using P = V²/R, is...', opts:['24 W','2 W','72 W','6 W'], correct:0, exp:'P = V²/R = 12²/6 = 144/6 = 24 W.'}
-];
-let quizIdx=0, quizScore=0, quizAnswered=false;
-function openQuiz(){ quizIdx=0; quizScore=0; el('quiz-modal').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion(); }
+/* QUIZ ENGINE (data lives in QUIZ1 / QUIZ2, defined above with the scenes config) */
+let quizData=[], quizIdx=0, quizScore=0, quizAnswered=false;
+function openQuiz(data){ quizData=data; quizIdx=0; quizScore=0; el('quiz-section').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion(); }
 function showQuizQuestion(){
   quizAnswered=false;
-  const item=QUIZ[quizIdx];
-  el('quiz-progress').textContent='Question '+(quizIdx+1)+'/'+QUIZ.length;
+  const item=quizData[quizIdx];
+  el('quiz-progress').textContent='Question '+(quizIdx+1)+'/'+quizData.length;
   el('quiz-kpi').textContent='KPI '+item.kpi;
   el('quiz-question').textContent=item.q;
   el('quiz-explain').style.display='none';
@@ -1681,21 +1694,18 @@ function showQuizQuestion(){
       el('quiz-explain').textContent=item.exp;
       el('quiz-explain').style.display='block';
       el('quiz-next').style.display='inline-block';
-      el('quiz-next').textContent=(quizIdx<QUIZ.length-1)? 'Next →' : 'See results →';
+      el('quiz-next').textContent=(quizIdx<quizData.length-1)? 'Next →' : 'See results →';
     };
   });
 }
-el('quiz-next').onclick=()=>{ quizIdx++; if(quizIdx>=QUIZ.length) showQuizFinal(); else showQuizQuestion(); };
+el('quiz-next').onclick=()=>{ quizIdx++; if(quizIdx>=quizData.length) showQuizFinal(); else showQuizQuestion(); };
 function showQuizFinal(){
   el('quiz-live').style.display='none'; el('quiz-final').style.display='block';
-  el('quiz-final-score').textContent=quizScore+'/'+QUIZ.length;
-  const pct=quizScore/QUIZ.length;
-  el('quiz-final-msg').textContent=pct>=0.8?'Outstanding grasp of circuits! 🎉':(pct>=0.5?'Good job! Review the modules and try again.':'Keep practicing current & resistance concepts!');
+  el('quiz-final-score').textContent=quizScore+'/'+quizData.length;
+  const pct=quizScore/quizData.length;
+  el('quiz-final-msg').textContent=pct>=0.8?'Outstanding grasp! 🎉':(pct>=0.5?'Good job! Review the modules and try again.':'Keep practicing these concepts!');
 }
-el('quiz-restart').onclick=openQuiz;
-el('quiz-btn').onclick=openQuiz;
-el('quiz-close').onclick=()=>{ el('quiz-modal').classList.remove('show'); };
-el('quiz-modal').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('show'); });
+el('quiz-restart').onclick=()=>openQuiz(quizData);
 </script>
 
 <button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
