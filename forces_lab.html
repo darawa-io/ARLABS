@@ -260,7 +260,7 @@ T.forEach((t,i)=>{const b=document.createElement('button');b.className='tb';b.da
 const qb=document.createElement('button');qb.className='tb';qb.textContent='🧠 Test Yourself';qb.onclick=()=>{document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));qb.classList.add('on');$('chal').classList.remove('show');$('types').classList.remove('show');tvRestore();startQuiz()};$('tabs').appendChild(qb);
 
 // ---------- AR Push: push the 10 kg box with your finger (Hiro marker + hand tracking), runs in this page like the other AR lab ----------
-const ARP_CSS="#arp #ap_aw{position:fixed;inset:0;z-index:1}\n#arp #ap_aw a-scene{position:absolute!important;inset:0;width:100%!important;height:100%!important}\n#arp #ap_ov{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}\n#arp .pill{position:fixed;z-index:10;padding:6px 14px;border-radius:16px;background:rgba(7,9,15,.88);border:1px solid rgba(180,200,255,.28);font:12px 'Space Mono',ui-monospace,Menlo,monospace;white-space:nowrap;pointer-events:none;display:none}\n#arp.run .pill{display:block}\n#arp #ap_st{top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);letter-spacing:1px;color:#ffb400;border-color:rgba(255,180,0,.45)}\n#arp #ap_st.ok{color:#4dffa0;border-color:rgba(77,255,160,.5)}\n#arp #ap_hp{top:calc(46px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);color:#c9dcf5}\n#arp #ap_hud{top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));line-height:1.7;color:#c9dcf5}\n#arp #ap_hud b{color:#fff}#ap_hud .f{color:#ff9a4a}\n#arp .btn{position:fixed;z-index:12;display:none;border:1px solid rgba(180,200,255,.4);background:rgba(7,9,15,.88);color:#fff;font:700 15px 'DM Sans',-apple-system,system-ui,sans-serif;border-radius:32px;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent}\n#arp.run .btn{display:block}\n#arp #ap_ex{top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:44px;height:44px;border-radius:50%;font-size:18px}\n#arp #ap_rst{left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:170px;height:68px;border-color:rgba(255,200,87,.7);color:#ffc857;font-size:19px}\n#arp #ap_rst i{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(77,255,160,.38)}\n#arp #ap_rst span{position:relative}\n#arp #ap_rst.act{border-color:#4dffa0}\n#arp #ap_mod{position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:94vh;overflow:auto;background:rgba(7,9,15,.97);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:22px 24px;text-align:center;font:12px/1.8 'Space Mono',ui-monospace,Menlo,monospace;color:#4dffa0}\n#arp #ap_mod h1{font:700 17px 'DM Sans',system-ui,sans-serif;color:#fff;margin:0 0 8px}\n#arp #ap_mod img{width:140px;height:140px;display:block;margin:6px auto 8px;border:6px solid #fff;background:#fff;border-radius:4px}\n#arp #ap_mod ol{text-align:left;color:rgba(255,255,255,.82);margin:8px 0 12px;padding-left:20px}\n#arp #ap_mod .go{padding:11px 30px;border-radius:30px;border:1px solid rgba(77,255,160,.7);background:rgba(77,255,160,.18);color:#4dffa0;font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer}\n#arp #ap_mod .x{position:absolute;top:8px;right:12px;background:none;border:none;color:rgba(255,255,255,.55);font-size:20px;cursor:pointer}\n#arp #ap_flash{position:fixed;z-index:11;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:8px 18px;border-radius:20px;background:rgba(77,255,160,.2);border:1px solid rgba(77,255,160,.6);color:#4dffa0;font:700 13px 'DM Sans',system-ui,sans-serif;opacity:0;transition:opacity .25s;pointer-events:none}\n#arp{position:fixed;inset:0;z-index:300;font:14px/1.45 -apple-system,'DM Sans',system-ui,sans-serif;color:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}\n#arp *{box-sizing:border-box}\nhtml.arp-on{background:#07090f!important}\nhtml.arp-on body{background:transparent!important}\nhtml.arp-on body>*:not(#arp):not(#arjs-video){display:none!important}\n",ARP_HTML="<div id=\"ap_aw\"><\/div>\n<canvas id=\"ap_ov\"><\/canvas>\n<div id=\"ap_st\" class=\"pill\">🔍 SCANNING FOR MARKER…<\/div>\n<div id=\"ap_hp\" class=\"pill\">✋ Hand tracking: loading…<\/div>\n<div id=\"ap_hud\" class=\"pill\">Box <b id=\"ap_hm\">10 kg<\/b><br>Speed <b id=\"ap_hs\">0.00 m/s<\/b><br>Push force <b class=\"f\" id=\"ap_hf\">0 N<\/b><\/div>\n<button id=\"ap_ex\" class=\"btn\" title=\"Exit AR\">✕<\/button>\n<button id=\"ap_rst\" class=\"btn\"><i id=\"ap_rstf\"><\/i><span id=\"ap_rstl\">↺ Reset<\/span><\/button>\n<div id=\"ap_flash\"><\/div>\n<div id=\"ap_mod\">\n  <button class=\"x\" id=\"ap_mx\" title=\"Close\">✕<\/button>\n  <h1>AR Push<\/h1>\n  <div id=\"ap_s1\">\n    Print or display the Hiro marker flat on a table:\n    <img src=\"https://ar-js-org.github.io/AR.js/data/images/hiro.png\" alt=\"Hiro marker\" onerror=\"this.style.display='none'\">\n    <ol>\n      <li>Tap <b>Start camera<\/b> and point the iPad at the marker.<\/li>\n      <li>A 10&nbsp;kg box appears on the marker.<\/li>\n      <li>Move your <b>index finger<\/b> through the box, from the side. The faster you move, the bigger the push.<\/li>\n      <li>Hold your finger on <b>Reset<\/b> (or tap it) to put the box back.<\/li>\n    <\/ol>\n    <button class=\"go\" id=\"ap_go\">Start camera<\/button>\n  <\/div>\n  <div id=\"ap_s2\" style=\"display:none\">⏳ Loading AR engine…<br><small style=\"color:rgba(77,255,160,.55)\">(first load ~5–10 s)<\/small><\/div>\n  <div id=\"ap_s3\" style=\"display:none\"><\/div>\n<\/div>";
+const ARP_CSS="#arp #ap_aw{position:fixed;inset:0;z-index:1}\n#arp #ap_aw a-scene{position:absolute!important;inset:0;width:100%!important;height:100%!important}\n#arp #ap_ov{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}\n#arp .pill{position:fixed;z-index:10;padding:6px 14px;border-radius:16px;background:rgba(7,9,15,.88);border:1px solid rgba(180,200,255,.28);font:12px 'Space Mono',ui-monospace,Menlo,monospace;white-space:nowrap;pointer-events:none;display:none}\n#arp.run .pill{display:block}\n#arp #ap_st{top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);letter-spacing:1px;color:#ffb400;border-color:rgba(255,180,0,.45)}\n#arp #ap_st.ok{color:#4dffa0;border-color:rgba(77,255,160,.5)}\n#arp #ap_hp{top:calc(46px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);color:#c9dcf5}\n#arp #ap_hud{top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));line-height:1.7;color:#c9dcf5}\n#arp #ap_hud b{color:#fff}#ap_hud .f{color:#ff9a4a}\n#arp .btn{position:fixed;z-index:12;display:none;border:1px solid rgba(180,200,255,.4);background:rgba(7,9,15,.88);color:#fff;font:700 15px 'DM Sans',-apple-system,system-ui,sans-serif;border-radius:32px;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent}\n#arp.run .btn{display:block}\n#arp #ap_ex{top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:44px;height:44px;border-radius:50%;font-size:18px}\n#arp #ap_rst{left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:170px;height:68px;border-color:rgba(255,200,87,.7);color:#ffc857;font-size:19px}\n#arp #ap_rst i{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(77,255,160,.38)}\n#arp #ap_rst span{position:relative}\n#arp #ap_rst.act{border-color:#4dffa0}\n#arp #ap_mod{position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:94vh;overflow:auto;background:rgba(7,9,15,.97);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:22px 24px;text-align:center;font:12px/1.8 'Space Mono',ui-monospace,Menlo,monospace;color:#4dffa0}\n#arp #ap_mod h1{font:700 17px 'DM Sans',system-ui,sans-serif;color:#fff;margin:0 0 8px}\n#arp #ap_mod img{width:140px;height:140px;display:block;margin:6px auto 8px;border:6px solid #fff;background:#fff;border-radius:4px}\n#arp #ap_mod ol{text-align:left;color:rgba(255,255,255,.82);margin:8px 0 12px;padding-left:20px}\n#arp #ap_mod .go{padding:11px 30px;border-radius:30px;border:1px solid rgba(77,255,160,.7);background:rgba(77,255,160,.18);color:#4dffa0;font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer}\n#arp #ap_mod .x{position:absolute;top:8px;right:12px;background:none;border:none;color:rgba(255,255,255,.55);font-size:20px;cursor:pointer}\n#arp #ap_flash{position:fixed;z-index:11;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:8px 18px;border-radius:20px;background:rgba(77,255,160,.2);border:1px solid rgba(77,255,160,.6);color:#4dffa0;font:700 13px 'DM Sans',system-ui,sans-serif;opacity:0;transition:opacity .25s;pointer-events:none}\n#arp{position:fixed;inset:0;z-index:300;font:14px/1.45 -apple-system,'DM Sans',system-ui,sans-serif;color:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}\n#arp *{box-sizing:border-box}\nhtml.arp-on{background:#07090f!important}\nhtml.arp-on body{background:transparent!important}\nhtml.arp-on body>*:not(#arp):not(#arjs-video){display:none!important}\n\n#arp #ap_hud.hot{border-color:#ff9a4a;background:rgba(60,28,5,.92)}\n#arp #ap_hud .dim{opacity:.65}\n#arp #ap_hud b{margin-left:4px}",ARP_HTML="<div id=\"ap_aw\"><\/div>\n<canvas id=\"ap_ov\"><\/canvas>\n<div id=\"ap_st\" class=\"pill\">🔍 SCANNING FOR MARKER…<\/div>\n<div id=\"ap_hp\" class=\"pill\">✋ Hand tracking: loading…<\/div>\n<div id=\"ap_hud\" class=\"pill\">Box mass <b>10 kg</b><br>Force on box <b class=\"f\" id=\"ap_hf\">0 N<\/b><br>Box speed <b id=\"ap_hs\">0.00 m/s<\/b><br><span class=\"dim\">Peak <b id=\"ap_pk\">0 N · 0.00 m/s<\/b><\/span><\/div>\n<button id=\"ap_ex\" class=\"btn\" title=\"Exit AR\">✕<\/button>\n<button id=\"ap_rst\" class=\"btn\"><i id=\"ap_rstf\"><\/i><span id=\"ap_rstl\">↺ Reset<\/span><\/button>\n<div id=\"ap_flash\"><\/div>\n<div id=\"ap_mod\">\n  <button class=\"x\" id=\"ap_mx\" title=\"Close\">✕<\/button>\n  <h1>AR Push<\/h1>\n  <div id=\"ap_s1\">\n    Print or display the Hiro marker flat on a table:\n    <img src=\"https://ar-js-org.github.io/AR.js/data/images/hiro.png\" alt=\"Hiro marker\" onerror=\"this.style.display='none'\">\n    <ol>\n      <li>Tap <b>Start camera<\/b> and point the iPad at the marker.<\/li>\n      <li>A 10&nbsp;kg box appears on the marker.<\/li>\n      <li>Move your <b>index finger<\/b> through the box, from the side. The faster you move, the bigger the push.<\/li>\n      <li>Hold your finger on <b>Reset<\/b> (or tap it) to put the box back.<\/li>\n    <\/ol>\n    <button class=\"go\" id=\"ap_go\">Start camera<\/button>\n  <\/div>\n  <div id=\"ap_s2\" style=\"display:none\">⏳ Loading AR engine…<br><small style=\"color:rgba(77,255,160,.55)\">(first load ~5–10 s)<\/small><\/div>\n  <div id=\"ap_s3\" style=\"display:none\"><\/div>\n<\/div>";
 let arpHL=null,arpDispose=null,arpLab=null,arpUsed=false,arpTabIdx=0;
 function startARPush(){
 let alive=true;
@@ -268,13 +268,13 @@ let alive=true;
 // ───────────── settings ─────────────
 const CFG={
   mass:10,          // kg
-  scale:.2,         // marker units per lab metre (box size on the marker)
+  scale:.4,         // marker units per lab metre (box size: 0.4 makes the box a bit bigger than the marker)
   mu:.08,           // sliding friction coefficient (box slows down by itself)
-  kf:40,            // N per (marker-width/s) of finger speed
-  fmax:120,         // N, largest push force
+  kf:25,            // N per (marker-width/s) of finger speed
+  fmax:80,          // N, largest push force
   vmin:.3,          // marker-widths/s, slower finger movement is ignored
   dwell:.7,         // s the finger must stay on the Reset button
-  wall:1.1,         // marker units: the box stops here (keeps it in view)
+  wall:1.6,         // marker units: the box stops here (keeps it in view)
   resetLabel:'↺ Reset',
   vision:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs',
   wasm:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm',
@@ -291,7 +291,7 @@ let TH,sceneEl,marker,root,box,arrow,aShaft,aHead,markerOn=false,ready=false;
 let X=0,Z=0,vx=0,vz=0,push=0,pushing=false,lastT=performance.now();
 let hand='loading',HL=null,lastVT=-1;
 const tip={sx:0,sy:0,t:-1e9,src:'',lm:null,hist:[],vx:0,vz:0};   // fingertip in screen px, plus velocity on the table plane
-let dwell=0,lock=false,flashT=0;
+let dwell=0,lock=false,flashT=0,lastM=null,seen=false,pkF=0,pkV=0,holdF=0,holdT=0;
 
 // ───────────── UI helpers ─────────────
 function status(txt,ok){const s=$('st');s.textContent=txt;s.classList.toggle('ok',!!ok)}
@@ -344,7 +344,7 @@ function buildScene(){
   mk.setAttribute('preset','hiro');mk.setAttribute('smooth','true');mk.setAttribute('smoothCount','5');
   mk.setAttribute('smoothTolerance','0.01');mk.setAttribute('smoothThreshold','2');
   mk.addEventListener('markerFound',()=>{markerOn=true;status('✅ MARKER DETECTED',true)});
-  mk.addEventListener('markerLost',()=>{markerOn=false;status('🔍 SCANNING…',false)});
+  mk.addEventListener('markerLost',()=>{markerOn=false;status(seen?'👆 MARKER COVERED: holding position':'🔍 SCANNING…',false)});
   sc.appendChild(mk);wrap.appendChild(sc);
   sceneEl=sc;marker=mk;
   const go=()=>{buildContent();$('mod').style.display='none';document.getElementById('arp').classList.add('run');status('🔍 SCANNING FOR MARKER…',false);setHand('loading');initHands();requestAnimationFrame(tick)};
@@ -352,7 +352,10 @@ function buildScene(){
 }
 function buildContent(){
   TH=AFRAME.THREE;
-  root=new TH.Group();marker.object3D.add(root);
+  lastM=new TH.Matrix4();
+  // the box lives in the scene (not inside the marker) so it stays visible, at the last known pose, when the finger covers the marker
+  root=new TH.Group();root.matrixAutoUpdate=false;root.visible=false;sceneEl.object3D.add(root);
+  sceneEl.object3D.onBeforeRender=()=>{if(markerOn){marker.object3D.updateMatrixWorld(true);lastM.copy(marker.object3D.matrixWorld);seen=true}root.matrix.copy(lastM);root.matrixWorldNeedsUpdate=true;root.visible=seen};
   root.add(new TH.AmbientLight(0xffffff,.3));
   const sun=new TH.DirectionalLight(0xffffff,.4);sun.position.set(.5,1,.6);root.add(sun);
   box=new TH.Mesh(new TH.BoxGeometry(1,1,1),new TH.MeshStandardMaterial({color:0xc9a46a,roughness:.45,metalness:.2}));
@@ -360,8 +363,8 @@ function buildContent(){
   // orange force arrow (appears while the box is being pushed)
   const mat=new TH.MeshBasicMaterial({color:0xff7a1a,depthTest:false});
   arrow=new TH.Group();arrow.renderOrder=10;arrow.visible=false;
-  aShaft=new TH.Mesh(new TH.CylinderGeometry(.012,.012,1,12).rotateZ(-Math.PI/2).translate(.5,0,0),mat);
-  aHead=new TH.Mesh(new TH.ConeGeometry(.03,.07,16).rotateZ(-Math.PI/2).translate(.035,0,0),mat);
+  aShaft=new TH.Mesh(new TH.CylinderGeometry(.018,.018,1,12).rotateZ(-Math.PI/2).translate(.5,0,0),mat);
+  aHead=new TH.Mesh(new TH.ConeGeometry(.045,.1,16).rotateZ(-Math.PI/2).translate(.05,0,0),mat);
   aShaft.renderOrder=aHead.renderOrder=10;arrow.add(aShaft,aHead);root.add(arrow);
   placeBox();ready=true;
 }
@@ -369,11 +372,11 @@ function placeBox(){box.position.set(X*S,HY,Z*S)}
 
 // ───────────── screen → marker geometry ─────────────
 function rayFromScreen(sx,sy){
-  if(!ready||!sceneEl.camera||!sceneEl.canvas)return null;
+  if(!ready||!seen||!sceneEl.camera||!sceneEl.canvas)return null;
   const c=sceneEl.canvas.getBoundingClientRect(),cam=sceneEl.camera;
   const nx=(sx-c.left)/c.width*2-1,ny=-((sy-c.top)/c.height*2-1);
-  cam.updateMatrixWorld();marker.object3D.updateMatrixWorld(true);
-  const inv=new TH.Matrix4().copy(marker.object3D.matrixWorld).invert();
+  cam.updateMatrixWorld();
+  const inv=new TH.Matrix4().copy(lastM).invert();
   const o=new TH.Vector3().setFromMatrixPosition(cam.matrixWorld);
   const d=new TH.Vector3(nx,ny,.5).unproject(cam).sub(o).normalize();
   return{o:o.applyMatrix4(inv),d:d.transformDirection(inv)};
@@ -442,7 +445,7 @@ const aw=$('aw');
 aw.addEventListener('pointerup',()=>{tip.t=-1e9;tip.hist=[];tip.vx=tip.vz=0});
 
 // ───────────── reset ─────────────
-function doReset(){X=Z=0;vx=vz=0;push=0;pushing=false;tip.hist=[];tip.vx=tip.vz=0;if(ready){placeBox();arrow.visible=false}flash('Box reset')}
+function doReset(){X=Z=0;vx=vz=0;push=0;pushing=false;pkF=pkV=holdF=holdT=0;tip.hist=[];tip.vx=tip.vz=0;if(ready){placeBox();arrow.visible=false}flash('Box reset')}
 $('rst').addEventListener('click',doReset);
 $('rst').addEventListener('pointerdown',e=>e.stopPropagation());
 
@@ -466,7 +469,7 @@ function tick(now){
   $('rstf').style.width=(dwell/CFG.dwell*100).toFixed(0)+'%';$('rst').classList.toggle('act',onBtn);
   // ---- push: fingertip ray inside the box → force along the finger's horizontal velocity
   let Fx=0,Fz=0,touching=false;pushing=false;
-  if(markerOn&&fr&&!onBtn){
+  if(seen&&fr&&!onBtn){
     const r=rayFromScreen(tip.sx,tip.sy);
     if(r&&hitsBox(r)){
       touching=true;
@@ -479,7 +482,7 @@ function tick(now){
   }
   if(!pushing)push=0;
   // ---- physics (lab units: metres, newtons); only while the marker is visible
-  if(markerOn){
+  if(seen){
     vx+=Fx/M*dt;vz+=Fz/M*dt;
     const sp=Math.hypot(vx,vz);
     if(sp>0){const dec=CFG.mu*G*dt;if(dec>=sp)vx=vz=0;else{vx*=(sp-dec)/sp;vz*=(sp-dec)/sp}}
@@ -491,12 +494,16 @@ function tick(now){
   // ---- force arrow
   if(pushing){
     const ux=Fx/push,uz=Fz/push,ext=Math.min(HX/Math.max(Math.abs(ux),1e-6),HZ/Math.max(Math.abs(uz),1e-6));
-    const L=Math.max(.06,Math.min(.5,push*.004));
-    arrow.position.set(X*S+ux*(ext+.01),HY,Z*S+uz*(ext+.01));arrow.rotation.y=Math.atan2(-uz,ux);
-    aShaft.scale.x=Math.max(L-.07,.001);aHead.position.x=Math.max(L-.07,.001);arrow.visible=true;
+    const L=Math.max(.12,Math.min(.8,push*.006));
+    arrow.position.set(X*S+ux*(ext+.015),HY,Z*S+uz*(ext+.015));arrow.rotation.y=Math.atan2(-uz,ux);
+    aShaft.scale.x=Math.max(L-.1,.001);aHead.position.x=Math.max(L-.1,.001);arrow.visible=true;
   }else arrow.visible=false;
   // ---- HUD
-  $('hs').textContent=Math.hypot(vx,vz).toFixed(2)+' m/s';$('hf').textContent=push.toFixed(0)+' N';
+  if(pushing){holdF=push;holdT=now+2000;if(push>pkF)pkF=push}
+  const shownF=pushing?push:(now<holdT?holdF:0),spd=Math.hypot(vx,vz);if(spd>pkV)pkV=spd;
+  $('hf').textContent=shownF.toFixed(0)+' N';$('hf').classList.toggle('dim',!pushing&&shownF>0);
+  $('hs').textContent=spd.toFixed(2)+' m/s';$('pk').textContent=pkF.toFixed(0)+' N · '+pkV.toFixed(2)+' m/s';
+  $('hud').classList.toggle('hot',pushing);
   // ---- overlay: fingertip cursor
   og.clearRect(0,0,innerWidth,innerHeight);
   if(fr){
