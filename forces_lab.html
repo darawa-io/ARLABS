@@ -260,7 +260,7 @@ T.forEach((t,i)=>{const b=document.createElement('button');b.className='tb';b.da
 const qb=document.createElement('button');qb.className='tb';qb.textContent='🧠 Test Yourself';qb.onclick=()=>{document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));qb.classList.add('on');$('chal').classList.remove('show');$('types').classList.remove('show');tvRestore();startQuiz()};$('tabs').appendChild(qb);
 
 // ---------- AR Push: push the 10 kg box with your finger (Hiro marker + hand tracking), runs in this page like the other AR lab ----------
-const ARP_CSS="#arp #ap_aw{position:fixed;inset:0;z-index:1}\n#arp #ap_aw a-scene{position:absolute!important;inset:0;width:100%!important;height:100%!important}\n#arp #ap_ov{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}\n#arp .pill{position:fixed;z-index:10;padding:6px 14px;border-radius:16px;background:rgba(7,9,15,.88);border:1px solid rgba(180,200,255,.28);font:12px 'Space Mono',ui-monospace,Menlo,monospace;white-space:nowrap;pointer-events:none;display:none}\n#arp.run .pill{display:block}\n#arp #ap_st{top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);letter-spacing:1px;color:#ffb400;border-color:rgba(255,180,0,.45)}\n#arp #ap_st.ok{color:#4dffa0;border-color:rgba(77,255,160,.5)}\n#arp #ap_hp{top:calc(46px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);color:#c9dcf5}\n#arp #ap_hud{top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));line-height:1.7;color:#c9dcf5}\n#arp #ap_hud b{color:#fff}#ap_hud .f{color:#ff9a4a}\n#arp .btn{position:fixed;z-index:12;display:none;border:1px solid rgba(180,200,255,.4);background:rgba(7,9,15,.88);color:#fff;font:700 15px 'DM Sans',-apple-system,system-ui,sans-serif;border-radius:32px;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent}\n#arp.run .btn{display:block}\n#arp #ap_ex{top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:44px;height:44px;border-radius:50%;font-size:18px}\n#arp #ap_rst{left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:170px;height:68px;border-color:rgba(255,200,87,.7);color:#ffc857;font-size:19px}\n#arp #ap_rst i{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(77,255,160,.38)}\n#arp #ap_rst span{position:relative}\n#arp #ap_rst.act{border-color:#4dffa0}\n#arp #ap_mod{position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:94vh;overflow:auto;background:rgba(7,9,15,.97);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:22px 24px;text-align:center;font:12px/1.8 'Space Mono',ui-monospace,Menlo,monospace;color:#4dffa0}\n#arp #ap_mod h1{font:700 17px 'DM Sans',system-ui,sans-serif;color:#fff;margin:0 0 8px}\n#arp #ap_mod img{width:140px;height:140px;display:block;margin:6px auto 8px;border:6px solid #fff;background:#fff;border-radius:4px}\n#arp #ap_mod ol{text-align:left;color:rgba(255,255,255,.82);margin:8px 0 12px;padding-left:20px}\n#arp #ap_mod .go{padding:11px 30px;border-radius:30px;border:1px solid rgba(77,255,160,.7);background:rgba(77,255,160,.18);color:#4dffa0;font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer}\n#arp #ap_mod .x{position:absolute;top:8px;right:12px;background:none;border:none;color:rgba(255,255,255,.55);font-size:20px;cursor:pointer}\n#arp #ap_flash{position:fixed;z-index:11;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:8px 18px;border-radius:20px;background:rgba(77,255,160,.2);border:1px solid rgba(77,255,160,.6);color:#4dffa0;font:700 13px 'DM Sans',system-ui,sans-serif;opacity:0;transition:opacity .25s;pointer-events:none}\n#arp{position:fixed;inset:0;z-index:300;font:14px/1.45 -apple-system,'DM Sans',system-ui,sans-serif;color:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}\n#arp *{box-sizing:border-box}\nhtml.arp-on{background:#07090f!important}\nhtml.arp-on body{background:transparent!important}\nhtml.arp-on body>*:not(#arp):not(#arjs-video){display:none!important}\n\n#arp #ap_hud.hot{border-color:#ff9a4a;background:rgba(60,28,5,.92)}\n#arp #ap_hud .dim{opacity:.65}\n#arp #ap_hud b{margin-left:4px}",ARP_HTML="<div id=\"ap_aw\"><\/div>\n<canvas id=\"ap_ov\"><\/canvas>\n<div id=\"ap_st\" class=\"pill\">🔍 SCANNING FOR MARKER…<\/div>\n<div id=\"ap_hp\" class=\"pill\">✋ Hand tracking: loading…<\/div>\n<div id=\"ap_hud\" class=\"pill\">Box mass <b>10 kg</b><br>Force on box <b class=\"f\" id=\"ap_hf\">0 N<\/b><br>Box speed <b id=\"ap_hs\">0.00 m/s<\/b><br><span class=\"dim\">Peak <b id=\"ap_pk\">0 N · 0.00 m/s<\/b><\/span><\/div>\n<button id=\"ap_ex\" class=\"btn\" title=\"Exit AR\">✕<\/button>\n<button id=\"ap_rst\" class=\"btn\"><i id=\"ap_rstf\"><\/i><span id=\"ap_rstl\">↺ Reset<\/span><\/button>\n<div id=\"ap_flash\"><\/div>\n<div id=\"ap_mod\">\n  <button class=\"x\" id=\"ap_mx\" title=\"Close\">✕<\/button>\n  <h1>AR Push<\/h1>\n  <div id=\"ap_s1\">\n    Print or display the Hiro marker flat on a table:\n    <img src=\"https://ar-js-org.github.io/AR.js/data/images/hiro.png\" alt=\"Hiro marker\" onerror=\"this.style.display='none'\">\n    <ol>\n      <li>Tap <b>Start camera<\/b> and point the iPad at the marker.<\/li>\n      <li>A 10&nbsp;kg box appears on the marker.<\/li>\n      <li>Move your <b>index finger<\/b> through the box, from the side. The faster you move, the bigger the push.<\/li>\n      <li>Hold your finger on <b>Reset<\/b> (or tap it) to put the box back.<\/li>\n    <\/ol>\n    <button class=\"go\" id=\"ap_go\">Start camera<\/button>\n  <\/div>\n  <div id=\"ap_s2\" style=\"display:none\">⏳ Loading AR engine…<br><small style=\"color:rgba(77,255,160,.55)\">(first load ~5–10 s)<\/small><\/div>\n  <div id=\"ap_s3\" style=\"display:none\"><\/div>\n<\/div>";
+const ARP_CSS="#arp #ap_aw{position:fixed;inset:0;z-index:1}\n#arp #ap_aw a-scene{position:absolute!important;inset:0;width:100%!important;height:100%!important}\n#arp #ap_ov{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}\n#arp .pill{position:fixed;z-index:10;padding:6px 14px;border-radius:16px;background:rgba(7,9,15,.88);border:1px solid rgba(180,200,255,.28);font:12px 'Space Mono',ui-monospace,Menlo,monospace;white-space:nowrap;pointer-events:none;display:none}\n#arp.run .pill{display:block}\n#arp #ap_st{top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);letter-spacing:1px;color:#ffb400;border-color:rgba(255,180,0,.45)}\n#arp #ap_st.ok{color:#4dffa0;border-color:rgba(77,255,160,.5)}\n#arp #ap_hp{top:calc(46px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);color:#c9dcf5}\n#arp #ap_hud{top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));line-height:1.7;color:#c9dcf5}\n#arp #ap_hud b{color:#fff}#ap_hud .f{color:#ff9a4a}\n#arp .btn{position:fixed;z-index:12;display:none;border:1px solid rgba(180,200,255,.4);background:rgba(7,9,15,.88);color:#fff;font:700 15px 'DM Sans',-apple-system,system-ui,sans-serif;border-radius:32px;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent}\n#arp.run .btn{display:block}\n#arp #ap_ex{top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:44px;height:44px;border-radius:50%;font-size:18px}\n#arp #ap_rst{left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:170px;height:68px;border-color:rgba(255,200,87,.7);color:#ffc857;font-size:19px}\n#arp #ap_rst i{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(77,255,160,.38)}\n#arp #ap_rst span{position:relative}\n#arp #ap_rst.act{border-color:#4dffa0}\n#arp #ap_mod{position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:94vh;overflow:auto;background:rgba(7,9,15,.97);border:1px solid rgba(77,255,160,.35);border-radius:18px;padding:22px 24px;text-align:center;font:12px/1.8 'Space Mono',ui-monospace,Menlo,monospace;color:#4dffa0}\n#arp #ap_mod h1{font:700 17px 'DM Sans',system-ui,sans-serif;color:#fff;margin:0 0 8px}\n#arp #ap_mod img{width:140px;height:140px;display:block;margin:6px auto 8px;border:6px solid #fff;background:#fff;border-radius:4px}\n#arp #ap_mod ol{text-align:left;color:rgba(255,255,255,.82);margin:8px 0 12px;padding-left:20px}\n#arp #ap_mod .go{padding:11px 30px;border-radius:30px;border:1px solid rgba(77,255,160,.7);background:rgba(77,255,160,.18);color:#4dffa0;font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer}\n#arp #ap_mod .x{position:absolute;top:8px;right:12px;background:none;border:none;color:rgba(255,255,255,.55);font-size:20px;cursor:pointer}\n#arp #ap_flash{position:fixed;z-index:11;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:8px 18px;border-radius:20px;background:rgba(77,255,160,.2);border:1px solid rgba(77,255,160,.6);color:#4dffa0;font:700 13px 'DM Sans',system-ui,sans-serif;opacity:0;transition:opacity .25s;pointer-events:none}\n#arp{position:fixed;inset:0;z-index:300;font:14px/1.45 -apple-system,'DM Sans',system-ui,sans-serif;color:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}\n#arp *{box-sizing:border-box}\nhtml.arp-on{background:#07090f!important}\nhtml.arp-on body{background:transparent!important}\nhtml.arp-on body>*:not(#arp):not(#arjs-video){display:none!important}\n\n#arp #ap_hud.hot{border-color:#ff9a4a;background:rgba(60,28,5,.92)}\n#arp #ap_hud .dim{opacity:.65}\n#arp #ap_hud b{margin-left:4px}\n#arp #ap_dg{top:calc(80px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);color:#c9dcf5}",ARP_HTML="<div id=\"ap_aw\"><\/div>\n<canvas id=\"ap_ov\"><\/canvas>\n<div id=\"ap_st\" class=\"pill\">🔍 SCANNING FOR MARKER…<\/div>\n<div id=\"ap_hp\" class=\"pill\">✋ Hand tracking: loading…<\/div><div id=\"ap_dg\" class=\"pill\"><\/div>\n<div id=\"ap_hud\" class=\"pill\">Box mass <b>10 kg</b><br>Force on box <b class=\"f\" id=\"ap_hf\">0 N<\/b><br>Box speed <b id=\"ap_hs\">0.00 m/s<\/b><br><span class=\"dim\">Peak <b id=\"ap_pk\">0 N · 0.00 m/s<\/b><\/span><\/div>\n<button id=\"ap_ex\" class=\"btn\" title=\"Exit AR\">✕<\/button>\n<button id=\"ap_rst\" class=\"btn\"><i id=\"ap_rstf\"><\/i><span id=\"ap_rstl\">↺ Reset<\/span><\/button>\n<div id=\"ap_flash\"><\/div>\n<div id=\"ap_mod\">\n  <button class=\"x\" id=\"ap_mx\" title=\"Close\">✕<\/button>\n  <h1>AR Push<\/h1>\n  <div id=\"ap_s1\">\n    Print or display the Hiro marker flat on a table:\n    <img src=\"https://ar-js-org.github.io/AR.js/data/images/hiro.png\" alt=\"Hiro marker\" onerror=\"this.style.display='none'\">\n    <ol>\n      <li>Tap <b>Start camera<\/b> and point the iPad at the marker.<\/li>\n      <li>A 10&nbsp;kg box appears on the marker.<\/li>\n      <li>Move your <b>index finger<\/b> through the box, from the side. The faster you move, the bigger the push.<\/li>\n      <li>Hold your finger on <b>Reset<\/b> (or tap it) to put the box back.<\/li>\n    <\/ol>\n    <button class=\"go\" id=\"ap_go\">Start camera<\/button>\n  <\/div>\n  <div id=\"ap_s2\" style=\"display:none\">⏳ Loading AR engine…<br><small style=\"color:rgba(77,255,160,.55)\">(first load ~5–10 s)<\/small><\/div>\n  <div id=\"ap_s3\" style=\"display:none\"><\/div>\n<\/div>";
 let arpHL=null,arpDispose=null,arpLab=null,arpUsed=false,arpTabIdx=0;
 function startARPush(){
 let alive=true;
@@ -268,13 +268,14 @@ let alive=true;
 // ───────────── settings ─────────────
 const CFG={
   mass:10,          // kg
-  scale:.4,         // marker units per lab metre (box size: 0.4 makes the box a bit bigger than the marker)
+  scale:.6,         // marker units per lab metre (box size on the marker: 0.6 = about 1.7 marker-widths long)
+  tipR:16,          // px: how close the fingertip must be to the box outline to count as touching it
   mu:.08,           // sliding friction coefficient (box slows down by itself)
   kf:25,            // N per (marker-width/s) of finger speed
   fmax:80,          // N, largest push force
-  vmin:.3,          // marker-widths/s, slower finger movement is ignored
+  vmin:.2,          // marker-widths/s, slower finger movement is ignored
   dwell:.7,         // s the finger must stay on the Reset button
-  wall:1.6,         // marker units: the box stops here (keeps it in view)
+  wall:2.2,         // marker units: the box stops here (keeps it in view)
   resetLabel:'↺ Reset',
   vision:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs',
   wasm:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm',
@@ -290,7 +291,7 @@ $('rstl').textContent=CFG.resetLabel;
 let TH,sceneEl,marker,root,box,arrow,aShaft,aHead,markerOn=false,ready=false;
 let X=0,Z=0,vx=0,vz=0,push=0,pushing=false,lastT=performance.now();
 let hand='loading',HL=null,lastVT=-1;
-const tip={sx:0,sy:0,t:-1e9,src:'',lm:null,hist:[],vx:0,vz:0};   // fingertip in screen px, plus velocity on the table plane
+const tip={sx:0,sy:0,t:-1e9,src:'',lm:null,hist:[],vx:0,vz:0,svx:0,svy:0};   // fingertip in screen px, plus velocity on the table plane
 let dwell=0,lock=false,flashT=0,lastM=null,seen=false,pkF=0,pkV=0,holdF=0,holdT=0;
 
 // ───────────── UI helpers ─────────────
@@ -370,31 +371,43 @@ function buildContent(){
 }
 function placeBox(){box.position.set(X*S,HY,Z*S)}
 
-// ───────────── screen → marker geometry ─────────────
-function rayFromScreen(sx,sy){
-  if(!ready||!seen||!sceneEl.camera||!sceneEl.canvas)return null;
-  const c=sceneEl.canvas.getBoundingClientRect(),cam=sceneEl.camera;
-  const nx=(sx-c.left)/c.width*2-1,ny=-((sy-c.top)/c.height*2-1);
-  cam.updateMatrixWorld();
-  const inv=new TH.Matrix4().copy(lastM).invert();
-  const o=new TH.Vector3().setFromMatrixPosition(cam.matrixWorld);
-  const d=new TH.Vector3(nx,ny,.5).unproject(cam).sub(o).normalize();
-  return{o:o.applyMatrix4(inv),d:d.transformDirection(inv)};
+// ───────────── marker ↔ screen geometry (done on screen, with the same projection the renderer uses) ─────────────
+function toScreen(x,y,z){            // marker coordinates → screen px
+  const cam=sceneEl.camera,c=sceneEl.canvas.getBoundingClientRect();
+  cam.updateMatrixWorld();cam.matrixWorldInverse.copy(cam.matrixWorld).invert();
+  const v=new TH.Vector3(x,y,z).applyMatrix4(lastM).applyMatrix4(cam.matrixWorldInverse);
+  if(v.z>=0)return null;                                   // behind the camera
+  v.applyMatrix4(cam.projectionMatrix);
+  return{x:c.left+(v.x+1)/2*c.width,y:c.top+(1-v.y)/2*c.height};
 }
-function hitsBox(r){        // ray against the box (slab test), marker coordinates
-  const lo=[X*S-HX,0,Z*S-HZ],hi=[X*S+HX,2*HY,Z*S+HZ],o=[r.o.x,r.o.y,r.o.z],d=[r.d.x,r.d.y,r.d.z];
-  let t0=0,t1=1e9;
-  for(let i=0;i<3;i++){
-    if(Math.abs(d[i])<1e-9){if(o[i]<lo[i]||o[i]>hi[i])return false;continue}
-    let a=(lo[i]-o[i])/d[i],b=(hi[i]-o[i])/d[i];if(a>b)[a,b]=[b,a];
-    t0=Math.max(t0,a);t1=Math.min(t1,b);if(t0>t1)return false;
+let hull=[],jac=null;
+function refreshGeom(){              // outline of the box on screen, and how table movement maps to screen movement
+  const pts=[],xs=X*S,zs=Z*S;
+  for(const dx of[-HX,HX])for(const dy of[0,2*HY])for(const dz of[-HZ,HZ]){const p=toScreen(xs+dx,dy,zs+dz);if(p)pts.push(p)}
+  pts.sort((a,b)=>a.x-b.x||a.y-b.y);
+  const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
+  const lo=[],up=[];
+  for(const p of pts){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
+  for(let i=pts.length-1;i>=0;i--){const p=pts[i];while(up.length>1&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}
+  lo.pop();up.pop();hull=lo.concat(up);
+  const e=.1,p0=toScreen(xs,HY,zs),px=toScreen(xs+e,HY,zs),pz=toScreen(xs,HY,zs+e);
+  jac=p0&&px&&pz?{ax:(px.x-p0.x)/e,ay:(px.y-p0.y)/e,bx:(pz.x-p0.x)/e,by:(pz.y-p0.y)/e}:null;   // screen px per marker unit along x and z
+}
+function nearHull(px,py,R){          // is the fingertip on the box outline (or within R px of it)?
+  const h=hull;if(h.length<3)return false;
+  let inside=true,dmin=1e9;
+  for(let i=0;i<h.length;i++){
+    const a=h[i],b=h[(i+1)%h.length],ex=b.x-a.x,ey=b.y-a.y;
+    if(ex*(py-a.y)-ey*(px-a.x)<0)inside=false;
+    const t=Math.max(0,Math.min(1,((px-a.x)*ex+(py-a.y)*ey)/(ex*ex+ey*ey||1)));
+    dmin=Math.min(dmin,Math.hypot(px-a.x-t*ex,py-a.y-t*ey));
   }
-  return true;
+  return inside||dmin<=R;
 }
-function planePoint(r){      // where the ray crosses the horizontal plane through the middle of the box
-  if(Math.abs(r.d.y)<1e-6)return null;
-  const t=(HY-r.o.y)/r.d.y;if(t<0)return null;
-  return{x:r.o.x+r.d.x*t,z:r.o.z+r.d.z*t};
+function toTable(svx,svy){           // finger velocity on screen (px/s) → horizontal velocity on the table (marker-widths/s)
+  if(!jac)return null;
+  const det=jac.ax*jac.by-jac.bx*jac.ay;if(Math.abs(det)<1)return null;   // camera looking along the table: cannot tell
+  return[(jac.by*svx-jac.bx*svy)/det,(-jac.ay*svx+jac.ax*svy)/det];
 }
 
 // ───────────── fingertip input ─────────────
@@ -402,14 +415,10 @@ function setTip(sx,sy,src,lm){
   const now=performance.now();
   if(tip.src===src&&now-tip.t<200){sx=tip.sx+(sx-tip.sx)*.6;sy=tip.sy+(sy-tip.sy)*.6}   // light smoothing
   tip.sx=sx;tip.sy=sy;tip.t=now;tip.src=src;tip.lm=lm||null;
-  const r=rayFromScreen(sx,sy),p=r&&planePoint(r);
-  if(!p){tip.hist=[];tip.vx=tip.vz=0;return}
-  tip.hist.push({t:now,x:p.x,z:p.z});while(tip.hist.length&&now-tip.hist[0].t>220)tip.hist.shift();
-  const h=tip.hist;if(h.length<2){tip.vx=tip.vz=0;return}
-  let a=h[0];for(const q of h){if(now-q.t>=90){a=q}else break}   // sample about 100–200 ms ago: less jitter
+  const h=tip.hist;h.push({t:now,x:sx,y:sy});while(h.length&&now-h[0].t>220)h.shift();
+  let a=h[0];for(const q of h){if(now-q.t>=90){a=q}else break}    // compare with a position about 100–200 ms ago: less jitter
   const dt=(now-a.t)/1000;
-  if(dt<.05){return}
-  tip.vx=(p.x-a.x)/dt;tip.vz=(p.z-a.z)/dt;                        // marker-widths per second
+  if(dt>=.05){tip.svx=(sx-a.x)/dt;tip.svy=(sy-a.y)/dt}
 }
 const fresh=()=>performance.now()-tip.t<180;
 
@@ -419,7 +428,7 @@ async function initHands(){
     if(arpHL){HL=arpHL;setHand('ready');requestAnimationFrame(handLoop);return}
     const mod=await import(CFG.vision);
     const fs=await mod.FilesetResolver.forVisionTasks(CFG.wasm);
-    const mk=d=>mod.HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:CFG.model,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.5,minHandPresenceConfidence:.5,minTrackingConfidence:.5});
+    const mk=d=>mod.HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:CFG.model,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.4,minHandPresenceConfidence:.4,minTrackingConfidence:.4});
     try{HL=await mk('GPU')}catch(e){HL=await mk('CPU')}
     arpHL=HL;setHand('ready');
     requestAnimationFrame(handLoop);
@@ -428,10 +437,11 @@ async function initHands(){
 function handLoop(){
   if(!alive)return;
   requestAnimationFrame(handLoop);
+  const now=performance.now();if(now-lastVT<30)return;        // about 30 detections per second at most
   const v=document.querySelector('video');
-  if(!HL||!v||v.readyState<2||!v.videoWidth||v.currentTime===lastVT)return;
-  lastVT=v.currentTime;
-  let res;try{res=HL.detectForVideo(v,performance.now())}catch(e){return}
+  if(!HL||!v||v.readyState<2||!v.videoWidth)return;
+  lastVT=now;
+  let res;try{res=HL.detectForVideo(v,now)}catch(e){return}
   const lm=res&&res.landmarks&&res.landmarks[0];
   if(!lm){if(hand==='seen')setHand('ready');return}
   if(hand!=='seen')setHand('seen');
@@ -442,10 +452,10 @@ function handLoop(){
 // fallback when the hand tracker cannot run: a finger/mouse dragged on the screen acts as the fingertip
 const aw=$('aw');
 ['pointerdown','pointermove'].forEach(ev=>aw.addEventListener(ev,e=>{if(hand!=='failed')return;if(ev==='pointermove'&&!e.buttons&&e.pointerType==='mouse')return;setTip(e.clientX,e.clientY,'ptr')}));
-aw.addEventListener('pointerup',()=>{tip.t=-1e9;tip.hist=[];tip.vx=tip.vz=0});
+aw.addEventListener('pointerup',()=>{tip.t=-1e9;tip.hist=[];tip.vx=tip.vz=tip.svx=tip.svy=0});
 
 // ───────────── reset ─────────────
-function doReset(){X=Z=0;vx=vz=0;push=0;pushing=false;pkF=pkV=holdF=holdT=0;tip.hist=[];tip.vx=tip.vz=0;if(ready){placeBox();arrow.visible=false}flash('Box reset')}
+function doReset(){X=Z=0;vx=vz=0;push=0;pushing=false;pkF=pkV=holdF=holdT=0;tip.hist=[];tip.vx=tip.vz=tip.svx=tip.svy=0;if(ready){placeBox();arrow.visible=false}flash('Box reset')}
 $('rst').addEventListener('click',doReset);
 $('rst').addEventListener('pointerdown',e=>e.stopPropagation());
 
@@ -467,19 +477,27 @@ function tick(now){
   const onBtn=fr&&tip.sx>b.left-pad&&tip.sx<b.right+pad&&tip.sy>b.top-pad&&tip.sy<b.bottom+pad;
   if(onBtn){if(!lock){dwell+=dt;if(dwell>=CFG.dwell){doReset();lock=true;dwell=0}}}else{dwell=0;lock=false}
   $('rstf').style.width=(dwell/CFG.dwell*100).toFixed(0)+'%';$('rst').classList.toggle('act',onBtn);
-  // ---- push: fingertip ray inside the box → force along the finger's horizontal velocity
-  let Fx=0,Fz=0,touching=false;pushing=false;
-  if(seen&&fr&&!onBtn){
-    const r=rayFromScreen(tip.sx,tip.sy);
-    if(r&&hitsBox(r)){
-      touching=true;
+  // ---- push: fingertip on the box (as seen on screen) → force along the finger's horizontal movement
+  let Fx=0,Fz=0,touching=false,diag='';pushing=false;
+  if(seen){refreshGeom()}
+  if(!seen)diag='Point the camera at the marker';
+  else if(!fr)diag=hand==='failed'?'Drag your finger on the screen':'No hand in view: show your index finger';
+  else if(onBtn)diag='Finger on Reset: hold…';
+  else{
+    touching=nearHull(tip.sx,tip.sy,CFG.tipR);
+    if(!touching)diag='Finger is not on the box';
+    else{
+      const v=toTable(tip.svx,tip.svy);
+      if(v){tip.vx=v[0];tip.vz=v[1]}else{tip.vx=tip.vz=0}
       const sp=Math.hypot(tip.vx,tip.vz);
       if(sp>CFG.vmin){
         const ux=tip.vx/sp,uz=tip.vz/sp,rel=sp-(vx*ux+vz*uz)*S;   // finger speed minus box speed along the push (marker-widths/s)
         if(rel>0){const f=Math.min(CFG.kf*rel,CFG.fmax);Fx=f*ux;Fz=f*uz;pushing=true;push=f}
-      }
+        diag='Pushing!'
+      }else diag='Finger on the box: move faster ('+sp.toFixed(1)+' of '+CFG.vmin+')';
     }
   }
+  $('dg').textContent=diag;$('dg').style.color=pushing?'#ff9a4a':touching?'#4dffa0':'#c9dcf5';
   if(!pushing)push=0;
   // ---- physics (lab units: metres, newtons); only while the marker is visible
   if(seen){
@@ -507,6 +525,7 @@ function tick(now){
   // ---- overlay: fingertip cursor
   og.clearRect(0,0,innerWidth,innerHeight);
   if(fr){
+    if(hull.length>2){og.beginPath();hull.forEach((p,i)=>i?og.lineTo(p.x,p.y):og.moveTo(p.x,p.y));og.closePath();og.setLineDash([6,6]);og.lineWidth=2;og.strokeStyle=touching?'rgba(77,255,160,.9)':'rgba(255,255,255,.4)';og.stroke();og.setLineDash([])}
     if(tip.lm){og.fillStyle='rgba(255,255,255,.55)';tip.lm.forEach(p=>{og.beginPath();og.arc(p.x,p.y,3,0,6.283);og.fill()})}
     og.lineWidth=3;og.strokeStyle=touching?'#4dffa0':'#ffffff';og.fillStyle=touching?'rgba(77,255,160,.3)':'rgba(255,255,255,.18)';
     og.beginPath();og.arc(tip.sx,tip.sy,16,0,6.283);og.fill();og.stroke();
