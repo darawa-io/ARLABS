@@ -278,6 +278,8 @@ const CFG={
   dwell:.7,         // s the finger must stay on the Reset button
   wall:2.2,         // marker units: the box stops here (keeps it in view)
   resetLabel:'↺ Reset',
+  handOn:!/arhand=off/.test(location.search),   // add ?arhand=off to the page address to switch hand tracking off (drag on screen instead)
+  handDelegate:'CPU',                           // 'CPU' is the safest: no second graphics context competing with the AR view ('GPU' is faster on some devices)
   vision:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs',
   wasm:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm',
   model:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'
@@ -293,11 +295,12 @@ let TH,sceneEl,marker,root,box,arrow,aShaft,aHead,markerOn=false,ready=false;
 let X=0,Z=0,vx=0,vz=0,push=0,pushing=false,lastT=performance.now();
 let hand='loading',HL=null,lastVT=-1;
 const tip={sx:0,sy:0,t:-1e9,src:'',lm:null,hist:[],vx:0,vz:0,svx:0,svy:0};   // fingertip in screen px, plus velocity on the table plane
+const arpT0=performance.now();
 let dwell=0,lock=false,flashT=0,lastM=null,seen=false,pkF=0,pkV=0,holdF=0,holdT=0;
 
 // ───────────── UI helpers ─────────────
 function status(txt,ok){const s=$('st');s.textContent=txt;s.classList.toggle('ok',!!ok)}
-function setHand(state){hand=state;const t={loading:'✋ Hand tracking: loading…',ready:'✋ Show your index finger to the camera',seen:'✋ Hand detected',failed:'☝️ Hand tracking unavailable: drag on the screen'};$('hp').textContent=t[state]||state}
+function setHand(state){hand=state;const t={waiting:'✋ Hand tracking starts when the marker is found…',loading:'✋ Hand tracking: loading…',ready:'✋ Show your index finger to the camera',seen:'✋ Hand detected',failed:'☝️ Hand tracking unavailable: drag on the screen',off:'☝️ Hand tracking switched off: drag on the screen'};$('hp').textContent=t[state]||state}
 function flash(msg){const f=$('flash');f.textContent=msg;f.style.opacity=1;flashT=performance.now()+1300}
 function exitAR(){closeAR()}
 $('ex').onclick=exitAR;$('mx').onclick=exitAR;
@@ -327,7 +330,7 @@ $('go').onclick=()=>{
   $('s1').style.display='none';$('s2').style.display='';
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camFail({name:'SecurityError'});return}
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false})
-    .then(s=>{s.getTracks().forEach(t=>t.stop());loadLibs()}).catch(camFail);
+    .then(s=>{s.getTracks().forEach(t=>t.stop());setTimeout(loadLibs,350)}).catch(camFail);   // short pause: iOS needs a moment to release the camera
 };
 
 // ───────────── AR scene ─────────────
@@ -345,11 +348,12 @@ function buildScene(){
   const mk=document.createElement('a-marker');
   mk.setAttribute('preset','hiro');mk.setAttribute('smooth','true');mk.setAttribute('smoothCount','5');
   mk.setAttribute('smoothTolerance','0.01');mk.setAttribute('smoothThreshold','2');
-  mk.addEventListener('markerFound',()=>{markerOn=true;status('✅ MARKER DETECTED',true)});
+  mk.addEventListener('markerFound',()=>{markerOn=true;status('✅ MARKER DETECTED',true);setTimeout(startHands,800)});
   mk.addEventListener('markerLost',()=>{markerOn=false;status(seen?'👆 MARKER COVERED: holding position':'🔍 SCANNING…',false)});
   sc.appendChild(mk);wrap.appendChild(sc);
   sceneEl=sc;marker=mk;
-  const go=()=>{buildContent();$('mod').style.display='none';document.getElementById('arp').classList.add('run');status('🔍 SCANNING FOR MARKER…',false);setHand('loading');initHands();requestAnimationFrame(tick)};
+  const go=()=>{buildContent();$('mod').style.display='none';document.getElementById('arp').classList.add('run');status('🔍 SCANNING FOR MARKER…',false);setHand('waiting');setTimeout(startHands,6000);requestAnimationFrame(tick);
+    if(sc.canvas)sc.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();status('⚠️ GRAPHICS LOST: close other tabs/apps, then reopen AR Push',false)})};
   sc.hasLoaded?go():sc.addEventListener('loaded',go);
 }
 function buildContent(){
@@ -424,13 +428,17 @@ function setTip(sx,sy,src,lm){
 const fresh=()=>performance.now()-tip.t<180;
 
 // hand tracking (MediaPipe Hand Landmarker on the camera video)
+let handStarted=false;
+function startHands(){if(handStarted||!alive)return;handStarted=true;initHands()}
 async function initHands(){
   try{
+    if(!CFG.handOn){setHand('off');return}
+    setHand('loading');
     if(arpHL){HL=arpHL;setHand('ready');requestAnimationFrame(handLoop);return}
     const mod=await import(CFG.vision);
     const fs=await mod.FilesetResolver.forVisionTasks(CFG.wasm);
     const mk=d=>mod.HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:CFG.model,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.4,minHandPresenceConfidence:.4,minTrackingConfidence:.4});
-    try{HL=await mk('GPU')}catch(e){HL=await mk('CPU')}
+    try{HL=await mk(CFG.handDelegate)}catch(e){HL=await mk(CFG.handDelegate==='CPU'?'GPU':'CPU')}
     arpHL=HL;setHand('ready');
     requestAnimationFrame(handLoop);
   }catch(e){console.warn('hand tracking failed',e);setHand('failed')}
@@ -438,7 +446,7 @@ async function initHands(){
 function handLoop(){
   if(!alive)return;
   requestAnimationFrame(handLoop);
-  const now=performance.now();if(now-lastVT<30)return;        // about 30 detections per second at most
+  const now=performance.now();if(now-lastVT<50)return;        // about 20 detections per second at most (leaves time for the AR view)
   const v=document.querySelector('video');
   if(!HL||!v||v.readyState<2||!v.videoWidth)return;
   lastVT=now;
@@ -452,7 +460,7 @@ function handLoop(){
 }
 // fallback when the hand tracker cannot run: a finger/mouse dragged on the screen acts as the fingertip
 const aw=$('aw');
-['pointerdown','pointermove'].forEach(ev=>aw.addEventListener(ev,e=>{if(hand!=='failed')return;if(ev==='pointermove'&&!e.buttons&&e.pointerType==='mouse')return;setTip(e.clientX,e.clientY,'ptr')}));
+['pointerdown','pointermove'].forEach(ev=>aw.addEventListener(ev,e=>{if(hand!=='failed'&&hand!=='off')return;if(ev==='pointermove'&&!e.buttons&&e.pointerType==='mouse')return;setTip(e.clientX,e.clientY,'ptr')}));
 aw.addEventListener('pointerup',()=>{tip.t=-1e9;tip.hist=[];tip.vx=tip.vz=tip.svx=tip.svy=0});
 
 // ───────────── reset ─────────────
@@ -481,8 +489,10 @@ function tick(now){
   // ---- push: fingertip on the box (as seen on screen) → force along the finger's horizontal movement
   let Fx=0,Fz=0,touching=false,diag='';pushing=false;
   if(seen){refreshGeom()}
-  if(!seen)diag='Point the camera at the marker';
-  else if(!fr)diag=hand==='failed'?'Drag your finger on the screen':'No hand in view: show your index finger';
+  const cv=document.querySelector('video'),camOK=cv&&cv.readyState>=2&&cv.videoWidth>0;
+  if(!camOK)diag=now-arpT0>6000?'No camera picture: close other apps/tabs using the camera, tap ✕ and open AR Push again':'Waiting for the camera picture…';
+  else if(!seen)diag='Point the camera at the marker';
+  else if(!fr)diag=(hand==='failed'||hand==='off')?'Drag your finger on the screen':'No hand in view: show your index finger';
   else if(onBtn)diag='Finger on Reset: hold…';
   else{
     touching=nearHull(tip.sx,tip.sy,CFG.tipR);
