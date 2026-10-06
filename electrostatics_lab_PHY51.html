@@ -117,11 +117,74 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   #tabbar{max-width:calc(100vw - 20px);top:60px;left:14px;transform:none;}
   #title{position:absolute;}
 }
+
+/* foldable panels */
+#infoPanel h2,#hud h2{cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;}
+#infoPanel h2::after,#hud h2::after{content:'\25BE';font-size:12px;}
+.folded h2::after{content:'\25B8' !important;}
+.folded>*:not(h2){display:none !important;}
+.folded h2{margin-bottom:0 !important;border-bottom:none !important;padding-bottom:0 !important;}
+/* right column + 2D view */
+#rightCol{position:absolute;top:70px;right:14px;width:230px;z-index:10;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 150px);overflow-y:auto;}
+#rightCol #hud{position:static;top:auto;right:auto;max-height:none;overflow:visible;flex-shrink:0;}
+#view2d{background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:10px;display:none;flex-direction:column;gap:7px;flex-shrink:0;}
+#view2d.show{display:flex;}
+.v2head{display:flex;justify-content:space-between;align-items:center;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;}
+.v2head button{background:none;border:1px solid var(--border);color:var(--blue);border-radius:7px;cursor:pointer;font-size:12px;padding:1px 7px;margin-left:4px;}
+.v2modes{display:flex;flex-wrap:wrap;gap:4px;}
+.btn.mini{padding:4px 8px;font-size:10px;}
+#v2canvas{display:block;width:100%;height:170px;border-radius:10px;}
+#view2d.big{position:fixed;left:10vw;top:10vh;width:80vw;height:80vh;z-index:30;padding:14px;box-shadow:0 0 0 100vmax rgba(4,6,18,.55);}
+#view2d.big #v2canvas{flex:1;height:auto;min-height:0;}
+#view2d.big .btn.mini{font-size:12px;padding:6px 12px;}
+#v2-restore{display:none;}
+#view2d.big #v2-restore{display:inline-block;}
+#view2d.big #v2-expand{display:none;}
+/* quiz */
+#quiz{position:fixed;inset:70px 0 0 0;z-index:9;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;touch-action:pan-y;padding:16px;background:rgba(7,9,15,.88);}
+#quiz-box{background:rgba(13,17,32,.97);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:660px;width:100%;}
+.qz-meta{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--amber);margin-bottom:8px;display:flex;justify-content:space-between;}
+.qz-bar{height:4px;border-radius:3px;background:rgba(180,200,255,.1);margin-bottom:16px;overflow:hidden;}
+.qz-bar i{display:block;height:100%;background:var(--blue);transition:width .3s;}
+.qz-q{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:14px;line-height:1.4;}
+.qz-opt{display:block;width:100%;text-align:left;padding:11px 14px;margin-bottom:8px;border-radius:11px;border:1px solid rgba(180,200,255,.2);background:rgba(180,200,255,.05);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+.qz-opt:hover:not(:disabled){background:rgba(91,200,255,.14);}
+.qz-opt.ok{border-color:var(--green);background:rgba(77,255,160,.14);}
+.qz-opt.bad{border-color:var(--red);background:rgba(255,94,114,.14);}
+.qz-exp{margin:10px 0;padding:10px 12px;border-radius:10px;background:rgba(255,200,87,.07);border:1px solid rgba(255,200,87,.25);font-size:12px;line-height:1.6;color:rgba(230,236,255,.9);}
+.qz-score{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:#fff;margin:6px 0;}
+@media (max-width:820px){#rightCol{top:100px;width:190px;max-height:calc(100vh - 190px);}#rightCol #hud{width:auto;top:auto;}#view2d.big{left:3vw;top:8vh;width:94vw;height:84vh;}#quiz{inset:100px 0 0 0;}}
+#arOverlay{position:fixed;inset:0;z-index:5;display:none;background:#000;}
+#arOverlay.show{display:block;}
+#arVideo{display:none;}
+#arCanvas{width:100%;height:100%;object-fit:contain;display:block;}
+#arMsg{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-family:'Space Mono',monospace;font-size:10px;text-align:center;}
 </style>
 </head>
 <body>
 <canvas id="mainCanvas"></canvas>
 <canvas id="labelCanvas"></canvas>
+<div id="arOverlay">
+  <video id="arVideo" autoplay playsinline muted></video>
+  <canvas id="arCanvas"></canvas>
+  <div id="arMsg">show both hands to the camera · point with your index finger</div>
+</div>
+<button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+    <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+  </svg>
+</button>
+<div id="qr-modal">
+  <div id="qr-modal-box">
+    <button id="qr-modal-close">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=168x168&color=ffc857&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Felectrostatics_lab_PHY51.html" alt="QR code" onerror="this.src='https://chart.googleapis.com/chart?chs=168x168&cht=qr&chl=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Felectrostatics_lab_PHY51.html'" />
+    <p>darawa-io.github.io/ARLABS/electrostatics_lab_PHY51.html</p>
+  </div>
+</div>
+
 
 <div id="title">
   <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
@@ -138,8 +201,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <button class="tab-btn" data-mod="experiments">3 · DETECTING</button>
   <button class="tab-btn" data-mod="fields">4 · FIELDS</button>
   <button class="tab-btn" data-mod="cond">5 · CONDUCTORS</button>
+  <button class="tab-btn" data-mod="quiz">6 · SELF-TEST</button>
 </div>
 
+<div id="rightCol">
 <div id="hud">
   <h2>Readings</h2>
   <div id="legend">
@@ -195,6 +260,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   </div>
 </div>
 
+
+<div id="view2d">
+  <div class="v2head"><span>2D view</span><span><button id="v2-expand" title="Expand to 80% of screen">&#x2922; Expand</button><button id="v2-restore" title="Restore size">&#x2923; Restore</button></span></div>
+  <div class="v2modes">
+    <button class="btn mini on" data-fm="point+">+ Point</button>
+    <button class="btn mini" data-fm="point-">&minus; Point</button>
+    <button class="btn mini" data-fm="sphere">Sphere</button>
+    <button class="btn mini" data-fm="plates">Plates</button>
+    <button class="btn mini f-sign">Test charge: +</button>
+    <button class="btn mini green f-release">&#x25B6; Release</button>
+  </div>
+  <canvas id="v2canvas"></canvas>
+</div>
+</div>
+<div id="quiz"><div id="quiz-box"></div></div>
+
 <div id="infoPanel">
   <h2>Concept</h2>
 
@@ -202,6 +283,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <h3>Types of Charge &amp; Coulomb's Law</h3>
     <p>There are exactly <b>two kinds</b> of electric charge: <span class="pos">positive (+)</span> and <span class="neg">negative (−)</span>. The SI unit of charge is the <b>coulomb (C)</b>.</p>
     <p>The space around a charge is an <b>electric field</b> — a region where another charge feels a force. The arrows on the field lines point the way a <b>positive</b> charge would be pushed.</p>
+    <p><span class="tag">AR Mode</span> Use your camera: charge A follows your right index finger, B your left. Point at the A / B buttons on screen to flip a sign.</p>
     <p><b>Like charges repel; unlike charges attract.</b> Change the signs, separation and size of the charges below and watch the field lines, the force reading and the charges' own motion respond. A positive charge is drawn as a red sphere and a negative charge as a blue sphere; either sphere grows or shrinks with the charge magnitude (q).</p>
     <button class="atom-toggle-btn" id="btn-atom-toggle">▸ What's inside an atom?</button>
     <div id="atom-panel-body" style="display:none;">
@@ -233,7 +315,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   </div>
   <div id="info-cond" class="info-block" style="display:none;">
     <h3>Conductors &amp; Insulators</h3>
-    <p><b>Experiment:</b> connect the charged sphere A to the neutral sphere B using a rod of each material. If B gains charge, the material is a <b>conductor</b>; if not, it is an <b>insulator</b>.</p>
+    <p><b>Experiment:</b> charged sphere A touches one end of the rod. Press <b>Connect</b> to bring neutral sphere B up to the other end. If B gains charge, the material is a <b>conductor</b>; if not, it is an <b>insulator</b>.</p>
     <p><b>Electron model:</b> in a conductor (e.g. copper, iron) some electrons are <b>free</b> to move through the lattice of fixed positive ions, so charge can flow. In an insulator (plastic, glass, wood) all electrons are <b>bound</b> to their atoms and only vibrate, so charge cannot flow.</p>
   </div>
 
@@ -252,6 +334,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <span class="sw">r=<input type="range" id="sl-dist" min="2" max="9" step="0.5" value="5"><span id="lbl-dist">5.0</span></span>
     <span class="sw">q=<input type="range" id="sl-mag" min="1" max="10" step="1" value="5"><span id="lbl-mag">5µC</span></span>
     <div class="sep"></div>
+    <button class="btn amber" id="btn-ar-toggle">🎥 AR Mode</button>
     <button class="btn" id="btn-reset-charges">Reset</button>
   </div>
 
@@ -282,8 +365,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="btn" data-fm="sphere">Sphere</button>
     <button class="btn" data-fm="plates">Plates</button>
     <div class="sep"></div>
-    <button class="btn" id="btn-f-sign">Test charge: +</button>
-    <button class="btn green" id="btn-f-release">▶ Release</button>
+    <button class="btn f-sign">Test charge: +</button>
+    <button class="btn green f-release">▶ Release</button>
   </div>
   <div id="ctrl-cond" class="ctrl-block" style="display:none;">
     <button class="btn on" data-mat="copper">Copper</button>
@@ -292,7 +375,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="btn" data-mat="glass">Glass</button>
     <button class="btn" data-mat="wood">Wood</button>
     <div class="sep"></div>
-    <button class="btn amber" id="btn-c-connect">Connect rod</button>
+    <button class="btn amber" id="btn-c-connect">Connect</button>
     <button class="btn" id="btn-c-reset">Reset</button>
   </div>
 
@@ -303,6 +386,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 <div id="hint">🖐️ drag: rotate view · scroll / pinch: zoom</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script>
 'use strict';
 /* ============================== CORE SETUP ============================== */
@@ -693,6 +778,7 @@ function updateActive1(t){
   // Like charges drift apart, unlike charges drift together, until they hit the view's limits.
   if(lastT1===null){ lastT1=t; return; }
   const dt = t-lastT1; lastT1=t;
+  if(stateAR.active) return;
   const attract = state1.signA !== state1.signB;
   const speed = 0.3 + (state1.mag/10)*0.35;
   if(attract) state1.dist = Math.max(MIN_DIST1, state1.dist - speed*dt);
@@ -797,6 +883,80 @@ document.getElementById('btn-atom-toggle').addEventListener('click', function(){
   this.textContent = (atomPanelOpen?'▾':'▸') + " What's inside an atom?";
   if(atomPanelOpen) initAtomScene();
 });
+
+/* ---------- AR MODE (webcam hand-tracking) ---------- */
+const stateAR = { active:false, lastToggle:{A:0,B:0} };
+let handsSolution=null, mpCamera=null;
+const arClamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function ensureHands(){
+  if(handsSolution) return true;
+  if(typeof Hands==='undefined' || typeof Camera==='undefined') return false;
+  handsSolution=new Hands({locateFile:f=>'https://cdn.jsdelivr.net/npm/@mediapipe/hands/'+f});
+  handsSolution.setOptions({maxNumHands:2,modelComplexity:1,minDetectionConfidence:0.6,minTrackingConfidence:0.6});
+  handsSolution.onResults(onHandsResults);
+  return true;
+}
+function arRRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function arButton(c,r,label,col){ c.fillStyle='rgba(10,14,28,0.6)'; c.strokeStyle=col; c.lineWidth=2; arRRect(c,r.x,r.y,r.w,r.h,10); c.fill(); c.stroke(); c.fillStyle=col; c.font='bold 15px "Space Mono",monospace'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(label,r.x+r.w/2,r.y+r.h/2); }
+function arCharge(c,pos,sign){
+  const rad=arClamp(14+Math.sqrt(state1.mag)*5,14,46);
+  c.globalAlpha=0.85; c.fillStyle=sign>0?'#ff5e72':'#5bc8ff'; c.beginPath(); c.arc(pos.x,pos.y,rad,0,6.283); c.fill(); c.globalAlpha=1;
+  c.fillStyle='#fff'; c.font='bold 14px "Space Mono",monospace'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(sign>0?'+':'−',pos.x,pos.y);
+}
+function arArrow(c,a,b,col){
+  c.strokeStyle=col; c.fillStyle=col; c.lineWidth=3.5; c.beginPath(); c.moveTo(a.x,a.y); c.lineTo(b.x,b.y); c.stroke();
+  const g=Math.atan2(b.y-a.y,b.x-a.x), h=12; c.beginPath(); c.moveTo(b.x,b.y); c.lineTo(b.x-h*Math.cos(g-0.4),b.y-h*Math.sin(g-0.4)); c.lineTo(b.x-h*Math.cos(g+0.4),b.y-h*Math.sin(g+0.4)); c.closePath(); c.fill();
+}
+function onHandsResults(res){
+  const cv=document.getElementById('arCanvas'), c=cv.getContext('2d');
+  const vw=res.image.width, vh=res.image.height;
+  if(cv.width!==vw||cv.height!==vh){ cv.width=vw; cv.height=vh; }
+  c.save(); c.clearRect(0,0,vw,vh); c.translate(vw,0); c.scale(-1,1); c.drawImage(res.image,0,0,vw,vh); c.restore();
+  const bw=vw*0.24, bh=vh*0.11, bA={x:vw*0.03,y:vh*0.04,w:bw,h:bh}, bB={x:vw*0.97-bw,y:vh*0.04,w:bw,h:bh};
+  const inR=(x,y,r)=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h;
+  let pA=null,pB=null; const now=performance.now();
+  if(res.multiHandLandmarks && res.multiHandedness){
+    res.multiHandLandmarks.forEach((lm,i)=>{
+      const lab=res.multiHandedness[i].label, px=(1-lm[8].x)*vw, py=lm[8].y*vh;
+      if(lab==='Right') pA={x:px,y:py}; else pB={x:px,y:py};
+      if(inR(px,py,bA)&&now-stateAR.lastToggle.A>1200){ state1.signA*=-1; stateAR.lastToggle.A=now; updateCharges1(); }
+      if(inR(px,py,bB)&&now-stateAR.lastToggle.B>1200){ state1.signB*=-1; stateAR.lastToggle.B=now; updateCharges1(); }
+    });
+  }
+  arButton(c,bA,'A: '+(state1.signA>0?'+':'−'),state1.signA>0?'#ff5e72':'#5bc8ff');
+  arButton(c,bB,'B: '+(state1.signB>0?'+':'−'),state1.signB>0?'#ff5e72':'#5bc8ff');
+  if(pA&&pB){
+    const dPx=Math.max(1,Math.hypot(pA.x-pB.x,pA.y-pB.y));
+    state1.dist=arClamp(dPx/vw*10,MIN_DIST1,MAX_DIST1);
+    document.getElementById('sl-dist').value=state1.dist; document.getElementById('lbl-dist').textContent=state1.dist.toFixed(1);
+    updateCharges1();
+    const F=K_COULOMB*Math.pow(state1.mag*1e-6,2)/Math.pow(state1.dist*METER_SCALE,2), same=state1.signA===state1.signB;
+    const d={x:(pB.x-pA.x)/dPx,y:(pB.y-pA.y)/dPx}, L=arClamp(30+Math.sqrt(F)*12,30,140), col=same?'#ffc857':'#4dffa0', k=same?-1:1;
+    arArrow(c,pA,{x:pA.x+k*d.x*L,y:pA.y+k*d.y*L},col); arArrow(c,pB,{x:pB.x-k*d.x*L,y:pB.y-k*d.y*L},col);
+    arCharge(c,pA,state1.signA); arCharge(c,pB,state1.signB);
+    c.fillStyle='#fff'; c.font='bold 15px "Space Mono",monospace'; c.textAlign='center'; c.fillText('F = '+F.toFixed(3)+' N  ('+(same?'REPULSION':'ATTRACTION')+')',vw/2,vh-30);
+  } else { if(pA) arCharge(c,pA,state1.signA); if(pB) arCharge(c,pB,state1.signB); }
+}
+function setArBtn(on){ const b=document.getElementById('btn-ar-toggle'); b.textContent=on?'⏹ Exit AR':'🎥 AR Mode'; b.classList.toggle('on',on); }
+function startAR(){
+  if(!ensureHands()){ alert('Hand-tracking library failed to load (check your internet connection) — AR mode needs @mediapipe/hands.'); return; }
+  document.getElementById('arOverlay').classList.add('show');
+  const v=document.getElementById('arVideo');
+  try{
+    mpCamera=new Camera(v,{onFrame:async()=>{ await handsSolution.send({image:v}); },width:640,height:480});
+    mpCamera.start(); stateAR.active=true; setArBtn(true);
+  }catch(err){ alert('Could not access the camera: '+err.message); document.getElementById('arOverlay').classList.remove('show'); }
+}
+function stopAR(){
+  document.getElementById('arOverlay').classList.remove('show');
+  if(mpCamera){ try{mpCamera.stop();}catch(e){} mpCamera=null; }
+  const v=document.getElementById('arVideo'); if(v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null; }
+  stateAR.active=false; setArBtn(false);
+}
+document.getElementById('btn-ar-toggle').addEventListener('click',()=>stateAR.active?stopAR():startAR());
+document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
+document.getElementById('qr-modal').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('show'); });
+document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
 
 /* ============================== MODULE 2: CHARGING PROCESS ============================== */
 const grpCharging = new THREE.Group(); grpCharging.visible=false; root3.add(grpCharging);
@@ -1272,39 +1432,85 @@ function updateFields4(){
   const dirs={'point+':'radially OUT','point-':'radially IN','sphere':'radially OUT (zero inside)','plates':'+ plate → − plate, parallel & uniform'};
   document.getElementById('val-f-src').textContent=names[m];
   document.getElementById('val-f-dir').textContent=dirs[m];
-  document.querySelectorAll('#ctrl-fields [data-fm]').forEach(b=>b.classList.toggle('on',b.dataset.fm===m));
-  document.getElementById('btn-f-sign').textContent='Test charge: '+(state4.tsign>0?'+':'−');
+  document.querySelectorAll('[data-fm]').forEach(b=>b.classList.toggle('on',b.dataset.fm===m));
+  document.querySelectorAll('.f-sign').forEach(b=>b.textContent='Test charge: '+(state4.tsign>0?'+':'−'));
   document.getElementById('val-f-force').textContent=(state4.tsign>0?'same as field':'opposite to field');
   const c=state4.tsign>0?COL_POS:COL_NEG; testMesh4.material.color.setHex(c); testMesh4.material.emissive.setHex(c);
 }
-function resetTest4(){ state4.running=false; testMesh4.position.copy(startPos4()); document.getElementById('btn-f-release').textContent='▶ Release'; }
+function setRel(t){ document.querySelectorAll('.f-release').forEach(b=>b.textContent=t); }
+function resetTest4(){ state4.running=false; testMesh4.position.copy(startPos4()); setRel('▶ Release'); }
 let lastT4=null;
 function updateActive4(t){
   const dt = lastT4===null?0:Math.min(0.1,t-lastT4); lastT4=t;
   const E=E4(testMesh4.position);
   if(state4.running){
-    if(E.lengthSq()===0){ state4.running=false; document.getElementById('btn-f-release').textContent='▶ Release'; }
+    if(E.lengthSq()===0){ state4.running=false; setRel('▶ Release'); }
     else {
       const v=E.clone().normalize().multiplyScalar(state4.tsign*Math.min(2.4,0.8+E.length()*3));
       testMesh4.position.addScaledVector(v,dt);
-      if(testMesh4.position.distanceTo(fieldCenter4)>7){ state4.running=false; document.getElementById('btn-f-release').textContent='▶ Release'; }
+      if(testMesh4.position.distanceTo(fieldCenter4)>7){ state4.running=false; setRel('▶ Release'); }
     }
   }
   const F=E.clone().multiplyScalar(state4.tsign);
   if(F.lengthSq()>0){ forceArrow4.visible=true; forceArrow4.position.copy(testMesh4.position); forceArrow4.setDirection(F.normalize()); forceArrow4.setLength(1.0,0.28,0.18); }
   else forceArrow4.visible=false;
+  draw2D();
 }
+const v2=document.getElementById('v2canvas'), v2c=v2.getContext('2d');
+function draw2D(){
+  const r=v2.getBoundingClientRect(); if(r.width<2) return;
+  const dpr=Math.min(2,window.devicePixelRatio||1), W=Math.round(r.width*dpr), H=Math.round(r.height*dpr);
+  if(v2.width!==W||v2.height!==H){ v2.width=W; v2.height=H; }
+  const c=v2c, m=state4.mode, s=Math.min(W/10.4,H/7.6), cx=W/2, cy=H/2;
+  const X=x=>cx+x*s, Y=y=>cy-(y-0.4)*s;
+  c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,W,H); c.fillStyle='#070a14'; c.fillRect(0,0,W,H);
+  const fs=Math.max(10,s*0.26);
+  function arrow(x1,y1,x2,y2,col,lw,hd){
+    const a=Math.atan2(y2-y1,x2-x1);
+    c.strokeStyle=col; c.fillStyle=col; c.lineWidth=lw; c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke();
+    c.beginPath(); c.moveTo(x2,y2); c.lineTo(x2-hd*Math.cos(a-0.4),y2-hd*Math.sin(a-0.4)); c.lineTo(x2-hd*Math.cos(a+0.4),y2-hd*Math.sin(a+0.4)); c.closePath(); c.fill();
+  }
+  function txt(t,x,y,col,size){ c.font='700 '+(size||fs)+'px "Space Mono",monospace'; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle=col; c.fillText(t,x,y); }
+  const hd=s*0.2, lw=Math.max(1,s*0.03), fcol='rgba(255,216,138,.75)';
+  if(m==='plates'){
+    for(let y=-1.2;y<=2.0;y+=0.5){ arrow(X(-2.45),Y(y),X(2.45),Y(y),fcol,lw,hd); }
+    c.fillStyle='#ff5e72'; c.fillRect(X(-PLATE_X4)-s*0.07,Y(2.2),s*0.14,3.6*s);
+    c.fillStyle='#5bc8ff'; c.fillRect(X(PLATE_X4)-s*0.07,Y(2.2),s*0.14,3.6*s);
+    txt('+ plate',X(-PLATE_X4),Y(2.2)-fs,'#ff8f9c'); txt('− plate',X(PLATE_X4),Y(2.2)-fs,'#8fd4ff');
+    txt('uniform field: parallel, equally spaced lines',X(0),Y(-1.7),'rgba(220,230,255,.7)',fs*0.85);
+  } else {
+    const sg=m==='point-'?-1:1, isS=m==='sphere', R=isS?SPH_R4:0.45, col=sg>0?'#ff5e72':'#5bc8ff';
+    for(let i=0;i<16;i++){
+      const a=i/16*Math.PI*2, ux=Math.cos(a), uy=Math.sin(a), r0=R+0.05, r1=3.6;
+      const rm=2.3, fa=sg>0?[r0,r1]:[r1,r0];
+      c.strokeStyle=fcol; c.lineWidth=lw; c.beginPath(); c.moveTo(X(ux*r0),Y(0.4+uy*r0)); c.lineTo(X(ux*r1),Y(0.4+uy*r1)); c.stroke();
+      const p1=sg>0?rm-0.3:rm+0.3, p2=sg>0?rm+0.3:rm-0.3;
+      arrow(X(ux*p1),Y(0.4+uy*p1),X(ux*p2),Y(0.4+uy*p2),'#ffd88a',lw,hd);
+    }
+    c.fillStyle=isS?'#7d8ba3':col; c.beginPath(); c.arc(X(0),Y(0.4),R*s,0,6.283); c.fill();
+    if(isS){ for(let i=0;i<24;i++){ const a=i/24*6.283; c.fillStyle='#ff5e72'; c.beginPath(); c.arc(X(Math.cos(a)*R*0.97),Y(0.4+Math.sin(a)*R*0.97),s*0.05,0,6.283); c.fill(); } txt('E = 0',X(0),Y(0.4)+fs*0.7,'#fff',fs*0.8); }
+    txt(sg>0?'+':'−',X(0),Y(0.4)-(isS?fs*0.5:0),'#fff',fs*1.3);
+  }
+  const tp=testMesh4.position, tx=X(tp.x), ty=Y(tp.y);
+  c.fillStyle=state4.tsign>0?'#ff5e72':'#5bc8ff'; c.strokeStyle='#fff'; c.lineWidth=lw; c.beginPath(); c.arc(tx,ty,s*0.2,0,6.283); c.fill(); c.stroke();
+  txt(state4.tsign>0?'+':'−',tx,ty,'#fff',fs*0.9);
+  const E=E4(tp), fx=E.x*state4.tsign, fy=E.y*state4.tsign, fl=Math.hypot(fx,fy);
+  if(fl>1e-6){ arrow(tx,ty,tx+fx/fl*s*1.0,ty-fy/fl*s*1.0,'#ffc857',lw*2,hd*1.4); txt('force',tx+fx/fl*s*1.0,ty-fy/fl*s*1.0-fs,'#ffc857',fs*0.8); }
+  txt(({'point+':'Positive point charge','point-':'Negative point charge','sphere':'Charged conducting sphere','plates':'Oppositely charged parallel plates'})[m],W/2,fs,'rgba(220,230,255,.8)',fs*0.9);
+}
+document.getElementById('v2-expand').addEventListener('click',()=>document.getElementById('view2d').classList.add('big'));
+document.getElementById('v2-restore').addEventListener('click',()=>document.getElementById('view2d').classList.remove('big'));
 function labelsFields(){
   const L=[{p:testMesh4.position.clone().add(new THREE.Vector3(0,0.4,0)),t:'test charge '+(state4.tsign>0?'+':'−'),c:state4.tsign>0?'#ff8f9c':'#8fd4ff',size:9}];
   if(state4.mode==='plates'){ L.push({p:new THREE.Vector3(-PLATE_X4,2.5,0),t:'+ plate',c:'#ff8f9c',size:11},{p:new THREE.Vector3(PLATE_X4,2.5,0),t:'− plate',c:'#8fd4ff',size:11}); }
   else L.push({p:fieldCenter4.clone(),t:state4.mode==='point-'?'−':'+',c:'#ffffff',size:16});
   return L;
 }
-document.querySelectorAll('#ctrl-fields [data-fm]').forEach(b=>b.addEventListener('click',()=>{ state4.mode=b.dataset.fm; updateFields4(); }));
-document.getElementById('btn-f-sign').addEventListener('click',()=>{ state4.tsign*=-1; updateFields4(); });
-document.getElementById('btn-f-release').addEventListener('click',()=>{
-  if(state4.running){ resetTest4(); } else { state4.running=true; document.getElementById('btn-f-release').textContent='⟲ Reset'; }
-});
+document.querySelectorAll('[data-fm]').forEach(b=>b.addEventListener('click',()=>{ state4.mode=b.dataset.fm; updateFields4(); }));
+document.querySelectorAll('.f-sign').forEach(b=>b.addEventListener('click',()=>{ state4.tsign*=-1; updateFields4(); }));
+document.querySelectorAll('.f-release').forEach(b=>b.addEventListener('click',()=>{
+  if(state4.running){ resetTest4(); } else { state4.running=true; setRel('⟲ Reset'); }
+}));
 updateFields4();
 
 /* ============================== MODULE 5: CONDUCTORS & INSULATORS (5.9, 5.10) ============================== */
@@ -1316,13 +1522,13 @@ const MATS5 = {
   glass: {name:'Glass',    cond:false,col:0x9fd8d0},
   wood:  {name:'Wood',     cond:false,col:0x8a5a33}
 };
-const state5 = { mat:'copper', connected:false, f:0 };
+const state5 = { mat:'copper', connected:false, f:0, p:0 }; // p: 0 = B away, 1 = B touching the rod
 const ROD5 = {x0:-3, x1:3, h:0.9, d:0.9, y:0.4};
 const rod5 = new THREE.Mesh(new THREE.BoxGeometry(ROD5.x1-ROD5.x0,ROD5.h,ROD5.d), new THREE.MeshStandardMaterial({color:0xc87533,transparent:true,opacity:0.35,metalness:0.5,roughness:0.4}));
 rod5.position.set(0,ROD5.y,0); grpCond.add(rod5);
 const sphA5 = new THREE.Mesh(new THREE.SphereGeometry(0.9,32,32), new THREE.MeshStandardMaterial({color:COL_NEG,emissive:COL_NEG,emissiveIntensity:0.3,metalness:0.5,roughness:0.4}));
 const sphB5 = sphA5.clone(); sphB5.material = sphA5.material.clone();
-sphA5.position.set(-4.2,ROD5.y,0); sphB5.position.set(4.2,ROD5.y,0); grpCond.add(sphA5,sphB5);
+sphA5.position.set(ROD5.x0-0.9,ROD5.y,0); sphB5.position.set(ROD5.x1+0.9+3.2,ROD5.y,0); grpCond.add(sphA5,sphB5);
 const ions5=[], els5=[];
 const ionMat5=new THREE.MeshStandardMaterial({color:COL_POS,emissive:COL_POS,emissiveIntensity:0.3});
 const elMat5=new THREE.MeshBasicMaterial({color:ELECTRON_COLOR});
@@ -1340,7 +1546,7 @@ function updateCond5(){
   const M=MATS5[state5.mat];
   rod5.material.color.setHex(M.col);
   document.querySelectorAll('#ctrl-cond [data-mat]').forEach(b=>b.classList.toggle('on',b.dataset.mat===state5.mat));
-  document.getElementById('btn-c-connect').textContent = state5.connected?'⟲ Disconnect':'Connect rod';
+  document.getElementById('btn-c-connect').textContent = state5.connected?'⟲ Disconnect':'Connect';
   document.getElementById('val-c-mat').textContent=M.name;
   const ty=document.getElementById('val-c-type'); ty.textContent=M.cond?'CONDUCTOR':'INSULATOR'; ty.style.color=M.cond?'var(--green)':'var(--red)';
   document.getElementById('val-c-el').textContent=M.cond?'free to move':'held in atoms';
@@ -1349,9 +1555,11 @@ let lastT5=null;
 function updateActive5(t){
   const dt=lastT5===null?0:Math.min(0.1,t-lastT5); lastT5=t;
   const M=MATS5[state5.mat];
-  if(state5.connected && M.cond) state5.f=Math.min(1,state5.f+dt*0.35);
-  else if(!state5.connected) state5.f=Math.max(0,state5.f-dt*0.7);
-  const f=state5.f, flowing=state5.connected&&M.cond&&f<1;
+  state5.p = Math.max(0,Math.min(1,state5.p+(state5.connected?1:-1)*dt*0.45));
+  sphB5.position.x = ROD5.x1+0.9+3.2*(1-ease(state5.p));
+  const touching = state5.p>=1;
+  if(touching && M.cond) state5.f=Math.min(1,state5.f+dt*0.35);
+  const f=state5.f, flowing=touching&&M.cond&&f<1;
   const qA=1-0.5*f, qB=0.5*f;
   sphA5.material.color.copy(chargeTint5(qA)); sphA5.material.emissive.copy(chargeTint5(qA));
   sphB5.material.color.copy(chargeTint5(qB)); sphB5.material.emissive.copy(chargeTint5(qB));
@@ -1373,14 +1581,17 @@ function updateActive5(t){
   document.getElementById('val-c-qa').textContent=qa.toFixed(1)+' nC';
   document.getElementById('val-c-qb').textContent=qb.toFixed(1)+' nC';
   const res=document.getElementById('val-c-res');
-  if(!state5.connected){ res.textContent='Rod not connected yet.'; }
+  if(!state5.connected){ res.textContent = f>0 ? 'B removed — it keeps the charge it gained.' : 'B is away from the rod. Press Connect.'; }
+  else if(!touching){ res.textContent='Sphere B is moving towards the rod…'; }
   else if(M.cond) res.textContent = f<1?'Electrons flow along the rod → charge spreads to B.':'Charge shared equally between A and B.';
   else res.textContent='No free electrons → no charge flows. B stays neutral.';
 }
 function labelsCond(){
   return [
-    {p:new THREE.Vector3(-4.2,-0.9,0),t:'A (charged −)',c:'#8fd4ff',size:10},
-    {p:new THREE.Vector3(4.2,-0.9,0),t:'B',c:'#ffffff',size:10},
+    {p:new THREE.Vector3(ROD5.x0-0.9,-0.9,0),t:'A (charged −)',c:'#8fd4ff',size:10},
+    {p:new THREE.Vector3(sphB5.position.x,-0.9,0),t:state5.f>0.01?'B (charged −)':'B (neutral)',c:state5.f>0.01?'#8fd4ff':'#ffffff',size:10},
+    {p:sphA5.position.clone(),t:'−',c:'#8fd4ff',size:16},
+    ...(state5.f>0.01?[{p:sphB5.position.clone(),t:'−',c:'#8fd4ff',size:16}]:[]),
     {p:new THREE.Vector3(0,1.7,0),t:MATS5[state5.mat].name+' rod',c:'#ffffff',size:11},
     {p:new THREE.Vector3(-2.2,-0.35,0),t:'● ion (+, fixed)   ● electron (−)',c:'#b57aff',size:9}
   ];
@@ -1390,20 +1601,71 @@ document.getElementById('btn-c-connect').addEventListener('click',()=>{ state5.c
 document.getElementById('btn-c-reset').addEventListener('click',()=>{ state5.connected=false; state5.f=0; updateCond5(); });
 updateCond5();
 
+/* ============================== SELF-ASSESSMENT QUIZ ============================== */
+const grpQuiz = new THREE.Group(); grpQuiz.visible=false; root3.add(grpQuiz);
+const QZ=[
+ {k:'5.1',q:'Which statement about electric charge is correct?',o:['There are two kinds of charge: positive and negative','There are three kinds: positive, negative and neutral','Only positive charge exists','Negative charge is carried by neutrons'],e:'There are exactly two kinds of charge, positive and negative. “Neutral” just means equal amounts of both.'},
+ {k:'5.2',q:'In which unit is electric charge measured?',o:['coulomb (C)','ampere (A)','volt (V)','joule (J)'],e:'Charge is measured in coulombs. (The ampere measures current, the volt measures potential difference.)'},
+ {k:'5.3',q:'Two negatively charged balloons are held close together. What happens?',o:['They repel each other','They attract each other','Nothing – like charges do not interact','One becomes positive'],e:'Like charges repel (+ and +, − and −). Unlike charges attract.'},
+ {k:'5.3',q:'A positive and a negative charge are placed near each other. What is true?',o:['They attract each other','They repel each other','They cancel and disappear','Only the negative charge feels a force'],e:'Unlike charges attract, and each charge feels an equal and opposite force.'},
+ {k:'5.4',q:'An electric field is best described as…',o:['a region in which an electric charge experiences a force','a region where charges are created','the force between two magnets','a flow of electrons in a wire'],e:'Any charge placed in an electric field experiences a force.'},
+ {k:'5.5',q:'Which is a simple way to make electrostatic charge?',o:['Rub a polythene rod with a dry cloth','Heat the rod in a flame','Dip the rod in water','Place the rod near a magnet'],e:'Friction between two different insulating materials transfers electrons and charges both.'},
+ {k:'5.5',q:'How can you detect that a rod is charged?',o:['It makes the leaves of a gold-leaf electroscope diverge when brought near the cap','It becomes hot','It changes colour','It floats on water'],e:'Charge spreads to both leaves; being the same sign they repel and diverge.'},
+ {k:'5.6',q:'The direction of an electric field at a point is the direction of the force on…',o:['a positive charge placed at that point','a negative charge placed at that point','a neutral object at that point','an electron moving at that point'],e:'By definition the field points the way a positive charge would be pushed.'},
+ {k:'5.7',q:'A rod becomes positively charged by rubbing. What has happened?',o:['It has lost electrons','It has gained protons','It has gained electrons','It has lost protons'],e:'Only negative charge (electrons) is transferred. Losing electrons leaves the rod positive.'},
+ {k:'5.8',q:'What is the field pattern around an isolated positive point charge?',o:['Straight lines pointing radially outwards','Straight lines pointing radially inwards','Closed circles around the charge','Parallel lines in one direction'],e:'Field lines leave a positive charge and spread out radially. For a negative charge they point inwards.'},
+ {k:'5.8',q:'Between two oppositely charged parallel plates (ignoring edge effects), the field is…',o:['uniform, with parallel lines from the + plate to the − plate','strongest near the + plate only','radial, pointing out from the centre','zero everywhere between the plates'],e:'The lines are straight, parallel and equally spaced, running from + to −: a uniform field.'},
+ {k:'5.8',q:'Outside a charged conducting sphere, the field lines are…',o:['radial, as if from a point charge at the centre','parallel to each other','circles around the sphere','absent'],e:'Outside the sphere the pattern is the same as for a point charge. (For a positive sphere the lines point away.)'},
+ {k:'5.9',q:'How can you test whether a material is a conductor or an insulator?',o:['Connect it between a charged and a neutral object (or touch a charged electroscope): charge flows only if it is a conductor','Weigh it','Heat it and watch the colour','See whether it floats'],e:'If charge flows through it (leaves collapse, or the neutral sphere becomes charged) it is a conductor.'},
+ {k:'5.10',q:'Why do metals conduct electricity?',o:['They contain free electrons that can move through the metal','They contain free protons','Their electrons are tightly bound to atoms','They have no atoms'],e:'Metals have a lattice of fixed positive ions and some electrons that are free to move.'},
+ {k:'5.10',q:'Which list contains only electrical insulators?',o:['Plastic, glass, dry wood','Copper, iron, glass','Plastic, aluminium, wood','Graphite, rubber, silver'],e:'In insulators the electrons are bound to their atoms. Metals such as copper, iron, aluminium and silver are conductors.'}
+];
+function shuf(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+let qz={order:[],i:0,score:0,missed:[]};
+function qzStart(){ qz={order:shuf(QZ.map((_,i)=>i)),i:0,score:0,missed:[]}; qzShow(); }
+function qzShow(){
+  const box=document.getElementById('quiz-box');
+  if(qz.i>=QZ.length){
+    const n=QZ.length, miss=[...new Set(qz.missed)].sort((a,b)=>parseFloat(a)-parseFloat(b));
+    box.innerHTML='<div class="qz-meta"><span>RESULT</span></div><div class="qz-score">'+qz.score+' / '+n+'</div><p style="font-size:13px;line-height:1.7;margin-bottom:12px;">'+
+      (miss.length?'Revise these KPIs: <b style="color:var(--amber)">'+miss.join(', ')+'</b>':'<b style="color:var(--green)">Perfect — every KPI secure!</b>')+'</p><button class="btn green" id="qz-retry">↻ Try again (shuffled)</button>';
+    document.getElementById('qz-retry').onclick=qzStart; return;
+  }
+  const Q=QZ[qz.order[qz.i]], opts=shuf(Q.o.map((t,j)=>({t,ok:j===0})));
+  box.innerHTML='<div class="qz-meta"><span>QUESTION '+(qz.i+1)+' / '+QZ.length+'</span><span>KPI '+Q.k+'</span></div><div class="qz-bar"><i style="width:'+(qz.i/QZ.length*100)+'%"></i></div><div class="qz-q"></div><div id="qz-opts"></div><div id="qz-fb"></div>';
+  box.querySelector('.qz-q').textContent=Q.q;
+  const wrap=document.getElementById('qz-opts');
+  opts.forEach(o=>{
+    const b=document.createElement('button'); b.className='qz-opt'; b.textContent=o.t;
+    b.onclick=()=>{
+      wrap.querySelectorAll('.qz-opt').forEach((x,i)=>{ x.disabled=true; if(opts[i].ok) x.classList.add('ok'); });
+      if(o.ok) qz.score++; else { b.classList.add('bad'); qz.missed.push(Q.k); }
+      const fb=document.getElementById('qz-fb');
+      fb.innerHTML='<div class="qz-exp"><b>'+(o.ok?'Correct. ':'Not quite. ')+'</b></div><button class="btn green" id="qz-next">'+(qz.i+1>=QZ.length?'See result':'Next →')+'</button>';
+      fb.querySelector('.qz-exp').appendChild(document.createTextNode(Q.e));
+      document.getElementById('qz-next').onclick=()=>{ qz.i++; qzShow(); };
+    };
+    wrap.appendChild(b);
+  });
+}
+qzStart();
+
 /* ============================== TAB SWITCHING ============================== */
-const moduleGroups = { charges:grpCharges, charging:grpCharging, experiments:grpExperiments, fields:grpFields, cond:grpCond };
+const moduleGroups = { charges:grpCharges, charging:grpCharging, experiments:grpExperiments, fields:grpFields, cond:grpCond, quiz:grpQuiz };
 const moduleCams = {
   charges:{theta:0.32,phi:0.16,radius:9,cx:0,cy:0.3,cz:0},
   charging:{theta:0.5,phi:0.24,radius:6.5,cx:0.1,cy:0.3,cz:0},
   experiments:{theta:0.45,phi:0.16,radius:9.5,cx:-2.5,cy:0.1,cz:0},
   fields:{theta:0.3,phi:0.2,radius:11,cx:0,cy:0.4,cz:0},
-  cond:{theta:0.25,phi:0.2,radius:12,cx:0,cy:0.3,cz:0}
+  quiz:{theta:0.3,phi:0.2,radius:12,cx:0,cy:0.3,cz:0},
+  cond:{theta:0.25,phi:0.2,radius:13,cx:1.5,cy:0.3,cz:0}
 };
-const moduleLabelFns = { charges:labelsCharges, charging:labelsCharging, experiments:labelsExperiments, fields:labelsFields, cond:labelsCond };
-const moduleUpdateFns = { charges:updateActive1, charging:updateActive2, experiments:updateActive6, fields:updateActive4, cond:updateActive5 };
+const moduleLabelFns = { charges:labelsCharges, charging:labelsCharging, experiments:labelsExperiments, fields:labelsFields, cond:labelsCond, quiz:()=>[] };
+const moduleUpdateFns = { charges:updateActive1, charging:updateActive2, experiments:updateActive6, fields:updateActive4, cond:updateActive5, quiz:null };
 
 let activeModule = 'charges';
 function setActiveModule(id){
+  if(stateAR.active) stopAR();
   if(!moduleGroups[id] || id===activeModule && document.querySelector('.tab-btn.on').dataset.mod===id){ /* allow re-entry too */ }
   Object.keys(moduleGroups).forEach(k=>{ moduleGroups[k].visible = (k===id); });
   activeModule = id;
@@ -1414,10 +1676,16 @@ function setActiveModule(id){
   document.querySelectorAll('.hud-block').forEach(el=>{ el.style.display = (el.id==='hud-'+id) ? 'block' : 'none'; });
   document.querySelectorAll('.info-block').forEach(el=>{ el.style.display = (el.id==='info-'+id) ? 'block' : 'none'; });
   document.querySelectorAll('.ctrl-block').forEach(el=>{ el.style.display = (el.id==='ctrl-'+id) ? 'flex' : 'none'; });
+  const isQ = id==='quiz';
+  ['infoPanel','rightCol','controls','hint'].forEach(i=>{ const e=document.getElementById(i); if(e) e.style.display = isQ?'none':''; });
+  document.getElementById('quiz').style.display = isQ?'flex':'none';
+  document.getElementById('view2d').classList.toggle('show', id==='fields');
+  if(id!=='fields') document.getElementById('view2d').classList.remove('big');
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> setActiveModule(btn.dataset.mod));
 });
+['infoPanel','hud'].forEach(id=>{ const el=document.getElementById(id); el.querySelector('h2').addEventListener('click',()=>el.classList.toggle('folded')); });
 document.getElementById('btn-camreset').addEventListener('click', ()=>{
   const c = moduleCams[activeModule];
   orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
