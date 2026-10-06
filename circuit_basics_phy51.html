@@ -437,10 +437,10 @@ function drawMeterGauge(opts){
   if(mode==='analogue'){
     const cx=w/2, cy=h*0.74, r=Math.min(w,h)*0.56;
     ctx.strokeStyle='rgba(180,200,255,0.35)'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,0); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,2*Math.PI); ctx.stroke();
     ctx.font="9px 'Space Mono', monospace";
     for(let k=0;k<=10;k++){
-      const a=Math.PI-(k/10)*Math.PI;
+      const a=Math.PI+(k/10)*Math.PI;
       const x1g=cx+Math.cos(a)*(r-8), y1g=cy+Math.sin(a)*(r-8);
       const x2g=cx+Math.cos(a)*r, y2g=cy+Math.sin(a)*r;
       ctx.strokeStyle='rgba(180,200,255,0.5)'; ctx.lineWidth=1.5;
@@ -451,7 +451,7 @@ function drawMeterGauge(opts){
         ctx.fillText((rangeMax*k/10).toFixed(rangeMax<2?2:1), tx-10, ty+4);
       }
     }
-    const na=Math.PI-frac*Math.PI;
+    const na=Math.PI+frac*Math.PI;
     ctx.strokeStyle=overScale?'#ff5e72':color; ctx.lineWidth=3;
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(na)*(r-16), cy+Math.sin(na)*(r-16)); ctx.stroke();
     ctx.fillStyle='rgba(220,230,255,0.85)'; ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill();
@@ -489,20 +489,22 @@ function drawACWave(opts){
   ctx.font="10px 'Space Mono', monospace"; ctx.fillStyle='rgba(200,215,255,0.55)';
   ctx.fillText(opts.mode==='dc'?'Current vs time (constant)':'Current vs time (alternating)', padL, h-6);
   ctx.strokeStyle=opts.mode==='dc'?'#4dffa0':'#5bc8ff'; ctx.lineWidth=2.2; ctx.beginPath();
-  const T=opts.period||1.2, span=T*2.4;
-  for(let i=0;i<=200;i++){
-    const tt=(i/200)*span;
+  const span=3.0; // fixed time window (s) so the curve itself visibly redraws as frequency changes
+  const f=opts.freq||1;
+  for(let i=0;i<=400;i++){
+    const tt=(i/400)*span;
     let val;
     if(opts.mode==='dc') val=1;
-    else val=Math.sin(2*Math.PI*tt/T);
-    const px=padL+(i/200)*plotW;
+    else val=Math.sin(2*Math.PI*f*tt);
+    const px=padL+(i/400)*plotW;
     const py=midY-val*(plotH*0.42);
     if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
   }
   ctx.stroke();
   const phase=((opts.t||0)%span)/span;
   const markX=padL+phase*plotW;
-  const markVal=opts.mode==='dc'?1:Math.sin(2*Math.PI*((opts.t||0)%T)/T);
+  const tAtMark=phase*span;
+  const markVal=opts.mode==='dc'?1:Math.sin(2*Math.PI*f*tAtMark);
   const markY=midY-markVal*(plotH*0.42);
   ctx.fillStyle='#ffc857'; ctx.beginPath(); ctx.arc(markX,markY,4.5,0,Math.PI*2); ctx.fill();
 }
@@ -653,22 +655,46 @@ const c2_challenge={
 };
 
 /* ================= SCENE C3 — Conduction in Metals / Free Electrons (KPI 6.4) ================= */
-const c3={field:false,t:0,ions:[],electrons:[]};
+const C3_XMIN=-2.9, C3_XMAX=2.9;
+const c3={field:false,t:0,ions:[],electrons:[],plates:[]};
 function c3_build(){
   clearStage();
-  c3.t=0; c3.ions=[]; c3.electrons=[];
-  for(let i=-1.5;i<=1.5;i++){
-    for(let j=-1;j<=1;j++){
+  c3.t=0; c3.ions=[]; c3.electrons=[]; c3.plates=[];
+  const cols=8, rows=3;
+  const spacingX=(C3_XMAX-C3_XMIN-0.9)/(cols-1);
+  for(let ci=0;ci<cols;ci++){
+    const x=C3_XMIN+0.45+ci*spacingX;
+    for(let ri=0;ri<rows;ri++){
+      const y=(ri-1)*0.85;
       const ion=new THREE.Mesh(new THREE.SphereGeometry(0.17,12,10), mat(0xcf7a2e,{metalness:0.5,roughness:0.4}));
-      ion.position.set(i*0.9, j*0.9, 0);
+      ion.position.set(x,y,0);
       ion.userData.base=ion.position.clone();
       stage.add(ion); c3.ions.push(ion);
-      const plus=makeTextSprite('+',{color:'#1a1006',height:0.22}); plus.position.copy(ion.position).add(new THREE.Vector3(0,0,0.2)); stage.add(plus); ion.userData.lbl=plus;
+      const plus=makeTextSprite('+',{color:'#1a1006',height:0.2}); plus.position.copy(ion.position).add(new THREE.Vector3(0,0,0.2)); stage.add(plus); ion.userData.lbl=plus;
     }
   }
-  for(let k=0;k<18;k++){
+  // terminal plates at both ends, pulled well clear of the lattice and joined by lead wires,
+  // so students can clearly see which end is + and which is − (only shown once voltage is applied)
+  const plateGap=2.0;
+  const negX=C3_XMIN-plateGap, posX=C3_XMAX+plateGap;
+  const terminals=new THREE.Group();
+  terminals.add(wireSegment(C3_XMIN-0.1,0,negX,0,0x5a6a90));
+  terminals.add(wireSegment(C3_XMAX+0.1,0,posX,0,0x5a6a90));
+  const plateGeo=new THREE.BoxGeometry(0.14,2.3,0.6);
+  const negPlate=new THREE.Mesh(plateGeo, mat(0x2d6bb5,{metalness:0.5,roughness:0.35}));
+  negPlate.position.set(negX,0,0); terminals.add(negPlate); c3.plates.push(negPlate);
+  const negLbl=makeTextSprite('−',{color:'#bfe0ff',height:0.6}); negLbl.position.set(negX,0,0.5); terminals.add(negLbl);
+  const negWord=makeTextSprite('negative terminal',{color:'#5bc8ff',height:0.22}); negWord.position.set(negX,-1.55,0); terminals.add(negWord);
+  const posPlate=new THREE.Mesh(plateGeo, mat(0xd8452f,{metalness:0.5,roughness:0.35}));
+  posPlate.position.set(posX,0,0); terminals.add(posPlate); c3.plates.push(posPlate);
+  const posLbl=makeTextSprite('+',{color:'#ffd9c9',height:0.6}); posLbl.position.set(posX,0,0.5); terminals.add(posLbl);
+  const posWord=makeTextSprite('positive terminal',{color:'#ff8a5e',height:0.22}); posWord.position.set(posX,-1.55,0); terminals.add(posWord);
+  stage.add(terminals);
+  terminals.visible=c3.field;
+  c3.terminals=terminals;
+  for(let k=0;k<26;k++){
     const el3=new THREE.Mesh(new THREE.SphereGeometry(0.08,10,8), emat(0x5bc8ff,0.9));
-    el3.position.set((Math.random()-0.5)*3.6,(Math.random()-0.5)*2.4,(Math.random()-0.5)*0.6);
+    el3.position.set(C3_XMIN+0.5+Math.random()*(C3_XMAX-C3_XMIN-1.0),(Math.random()-0.5)*2.2,(Math.random()-0.5)*0.6);
     el3.userData.vx=(Math.random()-0.5)*0.6; el3.userData.vy=(Math.random()-0.5)*0.6;
     stage.add(el3); c3.electrons.push(el3);
   }
@@ -678,6 +704,7 @@ function c3_toggleField(){
   const b=el('c3-field');
   b.textContent=c3.field?'⚡ Voltage Applied: ON':'⚡ Voltage Applied: OFF';
   b.classList.toggle('on', c3.field);
+  if(c3.terminals) c3.terminals.visible=c3.field;
 }
 function c3_tick(dt){
   c3.t+=dt;
@@ -692,17 +719,19 @@ function c3_tick(dt){
     el3.position.x += (el3.userData.vx + drift)*dt;
     el3.position.y += el3.userData.vy*dt;
     if(Math.random()<0.02){ el3.userData.vx=(Math.random()-0.5)*0.6; el3.userData.vy=(Math.random()-0.5)*0.6; }
-    if(el3.position.x>2.0) el3.position.x=-2.0;
-    if(el3.position.x<-2.0) el3.position.x=2.0;
-    if(el3.position.y>1.3) el3.position.y=-1.3;
-    if(el3.position.y<-1.3) el3.position.y=1.3;
+    // electrons are attracted into the positive plate and re-emerge from the negative plate,
+    // just like the continuous flow of charge around a complete circuit
+    if(el3.position.x>C3_XMAX-0.3) el3.position.x=C3_XMIN+0.3;
+    if(el3.position.x<C3_XMIN+0.3) el3.position.x=C3_XMAX-0.3;
+    if(el3.position.y>1.1) el3.position.y=-1.1;
+    if(el3.position.y<-1.1) el3.position.y=1.1;
   });
 }
 function c3_hud(){
   return [
     {l:'Applied voltage',v:c3.field?'Yes':'No',c:c3.field?'#4dffa0':'#ff5e72'},
     {l:'Positive ions (lattice)',v:'Fixed in place, vibrating',c:'#ffc857'},
-    {l:'Free electrons',v:c3.field?'Random motion + net drift →':'Random motion only, no net drift',c:'#5bc8ff'}
+    {l:'Free electrons',v:c3.field?'Random motion + net drift → towards (+)':'Random motion only, no net drift',c:'#5bc8ff'}
   ];
 }
 const c3_pool=[
@@ -782,7 +811,7 @@ function c5_tick(dt){
     const speed=Math.abs(val)*0.3;
     updateLoopParticles(c5.parts,dt,speed,dir,x0,x1,y0,y1);
   }
-  drawACWave({mode:c5.mode, period: c5.mode==='ac'? 1/c5_freq() : 1.2, t:c5.t});
+  drawACWave({mode:c5.mode, freq: c5_freq(), t:c5.t});
 }
 function c5_toggleMode(){
   c5.mode = c5.mode==='dc'?'ac':'dc';
@@ -895,54 +924,54 @@ function c6_exitChallenge(){
   el('btn-challenge-toggle').classList.remove('on');
 }
 
-/* ================= SCENE C7 — Potential Difference (KPI 6.10 / 6.11 / 6.12) ================= */
-const c7={parts:null,pulses:[],running:false,t:0,Q:0,x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,challengeActive:false,chalMode:null,chalGiven:{},chalAnswer:0};
+/* ================= SCENE C7 — Potential Difference & Sharing p.d. in Series (KPI 6.10 / 6.11 / 6.12) ================= */
+const c7={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,res1:null,res2:null,r1x:0,r2x:0,challengeActive:false,chalMode:null,chalGiven:{},chalAnswer:0};
 function c7_build(){
   clearStage();
-  c7.running=false; c7.t=0; c7.Q=0; c7.pulses=[];
   const {x0,x1,y0,y1}=c7;
-  stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
   stage.add(batteryMesh(x0,0));
-  const r=resistorMesh(x1,0,'R'); stage.add(r); c7.resistor=r;
-  c7.parts=makeLoopParticles(14,0x5bc8ff,x0,x1,y0,y1);
+  const r1x = x0 + (x1-x0)*0.33;
+  const r2x = x0 + (x1-x0)*0.67;
+  c7.r1x=r1x; c7.r2x=r2x;
+  stage.add(wireSegment(x0,y1,r1x-0.6,y1,0x5a6a90));
+  stage.add(wireSegment(r1x+0.6,y1,r2x-0.6,y1,0x5a6a90));
+  stage.add(wireSegment(r2x+0.6,y1,x1,y1,0x5a6a90));
+  stage.add(wireSegment(x1,y1,x1,y0,0x5a6a90));
+  stage.add(wireSegment(x1,y0,x0,y0,0x5a6a90));
+  stage.add(wireSegment(x0,y0,x0,y1,0x5a6a90));
+  const res1=resistorMesh(0,0,'R1'); res1.rotation.z=Math.PI/2; res1.position.set(r1x,y1,0); stage.add(res1); c7.res1=res1;
+  const res2=resistorMesh(0,0,'R2'); res2.rotation.z=Math.PI/2; res2.position.set(r2x,y1,0); stage.add(res2); c7.res2=res2;
+  c7.parts=makeLoopParticles(16,0x5bc8ff,x0,x1,y0,y1);
 }
-function c7_V(){ return c7.challengeActive? c7.chalGiven.V : parseFloat(el('c7-V')?.value||6); }
-function c7_rate(){ return parseFloat(el('c7-rate')?.value||1.5); }
+function c7_V(){ return c7.challengeActive? c7.chalGiven.V : parseFloat(el('c7-V')?.value||9); }
+function c7_R1(){ return parseFloat(el('c7-R1')?.value||4); }
+function c7_R2(){ return parseFloat(el('c7-R2')?.value||6); }
 function c7_tick(dt){
   const {x0,x1,y0,y1}=c7;
-  const rate=c7.challengeActive?0:c7_rate();
-  updateLoopParticles(c7.parts,dt,clamp(rate*0.12,0.02,0.6),1,x0,x1,y0,y1);
-  if(c7.running){
-    const prevQ=c7.Q;
-    c7.t+=dt; c7.Q+=rate*dt;
-    if(Math.floor(c7.Q)>Math.floor(prevQ)) c7.pulses.push(spawnExpandingPulse(new THREE.Vector3(x1,0,0),0xff5e72));
-  }
-  tickPulses(c7.pulses,0.6,2.4);
-}
-function c7_toggleRun(){
-  c7.running=!c7.running;
-  const b=el('c7-start');
-  b.textContent=c7.running?'⏸ Stop':'▶ Start';
-  b.classList.toggle('on',c7.running);
+  const V=c7_V(), R1=c7_R1(), R2=c7_R2(), I=V/(R1+R2);
+  updateLoopParticles(c7.parts,dt,clamp(I*0.12,0.02,0.6),1,x0,x1,y0,y1);
 }
 function c7_hud(){
-  const V=c7_V(), W=V*c7.Q;
+  const V=c7_V();
   if(c7.challengeActive){
     if(c7.chalMode==='findV') return [{l:'Work done W',v:c7.chalGiven.W+' J',c:'#4dffa0'},{l:'Charge moved Q',v:c7.chalGiven.Q+' C',c:'#5bc8ff'},{l:'p.d. V',v:'? (calculate!)',c:'#ff5e72'}];
     return [{l:'p.d. V',v:c7.chalGiven.V+' V',c:'#ffc857'},{l:'Charge moved Q',v:c7.chalGiven.Q+' C',c:'#5bc8ff'},{l:'Work done W',v:'? (calculate!)',c:'#ff5e72'}];
   }
+  const R1=c7_R1(), R2=c7_R2(), I=V/(R1+R2), V1=I*R1, V2=I*R2;
   return [
-    {l:'p.d. V across component (set)',v:fmt(V,1)+' V',c:'#ffc857'},
-    {l:'Elapsed time t',v:fmt(c7.t,1)+' s',c:'#5bc8ff'},
-    {l:'Charge moved Q',v:fmt(c7.Q,2)+' C',c:'#b57aff'},
-    {l:'Work done W = VQ',v:fmt(W,1)+' J',c:'#4dffa0'}
+    {l:'Battery p.d. (supply) V',v:fmt(V,1)+' V',c:'#ffc857'},
+    {l:'R1',v:fmt(R1,1)+' Ω',c:'#5bc8ff'},
+    {l:'R2',v:fmt(R2,1)+' Ω',c:'#5bc8ff'},
+    {l:'Current I (same through both)',v:fmt(I,3)+' A',c:'#b57aff'},
+    {l:'p.d. across R1 → V1 = IR1',v:fmt(V1,2)+' V',c:'#4dffa0'},
+    {l:'p.d. across R2 → V2 = IR2',v:fmt(V2,2)+' V',c:'#4dffa0'},
+    {l:'Check: V1 + V2',v:fmt(V1+V2,2)+' V  (≈ V, shared!)',c:'#ff5e72'}
   ];
 }
 function c7_initChallenge(){
-  c7.challengeActive=true; c7.running=false; c7.t=0; c7.Q=0;
-  const startBtn=el('c7-start'); if(startBtn){ startBtn.disabled=true; startBtn.textContent='▶ Start'; startBtn.classList.remove('on'); }
-  const vSlider=el('c7-V'); if(vSlider) vSlider.disabled=true;
-  const rateSlider=el('c7-rate'); if(rateSlider) rateSlider.disabled=true;
+  c7.challengeActive=true;
+  const vSlider=el('c7-V'), r1Sel=el('c7-R1'), r2Sel=el('c7-R2');
+  if(vSlider) vSlider.disabled=true; if(r1Sel) r1Sel.disabled=true; if(r2Sel) r2Sel.disabled=true;
   el('caption').style.display='none';
   el('challenge-wrap').classList.add('s5-pos');
   const variant=Math.random()<0.5?'findV':'findW';
@@ -971,9 +1000,8 @@ function c7_checkChallenge(){
 }
 function c7_exitChallenge(){
   c7.challengeActive=false;
-  const startBtn=el('c7-start'); if(startBtn) startBtn.disabled=false;
-  const vSlider=el('c7-V'); if(vSlider) vSlider.disabled=false;
-  const rateSlider=el('c7-rate'); if(rateSlider) rateSlider.disabled=false;
+  const vSlider=el('c7-V'), r1Sel=el('c7-R1'), r2Sel=el('c7-R2');
+  if(vSlider) vSlider.disabled=false; if(r1Sel) r1Sel.disabled=false; if(r2Sel) r2Sel.disabled=false;
   el('caption').style.display='';
   el('challenge-wrap').classList.remove('show','s5-pos');
   el('btn-challenge-toggle').classList.remove('on');
@@ -1378,7 +1406,7 @@ const CH1_SCENES=[
       <p>A metal is made of a regular lattice of fixed positive ions, surrounded by a "sea" of <b>free (delocalised) electrons</b> that are not bound to any particular atom.</p>
       <p>With no voltage applied, these free electrons move about randomly, colliding constantly — but there is no overall drift in any direction, so no current flows.</p>
       <p>When a potential difference is applied, the free electrons gain a small net drift velocity on top of their random motion, superimposed in one direction — this net drift of charge <i>is</i> the electric current.</p>
-      <p>Toggle the voltage on and off below and watch the electrons' motion change.</p>`,
+      <p>The two ends of the lattice are labelled <b>+</b> and <b>−</b>, just like the terminals of the supply. Toggle the voltage on and watch the electrons — being negatively charged — drift towards the <b>positive</b> terminal.</p>`,
     build:c3_build, tick:c3_tick, hud:c3_hud,
     controlsHTML:`<button class="btn amber" id="c3-field">⚡ Voltage Applied: OFF</button>`,
     wire(){ el('c3-field').onclick=c3_toggleField; },
@@ -1418,17 +1446,17 @@ const CH1_SCENES=[
     onLeave(){ c6.running=false; },
     chalInit:c6_initChallenge, chalCheck:c6_checkChallenge, chalExit:c6_exitChallenge},
 
-  {key:'c7', tab:'7 · p.d.', kpi:'KPI 6.10 / 6.11 / 6.12', title:'Potential Difference (p.d.)',
+  {key:'c7', tab:'7 · p.d.', kpi:'KPI 6.10 / 6.11 / 6.12', title:'Potential Difference (p.d.) & Sharing p.d. in Series',
     blurb:`<p><b>What Is Potential Difference?</b></p>
       <p>As charge passes through a component such as a resistor or lamp, it loses electrical energy — that energy is transferred to the component (and then usually to the surroundings, as heat or light).</p>
       <p>The <b>potential difference (p.d.)</b> across a component is defined as the work done by a unit charge passing through it: <b>V = W/Q</b>. Like e.m.f., p.d. is measured in volts (V).</p>
-      <p>Press <b>▶ Start</b> and watch charge pass through the resistor; the running total of work done on the charge, <b>W = VQ</b>, is shown in the Measurements panel.</p>`,
+      <p><b>Sharing the p.d.:</b> this circuit has <b>two resistors in series</b>. The same current I flows through both, but the battery's p.d. is <b>shared</b> between them: <b>V = V1 + V2</b>, where V1 = IR1 and V2 = IR2. A bigger resistor gets a bigger share of the p.d.</p>
+      <p>Try different values of R1 and R2 below and watch how the p.d. splits between them in the Measurements panel.</p>`,
     build:c7_build, tick:c7_tick, hud:c7_hud,
-    controlsHTML:`<div class="sw">V=<input type="range" id="c7-V" min="0.5" max="20" step="0.5" value="6"></div>
-      <div class="sw">Charge rate=<input type="range" id="c7-rate" min="0.5" max="5" step="0.1" value="1.5"> C/s</div>
-      <button class="btn green" id="c7-start">▶ Start</button>`,
-    wire(){ el('c7-start').onclick=c7_toggleRun; },
-    onLeave(){ c7.running=false; },
+    controlsHTML:`<div class="sw">Supply V=<input type="range" id="c7-V" min="1" max="20" step="0.5" value="9"></div>
+      <div class="sw">R1=<select id="c7-R1"><option value="2">2 Ω</option><option value="4" selected>4 Ω</option><option value="6">6 Ω</option><option value="10">10 Ω</option><option value="15">15 Ω</option></select></div>
+      <div class="sw">R2=<select id="c7-R2"><option value="2">2 Ω</option><option value="4">4 Ω</option><option value="6" selected>6 Ω</option><option value="10">10 Ω</option><option value="15">15 Ω</option></select></div>`,
+    wire(){},
     chalInit:c7_initChallenge, chalCheck:c7_checkChallenge, chalExit:c7_exitChallenge},
 
   {key:'c8', tab:'8 · Voltmeters', kpi:'KPI 6.13', title:'Voltmeters — Analogue & Digital, with Different Ranges',
