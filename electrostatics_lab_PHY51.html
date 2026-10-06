@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Electrostatics Lab | PHY51</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{
+  --bg:#07090f;
+  --surface:#0d1120;
+  --border:rgba(180,200,255,0.10);
+  --amber:#ffc857;
+  --blue:#5bc8ff;
+  --violet:#b57aff;
+  --green:#4dffa0;
+  --red:#ff5e72;
+  --text:#ddeeff;
+  --muted:rgba(180,210,255,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-weight:300;overflow:hidden;height:100vh;width:100vw;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:none;}
+
+#mainCanvas{position:absolute;inset:0;z-index:1;touch-action:none;}
+#labelCanvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3;}
+
+#title{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:9px;}
+#title-logo{width:34px;height:37px;flex-shrink:0;opacity:0.82;}
+#title-text h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.4px;}
+#title-text p{font-size:9px;color:rgba(180,200,255,0.4);letter-spacing:1.6px;text-transform:uppercase;margin-top:2px;font-family:'Space Mono',monospace;}
+
+/* QR button */
+#qr-btn{position:fixed;bottom:20px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,200,87,.3);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .2s;color:rgba(255,200,87,.55);}
+#qr-btn:hover{border-color:rgba(255,200,87,.6);background:rgba(255,200,87,.12);color:#ffc857;}
+#qr-btn svg{width:20px;height:20px;}
+#qr-modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,6,18,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qr-modal.show{display:flex;}
+#qr-modal-box{background:rgba(6,8,20,.97);border:1px solid rgba(255,200,87,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:270px;width:90%;}
+#qr-modal-box h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(255,200,87,.5);text-transform:uppercase;margin-bottom:14px;}
+#qr-modal-box img{width:168px;height:168px;border-radius:10px;border:2px solid rgba(255,200,87,.2);display:block;margin:0 auto 14px;}
+#qr-modal-box p{font-family:'Space Mono',monospace;font-size:8px;color:rgba(255,200,87,.35);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qr-modal-close{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(255,200,87,.35);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qr-modal-close:hover{color:#ffc857;}
+
+#tabbar{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:5px;z-index:10;max-width:calc(100vw - 200px);overflow-x:auto;}
+#tabbar::-webkit-scrollbar{height:0;}
+.tab-btn{padding:8px 11px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;transition:all .18s;}
+.tab-btn:hover{color:#fff;}
+.tab-btn.on{background:rgba(91,200,255,0.20);color:#fff;}
+
+#hud{
+  position:absolute;top:70px;right:14px;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:15px;width:230px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;
+}
+#hud h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+#hud h3{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--amber);margin:8px 0 6px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(180,200,255,0.04);gap:6px;}
+.dl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,210,255,0.6);}
+.dv{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-align:right;}
+.dv.amber{color:var(--amber);}
+.dv.blue{color:var(--blue);}
+.dv.violet{color:var(--violet);}
+.dv.green{color:var(--green);}
+.hdiv{height:1px;background:var(--border);margin:9px 0;}
+#legend{display:flex;flex-wrap:wrap;gap:6px 10px;font-family:'Space Mono',monospace;font-size:9px;}
+.legchip{display:flex;align-items:center;gap:4px;color:rgba(200,215,255,.65);}
+.legdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.note-box{padding:8px 9px;border-radius:9px;background:rgba(180,120,255,0.06);border:1px solid rgba(180,120,255,0.18);font-size:10px;font-family:'Space Mono',monospace;color:rgba(210,220,255,0.8);line-height:1.7;}
+
+#infoPanel{position:absolute;top:70px;left:14px;width:270px;max-width:calc(100vw - 320px);
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;
+  padding:15px;z-index:10;max-height:calc(100vh - 160px);overflow-y:auto;}
+#infoPanel h2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2.5px;color:rgba(180,200,255,0.45);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.info-block h3{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:8px;}
+.info-block p{font-size:11.5px;line-height:1.65;color:rgba(210,222,250,0.82);margin-bottom:8px;}
+.info-block p:last-child{margin-bottom:0;}
+.info-block b{color:#fff;}
+.info-block .pos{color:var(--red);font-weight:700;}
+.info-block .neg{color:var(--blue);font-weight:700;}
+.info-block .step-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;color:var(--green);background:rgba(77,255,160,.08);border:1px solid rgba(77,255,160,.25);border-radius:6px;padding:2px 7px;margin-bottom:7px;letter-spacing:.5px;}
+.atom-toggle-btn{display:block;width:100%;text-align:left;background:rgba(180,200,255,0.06);border:1px solid rgba(180,200,255,0.18);color:var(--blue);border-radius:9px;padding:7px 10px;font-family:'Space Mono',monospace;font-size:10.5px;cursor:pointer;margin:6px 0;}
+.atom-toggle-btn:hover{background:rgba(180,200,255,0.12);}
+#atom-canvas-wrap{width:100%;height:170px;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 40%, #0d1428, #05070d);margin:8px 0;border:1px solid var(--border);}
+#atomCanvas{width:100%;height:100%;display:block;touch-action:none;}
+.atom-legend{display:flex;gap:10px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:9px;color:rgba(200,215,255,.65);margin-bottom:8px;}
+
+#controls{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;align-items:center;
+  background:rgba(10,14,28,0.92);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:40px;
+  padding:8px 14px;z-index:10;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 24px);
+}
+.ctrl-block{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.btn{padding:7px 14px;border-radius:26px;border:1px solid rgba(180,200,255,0.25);background:rgba(180,200,255,0.06);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;outline:none;}
+.btn:hover{background:rgba(180,200,255,0.14);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.on{background:rgba(91,200,255,0.2);border-color:var(--blue);color:#fff;}
+.btn.green{border-color:rgba(77,255,160,0.4);color:var(--green);background:rgba(77,255,160,0.06);}
+.btn.red{border-color:rgba(255,94,114,0.4);color:var(--red);background:rgba(255,94,114,0.06);}
+.btn.amber{border-color:rgba(255,200,87,0.4);color:var(--amber);background:rgba(255,200,87,0.06);}
+.sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;font-family:'Space Mono',monospace;white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(180,200,255,0.15);outline:none;cursor:pointer;width:80px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 8px rgba(181,122,255,0.6);}
+
+#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);font-size:8.5px;color:rgba(180,200,255,0.2);letter-spacing:1px;pointer-events:none;font-family:'Space Mono',monospace;z-index:10;white-space:nowrap;}
+
+@media (max-width:820px){
+  #infoPanel{display:none;}
+  #hud{width:190px;top:66px;}
+  #tabbar{max-width:calc(100vw - 20px);top:60px;left:14px;transform:none;}
+  #title{position:absolute;}
+}
+</style>
+</head>
+<body>
+<canvas id="mainCanvas"></canvas>
+<canvas id="labelCanvas"></canvas>
+
+<div id="title">
+  <svg id="title-logo" viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+  <div id="title-text">
+    <h1>ELECTROSTATICS LAB</h1>
+    <p>PHY51 · Charge · Fields · Conductors</p>
+  </div>
+</div>
+
+
+<div id="tabbar">
+  <button class="tab-btn on" data-mod="charges">1 · CHARGES</button>
+  <button class="tab-btn" data-mod="charging">2 · FRICTION</button>
+  <button class="tab-btn" data-mod="experiments">3 · DETECTING</button>
+  <button class="tab-btn" data-mod="fields">4 · FIELDS</button>
+  <button class="tab-btn" data-mod="cond">5 · CONDUCTORS</button>
+</div>
+
+<div id="hud">
+  <h2>Readings</h2>
+  <div id="legend">
+    <span class="legchip"><span class="legdot" style="background:var(--red);"></span>positive</span>
+    <span class="legchip"><span class="legdot" style="background:var(--blue);"></span>negative</span>
+    <span class="legchip"><span class="legdot" style="background:#8fa2c0;"></span>neutral</span>
+  </div>
+  <div class="hdiv"></div>
+
+  <div id="hud-charges" class="hud-block">
+    <div class="dr"><span class="dl">Charge A</span><span class="dv" id="val-qA" style="color:var(--red);">+5.0 µC</span></div>
+    <div class="dr"><span class="dl">Charge B</span><span class="dv" id="val-qB" style="color:var(--blue);">−5.0 µC</span></div>
+    <div class="dr"><span class="dl">Separation r</span><span class="dv" id="val-r">0.75 m</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Coulomb force</span><span class="dv amber" id="val-force">0.400 N</span></div>
+    <div class="dr"><span class="dl">Interaction</span><span class="dv green" id="val-interaction">ATTRACTION</span></div>
+  </div>
+
+  <div id="hud-charging" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Rod</span><span class="dv" id="val-rodq">neutral</span></div>
+    <div class="dr"><span class="dl">Cloth</span><span class="dv" id="val-clothq">neutral</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Electrons moved</span><span class="dv amber" id="val-etransfer">0</span></div>
+    <div class="dr"><span class="dl">Charge magnitude</span><span class="dv amber" id="val-qtransfer">0.00 nC</span></div>
+  </div>
+
+
+
+
+  <div id="hud-fields" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Source</span><span class="dv" id="val-f-src">–</span></div>
+    <div class="dr"><span class="dl">Field direction</span><span class="dv amber" id="val-f-dir">–</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Force on test charge</span><span class="dv green" id="val-f-force">–</span></div>
+    <div class="note-box">Field direction = direction of the force on a <b>positive</b> charge. Yellow arrow = force on the test charge.</div>
+  </div>
+  <div id="hud-cond" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Material</span><span class="dv" id="val-c-mat">–</span></div>
+    <div class="dr"><span class="dl">Type</span><span class="dv" id="val-c-type">–</span></div>
+    <div class="dr"><span class="dl">Outer electrons</span><span class="dv" id="val-c-el">–</span></div>
+    <div class="hdiv"></div>
+    <div class="dr"><span class="dl">Charge on A</span><span class="dv blue" id="val-c-qa">–</span></div>
+    <div class="dr"><span class="dl">Charge on B</span><span class="dv blue" id="val-c-qb">–</span></div>
+    <div class="note-box" id="val-c-res">–</div>
+  </div>
+
+  <div id="hud-experiments" class="hud-block" style="display:none;">
+    <div class="dr"><span class="dl">Test rod</span><span class="dv" id="val-exprod">uncharged</span></div>
+    <div class="dr"><span class="dl">Electroscope</span><span class="dv" id="val-expescope">uncharged</span></div>
+    <div class="dr"><span class="dl">Leaf divergence</span><span class="dv amber" id="val-expangle">0°</span></div>
+    <div class="hdiv"></div>
+    <div class="note-box" id="val-expnote">Bring the charged rod near the cap to test for charge.</div>
+  </div>
+</div>
+
+<div id="infoPanel">
+  <h2>Concept</h2>
+
+  <div id="info-charges" class="info-block">
+    <h3>Types of Charge &amp; Coulomb's Law</h3>
+    <p>There are exactly <b>two kinds</b> of electric charge: <span class="pos">positive (+)</span> and <span class="neg">negative (−)</span>. The SI unit of charge is the <b>coulomb (C)</b>.</p>
+    <p>The space around a charge is an <b>electric field</b> — a region where another charge feels a force. The arrows on the field lines point the way a <b>positive</b> charge would be pushed.</p>
+    <p><b>Like charges repel; unlike charges attract.</b> Change the signs, separation and size of the charges below and watch the field lines, the force reading and the charges' own motion respond. A positive charge is drawn as a red sphere and a negative charge as a blue sphere; either sphere grows or shrinks with the charge magnitude (q).</p>
+    <button class="atom-toggle-btn" id="btn-atom-toggle">▸ What's inside an atom?</button>
+    <div id="atom-panel-body" style="display:none;">
+      <p>Every atom is built from three particles: <b>protons</b> (<span class="pos">positive</span>), <b>neutrons</b> (neutral — no charge at all), and <b>electrons</b> (<span class="neg">negative</span>). Protons and neutrons are bound tightly together in a tiny, dense <b>nucleus</b> at the centre; electrons occupy the much larger space around it.</p>
+      <div id="atom-canvas-wrap"><canvas id="atomCanvas"></canvas></div>
+      <div class="atom-legend">
+        <span class="legchip"><span class="legdot" style="background:var(--red);"></span>proton (+)</span>
+        <span class="legchip"><span class="legdot" style="background:#8fa2c0;"></span>neutron (0)</span>
+        <span class="legchip"><span class="legdot" style="background:var(--blue);"></span>electron (−)</span>
+      </div>
+      <p>Most everyday objects are <b>electrically neutral</b> because they contain an equal number of protons and electrons, so the positive and negative charges exactly cancel out. Charging an object never creates or destroys charge — it just unbalances this equal count by moving electrons in or out.</p>
+    </div>
+  </div>
+
+  <div id="info-charging" class="info-block" style="display:none;">
+    <h3>Charging a Body</h3>
+    <p>Charging an object means giving it an overall (net) charge. This always happens by the <b>addition or removal of electrons</b> — protons stay locked inside atomic nuclei and are never transferred between objects.</p>
+    <p>Rub the rod against the cloth: electrons hop from one surface to the other. Whichever object <b>gains</b> electrons ends up <span class="neg">negative</span>; whichever <b>loses</b> electrons ends up <span class="pos">positive</span> — by exactly equal amounts, since charge is conserved.</p>
+  </div>
+
+
+
+
+  <div id="info-fields" class="info-block" style="display:none;">
+    <h3>Electric Fields</h3>
+    <p>An <b>electric field</b> is a region in which an electric charge experiences a force. The <b>direction</b> of the field at a point is the direction of the force on a <span class="pos">positive</span> charge placed there.</p>
+    <p><b>Point charge:</b> lines radiate out from +, and in towards −. <b>Charged conducting sphere:</b> the same radial pattern outside; the charge sits on the surface. <b>Parallel plates:</b> straight, equally spaced lines from + to − (a uniform field; end effects ignored).</p>
+    <p>Release the test charge: a <span class="pos">+</span> charge moves along the field; a <span class="neg">−</span> charge moves against it.</p>
+  </div>
+  <div id="info-cond" class="info-block" style="display:none;">
+    <h3>Conductors &amp; Insulators</h3>
+    <p><b>Experiment:</b> connect the charged sphere A to the neutral sphere B using a rod of each material. If B gains charge, the material is a <b>conductor</b>; if not, it is an <b>insulator</b>.</p>
+    <p><b>Electron model:</b> in a conductor (e.g. copper, iron) some electrons are <b>free</b> to move through the lattice of fixed positive ions, so charge can flow. In an insulator (plastic, glass, wood) all electrons are <b>bound</b> to their atoms and only vibrate, so charge cannot flow.</p>
+  </div>
+
+  <div id="info-experiments" class="info-block" style="display:none;">
+    <h3>Producing &amp; Detecting Charge</h3>
+    <p><b>Production:</b> rubbing two different insulating materials together (friction) transfers electrons between them, charging both — this is how the test rod is charged.</p>
+    <p><b>Detection:</b> the gold-leaf electroscope detects charge. Charge spreads down the stem to two thin leaves, which — carrying the <b>same sign</b> — repel and diverge. The amount of divergence shows roughly how much charge is present, and comparing an approaching rod's effect on an already-charged electroscope reveals its sign.</p>
+  </div>
+</div>
+
+<div id="controls">
+  <div id="ctrl-charges" class="ctrl-block" style="display:flex;">
+    <button class="btn red" id="btn-signA">A: +</button>
+    <button class="btn" id="btn-signB">B: −</button>
+    <div class="sep"></div>
+    <span class="sw">r=<input type="range" id="sl-dist" min="2" max="9" step="0.5" value="5"><span id="lbl-dist">5.0</span></span>
+    <span class="sw">q=<input type="range" id="sl-mag" min="1" max="10" step="1" value="5"><span id="lbl-mag">5µC</span></span>
+    <div class="sep"></div>
+    <button class="btn" id="btn-reset-charges">Reset</button>
+  </div>
+
+  <div id="ctrl-charging" class="ctrl-block" style="display:none;">
+    <button class="btn on" id="btn-pair-poly">Polythene + Cloth</button>
+    <button class="btn" id="btn-pair-glass">Glass + Silk</button>
+    <div class="sep"></div>
+    <button class="btn green" id="btn-rub">⚡ Rub</button>
+    <button class="btn" id="btn-reset-charging">Reset</button>
+  </div>
+
+
+
+
+  <div id="ctrl-experiments" class="ctrl-block" style="display:none;">
+    <button class="btn" id="btn-exp-rub">⚡ Charge Rod (−)</button>
+    <span class="sw">dist=<input type="range" id="sl-exp-dist" min="1" max="6" step="0.25" value="6"><span id="lbl-exp-dist">6.0</span></span>
+    <button class="btn amber" id="btn-exp-touch">Touch Cap</button>
+    <div class="sep"></div>
+    <button class="btn red" id="btn-exp-test-pos" disabled>Test: + rod</button>
+    <button class="btn" id="btn-exp-test-neg" disabled>Test: − rod</button>
+    <button class="btn" id="btn-reset-exp">Reset</button>
+  </div>
+
+  <div id="ctrl-fields" class="ctrl-block" style="display:none;">
+    <button class="btn on" data-fm="point+">+ Point</button>
+    <button class="btn" data-fm="point-">− Point</button>
+    <button class="btn" data-fm="sphere">Sphere</button>
+    <button class="btn" data-fm="plates">Plates</button>
+    <div class="sep"></div>
+    <button class="btn" id="btn-f-sign">Test charge: +</button>
+    <button class="btn green" id="btn-f-release">▶ Release</button>
+  </div>
+  <div id="ctrl-cond" class="ctrl-block" style="display:none;">
+    <button class="btn on" data-mat="copper">Copper</button>
+    <button class="btn" data-mat="iron">Iron</button>
+    <button class="btn" data-mat="plastic">Plastic</button>
+    <button class="btn" data-mat="glass">Glass</button>
+    <button class="btn" data-mat="wood">Wood</button>
+    <div class="sep"></div>
+    <button class="btn amber" id="btn-c-connect">Connect rod</button>
+    <button class="btn" id="btn-c-reset">Reset</button>
+  </div>
+
+  <div class="sep"></div>
+  <button class="btn" id="btn-camreset">⟲ View</button>
+</div>
+
+<div id="hint">🖐️ drag: rotate view · scroll / pinch: zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+/* ============================== CORE SETUP ============================== */
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x07090f, 0);
+const scene3 = new THREE.Scene();
+scene3.fog = new THREE.FogExp2(0x07090f, 0.018);
+const cam3 = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+const labelCanvas = document.getElementById('labelCanvas');
+const lctx = labelCanvas.getContext('2d');
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  cam3.aspect = w / h; cam3.updateProjectionMatrix();
+  labelCanvas.width = w; labelCanvas.height = h;
+}
+resize(); window.addEventListener('resize', resize);
+
+scene3.add(new THREE.AmbientLight(0xffffff, 2.2));
+const sun = new THREE.DirectionalLight(0xfff8f0, 1.1); sun.position.set(5,10,6); scene3.add(sun);
+const rim = new THREE.DirectionalLight(0x6688ff, 0.5); rim.position.set(-6,4,-4); scene3.add(rim);
+
+const floorM = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0x0d1020, roughness:0.95}));
+floorM.rotation.x = -Math.PI/2; floorM.position.y = -2.3; scene3.add(floorM);
+const grid = new THREE.GridHelper(40,30,0x1a2540,0x121c30); grid.position.y = -2.28; scene3.add(grid);
+const root3 = new THREE.Group(); scene3.add(root3);
+
+/* ============================== SHARED HELPERS ============================== */
+const COL_POS = 0xff5e72, COL_NEG = 0x5bc8ff, COL_NEUTRAL = 0x8fa2c0, COL_EARTH = 0x4dffa0, COL_ROD_METAL = 0x445566, COL_STAND = 0x3a4560;
+const ELECTRON_COLOR = 0xb57aff; // electrons are ALWAYS this colour, distinct from any sphere/rod/background tint
+const K_COULOMB = 8.99e9, E_CHARGE = 1.6e-19;
+
+function ease(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+function lerp(a,b,t){ return a + (b-a)*t; }
+function tween(duration, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now-start)/duration);
+    onUpdate(ease(t), t);
+    if(t < 1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+function fibonacciSphereDirs(n){
+  const pts = [];
+  const offset = 2/n, increment = Math.PI*(3 - Math.sqrt(5));
+  for(let i=0;i<n;i++){
+    const y = ((i*offset) - 1) + (offset/2);
+    const r = Math.sqrt(Math.max(0, 1 - y*y));
+    const phi = i*increment;
+    pts.push(new THREE.Vector3(Math.cos(phi)*r, y, Math.sin(phi)*r));
+  }
+  return pts;
+}
+
+function makeElectronCloud(n, radius, colorHex){
+  // colorHex is accepted for API compatibility but electrons always render in ELECTRON_COLOR.
+  // Uses an UNLIT (MeshBasicMaterial) so the dot's colour never washes out under the scene's
+  // strong ambient/directional lighting, keeping it clearly distinct from whatever it sits on.
+  const grp = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({color:ELECTRON_COLOR});
+  const dirs = fibonacciSphereDirs(n);
+  const dots = [];
+  dirs.forEach(d=>{
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.075,10,10), mat.clone());
+    dot.position.copy(d.clone().multiplyScalar(radius*1.03));
+    grp.add(dot);
+    dots.push({mesh:dot, homeDir:d.clone()});
+  });
+  return {group:grp, dots};
+}
+
+// Deterministic flat grid of points across a rectangle - for charges that sit on a flat surface
+// (like the cloth) where a spherical shell would float unnaturally off the object instead of
+// resting on it.
+function flatGridPositions(n, halfW, halfD){
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n/cols);
+  const pts = [];
+  let i=0;
+  for(let r=0;r<rows && i<n;r++){
+    for(let c=0;c<cols && i<n;c++){
+      const fx = cols>1 ? (c/(cols-1))*2-1 : 0;
+      const fz = rows>1 ? (r/(rows-1))*2-1 : 0;
+      pts.push(new THREE.Vector3(fx*halfW, 0, fz*halfD));
+      i++;
+    }
+  }
+  return pts;
+}
+// A flat cloud of electron dots lying on a rectangle (local y=0), instead of a spherical shell.
+function makeFlatElectronCloud(n, halfW, halfD){
+  const grp = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({color:ELECTRON_COLOR});
+  const dots = flatGridPositions(n, halfW, halfD).map(p=>{
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.075,10,10), mat.clone());
+    dot.position.copy(p);
+    grp.add(dot);
+    return {mesh:dot, homeDir:p.clone()};
+  });
+  return {group:grp, dots};
+}
+
+function makeStand(height){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:COL_STAND, metalness:0.5, roughness:0.5});
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.5,0.14,20), mat);
+  base.position.y = -2.3 + 0.07; g.add(base);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,height,10), mat);
+  post.position.y = -2.3 + 0.14 + height/2; g.add(post);
+  return g;
+}
+
+function makeGroundSymbol(){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:COL_EARTH, emissive:COL_EARTH, emissiveIntensity:0.5});
+  for(let i=0;i<3;i++){
+    const w = 0.5 - i*0.15;
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(w,0.03,0.03), mat);
+    bar.position.y = -i*0.12;
+    g.add(bar);
+  }
+  return g;
+}
+
+function makeSignSprite(){ /* placeholder retained for API symmetry */ }
+
+// field-line tracer shared by "charges" and "polarization" modules
+function fieldAt(p, cA, qA, cB, qB){
+  const rA = p.clone().sub(cA); const dA = Math.max(rA.length(), 0.12);
+  const eA = rA.normalize().multiplyScalar(qA/(dA*dA));
+  const rB = p.clone().sub(cB); const dB = Math.max(rB.length(), 0.12);
+  const eB = rB.normalize().multiplyScalar(qB/(dB*dB));
+  return eA.add(eB);
+}
+function traceFieldLine(startPos, cA, qA, cB, qB, sourceSign, stepSize, maxSteps, stopR, boundR){
+  let p = startPos.clone();
+  const pts = [p.clone()];
+  for(let i=0;i<maxSteps;i++){
+    const Ef = fieldAt(p, cA, qA, cB, qB);
+    if(Ef.length() < 1e-7) break;
+    const dir = Ef.normalize().multiplyScalar(Math.sign(sourceSign) || 1);
+    p = p.clone().addScaledVector(dir, stepSize);
+    pts.push(p.clone());
+    if(p.distanceTo(cA) < stopR || p.distanceTo(cB) < stopR) break;
+    if(p.length() > boundR) break;
+  }
+  return pts;
+}
+function buildLineFromPoints(points, color, opacity){
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({color, transparent:true, opacity: opacity===undefined?0.8:opacity});
+  return new THREE.Line(geo, mat);
+}
+// Places small static cone "arrowheads" along a traced field-line path, oriented along the local
+// direction of travel, to show field direction without needing a continuously-animated dot.
+function addArrowsAlongPath(group, points, color, count, fieldDirFn){
+  const n = points.length;
+  if(n < 2) return;
+  const segTotal = n-1;
+  const num = count || 3;
+  for(let k=1;k<=num;k++){
+    const frac = k/(num+1);
+    const idxF = frac*segTotal;
+    const i0 = Math.min(segTotal-1, Math.floor(idxF));
+    const t = idxF - i0;
+    const p0 = points[i0], p1 = points[Math.min(i0+1, segTotal)];
+    const pos = new THREE.Vector3().lerpVectors(p0,p1,t);
+    // Arrow direction should always be the TRUE electric field direction at this point (away from
+    // positive charges, into negative charges) - NOT the direction the tracer happened to walk in,
+    // since for a source that's itself negative the tracer walks against the local field to get the
+    // right curve shape, which would otherwise draw the arrowhead backwards.
+    let dir = null;
+    if(fieldDirFn) dir = fieldDirFn(pos);
+    if(!dir || dir.lengthSq() < 1e-10){
+      dir = p1.clone().sub(p0);
+      if(dir.lengthSq() < 1e-8) continue;
+    }
+    dir = dir.clone().normalize();
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.05,0.16,8), new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.85}));
+    cone.position.copy(pos);
+    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+    group.add(cone);
+  }
+}
+
+// Redistributes a unit direction toward one hemisphere along `axis` (targetSign = +1 keeps it on the
+// +axis side, -1 on the -axis side), preserving its azimuthal position so points spread smoothly
+// across the target hemisphere rather than collapsing onto a single point. amount 0..1: 0 = untouched,
+// 1 = essentially fully migrated to that hemisphere. Used to show electrons redistributing under an
+// external field (polarization / induction) in a way that still looks like a spread-out charge cloud.
+function remapHemisphere(homeDir, axis, targetSign, amount){
+  const c = homeDir.dot(axis);
+  const perp = homeDir.clone().addScaledVector(axis, -c);
+  const perpLen = perp.length();
+  // Cap the migration itself (not the caller's `amount`, which still drives patches/field strength):
+  // driving newC all the way to ~0.97 at full amount collapses ~20 points into a tiny cap where they
+  // visibly overlap. Capping the blend keeps them spread over a wider - but still clearly lopsided -
+  // patch of the sphere.
+  const cappedAmount = Math.min(amount, 0.6);
+  const newC = THREE.MathUtils.lerp(c, targetSign*0.97, cappedAmount);
+  const newPerpScale = Math.sqrt(Math.max(0, 1-newC*newC));
+  if(perpLen > 1e-5){
+    return axis.clone().multiplyScalar(newC).add(perp.multiplyScalar(newPerpScale/perpLen)).normalize();
+  }
+  const arbitrary = Math.abs(axis.x) < 0.9 ? new THREE.Vector3(1,0,0) : new THREE.Vector3(0,1,0);
+  const perp2 = arbitrary.clone().sub(axis.clone().multiplyScalar(arbitrary.dot(axis))).normalize();
+  return axis.clone().multiplyScalar(newC).add(perp2.multiplyScalar(newPerpScale)).normalize();
+}
+
+function worldToScreen(v){
+  const c = v.clone().project(cam3);
+  return {x:(c.x*.5+.5)*window.innerWidth, y:(-.5*c.y+.5)*window.innerHeight};
+}
+function drawLabelChip(p, t, c, size){
+  const s = worldToScreen(p);
+  const fs = size || 11;
+  lctx.font = '700 '+fs+'px "Space Mono", monospace';
+  lctx.textAlign = 'center';
+  const tw = lctx.measureText(t).width;
+  lctx.fillStyle = 'rgba(4,7,15,0.72)';
+  lctx.fillRect(s.x-tw/2-5, s.y-fs-1, tw+10, fs+8);
+  lctx.fillStyle = c || '#ffffff';
+  lctx.shadowBlur = 6; lctx.shadowColor = c || '#fff';
+  lctx.fillText(t, s.x, s.y+4);
+  lctx.shadowBlur = 0;
+}
+
+/* ============================== ORBIT CONTROL ============================== */
+const orb = { theta:0.35, phi:0.20, radius:9, cx:0, cy:0.3, cz:0 };
+function applyOrbit(){
+  orb.phi = Math.max(-Math.PI/5, Math.min(Math.PI/3.2, orb.phi));
+  orb.radius = Math.max(3.5, Math.min(30, orb.radius));
+  const r=orb.radius, p=orb.phi, t=orb.theta;
+  cam3.position.set(orb.cx + r*Math.cos(p)*Math.sin(t), orb.cy + r*Math.sin(p), orb.cz + r*Math.cos(p)*Math.cos(t));
+  cam3.lookAt(orb.cx, orb.cy, orb.cz);
+}
+applyOrbit();
+
+let dragStart=null, pinchStartDist=0, pinchStartRadius=orb.radius;
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  if(e.touches.length===1){ dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; }
+  else if(e.touches.length===2){
+    const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+    pinchStartDist=Math.hypot(dx,dy); pinchStartRadius=orb.radius; dragStart=null;
+  }
+},{passive:false});
+canvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  if(e.touches.length===1 && dragStart){
+    const dx=e.touches[0].clientX-dragStart.x, dy=e.touches[0].clientY-dragStart.y;
+    orb.theta -= dx*0.005; orb.phi += dy*0.005; applyOrbit();
+    dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  } else if(e.touches.length===2 && pinchStartDist>0){
+    const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+    const nd=Math.hypot(dx,dy);
+    orb.radius = Math.max(3.5, Math.min(30, pinchStartRadius*(pinchStartDist/nd)));
+    applyOrbit();
+  }
+},{passive:false});
+canvas.addEventListener('touchend', e=>{ if(e.touches.length===0){ dragStart=null; pinchStartDist=0; } },{passive:false});
+canvas.addEventListener('mousedown', e=>{ dragStart={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mousemove', e=>{
+  if(!dragStart) return;
+  const dx=e.clientX-dragStart.x, dy=e.clientY-dragStart.y;
+  orb.theta -= dx*0.005; orb.phi += dy*0.005; applyOrbit();
+  dragStart={x:e.clientX,y:e.clientY};
+});
+window.addEventListener('mouseup', ()=>{ dragStart=null; });
+canvas.addEventListener('wheel', e=>{ orb.radius += e.deltaY*0.01; applyOrbit(); e.preventDefault(); }, {passive:false});
+
+/* ============================== MODULE 1: CHARGES & COULOMB'S LAW ============================== */
+const grpCharges = new THREE.Group(); root3.add(grpCharges);
+const state1 = { signA:1, signB:-1, dist:5, mag:5 };
+const METER_SCALE = 0.15;
+
+// Small "+" markers (used elsewhere, e.g. as fixed proton markers / conduction charge markers).
+function makePlusMesh(armSpan, thickness, material){
+  const grp = new THREE.Group();
+  const barX = new THREE.Mesh(new THREE.BoxGeometry(armSpan, thickness, thickness), material);
+  const barY = new THREE.Mesh(new THREE.BoxGeometry(thickness, armSpan, thickness), material);
+  const barZ = new THREE.Mesh(new THREE.BoxGeometry(thickness, thickness, armSpan), material);
+  grp.add(barX, barY, barZ);
+  return grp;
+}
+
+// Both positive and negative point charges are shown as spheres, colored by sign.
+function makePointChargeMesh(sign){
+  const color = sign>0 ? COL_POS : COL_NEG;
+  const mat = new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
+  return new THREE.Mesh(new THREE.SphereGeometry(0.55,32,32), mat);
+}
+const sphereA = makePointChargeMesh(1); grpCharges.add(sphereA);
+const sphereB = makePointChargeMesh(-1); grpCharges.add(sphereB);
+// bigger sphere = bigger charge magnitude, so the q slider has a visible on-screen effect
+function chargeVisualScale(mag){ return 0.72 + (mag-1)/9*0.55; }
+const fieldLineGroup1 = new THREE.Group(); grpCharges.add(fieldLineGroup1);
+
+function rebuildFieldLines1(){
+  while(fieldLineGroup1.children.length) fieldLineGroup1.remove(fieldLineGroup1.children[0]);
+  const ax = state1.dist/2;
+  const cA = new THREE.Vector3(-ax,0.4,0), cB = new THREE.Vector3(ax,0.4,0);
+  const qA = state1.signA*state1.mag, qB = state1.signB*state1.mag;
+  const R = 0.58 * chargeVisualScale(state1.mag);
+  // scale step count / bounding radius with separation so lines reliably reach the far charge
+  // (a curved path is longer than the straight-line separation) even at maximum slider distance.
+  const stepSize = 0.14;
+  const maxSteps = Math.ceil((state1.dist*3.6)/stepSize);
+  const boundR = Math.max(9, state1.dist*1.7+4);
+  function seedLines(center, q){
+    const dirs = fibonacciSphereDirs(10);
+    dirs.forEach(d=>{
+      const start = center.clone().addScaledVector(d, R+0.03);
+      const pts = traceFieldLine(start, cA, qA, cB, qB, q, stepSize, maxSteps, R+0.02, boundR);
+      if(pts.length < 2) return;
+      const color = q>0 ? 0xffb0b8 : 0xa8dcff;
+      fieldLineGroup1.add(buildLineFromPoints(pts, color, 0.55));
+      addArrowsAlongPath(fieldLineGroup1, pts, q>0?COL_POS:COL_NEG, 3, (pos)=>fieldAt(pos, cA, qA, cB, qB));
+    });
+  }
+  if(Math.sign(qA) !== Math.sign(qB)){
+    // opposite signs: trace from the positive charge only; lines terminate on the negative one
+    if(qA>0) seedLines(cA, qA); else seedLines(cB, qB);
+  } else {
+    seedLines(cA, qA);
+    seedLines(cB, qB);
+  }
+}
+
+function updateCharges1(){
+  const ax = state1.dist/2;
+  const posA = new THREE.Vector3(-ax,0.4,0), posB = new THREE.Vector3(ax,0.4,0);
+  sphereA.position.copy(posA);
+  sphereB.position.copy(posB);
+  const colA = state1.signA>0 ? COL_POS : COL_NEG;
+  sphereA.material.color.setHex(colA); sphereA.material.emissive.setHex(colA);
+  const colB = state1.signB>0 ? COL_POS : COL_NEG;
+  sphereB.material.color.setHex(colB); sphereB.material.emissive.setHex(colB);
+  const vscale = chargeVisualScale(state1.mag);
+  sphereA.scale.setScalar(vscale);
+  sphereB.scale.setScalar(vscale);
+  rebuildFieldLines1();
+
+  const qA_C = state1.signA*state1.mag*1e-6, qB_C = state1.signB*state1.mag*1e-6;
+  const r_m = state1.dist*METER_SCALE;
+  const F = K_COULOMB*Math.abs(qA_C*qB_C)/(r_m*r_m);
+  const attract = state1.signA !== state1.signB;
+
+  document.getElementById('val-qA').textContent = (state1.signA>0?'+':'−')+state1.mag.toFixed(1)+' µC';
+  document.getElementById('val-qA').style.color = state1.signA>0?'var(--red)':'var(--blue)';
+  document.getElementById('val-qB').textContent = (state1.signB>0?'+':'−')+state1.mag.toFixed(1)+' µC';
+  document.getElementById('val-qB').style.color = state1.signB>0?'var(--red)':'var(--blue)';
+  document.getElementById('val-r').textContent = r_m.toFixed(2)+' m';
+  document.getElementById('val-force').textContent = F.toFixed(3)+' N';
+  const interEl = document.getElementById('val-interaction');
+  interEl.textContent = attract ? 'ATTRACTION' : 'REPULSION';
+  interEl.className = 'dv ' + (attract ? 'green' : '') ;
+  interEl.style.color = attract ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('btn-signA').textContent = 'A: '+(state1.signA>0?'+':'−');
+  document.getElementById('btn-signA').className = 'btn ' + (state1.signA>0?'red':'');
+  document.getElementById('btn-signA').style.color = state1.signA>0?'':'var(--blue)';
+  document.getElementById('btn-signA').style.borderColor = state1.signA>0?'rgba(255,94,114,0.4)':'rgba(91,200,255,0.4)';
+  document.getElementById('btn-signB').textContent = 'B: '+(state1.signB>0?'+':'−');
+  document.getElementById('btn-signB').style.color = state1.signB>0?'var(--red)':'var(--blue)';
+  document.getElementById('btn-signB').style.borderColor = state1.signB>0?'rgba(255,94,114,0.4)':'rgba(91,200,255,0.4)';
+}
+
+function labelsCharges(){
+  const ax = state1.dist/2;
+  const L = [
+    {p:new THREE.Vector3(-ax,-0.45,0), t:'A', c:'#ffffff', size:9},
+    {p:new THREE.Vector3(ax,-0.45,0), t:'B', c:'#ffffff', size:9}
+  ];
+  // both charges are spheres now, so each needs its own explicit sign glyph
+  L.push({p:new THREE.Vector3(-ax,0.4,0), t:(state1.signA>0?'+':'−'), c: state1.signA>0?'#ff8f9c':'#8fd4ff', size:16});
+  L.push({p:new THREE.Vector3(ax,0.4,0), t:(state1.signB>0?'+':'−'), c: state1.signB>0?'#ff8f9c':'#8fd4ff', size:16});
+  return L;
+}
+const MIN_DIST1 = 2.0, MAX_DIST1 = 9;
+let lastT1 = null, lastRebuiltDist1 = state1.dist, lastRebuildTime1 = 0;
+function updateActive1(t){
+  // Like charges drift apart, unlike charges drift together, until they hit the view's limits.
+  if(lastT1===null){ lastT1=t; return; }
+  const dt = t-lastT1; lastT1=t;
+  const attract = state1.signA !== state1.signB;
+  const speed = 0.3 + (state1.mag/10)*0.35;
+  if(attract) state1.dist = Math.max(MIN_DIST1, state1.dist - speed*dt);
+  else state1.dist = Math.min(MAX_DIST1, state1.dist + speed*dt);
+  if(t-lastRebuildTime1 > 0.08 && Math.abs(state1.dist - lastRebuiltDist1) > 0.008){
+    lastRebuiltDist1 = state1.dist; lastRebuildTime1 = t;
+    document.getElementById('sl-dist').value = state1.dist.toFixed(2);
+    document.getElementById('lbl-dist').textContent = state1.dist.toFixed(1);
+    updateCharges1();
+  }
+}
+
+document.getElementById('btn-signA').addEventListener('click', ()=>{ state1.signA*=-1; updateCharges1(); });
+document.getElementById('btn-signB').addEventListener('click', ()=>{ state1.signB*=-1; updateCharges1(); });
+document.getElementById('sl-dist').addEventListener('input', function(){ state1.dist=parseFloat(this.value); document.getElementById('lbl-dist').textContent=state1.dist.toFixed(1); updateCharges1(); });
+document.getElementById('sl-mag').addEventListener('input', function(){ state1.mag=parseFloat(this.value); document.getElementById('lbl-mag').textContent=state1.mag.toFixed(0)+'µC'; updateCharges1(); });
+document.getElementById('btn-reset-charges').addEventListener('click', ()=>{
+  state1.signA=1; state1.signB=-1; state1.dist=5; state1.mag=5;
+  document.getElementById('sl-dist').value=5; document.getElementById('lbl-dist').textContent='5.0';
+  document.getElementById('sl-mag').value=5; document.getElementById('lbl-mag').textContent='5µC';
+  updateCharges1();
+});
+updateCharges1();
+
+/* ---- mini "inside an atom" widget (its own tiny renderer/scene, independent of the main canvas) ---- */
+const atomCanvasEl = document.getElementById('atomCanvas');
+let atomRenderer=null, atomScene=null, atomCam=null, atomGroup=null, atomInited=false, atomPanelOpen=false;
+const atomOrb = {theta:0.6, phi:0.3, radius:2.6};
+function applyAtomOrbit(){
+  const r=atomOrb.radius, p=atomOrb.phi, t=atomOrb.theta;
+  atomCam.position.set(r*Math.cos(p)*Math.sin(t), r*Math.sin(p), r*Math.cos(p)*Math.cos(t));
+  atomCam.lookAt(0,0,0);
+}
+function initAtomScene(){
+  if(atomInited) return;
+  atomInited = true;
+  const w = atomCanvasEl.clientWidth || 240, h = 170;
+  atomRenderer = new THREE.WebGLRenderer({canvas:atomCanvasEl, antialias:true, alpha:true});
+  atomRenderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+  atomRenderer.setSize(w,h,false);
+  atomScene = new THREE.Scene();
+  atomCam = new THREE.PerspectiveCamera(45, w/h, 0.1, 20);
+  atomScene.add(new THREE.AmbientLight(0xffffff,2.2));
+  const dl = new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(2,3,2); atomScene.add(dl);
+  atomGroup = new THREE.Group(); atomScene.add(atomGroup);
+
+  const nucleusPositions = [[0.09,0.05,0],[-0.08,-0.06,0.05],[0.02,-0.09,-0.06],[-0.05,0.08,-0.04],[0.06,-0.02,0.08],[-0.03,0.03,-0.09]];
+  const nucleusColors = [COL_POS, COL_NEUTRAL, COL_POS, COL_NEUTRAL, COL_POS, COL_NEUTRAL];
+  nucleusPositions.forEach((p,i)=>{
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.15,16,16), new THREE.MeshStandardMaterial({color:nucleusColors[i], roughness:0.4}));
+    m.position.set(p[0],p[1],p[2]);
+    atomGroup.add(m);
+  });
+  const ringGeo = new THREE.TorusGeometry(0.9,0.008,8,64);
+  const ringMat = new THREE.MeshBasicMaterial({color:0x2a3550, transparent:true, opacity:0.6});
+  const ring1 = new THREE.Mesh(ringGeo, ringMat); ring1.rotation.x = Math.PI/2.4; atomGroup.add(ring1);
+  const ring2 = new THREE.Mesh(ringGeo.clone(), ringMat.clone()); ring2.rotation.x = -Math.PI/3; ring2.rotation.y = Math.PI/5; atomGroup.add(ring2);
+
+  const electronMat = new THREE.MeshBasicMaterial({color:COL_NEG});
+  const electrons = [];
+  [ring1,ring1,ring2,ring2].forEach((ring,i)=>{
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12), electronMat);
+    atomGroup.add(e);
+    electrons.push({mesh:e, ring, angle:i*Math.PI+0.6*i, speed: i<2?0.9:-0.7});
+  });
+  atomGroup.userData.electrons = electrons;
+  applyAtomOrbit();
+
+  let drag = null;
+  atomCanvasEl.addEventListener('mousedown', e=>{ drag={x:e.clientX,y:e.clientY}; e.stopPropagation(); });
+  window.addEventListener('mousemove', e=>{
+    if(!drag) return;
+    const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    atomOrb.theta -= dx*0.01; atomOrb.phi = THREE.MathUtils.clamp(atomOrb.phi+dy*0.01,-1.3,1.3);
+    applyAtomOrbit(); drag={x:e.clientX,y:e.clientY};
+  });
+  window.addEventListener('mouseup', ()=>{ drag=null; });
+  atomCanvasEl.addEventListener('touchstart', e=>{ if(e.touches.length===1) drag={x:e.touches[0].clientX,y:e.touches[0].clientY}; e.stopPropagation(); }, {passive:true});
+  atomCanvasEl.addEventListener('touchmove', e=>{
+    if(drag && e.touches.length===1){
+      const dx=e.touches[0].clientX-drag.x, dy=e.touches[0].clientY-drag.y;
+      atomOrb.theta -= dx*0.01; atomOrb.phi = THREE.MathUtils.clamp(atomOrb.phi+dy*0.01,-1.3,1.3);
+      applyAtomOrbit(); drag={x:e.touches[0].clientX,y:e.touches[0].clientY};
+    }
+  }, {passive:true});
+  atomCanvasEl.addEventListener('touchend', ()=>{ drag=null; });
+}
+function renderAtom(){
+  if(!atomInited || !atomPanelOpen) return;
+  atomGroup.userData.electrons.forEach(e=>{
+    e.angle += 0.015*e.speed;
+    const v = new THREE.Vector3(Math.cos(e.angle)*0.9, 0, Math.sin(e.angle)*0.9);
+    v.applyEuler(e.ring.rotation);
+    e.mesh.position.copy(v);
+  });
+  atomGroup.rotation.y += 0.0015;
+  atomRenderer.render(atomScene, atomCam);
+}
+document.getElementById('btn-atom-toggle').addEventListener('click', function(){
+  atomPanelOpen = !atomPanelOpen;
+  document.getElementById('atom-panel-body').style.display = atomPanelOpen ? 'block' : 'none';
+  this.textContent = (atomPanelOpen?'▾':'▸') + " What's inside an atom?";
+  if(atomPanelOpen) initAtomScene();
+});
+
+/* ============================== MODULE 2: CHARGING PROCESS ============================== */
+const grpCharging = new THREE.Group(); grpCharging.visible=false; root3.add(grpCharging);
+const MAXQ2 = 8;
+const state2 = { pair:'poly', n:0 }; // n = electrons transferred (0..MAXQ2), sign of who gains depends on pair
+
+const clothMat2 = new THREE.MeshStandardMaterial({color:0x8fa2c0, roughness:0.85});
+const clothMesh2 = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.28,1.5), clothMat2);
+clothMesh2.position.set(1.8,0.1,0); grpCharging.add(clothMesh2);
+
+// The rod (and its electron cloud) live inside one movable assembly group, so the whole thing can be
+// slid onto the cloth for the rub and pulled back away from it afterwards, while its children stay
+// at local (0,0,0) and just ride along.
+const rodAssembly2 = new THREE.Group();
+const rodHome2 = new THREE.Vector3(-2.6,0.5,0); // resting position, well clear of the cloth
+rodAssembly2.position.copy(rodHome2);
+grpCharging.add(rodAssembly2);
+
+const rodMat2 = new THREE.MeshStandardMaterial({color:0x8fa2c0, roughness:0.35, metalness:0.4});
+const rodMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,3.0,20), rodMat2);
+rodMesh2.rotation.z = Math.PI/2; rodAssembly2.add(rodMesh2);
+
+// the rod's on-cloth position: centered over the cloth, hovering a little above its top surface
+// (not flush against it) so the transferring electrons are visible in the gap rather than hidden
+// where the two objects would otherwise overlap.
+const clothTopY2 = clothMesh2.position.y + 0.14;
+const rodOnClothPos2 = new THREE.Vector3(clothMesh2.position.x, clothTopY2+0.22+0.55, clothMesh2.position.z);
+
+// electron dot clouds - the rod's stays a spherical shell (appropriate for a round rod), but the
+// cloth's charges lie flat on its actual top surface instead of floating in a spherical cloud that
+// mostly hangs off in empty space above a flat object. Meshes are handed over from one group to the
+// other during a rub, so the count on each object visibly changes. The rod's cloud rides inside
+// rodAssembly2 (local origin), so it always tracks the rod wherever the assembly moves.
+const CLOTH_HALF_W = 0.85, CLOTH_HALF_D = 0.55;
+const CLOTH_ELECTRON_Y = 0.14 + 0.07; // a hair above the cloth's own top surface
+const CLOTH_PROTON_Y = 0.14 + 0.05;   // just under the electrons, so they're covered until one leaves
+const rodDots2 = makeElectronCloud(8, 0.24, COL_NEUTRAL);
+rodAssembly2.add(rodDots2.group);
+const clothDots2 = makeFlatElectronCloud(8, CLOTH_HALF_W, CLOTH_HALF_D);
+clothDots2.group.position.copy(clothMesh2.position).add(new THREE.Vector3(0,CLOTH_ELECTRON_Y,0));
+grpCharging.add(clothDots2.group);
+
+// Fixed "+" markers, one per electron, sitting at the SAME lattice positions the electrons start
+// from. They represent the protons, which never move - so once a specific electron migrates away,
+// the plus sign it used to sit on top of is left exposed in its place.
+const protonMatCharge2 = new THREE.MeshStandardMaterial({color:COL_POS, emissive:COL_POS, emissiveIntensity:0.35, metalness:0.3, roughness:0.35});
+const rodProtons2 = new THREE.Group();
+fibonacciSphereDirs(8).forEach(d=>{
+  const marker = makePlusMesh(0.1, 0.032, protonMatCharge2);
+  marker.position.copy(d.clone().multiplyScalar(0.24*0.96));
+  rodProtons2.add(marker);
+});
+rodAssembly2.add(rodProtons2);
+const clothProtons2 = new THREE.Group();
+flatGridPositions(8, CLOTH_HALF_W, CLOTH_HALF_D).forEach(p=>{
+  const marker = makePlusMesh(0.14, 0.045, protonMatCharge2);
+  marker.position.copy(p);
+  clothProtons2.add(marker);
+});
+clothProtons2.position.copy(clothMesh2.position).add(new THREE.Vector3(0,CLOTH_PROTON_Y,0));
+grpCharging.add(clothProtons2);
+
+let flying2 = [], rubbing2 = false;
+function pairDirection(){ return state2.pair==='poly' ? 1 : -1; } // +1: cloth->rod (rod ends negative); -1: rod->cloth (rod ends positive)
+
+function tintFor(sign, mag){
+  // mag 0..1 fraction toward MAXQ2
+  const base = new THREE.Color(COL_NEUTRAL);
+  const target = new THREE.Color(sign>0?COL_POS:COL_NEG);
+  return base.clone().lerp(target, mag*0.85);
+}
+
+function resetClouds2(){
+  while(rodDots2.group.children.length) rodDots2.group.remove(rodDots2.group.children[0]);
+  while(clothDots2.group.children.length) clothDots2.group.remove(clothDots2.group.children[0]);
+  const freshRod = makeElectronCloud(8, 0.24, COL_NEUTRAL);
+  const freshCloth = makeFlatElectronCloud(8, CLOTH_HALF_W, CLOTH_HALF_D);
+  rodDots2.dots = freshRod.dots; freshRod.dots.forEach(o=>rodDots2.group.add(o.mesh));
+  clothDots2.dots = freshCloth.dots; freshCloth.dots.forEach(o=>clothDots2.group.add(o.mesh));
+}
+
+function updateCharging2(){
+  const dir = pairDirection();
+  const frac = state2.n/MAXQ2;
+  const rodSign = dir>0 ? -1 : 1;   // poly: rod gains electrons -> negative
+  const clothSign = -rodSign;
+  rodMat2.color.copy(tintFor(rodSign, frac));
+  rodMat2.emissive.copy(tintFor(rodSign, frac)); rodMat2.emissiveIntensity=0.25;
+  clothMat2.color.copy(tintFor(clothSign, frac));
+  clothMat2.emissive.copy(tintFor(clothSign, frac)); clothMat2.emissiveIntensity=0.2;
+
+  const qC = state2.n * 1e12 * E_CHARGE * 1e9; // representative scaled magnitude (nC), purely illustrative
+  document.getElementById('val-rodq').textContent = state2.n===0 ? 'neutral' : ((rodSign>0?'+':'−') + state2.n + 'e (net '+(rodSign>0?'+':'−')+')');
+  document.getElementById('val-rodq').style.color = state2.n===0 ? '' : (rodSign>0?'var(--red)':'var(--blue)');
+  document.getElementById('val-clothq').textContent = state2.n===0 ? 'neutral' : ((clothSign>0?'+':'−') + state2.n + 'e (net '+(clothSign>0?'+':'−')+')');
+  document.getElementById('val-clothq').style.color = state2.n===0 ? '' : (clothSign>0?'var(--red)':'var(--blue)');
+  document.getElementById('val-etransfer').textContent = state2.n;
+  document.getElementById('val-qtransfer').textContent = qC.toFixed(2)+' nC';
+
+  document.getElementById('btn-rub').disabled = rubbing2 || state2.n >= MAXQ2;
+}
+
+function labelsCharging(){
+  const dir = pairDirection();
+  const rodSign = dir>0 ? -1 : 1;
+  const clothSign = -rodSign;
+  const L = [
+    {p:rodAssembly2.position.clone().add(new THREE.Vector3(0,0.65,0)), t:'ROD', c:'#ffffff', size:9},
+    {p:new THREE.Vector3(1.8,0.75,0), t:'CLOTH', c:'#ffffff', size:9}
+  ];
+  if(state2.n>0){
+    L.push({p:rodAssembly2.position.clone().add(new THREE.Vector3(0,0.9,0)), t:(rodSign>0?'net +':'net −'), c: rodSign>0?'#ff8f9c':'#8fd4ff', size:10});
+    L.push({p:new THREE.Vector3(1.8,1.0,0), t:(clothSign>0?'net +':'net −'), c: clothSign>0?'#ff8f9c':'#8fd4ff', size:10});
+  }
+  return L;
+}
+function updateActive2(t){
+  flying2.forEach(o=>{ o.mesh.position.lerpVectors(o.from, o.to, ease(o.tt)); });
+}
+
+function doRub(){
+  if(rubbing2 || state2.n >= MAXQ2) return;
+  rubbing2 = true;
+  document.getElementById('btn-rub').disabled = true;
+  // slide the rod from its resting spot onto the cloth first
+  tween(500, e=>{ rodAssembly2.position.lerpVectors(rodHome2, rodOnClothPos2, e); }, ()=>{
+    // physically rub the rod back and forth on top of the cloth
+    const cycles = 3; let cycle = 0;
+    function doCycle(){
+      tween(220, e=>{ rodAssembly2.position.x = lerp(rodOnClothPos2.x-0.5, rodOnClothPos2.x+0.5, e); }, ()=>{
+        tween(220, e2=>{ rodAssembly2.position.x = lerp(rodOnClothPos2.x+0.5, rodOnClothPos2.x-0.5, e2); }, ()=>{
+          cycle++;
+          if(cycle < cycles) doCycle();
+          else { rodAssembly2.position.copy(rodOnClothPos2); afterRub(); }
+        });
+      });
+    }
+    doCycle();
+  });
+
+  function afterRub(){
+    const dir = pairDirection();
+    const sourceCloud = dir>0 ? clothDots2 : rodDots2; // poly: electrons leave the cloth, land on the rod
+    const destCloud = dir>0 ? rodDots2 : clothDots2;
+    const nBatch = Math.min(2, MAXQ2-state2.n, sourceCloud.dots.length);
+    for(let i=0;i<nBatch;i++){
+      const idx = Math.floor(Math.random()*sourceCloud.dots.length);
+      const dotObj = sourceCloud.dots.splice(idx,1)[0];
+      const mesh = dotObj.mesh;
+      // group positions may now be local to a moving parent (rodAssembly2), so read the true world
+      // position rather than assuming group.position is already in world space.
+      const srcWorldPos = sourceCloud.group.getWorldPosition(new THREE.Vector3());
+      const worldFrom = mesh.position.clone().add(srcWorldPos);
+      sourceCloud.group.remove(mesh);
+      mesh.position.copy(worldFrom);
+      grpCharging.add(mesh);
+      let destLocal, destHomeDir;
+      if(destCloud === rodDots2){
+        const destDir = fibonacciSphereDirs(24)[Math.floor(Math.random()*24)];
+        destLocal = destDir.clone().multiplyScalar(0.24*1.03);
+        destHomeDir = destDir;
+      } else {
+        destLocal = new THREE.Vector3((Math.random()*2-1)*CLOTH_HALF_W, 0, (Math.random()*2-1)*CLOTH_HALF_D);
+        destHomeDir = destLocal;
+      }
+      const destWorldPos = destCloud.group.getWorldPosition(new THREE.Vector3());
+      const worldTo = destWorldPos.clone().add(destLocal);
+      const o = {mesh, from:worldFrom.clone(), to:worldTo.clone(), tt:0};
+      flying2.push(o);
+      tween(550+i*130, (e,t)=>{ o.tt=t; }, ()=>{
+        grpCharging.remove(mesh);
+        mesh.position.copy(destLocal);
+        destCloud.group.add(mesh);
+        destCloud.dots.push({mesh, homeDir:destHomeDir.clone()});
+        flying2 = flying2.filter(x=>x!==o);
+      });
+    }
+    state2.n = Math.min(MAXQ2, state2.n+nBatch);
+    updateCharging2();
+    // once the electrons have transferred, pull the rod back away from the cloth
+    setTimeout(()=>{
+      tween(600, e=>{ rodAssembly2.position.lerpVectors(rodOnClothPos2, rodHome2, e); }, ()=>{
+        rubbing2 = false;
+        updateCharging2();
+      });
+    }, 550+nBatch*130);
+  }
+}
+
+document.getElementById('btn-rub').addEventListener('click', doRub);
+document.getElementById('btn-pair-poly').addEventListener('click', function(){
+  state2.pair='poly'; state2.n=0; resetClouds2();
+  this.classList.add('on'); document.getElementById('btn-pair-glass').classList.remove('on');
+  updateCharging2();
+});
+document.getElementById('btn-pair-glass').addEventListener('click', function(){
+  state2.pair='glass'; state2.n=0; resetClouds2();
+  this.classList.add('on'); document.getElementById('btn-pair-poly').classList.remove('on');
+  updateCharging2();
+});
+document.getElementById('btn-reset-charging').addEventListener('click', ()=>{
+  state2.n=0; rubbing2=false; resetClouds2(); rodAssembly2.position.copy(rodHome2); updateCharging2();
+});
+updateCharging2();
+
+/* ============================== MODULE 6: EXPERIMENTS (PRODUCTION & DETECTION) ============================== */
+const grpExperiments = new THREE.Group(); grpExperiments.visible=false; root3.add(grpExperiments);
+const state6 = { rodCharged:false, dist:6, escopeQ:0 }; // escopeQ: -1..1 signed magnitude fraction
+
+// test rod + cloth (mini production rig)
+const rodMesh6 = new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.18,2.2,18), new THREE.MeshStandardMaterial({color:COL_NEUTRAL, roughness:0.35, metalness:0.4}));
+rodMesh6.rotation.z = Math.PI/2; rodMesh6.position.set(-6,1.1,0); grpExperiments.add(rodMesh6);
+const clothMesh6 = new THREE.Mesh(new THREE.BoxGeometry(1.3,0.2,1.0), new THREE.MeshStandardMaterial({color:0x556677, roughness:0.85}));
+clothMesh6.position.set(-6,0.55,0.9); grpExperiments.add(clothMesh6);
+const rodRestZ6 = 0.9;
+let rubbing6 = false, flying6 = [];
+
+// a separate known-sign test rod used only for the sign-detection mini experiment
+const testRodMesh6 = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,1.2,16), new THREE.MeshStandardMaterial({color:COL_POS, emissive:COL_POS, emissiveIntensity:0.35, metalness:0.4, roughness:0.35}));
+testRodMesh6.rotation.z = Math.PI/2; testRodMesh6.visible = false; grpExperiments.add(testRodMesh6);
+
+// electroscope: base box, metal stem, cap sphere, two leaves inside a glass case
+const escopeGroup = new THREE.Group(); escopeGroup.position.set(0.4,0,0); grpExperiments.add(escopeGroup);
+const caseMat = new THREE.MeshPhysicalMaterial({color:0xbcd4ff, transmission:0.75, opacity:0.35, transparent:true, roughness:0.15, side:THREE.DoubleSide});
+const caseMesh = new THREE.Mesh(new THREE.BoxGeometry(1.3,1.7,1.0), caseMat);
+caseMesh.position.y = -1.1; escopeGroup.add(caseMesh);
+const baseMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5,0.16,1.2), new THREE.MeshStandardMaterial({color:0x334455, metalness:0.5}));
+baseMesh.position.y = -2.0; escopeGroup.add(baseMesh);
+const stemMat = new THREE.MeshStandardMaterial({color:0xaab8cc, metalness:0.8, roughness:0.25});
+const stemMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.9,12), stemMat);
+stemMesh.position.y = -0.85; escopeGroup.add(stemMesh);
+const capMesh = new THREE.Mesh(new THREE.SphereGeometry(0.26,20,20), stemMat.clone());
+capMesh.position.y = 0.32; escopeGroup.add(capMesh);
+const plateMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.05,12), stemMat.clone());
+plateMesh.position.y = -1.5; escopeGroup.add(plateMesh);
+const leafMat = new THREE.MeshStandardMaterial({color:0xffe08a, metalness:0.6, roughness:0.3, side:THREE.DoubleSide, emissive:0xffe08a, emissiveIntensity:0.15});
+const leafGeo = new THREE.PlaneGeometry(0.35,0.85);
+const leafL = new THREE.Mesh(leafGeo, leafMat.clone()); leafL.position.set(0,-1.5,0);
+const leafPivotL = new THREE.Group(); leafPivotL.position.set(0,-1.5,0); leafL.position.set(0,-0.43,0); leafPivotL.add(leafL);
+const leafR = new THREE.Mesh(leafGeo, leafMat.clone());
+const leafPivotR = new THREE.Group(); leafPivotR.position.set(0,-1.5,0); leafR.position.set(0,-0.43,0); leafPivotR.add(leafR);
+escopeGroup.add(leafPivotL, leafPivotR);
+
+function updateExperiments(){
+  rodMesh6.material.color.setHex(state6.rodCharged?COL_NEG:COL_NEUTRAL);
+  rodMesh6.material.emissive.setHex(state6.rodCharged?COL_NEG:0x000000);
+  rodMesh6.material.emissiveIntensity = state6.rodCharged?0.35:0;
+  rodMesh6.position.x = -6 + (6 - state6.dist);
+
+  // induced (temporary) contribution while rod is charged & near, on top of permanent escopeQ
+  let inducedContribution = 0;
+  if(state6.rodCharged){
+    const proximity = THREE.MathUtils.clamp(1-(state6.dist-1)/5, 0, 1);
+    inducedContribution = -1 * proximity * 0.85; // rod is negative -> induces positive-leaning divergence pattern too (same-sign leaves either way)
+  }
+  const effective = THREE.MathUtils.clamp(Math.abs(state6.escopeQ) + Math.abs(inducedContribution)*(state6.escopeQ===0?1:0.4), 0, 1);
+  const angle = effective * 0.75; // radians, ~43 deg max
+
+  leafPivotL.rotation.z = angle;
+  leafPivotR.rotation.z = -angle;
+  const leafSign = state6.escopeQ!==0 ? state6.escopeQ : (state6.rodCharged?-1:0);
+  const leafColor = leafSign>0?COL_POS:(leafSign<0?COL_NEG:0xffe08a);
+  leafL.material.color.setHex(leafColor); leafR.material.color.setHex(leafColor);
+  leafL.material.emissive.setHex(leafColor); leafR.material.emissive.setHex(leafColor);
+  capMesh.material.color.setHex(leafSign===0?0xaab8cc: (leafSign>0?0xffb3ba:0xb3e0ff));
+
+  const escopeState = state6.escopeQ===0 ? 'uncharged' : ((state6.escopeQ>0?'+':'−')+' charged');
+  document.getElementById('val-exprod').textContent = state6.rodCharged ? 'negative (charged)' : 'uncharged';
+  document.getElementById('val-exprod').style.color = state6.rodCharged ? 'var(--blue)' : '';
+  document.getElementById('val-expescope').textContent = escopeState;
+  document.getElementById('val-expescope').style.color = state6.escopeQ===0?'':(state6.escopeQ>0?'var(--red)':'var(--blue)');
+  document.getElementById('val-expangle').textContent = (angle*180/Math.PI).toFixed(0)+'°';
+
+  const noteEl = document.getElementById('val-expnote');
+  if(effective < 0.04) noteEl.textContent = 'Leaves hang together — no charge detected yet.';
+  else if(state6.escopeQ===0) noteEl.textContent = 'Leaves diverge as the rod approaches — charge is detected by induction, even without contact.';
+  else noteEl.textContent = 'The electroscope carries a permanent charge — the leaves stay apart even with the rod removed.';
+
+  document.getElementById('btn-exp-touch').disabled = !state6.rodCharged;
+  document.getElementById('btn-exp-test-pos').disabled = state6.escopeQ===0;
+  document.getElementById('btn-exp-test-neg').disabled = state6.escopeQ===0;
+}
+
+function labelsExperiments(){
+  const L = [
+    {p:new THREE.Vector3(rodMesh6.position.x, 1.55, 0), t:'TEST ROD'+(state6.rodCharged?' (−)':''), c: state6.rodCharged?'#8fd4ff':'#ffffff', size:9},
+    {p:escopeGroup.position.clone().add(new THREE.Vector3(0,0.75,0)), t:'ELECTROSCOPE', c:'#ffffff', size:9}
+  ];
+  if(state6.escopeQ!==0) L.push({p:capMesh.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,0.35,0)), t:(state6.escopeQ>0?'+':'−'), c: state6.escopeQ>0?'#ff8f9c':'#8fd4ff', size:14});
+  if(testRodMesh6.visible){
+    const sign = testRodMesh6.material.color.getHex()===COL_POS?'+':'−';
+    L.push({p:testRodMesh6.position.clone().add(new THREE.Vector3(0,0.55,0)), t:'KNOWN '+sign+' ROD', c: sign==='+'?'#ff8f9c':'#8fd4ff', size:9});
+  }
+  return L;
+}
+function updateActive6(t){ flying6.forEach(o=>{ o.mesh.position.lerpVectors(o.from,o.to,ease(o.tt)); }); }
+
+function doRubExperiment(){
+  if(rubbing6) return;
+  if(state6.rodCharged){
+    state6.rodCharged = false;
+    document.getElementById('btn-exp-rub').textContent = '⚡ Charge Rod (−)';
+    updateExperiments();
+    return;
+  }
+  rubbing6 = true;
+  document.getElementById('btn-exp-rub').disabled = true;
+  // make sure the rod is at its home position next to the cloth before rubbing
+  state6.dist = 6; document.getElementById('sl-exp-dist').value = 6; document.getElementById('lbl-exp-dist').textContent = '6.00';
+  const homeX = -6, homeY = 1.1;
+  rodMesh6.position.set(homeX, homeY, 0);
+  const cycles = 3;
+  let cycle = 0;
+  function doCycle(){
+    tween(260, e=>{
+      rodMesh6.position.z = lerp(0.05, 0.6, e);
+      rodMesh6.position.y = lerp(homeY, 0.86, Math.min(1,e*3));
+    }, ()=>{
+      tween(260, e2=>{
+        rodMesh6.position.z = lerp(0.6, 0.05, e2);
+      }, ()=>{
+        cycle++;
+        if(cycle < cycles) doCycle(); else finishRub();
+      });
+    });
+  }
+  doCycle();
+  for(let i=0;i<3;i++){
+    setTimeout(()=>{
+      const mat = new THREE.MeshBasicMaterial({color:ELECTRON_COLOR});
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), mat);
+      const from = clothMesh6.position.clone().add(new THREE.Vector3(0,0.15,0));
+      const to = new THREE.Vector3(homeX,homeY,0.3);
+      mesh.position.copy(from);
+      grpExperiments.add(mesh);
+      const o = {mesh, from:from.clone(), to:to.clone(), tt:0};
+      flying6.push(o);
+      tween(500, (e,t)=>{ o.tt=t; }, ()=>{ grpExperiments.remove(mesh); flying6=flying6.filter(x=>x!==o); });
+    }, i*300);
+  }
+  function finishRub(){
+    rodMesh6.position.set(homeX,homeY,0);
+    rubbing6 = false;
+    state6.rodCharged = true;
+    document.getElementById('btn-exp-rub').disabled = false;
+    document.getElementById('btn-exp-rub').textContent = 'Discharge Rod';
+    updateExperiments();
+  }
+}
+document.getElementById('btn-exp-rub').addEventListener('click', doRubExperiment);
+document.getElementById('sl-exp-dist').addEventListener('input', function(){
+  state6.dist = parseFloat(this.value); document.getElementById('lbl-exp-dist').textContent = state6.dist.toFixed(2);
+  updateExperiments();
+});
+document.getElementById('btn-exp-touch').addEventListener('click', ()=>{
+  if(!state6.rodCharged) return;
+  // charged same sign as rod, via conduction - left below the max so a same-sign sign-test can still
+  // visibly push the divergence further (otherwise it would already be pinned at the ceiling).
+  state6.escopeQ = -0.7;
+  updateExperiments();
+});
+function runSignTest(testSign){
+  if(state6.escopeQ===0) return;
+  const same = Math.sign(state6.escopeQ) === testSign;
+  const note = document.getElementById('val-expnote');
+  const label = testSign>0 ? '+' : '−';
+  note.textContent = same
+    ? ('Bringing a '+label+' rod near increased the divergence — the electroscope\u2019s charge is also '+(testSign>0?'positive':'negative')+'.')
+    : ('Bringing a '+label+' rod near decreased the divergence — the electroscope\u2019s charge is '+(testSign>0?'negative':'positive')+' (opposite sign).');
+
+  const col = testSign>0?COL_POS:COL_NEG;
+  testRodMesh6.material.color.setHex(col); testRodMesh6.material.emissive.setHex(col);
+  testRodMesh6.visible = true;
+
+  const capWorld = capMesh.getWorldPosition(new THREE.Vector3());
+  const farPos = capWorld.clone().add(new THREE.Vector3(4.0,0.3,0));
+  // rod half-length is 0.6 and the cap radius is 0.26, so an offset of ~1.25 keeps a clear ~0.35
+  // unit gap between the rod's nearest tip and the cap surface - close enough to show induction,
+  // never touching.
+  const nearPos = capWorld.clone().add(new THREE.Vector3(1.25,0.05,0));
+  testRodMesh6.position.copy(farPos);
+
+  const baseAngle = Math.abs(state6.escopeQ)*0.75;
+  const bump = same ? 0.22 : -0.16;
+  const targetAngle = THREE.MathUtils.clamp(baseAngle+bump, 0, 0.75);
+
+  document.getElementById('btn-exp-test-pos').disabled = true;
+  document.getElementById('btn-exp-test-neg').disabled = true;
+
+  tween(700, e=>{
+    testRodMesh6.position.lerpVectors(farPos, nearPos, e);
+    const ang = lerp(baseAngle, targetAngle, e);
+    leafPivotL.rotation.z = ang; leafPivotR.rotation.z = -ang;
+  }, ()=>{
+    setTimeout(()=>{
+      tween(700, e2=>{
+        testRodMesh6.position.lerpVectors(nearPos, farPos, e2);
+        const ang2 = lerp(targetAngle, baseAngle, e2);
+        leafPivotL.rotation.z = ang2; leafPivotR.rotation.z = -ang2;
+      }, ()=>{
+        testRodMesh6.visible = false;
+        document.getElementById('btn-exp-test-pos').disabled = state6.escopeQ===0;
+        document.getElementById('btn-exp-test-neg').disabled = state6.escopeQ===0;
+      });
+    }, 1100);
+  });
+}
+document.getElementById('btn-exp-test-pos').addEventListener('click', ()=>runSignTest(1));
+document.getElementById('btn-exp-test-neg').addEventListener('click', ()=>runSignTest(-1));
+document.getElementById('btn-reset-exp').addEventListener('click', ()=>{
+  state6.rodCharged=false; state6.dist=6; state6.escopeQ=0;
+  document.getElementById('sl-exp-dist').value=6; document.getElementById('lbl-exp-dist').textContent='6.00';
+  document.getElementById('btn-exp-rub').textContent='⚡ Charge Rod (−)';
+  updateExperiments();
+});
+updateExperiments();
+
+/* ============================== MODULE 4: ELECTRIC FIELDS (5.4, 5.6, 5.8) ============================== */
+const grpFields = new THREE.Group(); grpFields.visible=false; root3.add(grpFields);
+const state4 = { mode:'point+', tsign:1, running:false };
+const fieldStatic4 = new THREE.Group(); grpFields.add(fieldStatic4);
+const fieldCenter4 = new THREE.Vector3(0,0.4,0);
+const SPH_R4 = 1.0, PLATE_X4 = 2.6;
+const testMesh4 = new THREE.Mesh(new THREE.SphereGeometry(0.18,20,20), new THREE.MeshStandardMaterial({color:COL_POS,emissive:COL_POS,emissiveIntensity:0.5}));
+grpFields.add(testMesh4);
+const forceArrow4 = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, 0xffc857, 0.28, 0.18);
+grpFields.add(forceArrow4);
+function E4(p){ // field direction (unnormalised) at p for current mode
+  const m = state4.mode;
+  if(m==='plates') return Math.abs(p.x) < PLATE_X4 ? new THREE.Vector3(1,0,0) : new THREE.Vector3();
+  const r = p.clone().sub(fieldCenter4), d = r.length();
+  if(d < (m==='sphere'?SPH_R4:0.45)) return new THREE.Vector3();
+  return r.normalize().multiplyScalar((m==='point-'?-1:1)/(d*d));
+}
+function startPos4(){ return state4.mode==='plates' ? new THREE.Vector3(-1.2,0.9,0.4) : fieldCenter4.clone().add(new THREE.Vector3(1.9,0.9,0.5)); }
+function rebuildFields4(){
+  while(fieldStatic4.children.length) fieldStatic4.remove(fieldStatic4.children[0]);
+  const m = state4.mode;
+  const arrowCol = 0xffc857;
+  if(m==='plates'){
+    [[-PLATE_X4,COL_POS],[PLATE_X4,COL_NEG]].forEach(([x,c])=>{
+      const pl = new THREE.Mesh(new THREE.BoxGeometry(0.12,3.6,3.6), new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.25,metalness:0.6,roughness:0.4}));
+      pl.position.set(x,0.4,0); fieldStatic4.add(pl);
+    });
+    for(let y=-1.2;y<=1.9;y+=0.8) for(let z=-1.2;z<=1.2;z+=0.8){
+      const pts=[new THREE.Vector3(-PLATE_X4+0.1,y,z), new THREE.Vector3(PLATE_X4-0.1,y,z)];
+      fieldStatic4.add(buildLineFromPoints(pts,0xffd88a,0.5));
+      addArrowsAlongPath(fieldStatic4,pts,arrowCol,2,()=>new THREE.Vector3(1,0,0));
+    }
+    return;
+  }
+  const isSphere = m==='sphere', sgn = m==='point-'?-1:1, col = sgn>0?COL_POS:COL_NEG;
+  const R = isSphere?SPH_R4:0.45;
+  const src = new THREE.Mesh(new THREE.SphereGeometry(R,32,32), new THREE.MeshStandardMaterial({color:isSphere?0x99a8c0:col, emissive:col, emissiveIntensity:isSphere?0.15:0.35, metalness:isSphere?0.8:0.3, roughness:0.35}));
+  src.position.copy(fieldCenter4); fieldStatic4.add(src);
+  if(isSphere){ // charge sits on the surface of a conductor
+    fibonacciSphereDirs(36).forEach(d=>{
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), new THREE.MeshBasicMaterial({color:COL_POS}));
+      dot.position.copy(fieldCenter4).addScaledVector(d,R+0.02); fieldStatic4.add(dot);
+    });
+  }
+  fibonacciSphereDirs(isSphere?20:16).forEach(d=>{
+    const a=fieldCenter4.clone().addScaledVector(d,R+0.03), b=fieldCenter4.clone().addScaledVector(d,3.8);
+    const pts=[a,b];
+    fieldStatic4.add(buildLineFromPoints(pts,sgn>0?0xffb0b8:0xa8dcff,0.55));
+    addArrowsAlongPath(fieldStatic4,pts,arrowCol,2,pos=>E4(pos));
+  });
+}
+function updateFields4(){
+  rebuildFields4(); resetTest4();
+  const m=state4.mode;
+  const names={'point+':'Positive point charge','point-':'Negative point charge','sphere':'Charged conducting sphere','plates':'Parallel plates'};
+  const dirs={'point+':'radially OUT','point-':'radially IN','sphere':'radially OUT (zero inside)','plates':'+ plate → − plate, parallel & uniform'};
+  document.getElementById('val-f-src').textContent=names[m];
+  document.getElementById('val-f-dir').textContent=dirs[m];
+  document.querySelectorAll('#ctrl-fields [data-fm]').forEach(b=>b.classList.toggle('on',b.dataset.fm===m));
+  document.getElementById('btn-f-sign').textContent='Test charge: '+(state4.tsign>0?'+':'−');
+  document.getElementById('val-f-force').textContent=(state4.tsign>0?'same as field':'opposite to field');
+  const c=state4.tsign>0?COL_POS:COL_NEG; testMesh4.material.color.setHex(c); testMesh4.material.emissive.setHex(c);
+}
+function resetTest4(){ state4.running=false; testMesh4.position.copy(startPos4()); document.getElementById('btn-f-release').textContent='▶ Release'; }
+let lastT4=null;
+function updateActive4(t){
+  const dt = lastT4===null?0:Math.min(0.1,t-lastT4); lastT4=t;
+  const E=E4(testMesh4.position);
+  if(state4.running){
+    if(E.lengthSq()===0){ state4.running=false; document.getElementById('btn-f-release').textContent='▶ Release'; }
+    else {
+      const v=E.clone().normalize().multiplyScalar(state4.tsign*Math.min(2.4,0.8+E.length()*3));
+      testMesh4.position.addScaledVector(v,dt);
+      if(testMesh4.position.distanceTo(fieldCenter4)>7){ state4.running=false; document.getElementById('btn-f-release').textContent='▶ Release'; }
+    }
+  }
+  const F=E.clone().multiplyScalar(state4.tsign);
+  if(F.lengthSq()>0){ forceArrow4.visible=true; forceArrow4.position.copy(testMesh4.position); forceArrow4.setDirection(F.normalize()); forceArrow4.setLength(1.0,0.28,0.18); }
+  else forceArrow4.visible=false;
+}
+function labelsFields(){
+  const L=[{p:testMesh4.position.clone().add(new THREE.Vector3(0,0.4,0)),t:'test charge '+(state4.tsign>0?'+':'−'),c:state4.tsign>0?'#ff8f9c':'#8fd4ff',size:9}];
+  if(state4.mode==='plates'){ L.push({p:new THREE.Vector3(-PLATE_X4,2.5,0),t:'+ plate',c:'#ff8f9c',size:11},{p:new THREE.Vector3(PLATE_X4,2.5,0),t:'− plate',c:'#8fd4ff',size:11}); }
+  else L.push({p:fieldCenter4.clone(),t:state4.mode==='point-'?'−':'+',c:'#ffffff',size:16});
+  return L;
+}
+document.querySelectorAll('#ctrl-fields [data-fm]').forEach(b=>b.addEventListener('click',()=>{ state4.mode=b.dataset.fm; updateFields4(); }));
+document.getElementById('btn-f-sign').addEventListener('click',()=>{ state4.tsign*=-1; updateFields4(); });
+document.getElementById('btn-f-release').addEventListener('click',()=>{
+  if(state4.running){ resetTest4(); } else { state4.running=true; document.getElementById('btn-f-release').textContent='⟲ Reset'; }
+});
+updateFields4();
+
+/* ============================== MODULE 5: CONDUCTORS & INSULATORS (5.9, 5.10) ============================== */
+const grpCond = new THREE.Group(); grpCond.visible=false; root3.add(grpCond);
+const MATS5 = {
+  copper:{name:'Copper',   cond:true, col:0xc87533},
+  iron:  {name:'Iron',     cond:true, col:0x7d8794},
+  plastic:{name:'Plastic', cond:false,col:0x5fa8d3},
+  glass: {name:'Glass',    cond:false,col:0x9fd8d0},
+  wood:  {name:'Wood',     cond:false,col:0x8a5a33}
+};
+const state5 = { mat:'copper', connected:false, f:0 };
+const ROD5 = {x0:-3, x1:3, h:0.9, d:0.9, y:0.4};
+const rod5 = new THREE.Mesh(new THREE.BoxGeometry(ROD5.x1-ROD5.x0,ROD5.h,ROD5.d), new THREE.MeshStandardMaterial({color:0xc87533,transparent:true,opacity:0.35,metalness:0.5,roughness:0.4}));
+rod5.position.set(0,ROD5.y,0); grpCond.add(rod5);
+const sphA5 = new THREE.Mesh(new THREE.SphereGeometry(0.9,32,32), new THREE.MeshStandardMaterial({color:COL_NEG,emissive:COL_NEG,emissiveIntensity:0.3,metalness:0.5,roughness:0.4}));
+const sphB5 = sphA5.clone(); sphB5.material = sphA5.material.clone();
+sphA5.position.set(-4.2,ROD5.y,0); sphB5.position.set(4.2,ROD5.y,0); grpCond.add(sphA5,sphB5);
+const ions5=[], els5=[];
+const ionMat5=new THREE.MeshStandardMaterial({color:COL_POS,emissive:COL_POS,emissiveIntensity:0.3});
+const elMat5=new THREE.MeshBasicMaterial({color:ELECTRON_COLOR});
+for(let i=0;i<9;i++) for(let j=0;j<3;j++){
+  const home=new THREE.Vector3(ROD5.x0+0.4+i*0.65, ROD5.y-0.25+j*0.25, 0);
+  const ion=new THREE.Mesh(new THREE.SphereGeometry(0.11,12,12),ionMat5); ion.position.copy(home); grpCond.add(ion); ions5.push(ion);
+  const e=new THREE.Mesh(new THREE.SphereGeometry(0.065,10,10),elMat5);
+  e.userData={home:home.clone().add(new THREE.Vector3(0.22,0.1,0.18)), ph:Math.random()*6.28, vz:(Math.random()-0.5)*0.4};
+  e.position.copy(e.userData.home); grpCond.add(e); els5.push(e);
+}
+function chargeTint5(q){ // q: 0 neutral .. 1 fully negative
+  return new THREE.Color(COL_NEUTRAL).lerp(new THREE.Color(COL_NEG),Math.min(1,q));
+}
+function updateCond5(){
+  const M=MATS5[state5.mat];
+  rod5.material.color.setHex(M.col);
+  document.querySelectorAll('#ctrl-cond [data-mat]').forEach(b=>b.classList.toggle('on',b.dataset.mat===state5.mat));
+  document.getElementById('btn-c-connect').textContent = state5.connected?'⟲ Disconnect':'Connect rod';
+  document.getElementById('val-c-mat').textContent=M.name;
+  const ty=document.getElementById('val-c-type'); ty.textContent=M.cond?'CONDUCTOR':'INSULATOR'; ty.style.color=M.cond?'var(--green)':'var(--red)';
+  document.getElementById('val-c-el').textContent=M.cond?'free to move':'held in atoms';
+}
+let lastT5=null;
+function updateActive5(t){
+  const dt=lastT5===null?0:Math.min(0.1,t-lastT5); lastT5=t;
+  const M=MATS5[state5.mat];
+  if(state5.connected && M.cond) state5.f=Math.min(1,state5.f+dt*0.35);
+  else if(!state5.connected) state5.f=Math.max(0,state5.f-dt*0.7);
+  const f=state5.f, flowing=state5.connected&&M.cond&&f<1;
+  const qA=1-0.5*f, qB=0.5*f;
+  sphA5.material.color.copy(chargeTint5(qA)); sphA5.material.emissive.copy(chargeTint5(qA));
+  sphB5.material.color.copy(chargeTint5(qB)); sphB5.material.emissive.copy(chargeTint5(qB));
+  els5.forEach(e=>{
+    const u=e.userData, w=t*3+u.ph;
+    if(M.cond){ // free electrons: wander randomly, drift to the right when connected (A is negative → pushes electrons toward B)
+      u.home.x += (flowing?1.6:0)*dt + Math.sin(w*1.3)*0.01;
+      if(u.home.x>ROD5.x1-0.15) u.home.x=ROD5.x0+0.15;
+      u.home.y = ROD5.y-0.3+((u.ph*7)%1)*0.6+Math.sin(w)*0.08;
+      u.home.z = Math.sin(w*0.7+u.ph)*0.3;
+      e.position.copy(u.home);
+    } else { // bound electrons: only vibrate about their atom
+      const base=ions5[els5.indexOf(e)].position;
+      e.position.set(base.x+0.22+Math.sin(w*2)*0.03, base.y+0.1+Math.cos(w*2.3)*0.03, 0.18);
+      u.home.copy(e.position);
+    }
+  });
+  const qa=-8*qA, qb=-8*qB;
+  document.getElementById('val-c-qa').textContent=qa.toFixed(1)+' nC';
+  document.getElementById('val-c-qb').textContent=qb.toFixed(1)+' nC';
+  const res=document.getElementById('val-c-res');
+  if(!state5.connected){ res.textContent='Rod not connected yet.'; }
+  else if(M.cond) res.textContent = f<1?'Electrons flow along the rod → charge spreads to B.':'Charge shared equally between A and B.';
+  else res.textContent='No free electrons → no charge flows. B stays neutral.';
+}
+function labelsCond(){
+  return [
+    {p:new THREE.Vector3(-4.2,-0.9,0),t:'A (charged −)',c:'#8fd4ff',size:10},
+    {p:new THREE.Vector3(4.2,-0.9,0),t:'B',c:'#ffffff',size:10},
+    {p:new THREE.Vector3(0,1.7,0),t:MATS5[state5.mat].name+' rod',c:'#ffffff',size:11},
+    {p:new THREE.Vector3(-2.2,-0.35,0),t:'● ion (+, fixed)   ● electron (−)',c:'#b57aff',size:9}
+  ];
+}
+document.querySelectorAll('#ctrl-cond [data-mat]').forEach(b=>b.addEventListener('click',()=>{ state5.mat=b.dataset.mat; state5.connected=false; state5.f=0; updateCond5(); }));
+document.getElementById('btn-c-connect').addEventListener('click',()=>{ state5.connected=!state5.connected; updateCond5(); });
+document.getElementById('btn-c-reset').addEventListener('click',()=>{ state5.connected=false; state5.f=0; updateCond5(); });
+updateCond5();
+
+/* ============================== TAB SWITCHING ============================== */
+const moduleGroups = { charges:grpCharges, charging:grpCharging, experiments:grpExperiments, fields:grpFields, cond:grpCond };
+const moduleCams = {
+  charges:{theta:0.32,phi:0.16,radius:9,cx:0,cy:0.3,cz:0},
+  charging:{theta:0.5,phi:0.24,radius:6.5,cx:0.1,cy:0.3,cz:0},
+  experiments:{theta:0.45,phi:0.16,radius:9.5,cx:-2.5,cy:0.1,cz:0},
+  fields:{theta:0.3,phi:0.2,radius:11,cx:0,cy:0.4,cz:0},
+  cond:{theta:0.25,phi:0.2,radius:12,cx:0,cy:0.3,cz:0}
+};
+const moduleLabelFns = { charges:labelsCharges, charging:labelsCharging, experiments:labelsExperiments, fields:labelsFields, cond:labelsCond };
+const moduleUpdateFns = { charges:updateActive1, charging:updateActive2, experiments:updateActive6, fields:updateActive4, cond:updateActive5 };
+
+let activeModule = 'charges';
+function setActiveModule(id){
+  if(!moduleGroups[id] || id===activeModule && document.querySelector('.tab-btn.on').dataset.mod===id){ /* allow re-entry too */ }
+  Object.keys(moduleGroups).forEach(k=>{ moduleGroups[k].visible = (k===id); });
+  activeModule = id;
+  const c = moduleCams[id];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.mod===id));
+  document.querySelectorAll('.hud-block').forEach(el=>{ el.style.display = (el.id==='hud-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.info-block').forEach(el=>{ el.style.display = (el.id==='info-'+id) ? 'block' : 'none'; });
+  document.querySelectorAll('.ctrl-block').forEach(el=>{ el.style.display = (el.id==='ctrl-'+id) ? 'flex' : 'none'; });
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setActiveModule(btn.dataset.mod));
+});
+document.getElementById('btn-camreset').addEventListener('click', ()=>{
+  const c = moduleCams[activeModule];
+  orb.theta=c.theta; orb.phi=c.phi; orb.radius=c.radius; orb.cx=c.cx; orb.cy=c.cy; orb.cz=c.cz;
+  applyOrbit();
+});
+setActiveModule('charges');
+
+/* ============================== MAIN LOOP ============================== */
+function drawLabels(){
+  lctx.clearRect(0,0,labelCanvas.width,labelCanvas.height);
+  const fn = moduleLabelFns[activeModule];
+  if(!fn) return;
+  fn().forEach(l=> drawLabelChip(l.p, l.t, l.c, l.size));
+}
+
+let lastRender = 0;
+const clock0 = performance.now();
+function animate(ts){
+  requestAnimationFrame(animate);
+  if(ts - lastRender < 33) return;
+  lastRender = ts;
+  const t = (performance.now()-clock0)/1000;
+  const fn = moduleUpdateFns[activeModule];
+  if(fn) fn(t);
+  drawLabels();
+  renderer.render(scene3, cam3);
+  renderAtom();
+}
+animate();
+
+</script>
+</body>
+</html>
