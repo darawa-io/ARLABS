@@ -736,6 +736,11 @@ let undoStack = [];
 let hoverComp = null;
 let hoverWire = null;
 let hoverNode = null;
+// Touch: pressing a terminal MOVES the component by default; hold ~0.3s to arm wiring.
+const TERM_HOLD_MS = 320;
+let selectedCompBeforeTouch = null;
+let termHold = null;        // {comp, terminal, t0, armed, timer}
+function cancelTermHold() { if (termHold) { clearTimeout(termHold.timer); termHold = null; } }
 let hoverTerminal = null;   // {comp, terminal:'a'|'b'} — terminal under cursor for drag-to-wire
 let wireDragActive = false; // true while a terminal drag-wire is in progress
 let compIdCounter = 1;
@@ -1135,138 +1140,74 @@ function solveCircuit() {
       const I_wire = (vA - vB) / WIRE_R;
       if (Math.abs(I_wire) > 1e-9) {
         e.wire._active = true;
+        e.wire._current = Math.abs(I_wire);
         e.wire._flowForward = (vA > vB) === (e.wire._nodeA === e.from);
       }
     }
   } else {
-    // Ideal mode: find all simple paths from each source’s + node to its − node
-    // (same algorithm as circuit_goodcurrent.html), filtered by MNA-computed
-    // currents so open branches are never animated.
-    // markPathWires() sets _flowForward correctly because paths walk + → −.
-
-    function compHasCurrent(c) {
-      const pe = passiveEdges.find(p => p.comp === c);
-      if (pe) return Math.abs((snVoltage[pe.from_sn] - snVoltage[pe.to_sn]) / pe.R) > 1e-9;
-      return false;
-    }
-
-    for (const vs of vsEdges) {
-      // In ideal mode, all wire-connected nodes collapse into super-nodes.
-      // A single posNode representative misses wires whose BOTH endpoints are
-      // in the same super-node (zero ΔV, but still carry current).
-      // Fix: seed findAllPaths from EVERY graph node that belongs to the + super-node,
-      // and treat EVERY graph node in the − super-node as a valid destination.
-      const posNodes = graph.nodes.map((_, i) => i).filter(i => sn(i) === vs.from_sn);
-      const negNodes = new Set(graph.nodes.map((_, i) => i).filter(i => sn(i) === vs.to_sn));
-      if (!posNodes.length || !negNodes.size) continue;
-
-      // findAllPathsMulti: DFS from any of posNodes to any of negNodes
-      const allPaths = findAllPathsMultiSeed(graph, posNodes, negNodes, vs.comp, 64);
-      const posNode = posNodes[0]; // kept for compat (unused below)
-      const negNode = [...negNodes][0];
-      const validPaths = allPaths.filter(path => {
-        for (let i = 0; i < path.length - 1; i++) {
-          const from = path[i], to = path[i + 1];
-          for (const { to: t2, edge } of (graph.adj[from] || [])) {
-            if (t2 !== to || !edge.comp) continue;
-            const c = edge.comp;
-            if (c.type === 'switch' && !c.closed) return false;
-            if (c.type === 'voltmeter') return false;
-            if (c.type === 'led' && from === c._nodeB && to === c._nodeA) return false;
-            // Fully-charged capacitor blocks current — no animation through it
-            if (c.type === 'capacitor' && c._charge >= 0.999) return false;
-            // Reject open-branch components (no MNA current)
-            if (c.type !== 'battery' && c.type !== 'dcpsu' && !compHasCurrent(c)) return false;
-          }
-        }
-        return true;
-      });
-
-      for (const path of validPaths) {
-        markPathWires(path, graph);
-
-        // Assign per-path current to every wire on this path.
-        let pathI = vs.comp._current || 0;
-        for (let i = 0; i < path.length - 1; i++) {
-          const from = path[i], to = path[i + 1];
-          for (const { to: t2, edge } of (graph.adj[from] || [])) {
-            if (t2 !== to || !edge.comp) continue;
-            const c = edge.comp;
-            if (c._current > 0 && c.type !== 'battery' && c.type !== 'dcpsu') {
-              pathI = c._current;
-              break;
-            }
-          }
-        }
-        // Stamp pathI onto every wire segment on this path
-        for (let i = 0; i < path.length - 1; i++) {
-          const from = path[i], to = path[i + 1];
-          for (const { to: t2, edge } of (graph.adj[from] || [])) {
-            if (t2 !== to || !edge.wire) continue;
-            const w = edge.wire;
-            if (w._active) w._current = pathI;
-          }
-        }
-      }
-    }
-
-    // ── Intra-super-node wire pass ──────────────────────────────────────────
-    // Path-finding never traverses wires whose both endpoints share a super-node
-    // (the DFS stops at the first negNode it hits, and never re-enters a posNode
-    // it already started from). Fix: after path marking, activate every wire
-    // whose both endpoints are in the same super-node IF that super-node is
-    // already live (i.e. touches at least one already-active wire or component).
-    //
-    // Flow direction: pick the direction whose "from" side neighbours an
-    // already-active wire — that side is the one current is arriving from.
-    // A super-node is live only if an already-active wire touches it.
-    // Do NOT use component._current here — the battery retains a stale _current
-    // even when the cap is fully charged and the path-finder correctly produced
-    // zero active wires. Active wires are the sole ground truth.
-    const liveSuperNodes = new Set();
+    // Ideal mode: wires have zero resistance, so every wire joined to a node sits in one
+    // super-node and ΔV can't tell us the direction. Use Kirchhoff's current law instead:
+    //   1. For every graph node, add up the current the *components* push into / pull out of it.
+    //   2. Within each wire network, take a spanning tree and peel leaves inward. The current
+    //      on a tree edge is the net injection of everything on the leaf side of it.
+    // This gives the true direction on every wire, including wires at a parallel junction.
+    const inj = new Array(graph.nodes.length).fill(0); // + = current enters wire network here
     for (const e of graph.edges) {
-      if (e.wire && e.wire._active) {
-        liveSuperNodes.add(sn(e.from));
-        liveSuperNodes.add(sn(e.to));
+      const c = e.comp;
+      if (!c) continue;
+      const vDiff = nodeVoltages[e.from] - nodeVoltages[e.to];
+      let I = 0; // current flowing from e.from through the component to e.to
+      if (c.type === 'battery' || c.type === 'dcpsu') {
+        const vs = vsEdges.find(v => v.comp === c);
+        if (!vs) continue;
+        const I_src = (vs.V - vDiff) / vs.intR; // delivered out of + (e.from) into the circuit
+        inj[e.from] += I_src;
+        inj[e.to]   -= I_src;
+        continue;
       }
+      if (c.type === 'switch' || c.type === 'voltmeter') continue;
+      if (c.type === 'capacitor' && c._charge >= 0.999) continue;
+      const R = compResistance(c);
+      if (!(R > 0)) continue;
+      I = vDiff / R;
+      if (c.type === 'led' && I <= 0) continue; // reverse-biased LED blocks
+      inj[e.from] -= I;
+      inj[e.to]   += I;
     }
-    for (const e of graph.edges) {
-      if (!e.wire) continue;
-      const snA = sn(e.from), snB = sn(e.to);
-      if (snA !== snB) continue;            // not an intra-super-node wire
-      if (!liveSuperNodes.has(snA)) continue; // super-node carries no current
-      const w = e.wire;
-      if (w._active) continue;              // already marked by path pass
 
-      // Determine flow direction by finding an active neighbouring wire and asking:
-      // "which end of *this* wire does current enter from?"
-      // An active neighbour nw touches endpoint. If nw's exit-node === endpoint,
-      // current arrives at endpoint, so it exits through the other end of w.
-      // _flowForward = true means particles travel nodeA→nodeB (pts[0]→pts[last]).
-      let flowForward = true; // default, overridden below when a neighbour is found
-      let dirFound = false;
-      for (const endpoint of [e.from, e.to]) {
-        if (dirFound) break;
-        for (const { edge: ne } of (graph.adj[endpoint] || [])) {
-          if (!ne.wire || !ne.wire._active) continue;
-          const nw = ne.wire;
-          const nwExitNode = nw._flowForward ? nw._nodeB : nw._nodeA;
-          if (nwExitNode === endpoint) {
-            // current arrives at `endpoint` → exits out the far end of w
-            // _flowForward=true  ↔ entry at nodeA (e.from)
-            // _flowForward=false ↔ entry at nodeB (e.to)
-            flowForward = (endpoint === w._nodeA);
-            dirFound = true;
-            break;
-          }
+    // "Wire-like" edges: real wires plus closed switches (both are ideal connections)
+    const wl = graph.edges.filter(e => e.from !== e.to &&
+      (e.wire || (e.comp && e.comp.type === 'switch' && e.comp.closed)));
+    const wadj = graph.nodes.map(() => []);
+    wl.forEach(e => { wadj[e.from].push({ to: e.to, e }); wadj[e.to].push({ to: e.from, e }); });
+
+    const seen = new Array(graph.nodes.length).fill(false);
+    for (let root = 0; root < graph.nodes.length; root++) {
+      if (seen[root]) continue;
+      // iterative DFS → spanning tree + visit order
+      const order = [], parent = new Map();
+      const stack = [root]; seen[root] = true; parent.set(root, null);
+      while (stack.length) {
+        const u = stack.pop(); order.push(u);
+        for (const { to, e } of wadj[u]) {
+          if (seen[to]) continue;
+          seen[to] = true; parent.set(to, { node: u, e });
+          stack.push(to);
         }
       }
-      w._active = true;
-      w._flowForward = flowForward;
-      // Inherit current magnitude from an active neighbour wire
-      for (const { edge: ne } of (graph.adj[e.from] || [])) {
-        if (ne.wire && ne.wire._active && ne.wire._current > 0) {
-          w._current = ne.wire._current; break;
+      // peel leaves (reverse visit order): subtree sum = current leaving via the parent edge
+      const sub = new Map(order.map(n => [n, inj[n]]));
+      for (let k = order.length - 1; k > 0; k--) {
+        const n = order[k], par = parent.get(n);
+        if (!par) continue;
+        const flow = sub.get(n);                 // current flowing n → par.node
+        sub.set(par.node, sub.get(par.node) + flow);
+        const w = par.e.wire;
+        if (w && Math.abs(flow) > 1e-7) {
+          w._active = true;
+          w._current = Math.abs(flow);
+          const flowsFromNodeA = (flow > 0) ? (n === w._nodeA) : (par.node === w._nodeA);
+          w._flowForward = flowsFromNodeA;
         }
       }
     }
@@ -1698,6 +1639,16 @@ function drawComponent(c) {
     // Check if this terminal is being hovered for wire-drag
     const isHovered = hoverTerminal && hoverTerminal.comp === c &&
       ((hoverTerminal.terminal === 'a' && lx === -hw) || (hoverTerminal.terminal === 'b' && lx === hw));
+      // Touch hold-to-wire feedback: ring fills while holding, solid once armed
+      if (termHold && termHold.comp === c && ((termHold.terminal === 'a' && lx === -hw) || (termHold.terminal === 'b' && lx === hw))) {
+        const prog = termHold.armed ? 1 : Math.min(1, (performance.now() - termHold.t0) / TERM_HOLD_MS);
+        ctx.save();
+        ctx.strokeStyle = '#00ffaa'; ctx.lineWidth = 3;
+        ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = termHold.armed ? 18 : 8;
+        ctx.beginPath(); ctx.arc(lx, 0, 18, -Math.PI/2, -Math.PI/2 + Math.PI*2*prog); ctx.stroke();
+        if (termHold.armed) { ctx.fillStyle = 'rgba(0,255,170,0.25)'; ctx.beginPath(); ctx.arc(lx, 0, 18, 0, Math.PI*2); ctx.fill(); }
+        ctx.restore();
+      }
     if (isHovered) {
       // Pulsing glow ring to indicate "drag from here to wire"
       ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = 14;
@@ -2224,7 +2175,7 @@ document.querySelectorAll('.comp-btn[data-type]').forEach(btn => {
     const _fs = findFreeSpot();
     addComponent(type, _fs.x, _fs.y);
     updateCircuit();
-    setHint('Component added! Tap a terminal to wire it up · Double-tap to edit values');
+    setHint('Component added! Drag to move · hold a terminal then drag to wire · Double-tap to edit');
   }, { passive: true });
 });
 
@@ -2246,6 +2197,7 @@ function canvasTouchPos(touch) {
 // pendingDragComp: component touched but not yet committed to drag
 let pendingDragComp = null;
 let pendingDragOffset = null;
+// (touch hold-to-wire state lives near the other globals)
 
 canvas.addEventListener('touchstart', e => {
   if (touchDragActive) return; // sidebar touch in progress
@@ -2253,6 +2205,7 @@ canvas.addEventListener('touchstart', e => {
   const { x: mx, y: my } = canvasTouchPos(e.touches[0]);
   mouseDownPos = { x: mx, y: my };
   isMouseDown = true;
+  selectedCompBeforeTouch = selectedComp;
   pendingDragComp = null;
   pendingDragOffset = null;
 
@@ -2263,14 +2216,31 @@ canvas.addEventListener('touchstart', e => {
   }
   if (wireMode && !wireStart) return; // handled in touchend
 
-  // Drag-from-terminal on touch: if finger lands on a terminal, start wire-drag
+  // Finger on a terminal (normal mode): treat it as "grab the component" by default.
+  // Hold ~0.3 s without moving to arm drag-to-wire from this terminal instead.
   if (!wireDragActive) {
     const termHit = nearTerminalTouch(mx, my);
     if (termHit) {
-      saveUndo();
-      wireDragActive = true;
-      wireStart = { type:'terminal', comp:termHit.comp, terminal:termHit.terminal };
-      wirePreview = { x: snap(mx), y: snap(my) };
+      const body = hitComp(mx, my);
+      const owner = body || termHit.comp;
+      pendingDragComp = owner;
+      pendingDragOffset = { x: mx - owner.x, y: my - owner.y };
+      cancelTermHold();
+      termHold = { comp: termHit.comp, terminal: termHit.terminal, t0: performance.now(), armed: false, timer: null };
+      const th = termHold;
+      th.timer = setTimeout(() => {
+        if (termHold !== th || !isMouseDown || draggingComp || wireMode) return;
+        th.armed = true;
+        saveUndo();
+        wireDragActive = true;
+        wireStart = { type:'terminal', comp:th.comp, terminal:th.terminal };
+        const tp = getTerminals(th.comp)[th.terminal];
+        wirePreview = { x: tp.x, y: tp.y };
+        pendingDragComp = null; pendingDragOffset = null;
+        if (navigator.vibrate) navigator.vibrate(15);
+        setHint('Wire armed — drag to another terminal or node · release on empty space to drop a node');
+      }, TERM_HOLD_MS);
+      selectedComp = owner; selectedWire = null;
       return;
     }
   }
@@ -2301,6 +2271,7 @@ canvas.addEventListener('touchmove', e => {
   if (!wireMode && !wireDragActive && isMouseDown && pendingDragComp && !draggingComp) {
     const startPos = mouseDownPos || { x: mx, y: my };
     if (Math.hypot(mx - startPos.x, my - startPos.y) > 8) {
+      cancelTermHold();
       draggingComp = pendingDragComp;
       dragOffset = pendingDragOffset;
       selectedComp = pendingDragComp;
@@ -2359,6 +2330,8 @@ canvas.addEventListener('touchend', e => {
   const { x: mx, y: my } = canvasTouchPos(touch);
   const wasDraggingComp = !!draggingComp;
   const wasDragging = !!(draggingComp || draggingNode);
+  const wasSelectedBeforeTap = !!(termHold && !termHold.armed && selectedCompBeforeTouch === termHold.comp);
+  cancelTermHold();
   isMouseDown = false;
   draggingComp = null; draggingNode = null; pendingNodePress = null;
   pendingDragComp = null; pendingDragOffset = null;
@@ -2463,9 +2436,11 @@ canvas.addEventListener('touchend', e => {
 
   // ── Normal mode ───────────────────────────────────────────
 
-  // Priority 1: terminal tap → start wire mode (terminal-first)
+  // Priority 1: tap on a terminal of an ALREADY-selected component → start tap-to-tap wiring.
+  // (First tap only selects, so an accidental touch can't drop you into wire mode.)
   const tTap = nearTerminalTouch(mx, my);
-  if (tTap) {
+  const dbl = canvas._lastTap && (Date.now() - canvas._lastTap < 400);
+  if (tTap && wasSelectedBeforeTap && !dbl) {
     saveUndo();
     wireMode = true;
     wireStart = { type:'terminal', comp:tTap.comp, terminal:tTap.terminal };
@@ -2506,6 +2481,8 @@ canvas.addEventListener('touchend', e => {
     else { selectedComp = null; selectedWire = null; }
   }
 }, { passive: false });
+
+canvas.addEventListener('touchcancel', () => { cancelTermHold(); isMouseDown = false; draggingComp = null; draggingNode = null; pendingDragComp = null; pendingNodePress = null; if (wireDragActive) { wireDragActive = false; wireStart = null; wirePreview = null; } });
 
 // ---- Mouse Events ----
 let isMouseDown = false;
