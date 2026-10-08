@@ -46,6 +46,23 @@
     --fab-shadow: rgba(80,50,10,0.22);
   }
 
+
+  /* ── Light theme: darker, higher-contrast component colours (sidebar icons) ── */
+  body.theme-light .sidebar svg [stroke="#00d4ff" i] { stroke: #0b5394; }
+  body.theme-light .sidebar svg [fill="#00d4ff" i]   { fill:   #0b5394; }
+  body.theme-light .sidebar svg [stroke="#ffe066" i] { stroke: #8a5a00; }
+  body.theme-light .sidebar svg [fill="#ffe066" i]   { fill:   #8a5a00; }
+  body.theme-light .sidebar svg [stroke="#39ff14" i] { stroke: #0d6b00; }
+  body.theme-light .sidebar svg [fill="#39ff14" i]   { fill:   #0d6b00; }
+  body.theme-light .sidebar svg [stroke="#ff9900" i] { stroke: #a85400; }
+  body.theme-light .sidebar svg [fill="#ff9900" i]   { fill:   #a85400; }
+  body.theme-light .sidebar svg [stroke="#b44aff" i] { stroke: #5c0099; }
+  body.theme-light .sidebar svg [fill="#b44aff" i]   { fill:   #5c0099; }
+  body.theme-light .sidebar svg [stroke="#ff3355" i] { stroke: #b50020; }
+  body.theme-light .sidebar svg [fill="#ff3355" i]   { fill:   #b50020; }
+  body.theme-light .sidebar svg [fill="#ff6b35" i]   { fill:   #b83200; }
+  body.theme-light .sidebar svg [stroke="#ff6b35" i] { stroke: #b83200; }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -147,7 +164,21 @@
   #simCanvas {
     display: block;
     cursor: crosshair;
+    touch-action: none;
   }
+  .zoom-ctl {
+    position: absolute; top: 12px; left: 12px; z-index: 5;
+    display: flex; align-items: stretch;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 2px 10px var(--fab-shadow); overflow: hidden;
+    -webkit-user-select: none; user-select: none;
+  }
+  .zoom-ctl button {
+    min-width: 40px; height: 38px; border: 0; background: transparent; color: var(--text);
+    font: 600 16px 'Share Tech Mono', monospace; cursor: pointer; touch-action: manipulation;
+  }
+  .zoom-ctl button:hover, .zoom-ctl button:active { background: var(--border); }
+  .zoom-ctl #zoomReset { min-width: 58px; font-size: 12px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
 
   /* RIGHT PANEL */
   .readings-panel {
@@ -535,31 +566,16 @@
   <div class="sidebar">
     <div class="sidebar-section">Sources</div>
     <div class="comp-btn" draggable="true" data-type="battery" title="Battery">
-      <!-- IEC battery: each cell = short thin(+) then long thick(−), two cells, leads on both ends -->
+      <!-- Battery: long plate = +, short plate = −. Two cells; + on the left to match the canvas symbol -->
       <svg viewBox="0 0 44 28">
-        <!-- left lead -->
-        <line x1="2" y1="14" x2="9" y2="14" stroke="#00d4ff" stroke-width="2"/>
-        <!-- cell 1: short thin = + -->
-        <line x1="9" y1="10" x2="9" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
-        <!-- cell 1: long thick = − -->
-        <line x1="14" y1="6" x2="14" y2="22" stroke="#00d4ff" stroke-width="3"/>
-        <!-- bridge -->
-        <line x1="14" y1="14" x2="20" y2="14" stroke="#00d4ff" stroke-width="1.5"/>
-        <!-- cell 2: short thin = + -->
-        <line x1="20" y1="10" x2="20" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
-        <!-- cell 2: long thick = − -->
-        <line x1="25" y1="6" x2="25" y2="22" stroke="#00d4ff" stroke-width="3"/>
-        <!-- bridge -->
-        <line x1="25" y1="14" x2="31" y2="14" stroke="#00d4ff" stroke-width="1.5"/>
-        <!-- cell 3: short thin = + -->
-        <line x1="31" y1="10" x2="31" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
-        <!-- cell 3: long thick = − -->
-        <line x1="36" y1="6" x2="36" y2="22" stroke="#00d4ff" stroke-width="3"/>
-        <!-- right lead -->
-        <line x1="36" y1="14" x2="42" y2="14" stroke="#00d4ff" stroke-width="2"/>
-        <!-- − label near left (short thin = − terminal), + label near right (long thick = + terminal) -->
-        <text x="1" y="9" fill="#00d4ff" font-size="7" font-family="monospace">−</text>
-        <text x="37" y="9" fill="#00d4ff" font-size="6" font-family="monospace" font-weight="bold">+</text>
+        <line x1="3"  y1="14" x2="10" y2="14" stroke="#00d4ff" stroke-width="2"/>
+        <line x1="10" y1="5"  x2="10" y2="23" stroke="#00d4ff" stroke-width="3"/>
+        <line x1="16" y1="9"  x2="16" y2="19" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="22" y1="5"  x2="22" y2="23" stroke="#00d4ff" stroke-width="3"/>
+        <line x1="28" y1="9"  x2="28" y2="19" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="28" y1="14" x2="41" y2="14" stroke="#00d4ff" stroke-width="2"/>
+        <text x="1"  y="10" fill="#00d4ff" font-size="9" font-family="monospace" font-weight="bold">+</text>
+        <text x="35" y="10" fill="#00d4ff" font-size="9" font-family="monospace" font-weight="bold">−</text>
       </svg>
       <span>Battery</span>
     </div>
@@ -614,6 +630,11 @@
   <!-- CANVAS -->
   <div class="canvas-wrap">
     <canvas id="simCanvas"></canvas>
+    <div class="zoom-ctl" id="zoomCtl">
+      <button id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+      <button id="zoomReset" title="Reset zoom to 100%" aria-label="Reset zoom">100%</button>
+      <button id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+    </div>
   </div>
 
   <!-- RIGHT PANEL -->
@@ -647,9 +668,20 @@
       </div>
       <div id="modeDesc" style="font-size:8px;color:var(--dim);margin-top:4px;line-height:1.4;">Ideal: zero wire &amp; meter resistance.</div>
     </div>
+    <div style="margin-top:10px;">
+      <div style="font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:5px;">Capacitor Time</div>
+      <div id="capSpeed" style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <button data-slow="400" onclick="setCapSpeed(400)">÷400</button>
+        <button data-slow="100" onclick="setCapSpeed(100)">÷100</button>
+        <button data-slow="10"  onclick="setCapSpeed(10)">÷10</button>
+        <button data-slow="1"   onclick="setCapSpeed(1)">REAL</button>
+      </div>
+      <div style="font-size:8px;color:var(--dim);margin-top:4px;line-height:1.4;">Slows RC charging so you can watch it (τ = R·C ÷ factor).</div>
+    </div>
     <div class="warning-box" id="warningBox">⚠ Circuit incomplete or open branch detected</div>
     <div style="height:12px"></div>
     <div style="font-size:9px;color:var(--dim);letter-spacing:1px;line-height:1.7">
+      <div>• Pan: drag empty space · Zoom: scroll / pinch</div>
       <div>• Click terminal to start wire</div>
       <div>• Click terminal/wire to complete</div>
       <div>• Click empty space: add node, keep wiring</div>
@@ -708,10 +740,46 @@ const ctx = canvas.getContext('2d');
 const GRID = 30;
 
 // ---- Resize ----
+// The world (components, wires, nodes) lives in its own coordinate system. `view` maps it to the
+// screen:  screen = world * k + (x, y).  Panning/zooming only changes `view`, never the circuit,
+// so grid alignment between terminals and nodes can never be disturbed.
+let DPR = 1;
+const view = { x: 0, y: 0, k: 1 };
+const VIEW_MIN = 0.3, VIEW_MAX = 3;
 function resize() {
   const wrap = canvas.parentElement;
-  canvas.width = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
+  DPR = Math.max(1, Math.min(3, window.devicePixelRatio || 1));   // crisp on retina / iPad
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  canvas.width = Math.round(w * DPR);
+  canvas.height = Math.round(h * DPR);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+}
+const viewW = () => canvas.width / DPR;
+const viewH = () => canvas.height / DPR;
+const toWorld  = (sx, sy) => ({ x: (sx - view.x) / view.k, y: (sy - view.y) / view.k });
+const toScreen = (wx, wy) => ({ x: wx * view.k + view.x, y: wy * view.k + view.y });
+const clampK = k => Math.max(VIEW_MIN, Math.min(VIEW_MAX, k));
+// hit-radius multiplier: when zoomed out, targets grow in world units so they stay finger-sized
+const hitScale = () => 1 / Math.min(1, view.k);
+let _viewAnim = null;
+function cancelViewAnim() { if (_viewAnim) { cancelAnimationFrame(_viewAnim); _viewAnim = null; } }
+function zoomAt(sx, sy, factor) {           // zoom keeping the world point under (sx, sy) fixed
+  cancelViewAnim();
+  const nk = clampK(view.k * factor), w = toWorld(sx, sy);
+  view.k = nk; view.x = sx - w.x * nk; view.y = sy - w.y * nk;
+}
+function animateViewTo(tx, ty, tk, ms = 260) {
+  cancelViewAnim();
+  const x0 = view.x, y0 = view.y, k0 = view.k, t0 = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - t, 3);
+    // interpolate zoom geometrically so it feels uniform
+    view.k = k0 * Math.pow(tk / k0, e);
+    view.x = x0 + (tx - x0) * e; view.y = y0 + (ty - y0) * e;
+    _viewAnim = t < 1 ? requestAnimationFrame(step) : null;
+  };
+  _viewAnim = requestAnimationFrame(step);
 }
 resize();
 window.addEventListener('resize', resize);
@@ -741,6 +809,14 @@ const TERM_HOLD_MS = 320;
 let selectedCompBeforeTouch = null;
 let termHold = null;        // {comp, terminal, t0, armed, timer}
 function cancelTermHold() { if (termHold) { clearTimeout(termHold.timer); termHold = null; } }
+// ── Capacitor transient model ────────────────────────────────────────────────
+// Real RC physics (backward Euler, solved inside the MNA matrix every frame). A capacitor is
+// ESR + C. Real time constants (e.g. 100 Ω × 100 µF = 10 ms) are far too fast to watch, so
+// simulated time runs `capSlowdown` times slower than the wall clock.
+const CAP_ESR = 0.1;                  // Ω, tiny series resistance (keeps C-across-battery finite)
+let capSlowdown = 100;                // sim runs ÷100 by default (τ = 10 ms shows as ~1 s)
+let capDt = 1 / 60 / capSlowdown;     // simulated seconds advanced per frame
+let _capLastT = 0;
 let hoverTerminal = null;   // {comp, terminal:'a'|'b'} — terminal under cursor for drag-to-wire
 let wireDragActive = false; // true while a terminal drag-wire is in progress
 let compIdCounter = 1;
@@ -753,6 +829,71 @@ let draggingNode = null; // {node, offsetX, offsetY}
 let pendingNodePress = null; // node under mousedown, resolved to drag or wire on move/click
 let suppressNextClick = false; // set after wire actions in mousedown to prevent modal opening
 
+
+// ── Light-theme colour remap ─────────────────────────────────────────────────
+// The canvas code uses neon colours designed for a dark background. In light theme every
+// colour set on the main canvas context is translated to a darker, high-contrast equivalent.
+const LIGHT_HEX = {
+  '#00d4ff':'#0b5394', '#00bfff':'#0b5394', '#00e5ff':'#0b5394', '#00dcff':'#0b5394', '#00ffff':'#0b5394',
+  '#ffe066':'#8a5a00', '#ffee88':'#8a5a00',
+  '#39ff14':'#0d6b00', '#88ff44':'#0d6b00',
+  '#00ffaa':'#07704d', '#00ffcc':'#07704d',
+  '#ff9900':'#a85400', '#ff6b35':'#b83200', '#ff3355':'#b50020', '#ff5050':'#b50020',
+  '#b44aff':'#5c0099',
+  '#6a88aa':'#33465c', '#4a8aaa':'#1d5c85', '#4a7fa5':'#1d5c85', '#2a6080':'#14486a',
+  '#4a5a6a':'#33465c', '#1e4060':'#2b4a68'
+};
+const LIGHT_RGB = [ // [r,g,b] → replacement rgb
+  [[0,212,255],[11,83,148]], [[0,220,255],[11,83,148]], [[0,119,204],[11,83,148]],
+  [[255,224,102],[138,90,0]], [[57,255,20],[13,107,0]], [[0,255,170],[7,112,77]],
+  [[255,51,85],[181,0,32]], [[255,107,53],[184,50,0]], [[204,0,51],[181,0,32]],
+  [[100,160,200],[51,70,92]]
+];
+function lightColor(v, forShadow) {
+  if (typeof v !== 'string') return v;
+  const k = v.trim().toLowerCase();
+  let out = null;
+  if (LIGHT_HEX[k]) { const h = LIGHT_HEX[k]; out = [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16), 1]; }
+  else {
+    const m = k.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/);
+    if (m) {
+      const r = +m[1], g = +m[2], b = +m[3], al = m[4] === undefined ? 1 : +m[4];
+      const hit = LIGHT_RGB.find(x => x[0][0] === r && x[0][1] === g && x[0][2] === b);
+      if (hit) {
+        // the near-opaque cyan (0.9) is the flow particle: make it light so it reads against the dark-blue wire
+        if (r === 0 && g === 212 && al >= 0.9) return '#d8ecff';
+        out = [hit[1][0], hit[1][1], hit[1][2], al];
+      }
+    }
+  }
+  if (!out) return v;
+  const alpha = forShadow ? Math.min(out[3], 0.35) : out[3];
+  return alpha >= 1 ? 'rgb(' + out[0] + ',' + out[1] + ',' + out[2] + ')' : 'rgba(' + out[0] + ',' + out[1] + ',' + out[2] + ',' + alpha + ')';
+}
+(function installLightRemap() {
+  const proto = Object.getPrototypeOf(ctx);
+  { // glows: shadowBlur ignores the canvas transform, so scale it by DPR × zoom
+    const d = Object.getOwnPropertyDescriptor(proto, 'shadowBlur');
+    if (d) Object.defineProperty(ctx, 'shadowBlur', {
+      configurable: true,
+      get() { return d.get.call(this) / (DPR * view.k); },
+      set(v) { d.set.call(this, v * DPR * view.k); }
+    });
+  }
+  for (const prop of ['strokeStyle', 'fillStyle', 'shadowColor']) {
+    const d = Object.getOwnPropertyDescriptor(proto, prop);
+    if (!d) continue;
+    Object.defineProperty(ctx, prop, {
+      configurable: true,
+      get() { return d.get.call(this); },
+      set(v) {
+        if (document.body.classList.contains('theme-light') && typeof v === 'string') v = lightColor(v, prop === 'shadowColor');
+        d.set.call(this, v);
+      }
+    });
+  }
+})();
+
 // ---- Component Definitions ----
 const COMP_DEFAULTS = {
   battery:     { voltage: 9,   resistance: 0.1, label: 'Battery',     color: '#00d4ff', w: 3, h: 2 },
@@ -760,13 +901,27 @@ const COMP_DEFAULTS = {
   resistor:    { resistance: 100, label: 'Resistor',    color: '#ffe066', w: 2, h: 2 },
   hiresistor:  { resistance: 10000, label: 'Hi-R',      color: '#ff9900', w: 2, h: 2 },
   varresistor: { resistance: 500, label: 'Var. R',      color: '#ffe066', w: 2, h: 2 },
-  capacitor:   { capacitance: 100, label: 'Capacitor',  color: '#b44aff', w: 3, h: 2, _charge: 0, _capVoltage: 0, _charging: false },
+  capacitor:   { capacitance: 100, label: 'Capacitor',  color: '#b44aff', w: 3, h: 2, _charge: 0, _capVoltage: 0, _vc: 0 },
   bulb:        { resistance: 60,  label: 'Bulb',        color: '#ffe066', w: 2, h: 2 },
   led:         { forwardV: 2.0, resistance: 50, label: 'LED', color: '#39ff14', w: 3, h: 2 },
   switch:      { closed: false, label: 'Switch',       color: '#39ff14', w: 3, h: 2 },
   ammeter:     { label: 'Ammeter',    color: '#00d4ff', w: 2, h: 2 },
   voltmeter:   { label: 'Voltmeter',  color: '#ffe066', w: 2, h: 2 },
 };
+
+// ---- Capacitor time scale ----
+function setCapSpeed(n) {
+  capSlowdown = n;
+  document.querySelectorAll('#capSpeed button').forEach(b => {
+    const on = +b.dataset.slow === n;
+    b.style.background = on ? 'var(--accent)' : 'var(--panel2)';
+    b.style.color = on ? '#000' : 'var(--dim)';
+  });
+}
+document.querySelectorAll('#capSpeed button').forEach(b => {
+  b.style.cssText = "flex:1;padding:5px 2px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;border:none;cursor:pointer;";
+});
+setCapSpeed(100);
 
 // ---- Simulation Mode ----
 let simMode = 'ideal';
@@ -825,8 +980,8 @@ function getTerminals(c) {
 function nearTerminal(mx, my) {
   for (const c of components) {
     const t = getTerminals(c);
-    if (dist({x:mx,y:my}, t.a) < 12) return { comp: c, terminal: 'a' };
-    if (dist({x:mx,y:my}, t.b) < 12) return { comp: c, terminal: 'b' };
+    if (dist({x:mx,y:my}, t.a) < 12 * hitScale()) return { comp: c, terminal: 'a' };
+    if (dist({x:mx,y:my}, t.b) < 12 * hitScale()) return { comp: c, terminal: 'b' };
   }
   return null;
 }
@@ -836,8 +991,8 @@ function nearTerminalTouch(mx, my) {
   // First pass: tight radius (snap precision)
   for (const c of components) {
     const t = getTerminals(c);
-    if (dist({x:mx,y:my}, t.a) < 22) return { comp: c, terminal: 'a' };
-    if (dist({x:mx,y:my}, t.b) < 22) return { comp: c, terminal: 'b' };
+    if (dist({x:mx,y:my}, t.a) < 22 * hitScale()) return { comp: c, terminal: 'a' };
+    if (dist({x:mx,y:my}, t.b) < 22 * hitScale()) return { comp: c, terminal: 'b' };
   }
   return null;
 }
@@ -847,10 +1002,7 @@ function compResistance(c) {
   if (c.type === 'resistor' || c.type === 'varresistor' || c.type === 'hiresistor') return c.resistance;
   if (c.type === 'bulb')      return c.resistance;
   if (c.type === 'led')       return c.resistance;
-  if (c.type === 'capacitor') {
-    if (c._charge >= 0.999) return 1e9;
-    return 0.1;
-  }
+  if (c.type === 'capacitor') return CAP_ESR;
   if (c.type === 'ammeter')   return simMode === 'realistic' ? 0.1 : 0.001;
   if (c.type === 'voltmeter') return 1e7; // high but finite so node voltages can be computed
   return 0;
@@ -895,24 +1047,17 @@ function gaussianSolve(A, b) {
 //   - Stamp voltage sources into extra rows/columns
 //   - Solve [G|B; C|D] * [V; I_src] = [I_inj; V_src]
 //   - Read back node voltages, then derive branch currents
-function solveCircuit() {
-  components.forEach(c => { c._current = 0; c._voltage = 0; c._lit = false; });
+function solveCircuit(advance = false, sourcesOff = false) {
+  components.forEach(c => { c._current = 0; c._voltage = 0; c._lit = false; c._capI = 0; c._vcNext = undefined; });
   circuitCurrent = 0; circuitVoltage = 0; circuitResistance = 0;
   shortCircuitDetected = false;
   wires.forEach(w => { w._active = false; w._current = 0; });
 
-  const sources = components.filter(c => c.type === 'battery' || c.type === 'dcpsu');
-
-  // ── Capacitor topology check ─────────────────────────────────
-  const graph0 = buildGraph();
-  components.filter(c => c.type === 'capacitor').forEach(cap => {
-    const tA = findNode(graph0, getTerminals(cap).a);
-    const tB = findNode(graph0, getTerminals(cap).b);
-    const inLoop = tA !== -1 && tB !== -1 && tA !== tB && bfsPath(graph0, tA, tB, cap) !== null;
-    if (!inLoop) { cap._charging = false; }
-  });
-
-  if (!sources.length) { _tickCapacitors(null, graph0); return; }
+  // Sources only drive the circuit while power is ON. With power off they are open circuits,
+  // but charged capacitors still exist and can discharge through any loop they are in.
+  const sources = sourcesOff ? [] : components.filter(c => c.type === 'battery' || c.type === 'dcpsu');
+  const capsCharged = components.some(c => c.type === 'capacitor' && Math.abs(c._vc || 0) > 1e-9);
+  if (!sources.length && !capsCharged) { finishCaps(false, sources); return; }
 
   const graph = buildGraph();
   const WIRE_R = simMode === 'realistic' ? 0.05 : 0;
@@ -966,7 +1111,7 @@ function solveCircuit() {
 
   for (const e of graph.edges) {
     const fSN = sn(e.from), tSN = sn(e.to);
-    if (fSN === tSN) continue; // short-circuited by wire merge — skip
+    if (fSN === tSN) { if (e.comp && e.comp.type === 'capacitor') e.comp._vcNext = 0; continue; } // shorted by wires (a shorted capacitor discharges fully)
 
     if (e.wire) {
       if (WIRE_R >= 1e-9) passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: WIRE_R, comp: null, wire: e.wire });
@@ -982,7 +1127,7 @@ function solveCircuit() {
         // Model as ideal V source in series with intR:
         // We stamp as a voltage source with series resistance using Norton equiv:
         // (handled below as a Thevenin source — V source + series R)
-        vsEdges.push({ from_sn: fSN, to_sn: tSN, V, intR, comp: c });
+        if (!sourcesOff) vsEdges.push({ from_sn: fSN, to_sn: tSN, V, intR, comp: c });
       } else if (c.type === 'switch') {
         if (c.closed) {
           // already merged via super-nodes
@@ -995,7 +1140,7 @@ function solveCircuit() {
         // Current only flows from anode to cathode
         passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: compResistance(c), comp: c, wire: null, isLed: true, ledNodeA: fSN, ledNodeB: tSN });
       } else if (c.type === 'capacitor') {
-        passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: compResistance(c), comp: c, wire: null });
+        passiveEdges.push({ from_sn: fSN, to_sn: tSN, R: CAP_ESR, comp: c, wire: null, isCap: true });
       } else {
         const R = compResistance(c);
         if (R > 0) passiveEdges.push({ from_sn: fSN, to_sn: tSN, R, comp: c, wire: null });
@@ -1003,7 +1148,7 @@ function solveCircuit() {
     }
   }
 
-  if (!vsEdges.length) { _tickCapacitors(sources, graph); return; }
+  // (no early-out when there are no voltage sources: a charged capacitor may still be discharging)
 
   // ── Step 3: build MNA matrix ────────────────────────────────────────────────
   // We model each voltage source as a Thevenin source (V + series intR).
@@ -1013,7 +1158,7 @@ function solveCircuit() {
   // and stamp it as a current injection + conductance.
 
   // Choose ground: the − terminal super-node of the first source
-  const groundSN = vsEdges[0].to_sn;
+  const groundSN = vsEdges.length ? vsEdges[0].to_sn : 0;
 
   // All super-nodes except ground become unknowns (node voltages)
   const unknownSNs = [];
@@ -1024,52 +1169,86 @@ function solveCircuit() {
     unknownSNs.push(s);
   }
   const M = unknownSNs.length;
-  if (M === 0) { _tickCapacitors(sources, graph); return; }
+  if (M === 0) { finishCaps(false, sources); return; }
 
-  // Initialize G matrix and RHS current vector
-  const G = Array.from({length: M}, () => new Array(M).fill(0));
-  const I = new Array(M).fill(0);
+  // ── Diode (LED) model: piecewise-linear, solved by iterating the on/off state ──
+  //   off (reverse-biased or below Vf): open circuit, no current
+  //   on  (Vd > Vf): conducts through R_led with a Vf drop:  I = (Vd − Vf) / R_led
+  // Start with every LED "on", solve, then flip any LED whose state contradicts the result.
+  const ledOn = new Map();
+  passiveEdges.forEach(pe => { if (pe.isLed) ledOn.set(pe.comp, true); });
+  let sol = null;
+  for (let iter = 0; iter < 40; iter++) {
+    const G = Array.from({length: M}, () => new Array(M).fill(0));
+    const I = new Array(M).fill(0);
 
-  function stampConductance(snA, snB, g) {
-    const ia = snToIdx[snA], ib = snToIdx[snB];
-    if (ia !== -1) G[ia][ia] += g;
-    if (ib !== -1) G[ib][ib] += g;
-    if (ia !== -1 && ib !== -1) { G[ia][ib] -= g; G[ib][ia] -= g; }
+    function stampConductance(snA, snB, g) {
+      const ia = snToIdx[snA], ib = snToIdx[snB];
+      if (ia !== -1) G[ia][ia] += g;
+      if (ib !== -1) G[ib][ib] += g;
+      if (ia !== -1 && ib !== -1) { G[ia][ib] -= g; G[ib][ia] -= g; }
+    }
+    function stampCurrentInj(snA, snB, i_val) {
+      // current flowing from snB into snA (i.e. into snA node)
+      const ia = snToIdx[snA], ib = snToIdx[snB];
+      if (ia !== -1) I[ia] += i_val;
+      if (ib !== -1) I[ib] -= i_val;
+    }
+
+    // GMIN: tiny conductance from every unknown SN to ground (prevents a singular matrix
+    // when a floating component creates an isolated super-node — SPICE trick).
+    const GMIN = 1e-12;
+    for (let s2 = 0; s2 < snCount; s2++) {
+      const ia = snToIdx[s2];
+      if (ia !== -1) G[ia][ia] += GMIN;
+    }
+
+    // Stamp passive elements
+    for (const pe of passiveEdges) {
+      if (pe.R <= 0 || !isFinite(pe.R)) continue;
+      if (pe.isLed) {
+        if (!ledOn.get(pe.comp)) continue;            // blocking: open circuit
+        const gL = 1 / pe.R, Vf = pe.comp.forwardV || 2.0;
+        stampConductance(pe.from_sn, pe.to_sn, gL);
+        stampCurrentInj(pe.from_sn, pe.to_sn, gL * Vf); // the Vf "battery" in series with R
+        continue;
+      }
+      if (pe.isCap) {
+        // Backward-Euler companion: I = (Vd − Vc) / (ESR + dt/C)  →  conductance + Norton source Vc
+        const Cf = Math.max(1e-12, (pe.comp.capacitance || 100) * 1e-6);
+        const gC = 1 / (pe.R + capDt / Cf);
+        stampConductance(pe.from_sn, pe.to_sn, gC);
+        stampCurrentInj(pe.from_sn, pe.to_sn, gC * (pe.comp._vc || 0));
+        continue;
+      }
+      stampConductance(pe.from_sn, pe.to_sn, 1 / pe.R);
+    }
+
+    // Stamp voltage sources as Norton equivalents
+    for (const vs of vsEdges) {
+      const g = 1 / vs.intR;
+      stampConductance(vs.from_sn, vs.to_sn, g);
+      stampCurrentInj(vs.from_sn, vs.to_sn, vs.V / vs.intR); // Norton: I_N = V/intR into + terminal
+    }
+
+    // ── Step 4: solve ──────────────────────────────────────────────────────────
+    sol = gaussianSolve(G, I);
+    if (!sol) break;
+
+    // Check every LED's assumed state against the solution
+    let changed = false;
+    for (const pe of passiveEdges) {
+      if (!pe.isLed) continue;
+      const va = pe.from_sn === groundSN ? 0 : sol[snToIdx[pe.from_sn]];
+      const vc = pe.to_sn   === groundSN ? 0 : sol[snToIdx[pe.to_sn]];
+      const Vd = va - vc, Vf = pe.comp.forwardV || 2.0;
+      const on = ledOn.get(pe.comp);
+      if (on && (Vd - Vf) / pe.R < 0) { ledOn.set(pe.comp, false); changed = true; }
+      else if (!on && Vd > Vf)        { ledOn.set(pe.comp, true);  changed = true; }
+    }
+    if (!changed) break;
   }
-  function stampCurrentInj(snA, snB, i_val) {
-    // current flowing from snB into snA (i.e. into snA node)
-    const ia = snToIdx[snA], ib = snToIdx[snB];
-    if (ia !== -1) I[ia] += i_val;
-    if (ib !== -1) I[ib] -= i_val;
-  }
-
-  // GMIN: stamp a tiny conductance from every unknown SN to ground.
-  // This prevents a singular G matrix when a floating component creates an
-  // isolated super-node with no other conductance connections (SPICE trick).
-  const GMIN = 1e-12;
-  for (let s = 0; s < snCount; s++) {
-    const ia = snToIdx[s];
-    if (ia !== -1) G[ia][ia] += GMIN;
-  }
-
-  // Stamp passive elements
-  for (const pe of passiveEdges) {
-    if (pe.R <= 0 || !isFinite(pe.R)) continue;
-    stampConductance(pe.from_sn, pe.to_sn, 1 / pe.R);
-  }
-
-  // Stamp voltage sources as Norton equivalents
-  for (const vs of vsEdges) {
-    const g = 1 / vs.intR;
-    // + terminal = from_sn, − terminal = to_sn
-    stampConductance(vs.from_sn, vs.to_sn, g);
-    // Norton current source: I_N = V/intR, flowing INTO + terminal
-    stampCurrentInj(vs.from_sn, vs.to_sn, vs.V / vs.intR);
-  }
-
-  // ── Step 4: solve ────────────────────────────────────────────────────────────
-  const sol = gaussianSolve(G, I);
-  if (!sol) { _tickCapacitors(sources, graph); return; }
+  if (!sol) { finishCaps(false, sources); return; }
 
   // Build super-node voltage map
   const snVoltage = new Array(snCount).fill(0);
@@ -1108,17 +1287,26 @@ function solveCircuit() {
 
     if (pe.comp) {
       const c = pe.comp;
-      // LED: only conduct in forward direction
+      // LED: conducts only when forward-biased past its forward voltage (see diode model above)
       if (pe.isLed) {
-        const forward = I_branch > 0; // from_sn is ledNodeA (anode)
-        c._current = forward ? absI : 0;
-        c._voltage = forward ? absI * pe.R : 0;
-        c._lit = forward && absI > 0.001 && snVoltage[pe.from_sn] > (c.forwardV || 2.0);
+        const Vf = c.forwardV || 2.0;
+        const on = ledOn.get(c);
+        const Iled = on ? Math.max(0, (vDiff - Vf) / pe.R) : 0;
+        c._current = Iled;
+        c._voltage = on ? vDiff : 0;
+        c._lit = Iled > 0.001;
+      } else if (pe.isCap) {
+        const Cf = Math.max(1e-12, (c.capacitance || 100) * 1e-6);
+        const gC = 1 / (pe.R + capDt / Cf), Vc = c._vc || 0;
+        const Icap = gC * (vDiff - Vc);               // + means from → to (charging that way)
+        c._current = Math.abs(Icap);
+        c._capI = Icap;
+        c._voltage = vDiff;
+        c._vcNext = Vc + Icap * capDt / Cf;           // new stored voltage after this time step
       } else {
         c._current = absI;
         c._voltage = absI * pe.R;
         if (c.type === 'bulb') c._lit = absI > 0.01;
-        if (c.type === 'capacitor') { c._charging = true; c._sourceV = circuitVoltage; }
       }
     }
   }
@@ -1166,11 +1354,20 @@ function solveCircuit() {
         continue;
       }
       if (c.type === 'switch' || c.type === 'voltmeter') continue;
-      if (c.type === 'capacitor' && c._charge >= 0.999) continue;
+      if (c.type === 'capacitor') {
+        const Ic = c._capI || 0;                    // real (signed) capacitor current, from → to
+        if (Math.abs(Ic) > 1e-12) { inj[e.from] -= Ic; inj[e.to] += Ic; }
+        continue;
+      }
       const R = compResistance(c);
       if (!(R > 0)) continue;
-      I = vDiff / R;
-      if (c.type === 'led' && I <= 0) continue; // reverse-biased LED blocks
+      if (c.type === 'led') {
+        if (!ledOn.get(c)) continue;                 // blocking LED carries no current
+        I = (vDiff - (c.forwardV || 2.0)) / R;
+        if (I <= 0) continue;
+      } else {
+        I = vDiff / R;
+      }
       inj[e.from] -= I;
       inj[e.to]   += I;
     }
@@ -1203,7 +1400,7 @@ function solveCircuit() {
         const flow = sub.get(n);                 // current flowing n → par.node
         sub.set(par.node, sub.get(par.node) + flow);
         const w = par.e.wire;
-        if (w && Math.abs(flow) > 1e-7) {
+        if (w && Math.abs(flow) > 1e-5) {   // below ~10 µA the wire isn't visibly carrying current
           w._active = true;
           w._current = Math.abs(flow);
           const flowsFromNodeA = (flow > 0) ? (n === w._nodeA) : (par.node === w._nodeA);
@@ -1224,49 +1421,21 @@ function solveCircuit() {
     c._current = 0;
   }
 
-  _tickCapacitors(sources, graph);
+  finishCaps(advance, sources);
 }
 
-// ── Capacitor charge / discharge tick ───────────────────────────
-// dt per animation frame ≈ 16ms; RC time constant uses capacitance (μF) and notional R
-const CAP_CHARGE_RATE   = 0.008; // fraction per frame when charging
-const CAP_DISCHARGE_RATE = 0.005; // fraction per frame when discharging
-
-function _tickCapacitors(sources, graph) {
-  components.filter(c => c.type === 'capacitor').forEach(cap => {
-    if (cap._charging) {
-      // Charge toward 1 (full)
-      cap._charge = Math.min(1, cap._charge + CAP_CHARGE_RATE * (1 - cap._charge) + 0.002);
-      const srcV = cap._sourceV || (sources && sources[0] ? sources[0].voltage : 0);
-      cap._capVoltage = cap._charge * srcV;
-      if (cap._charge >= 0.999) { cap._charge = 1; cap._charging = false; }
-    } else {
-      // Check if in a discharge loop (closed circuit, no source needed)
-      const g = graph || buildGraph();
-      const tA = findNode(g, getTerminals(cap).a);
-      const tB = findNode(g, getTerminals(cap).b);
-      const path = (tA !== -1 && tB !== -1) ? bfsPath(g, tA, tB, cap) : null;
-      if (path && cap._charge > 0) {
-        // Discharging into the circuit
-        cap._charge = Math.max(0, cap._charge - CAP_DISCHARGE_RATE * cap._charge - 0.001);
-        cap._capVoltage = cap._charge * (cap._sourceV || 0);
-        // light up wires on discharge path.
-        // Current flows from cap+ terminal (A) through external circuit back to cap− (B),
-        // which is the same direction as the BFS path A→…→B, so no reversal needed.
-        markPathWires(path, g);
-        // Give discharge current to components on that path
-        const disI = cap._charge * 0.05;
-        getPathComponents(path, g).forEach(c => {
-          if (c.type !== 'capacitor') {
-            c._current = Math.max(c._current, disI);
-            if (c.type === 'bulb') c._lit = disI > 0.01;
-            if (c.type === 'led') c._lit = disI > 0.001;
-          }
-        });
-        wires.forEach(w => { if (w._active) {} }); // already marked above
-      }
-      // If not in a loop: charge is frozen (held)
-    }
+// ── Capacitor state commit + display ────────────────────────────
+// Called at the end of every solve. Only when `advance` is true (once per animation frame) is the
+// stored voltage actually moved forward in time; ordinary re-solves from edits leave time alone.
+function finishCaps(advance, sources) {
+  const vRef = Math.max(1, ...sources.map(sv => sv.voltage || 0));
+  components.forEach(c => {
+    if (c.type !== 'capacitor') return;
+    if (advance && c._vcNext !== undefined) c._vc = c._vcNext;
+    const Vc = c._vc || 0;
+    if (sources.length) c._vRef = vRef; else if (!c._vRef) c._vRef = Math.max(1, Math.abs(Vc));
+    c._capVoltage = Vc;                               // real stored voltage (signed)
+    c._charge = Math.min(1, Math.abs(Vc) / c._vRef);  // plate-fill fraction for the drawing
   });
 }
 
@@ -1492,27 +1661,34 @@ function getCSSVar(name) {
 function drawGrid() {
   const gridColor = getCSSVar('--grid');
   const bgColor   = getCSSVar('--bg');
-  // Fill background with theme colour
+  // Background fills the whole canvas in screen space
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+  // Grid is drawn in world space, only across the visible region (so it is endless)
+  const x0 = -view.x / view.k, y0 = -view.y / view.k;
+  const x1 = x0 + viewW() / view.k, y1 = y0 + viewH() / view.k;
+  const gx0 = Math.floor(x0 / GRID) * GRID, gy0 = Math.floor(y0 / GRID) * GRID;
   ctx.strokeStyle = gridColor;
-  ctx.lineWidth = 0.5;
-  for (let x = 0; x < canvas.width; x += GRID) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  ctx.lineWidth = 0.5 / view.k;
+  ctx.beginPath();
+  for (let x = gx0; x <= x1; x += GRID) { ctx.moveTo(x, y0); ctx.lineTo(x, y1); }
+  for (let y = gy0; y <= y1; y += GRID) { ctx.moveTo(x0, y); ctx.lineTo(x1, y); }
+  ctx.stroke();
+  if (view.k >= 0.5) {                       // dots at grid intersections
+    ctx.fillStyle = gridColor;
+    const r = 1.5 / Math.max(view.k, 0.75);
+    for (let x = gx0; x <= x1; x += GRID)
+      for (let y = gy0; y <= y1; y += GRID) {
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
   }
-  for (let y = 0; y < canvas.height; y += GRID) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-  }
-  // Dots at grid intersections
-  ctx.fillStyle = gridColor;
-  for (let x = 0; x < canvas.width; x += GRID)
-    for (let y = 0; y < canvas.height; y += GRID) {
-      ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill();
-    }
 }
 
 function drawWire(w) {
-  // Active when powered OR when a capacitor is discharging (wire marked _active by _tickCapacitors)
+  // Active when powered OR when a capacitor is discharging (wire marked _active by the KCL pass)
   const capDischarging = !powerOn && w._active && components.some(c => c.type === 'capacitor' && c._charge > 0);
   const active = (powerOn && w._active) || capDischarging;
   ctx.save();
@@ -1742,20 +1918,19 @@ function drawSource(c, hw, hh, col) {
   // Leads
   ctx.beginPath(); ctx.moveTo(-hw, 0); ctx.lineTo(-hw/3, 0); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(hw/3, 0); ctx.lineTo(hw, 0); ctx.stroke();
-  // Battery cells
+  // Battery cells: 2n plates evenly spaced, long (thick) = +, short (thin) = −, + on the left
   const n = c.type === 'battery' ? 2 : 1;
-  const cellW = (hw * 2 / 3) / (n * 2);
-  for (let i = 0; i < n; i++) {
-    const x = -hw/3 + i * cellW * 2;
-    ctx.strokeStyle = col; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(x, -hh*0.7); ctx.lineTo(x, hh*0.7); ctx.stroke();
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(x + cellW, -hh*0.45); ctx.lineTo(x + cellW, hh*0.45); ctx.stroke();
+  const plates = n * 2, x0 = -hw/3, x1 = hw/3, step = (x1 - x0) / (plates - 1);
+  ctx.strokeStyle = col;
+  for (let k = 0; k < plates; k++) {
+    const x = x0 + k * step, long = (k % 2 === 0);
+    ctx.lineWidth = long ? 3 : 2;
+    ctx.beginPath(); ctx.moveTo(x, long ? -hh*0.7 : -hh*0.42); ctx.lineTo(x, long ? hh*0.7 : hh*0.42); ctx.stroke();
   }
   // + / - markers
-  ctx.fillStyle = col; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
-  ctx.fillText('+', -hw + 6, -4);
-  ctx.fillText('−', hw - 6, -4);
+  ctx.fillStyle = col; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('+', -hw + 10, -13);
+  ctx.fillText('−', hw - 10, -13);
   if (c.type === 'dcpsu') {
     ctx.strokeStyle = col; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.arc(0, 0, hw - 2, 0, Math.PI*2); ctx.stroke();
@@ -1803,27 +1978,53 @@ function drawCapacitor(hw, hh, col, cap) {
   }
 }
 
+// Brightness is proportional to the current through the bulb: BULB_I_NOM (a 9 V battery across the
+// default 60 Ω bulb) = 100 %. Above that the bulb is "over-driven": the aura keeps growing and the
+// filament turns white-hot. The aura fades smoothly to nothing as the current falls (e.g. while a
+// capacitor discharges through it).
+const BULB_I_NOM = 0.15;
 function drawBulb(hw, hh, col, lit, I) {
-  const glow = lit ? Math.min(I * 200, 1) : 0;
-  ctx.strokeStyle = lit ? `rgba(255,230,100,${0.6 + glow * 0.4})` : col;
+  const level = Math.max(0, (I || 0) / BULB_I_NOM);          // 1.0 = nominal brightness
+  const on = level > 0.004;                                   // ≈ 0.6 mA: below this, invisible
+  const lv = Math.min(level, 2);                              // visual saturation at 200 %
+  const rBulb = hw - 12;
+  const light = document.body.classList.contains('theme-light');
+  const rgb = light ? '255,150,0' : '255,222,100';            // aura colour (stronger hue on white)
+
+  if (on) {
+    // Aura: radial gradient around the bulb, radius and opacity both grow with current
+    const rOut = rBulb * (1.25 + 1.9 * Math.min(lv, 1.6));
+    const aOut = Math.min(light ? 0.85 : 0.8, (light ? 0.8 : 0.7) * lv + 0.04);
+    const g = ctx.createRadialGradient(0, 0, rBulb * 0.4, 0, 0, rOut);
+    g.addColorStop(0,    `rgba(${rgb},${aOut})`);
+    g.addColorStop(0.45, `rgba(${rgb},${aOut * 0.45})`);
+    g.addColorStop(1,    `rgba(${rgb},0)`);
+    ctx.save();
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, 0, rOut, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Glass + filament: colour ramps from the idle colour to bright yellow, then toward white
+  const heat = Math.min(1, level * 2.5);
+  ctx.strokeStyle = on ? (lv > 1 ? '#fff6c8' : `rgba(255,${Math.round(200 + 38 * heat)},${Math.round(70 + 70 * heat)},${0.55 + 0.45 * heat})`) : col;
   ctx.lineWidth = 2;
   // Leads
   ctx.beginPath(); ctx.moveTo(-hw, 0); ctx.lineTo(-hw + 12, 0); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(hw - 12, 0); ctx.lineTo(hw, 0); ctx.stroke();
-  // Circle
-  if (lit) {
-    ctx.shadowColor = '#ffe066'; ctx.shadowBlur = 20 + glow * 20;
-    ctx.fillStyle = `rgba(255,230,100,${0.1 + glow * 0.3})`;
-    ctx.beginPath(); ctx.arc(0, 0, hw - 12, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#ffee88';
+  // Glass bulb
+  if (on) {
+    const fa = Math.min(0.9, 0.12 + 0.5 * lv);
+    ctx.fillStyle = lv > 1 ? `rgba(255,250,220,${Math.min(0.95, 0.5 + 0.3 * (lv - 1) + 0.2)})` : `rgba(${rgb},${fa})`;
+    ctx.beginPath(); ctx.arc(0, 0, rBulb, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = lv > 1 ? '#ffffff' : (light ? '#c76a00' : '#ffee88');
   }
-  ctx.beginPath(); ctx.arc(0, 0, hw - 12, 0, Math.PI * 2); ctx.stroke();
-  // X inside
+  ctx.beginPath(); ctx.arc(0, 0, rBulb, 0, Math.PI * 2); ctx.stroke();
+  // X (filament) inside
   ctx.lineWidth = 1.2;
   const r = hw - 16;
   ctx.beginPath(); ctx.moveTo(-r, -r); ctx.lineTo(r, r); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(r, -r); ctx.lineTo(-r, r); ctx.stroke();
-  ctx.shadowBlur = 0;
 }
 
 function drawLED(hw, hh, col, lit, I) {
@@ -1884,7 +2085,9 @@ function drawMeter(c, hw, hh, col, I) {
 
 // ---- Main Render ----
 function render() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(DPR * view.k, 0, 0, DPR * view.k, DPR * view.x, DPR * view.y);
   drawGrid();
 
   // Draw wires
@@ -1947,28 +2150,24 @@ function render() {
     ctx.restore();
   }
 
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  updateZoomLabel();
   animOffset += 0.016;
   // Tick capacitor charge/discharge every frame when power is on or caps have charge
   const hasCaps = components.some(c => c.type === 'capacitor');
-  if (hasCaps && (powerOn || components.some(c => c.type === 'capacitor' && c._charge > 0))) {
-    updateCircuit();
+  const _t = performance.now();
+  const realDt = Math.min(0.05, Math.max(1 / 240, (_t - (_capLastT || _t - 16.7)) / 1000));
+  _capLastT = _t;
+  capDt = realDt / capSlowdown;
+  if (hasCaps && (powerOn || components.some(c => c.type === 'capacitor' && Math.abs(c._vc || 0) > 1e-6))) {
+    updateCircuit(true);              // advance the RC dynamics by one frame
   }
   requestAnimationFrame(render);
 }
 
 // ---- Circuit Update ----
-function updateCircuit() {
-  // Reset charging flag before solve — solveCircuit will re-set it if in active loop
-  components.filter(c => c.type === 'capacitor').forEach(c => { c._charging = false; });
-  if (powerOn) {
-    solveCircuit();
-  } else {
-    components.forEach(c => { c._current = 0; c._voltage = 0; c._lit = false; });
-    wires.forEach(w => w._active = false);
-    circuitCurrent = 0; circuitVoltage = 0; circuitResistance = 0;
-    // Still tick capacitors for discharge even when power is off
-    _tickCapacitors(null, buildGraph());
-  }
+function updateCircuit(advance = false) {
+  solveCircuit(advance, !powerOn);   // power off → sources open, but capacitors can still discharge
   updateReadings();
 }
 
@@ -2009,24 +2208,22 @@ function updateReadings() {
 // Scans a grid of candidate spots and picks the one farthest from all occupied positions.
 function findFreeSpot() {
   const margin = GRID * 3;
-  const cw = canvas.width, ch = canvas.height;
-  // Build list of occupied centres (components + wire midpoints)
+  // visible region in world coordinates (keep clear of the bottom toolbar)
+  const vx0 = -view.x / view.k, vy0 = -view.y / view.k;
+  const vx1 = vx0 + viewW() / view.k, vy1 = vy0 + (viewH() - 110) / view.k;
+  const cxm = snap((vx0 + vx1) / 2), cym = snap((vy0 + vy1) / 2);
   const occupied = [];
   for (const c of components) occupied.push({ x: c.x, y: c.y });
   for (const w of wires) {
-    const mx = (w.pts[0].x + w.pts[w.pts.length-1].x) / 2;
-    const my = (w.pts[0].y + w.pts[w.pts.length-1].y) / 2;
-    occupied.push({ x: mx, y: my });
+    occupied.push({ x: (w.pts[0].x + w.pts[w.pts.length-1].x) / 2, y: (w.pts[0].y + w.pts[w.pts.length-1].y) / 2 });
   }
-  if (!occupied.length) return { x: snap(cw / 2), y: snap(ch / 2) };
-
-  // Candidate grid — avoid edges
-  let bestX = snap(cw / 2), bestY = snap(ch / 2), bestDist = -1;
-  for (let gx = margin; gx < cw - margin; gx += GRID * 3) {
-    for (let gy = margin; gy < ch - margin; gy += GRID * 3) {
-      const sx = snap(gx), sy = snap(gy);
-      const minD = Math.min(...occupied.map(o => Math.hypot(o.x - sx, o.y - sy)));
-      if (minD > bestDist) { bestDist = minD; bestX = sx; bestY = sy; }
+  if (!occupied.length) return { x: cxm, y: cym };
+  let bestX = cxm, bestY = cym, bestDist = -1;
+  for (let gx = vx0 + margin; gx < vx1 - margin; gx += GRID * 3) {
+    for (let gy = vy0 + margin; gy < vy1 - margin; gy += GRID * 3) {
+      const sx2 = snap(gx), sy2 = snap(gy);
+      const minD = Math.min(...occupied.map(o => Math.hypot(o.x - sx2, o.y - sy2)));
+      if (minD > bestDist) { bestDist = minD; bestX = sx2; bestY = sy2; }
     }
   }
   return { x: bestX, y: bestY };
@@ -2042,11 +2239,25 @@ function addComponent(type, x, y) {
     label: def.label, color: def.color,
     ...def,
     _current: 0, _voltage: 0, _lit: false,
-    _charge: 0, _capVoltage: 0, _charging: false
+    _charge: 0, _capVoltage: 0, _vc: 0
   };
   components.push(c);
   updateCircuit();
   return c;
+}
+
+// ---- Double-click / double-tap on a component ----
+// Switch: flip open ↔ closed immediately (no dialog). Everything else: open its properties panel.
+function activateComponent(c, clientX, clientY) {
+  if (c.type === 'switch') {
+    saveUndo();
+    c.closed = !c.closed;
+    selectedComp = c;
+    updateCircuit();
+    setHint(c.closed ? 'Switch CLOSED — current can flow' : 'Switch OPEN — circuit is broken');
+    return;
+  }
+  openModal(c, clientX, clientY);
 }
 
 // ---- Modal ----
@@ -2175,7 +2386,7 @@ document.querySelectorAll('.comp-btn[data-type]').forEach(btn => {
     const _fs = findFreeSpot();
     addComponent(type, _fs.x, _fs.y);
     updateCircuit();
-    setHint('Component added! Drag to move · hold a terminal then drag to wire · Double-tap to edit');
+    setHint('Component added! Drag to move · hold a terminal then drag to wire · Double-tap to edit (switch: toggles)');
   }, { passive: true });
 });
 
@@ -2184,14 +2395,18 @@ canvas.addEventListener('drop', e => {
   e.preventDefault();
   if (!sidebarDragType) return;
   const rect = canvas.getBoundingClientRect();
-  addComponent(sidebarDragType, e.clientX - rect.left, e.clientY - rect.top);
+  { const wp = toWorld(e.clientX - rect.left, e.clientY - rect.top); addComponent(sidebarDragType, wp.x, wp.y); }
   sidebarDragType = null;
 });
 
 // ---- Canvas touch events (iPad component drag + wire drawing) ----
-function canvasTouchPos(touch) {
+function canvasTouchScreen(touch) {
   const rect = canvas.getBoundingClientRect();
   return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+function canvasTouchPos(touch) {            // → world coordinates
+  const sp = canvasTouchScreen(touch);
+  return toWorld(sp.x, sp.y);
 }
 
 // pendingDragComp: component touched but not yet committed to drag
@@ -2202,6 +2417,8 @@ let pendingDragOffset = null;
 canvas.addEventListener('touchstart', e => {
   if (touchDragActive) return; // sidebar touch in progress
   e.preventDefault();
+  if (e.touches.length >= 2) { beginPinch(e); return; }
+  cancelViewAnim();
   const { x: mx, y: my } = canvasTouchPos(e.touches[0]);
   mouseDownPos = { x: mx, y: my };
   isMouseDown = true;
@@ -2260,6 +2477,7 @@ canvas.addEventListener('touchstart', e => {
 canvas.addEventListener('touchmove', e => {
   if (touchDragActive) return;
   e.preventDefault();
+  if (gestureLock) { updatePinch(e); return; }
   const { x: mx, y: my } = canvasTouchPos(e.touches[0]);
 
   if (wireMode && wireStart) { wirePreview = { x: snap(mx), y: snap(my) }; }
@@ -2326,6 +2544,11 @@ canvas.addEventListener('touchmove', e => {
 canvas.addEventListener('touchend', e => {
   if (touchDragActive) return;
   e.preventDefault();
+  if (gestureLock) {                           // finishing a pan/zoom: never treat it as a tap
+    if (e.touches.length < 2) gesture = null;
+    if (e.touches.length === 0) gestureLock = false;
+    return;
+  }
   const touch = e.changedTouches[0];
   const { x: mx, y: my } = canvasTouchPos(touch);
   const wasDraggingComp = !!draggingComp;
@@ -2467,7 +2690,7 @@ canvas.addEventListener('touchend', e => {
   const now = Date.now();
   const c = hitComp(mx, my);
   if (c && canvas._lastTap && now - canvas._lastTap < 400) {
-    openModal(c, touch.clientX, touch.clientY);
+    activateComponent(c, touch.clientX, touch.clientY);
     canvas._lastTap = 0;
     return;
   }
@@ -2482,7 +2705,7 @@ canvas.addEventListener('touchend', e => {
   }
 }, { passive: false });
 
-canvas.addEventListener('touchcancel', () => { cancelTermHold(); isMouseDown = false; draggingComp = null; draggingNode = null; pendingDragComp = null; pendingNodePress = null; if (wireDragActive) { wireDragActive = false; wireStart = null; wirePreview = null; } });
+canvas.addEventListener('touchcancel', () => { gestureLock = false; gesture = null; cancelTermHold(); isMouseDown = false; draggingComp = null; draggingNode = null; pendingDragComp = null; pendingNodePress = null; if (wireDragActive) { wireDragActive = false; wireStart = null; wirePreview = null; } });
 
 // ---- Mouse Events ----
 let isMouseDown = false;
@@ -2554,8 +2777,19 @@ canvas.addEventListener('mousedown', e => {
   e.preventDefault();
   isMouseDown = true;
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const { x: mx, y: my } = toWorld(sx, sy);
   mouseDownPos = {x: mx, y: my};
+  cancelViewAnim();
+
+  // Pan: middle button / Space+drag anywhere, or plain drag starting on empty space
+  if (e.button === 1 || (e.button === 0 && spaceHeld)) {
+    panCand = { sx, sy, vx: view.x, vy: view.y }; panning = true; isMouseDown = true;
+    canvas.style.cursor = 'grabbing'; return;
+  }
+  if (e.button === 0 && !nearTerminal(mx, my) && !hitComp(mx, my) && !hitNode(mx, my) && !hitWire(mx, my)) {
+    panCand = { sx, sy, vx: view.x, vy: view.y }; panning = false;
+  } else { panCand = null; }
 
   if (e.button === 2) {
     // Right-click: delete hovered wire or node
@@ -2696,7 +2930,18 @@ canvas.addEventListener('mousedown', e => {
 
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const { x: mx, y: my } = toWorld(sx, sy);
+
+  if (panCand && e.buttons === 0) { panCand = null; panning = false; }    // button released outside
+  if (panCand) {
+    if (!panning && Math.hypot(sx - panCand.sx, sy - panCand.sy) > 5) panning = true;
+    if (panning) {
+      view.x = panCand.vx + (sx - panCand.sx); view.y = panCand.vy + (sy - panCand.sy);
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
+  }
 
   if (wireMode && wireStart) {
     wirePreview = { x: snap(mx), y: snap(my) };
@@ -2762,7 +3007,14 @@ canvas.addEventListener('mousemove', e => {
 
 canvas.addEventListener('mouseup', e => {
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const { x: mx, y: my } = toWorld(sx, sy);
+  if (panning) {                                // finished a pan: swallow the click that follows
+    panning = false; panCand = null; isMouseDown = false; suppressNextClick = true;
+    canvas.style.cursor = 'crosshair';
+    return;
+  }
+  panCand = null;
 
   // If we were dragging a component, just release it — don't snap or steal connections.
   if (draggingComp) {
@@ -2858,7 +3110,8 @@ canvas.addEventListener('mouseup', e => {
 canvas.addEventListener('click', e => {
   if (suppressNextClick) { suppressNextClick = false; return; }
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const { x: mx, y: my } = toWorld(sx, sy);
   if (mouseDownPos && dist({x:mx,y:my}, mouseDownPos) > 5) return;
   if (wireMode || wireDragActive) return;
 
@@ -2900,9 +3153,10 @@ canvas.addEventListener('click', e => {
 canvas.addEventListener('dblclick', e => {
   if (wireMode) return;
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const { x: mx, y: my } = toWorld(sx, sy);
   const c = hitComp(mx, my);
-  if (c) openModal(c, e.clientX, e.clientY);
+  if (c) activateComponent(c, e.clientX, e.clientY);
 });
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -2923,7 +3177,7 @@ function hitComp(mx, my) {
 
 function hitNode(mx, my) {
   for (const n of nodes) {
-    if (dist({x:mx,y:my}, {x:n.x,y:n.y}) < 10) return n;
+    if (dist({x:mx,y:my}, {x:n.x,y:n.y}) < 10 * hitScale()) return n;
   }
   return null;
 }
@@ -2941,7 +3195,7 @@ function hitWire(mx, my) {
   for (const w of wires) {
     for (let i = 0; i < w.pts.length - 1; i++) {
       const d = distToSegment({x:mx,y:my}, w.pts[i], w.pts[i+1]);
-      if (d < 6) return w;
+      if (d < 6 * hitScale()) return w;
     }
   }
   return null;
@@ -3086,18 +3340,79 @@ document.getElementById('btnClear').addEventListener('click', () => {
 
 document.getElementById('btnUndo').addEventListener('click', () => { restoreUndo(); updateCircuit(); });
 
-document.getElementById('btnView').addEventListener('click', () => {
-  // Fit view (zoom to components) - simple centering
-  if (!components.length) return;
-  const xs = components.map(c => c.x);
-  const ys = components.map(c => c.y);
-  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-  const dx = canvas.width/2 - cx;
-  const dy = canvas.height/2 - cy;
-  components.forEach(c => { c.x += dx; c.y += dy; });
-  wires.forEach(w => w.pts.forEach(p => { p.x += dx; p.y += dy; }));
+// Fit: change only the VIEW so the whole circuit is visible. The circuit itself is never moved,
+// so terminals / nodes / grid stay exactly aligned.
+function fitView(animated = true) {
+  const pts = [];
+  components.forEach(c => { const t = getTerminals(c); pts.push(t.a, t.b, { x: c.x - c.w*GRID/2, y: c.y - c.h*GRID/2 }, { x: c.x + c.w*GRID/2, y: c.y + c.h*GRID/2 }); });
+  nodes.forEach(n => pts.push(n));
+  wires.forEach(w => w.pts.forEach(q => pts.push(q)));
+  if (!pts.length) { animateViewTo(0, 0, 1); return; }
+  const xs = pts.map(q => q.x), ys = pts.map(q => q.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const padL = 50, padR = 50, padT = 60, padB = 150;        // bottom: floating toolbar
+  const availW = viewW() - padL - padR, availH = viewH() - padT - padB;
+  const k = clampK(Math.min(availW / Math.max(1, maxX - minX), availH / Math.max(1, maxY - minY), 1.25));
+  const tx = padL + (availW - (maxX - minX) * k) / 2 - minX * k;
+  const ty = padT + (availH - (maxY - minY) * k) / 2 - minY * k;
+  if (animated) animateViewTo(tx, ty, k); else { view.x = tx; view.y = ty; view.k = k; }
+}
+document.getElementById('btnView').addEventListener('click', () => fitView(true));
+
+// Zoom controls (+ / − / reset)
+(function () {
+  const zin = document.getElementById('zoomIn'), zout = document.getElementById('zoomOut'), zr = document.getElementById('zoomReset');
+  const centre = () => ({ x: viewW() / 2, y: viewH() / 2 });
+  zin.addEventListener('click',  () => { const c = centre(); zoomAt(c.x, c.y, 1.25); });
+  zout.addEventListener('click', () => { const c = centre(); zoomAt(c.x, c.y, 1 / 1.25); });
+  zr.addEventListener('click',   () => animateViewTo(0, 0, 1));
+  ['zoomIn','zoomOut','zoomReset'].forEach(id => document.getElementById(id).addEventListener('touchstart', e => e.stopPropagation(), { passive: true }));
+})();
+let _zoomLabel = '';
+function updateZoomLabel() {
+  const t = Math.round(view.k * 100) + '%';
+  if (t !== _zoomLabel) { _zoomLabel = t; const el = document.getElementById('zoomReset'); if (el) el.textContent = t; }
+}
+
+// ── Pan & zoom input ─────────────────────────────────────────────────────────
+// Mouse / trackpad: wheel or pinch = zoom at cursor · drag empty space (or middle-button / Space+drag) = pan
+// Touch: two fingers = pan + pinch-zoom
+let panCand = null, panning = false, spaceHeld = false;
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = canvas.getBoundingClientRect();
+  const unit = e.deltaMode === 1 ? 16 : (e.deltaMode === 2 ? 100 : 1);
+  const dy = e.deltaY * unit;
+  zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0015)));
+}, { passive: false });
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target.tagName || ''))) { spaceHeld = true; e.preventDefault(); }
 });
+window.addEventListener('keyup', e => { if (e.code === 'Space') spaceHeld = false; });
+window.addEventListener('blur', () => { spaceHeld = false; });
+
+// two-finger gesture
+let gesture = null, gestureLock = false;
+function beginPinch(e) {
+  cancelViewAnim();
+  cancelTermHold();
+  // abandon whatever the first finger had started
+  pendingDragComp = null; pendingDragOffset = null; pendingNodePress = null;
+  draggingComp = null; draggingNode = null; isMouseDown = false;
+  if (wireDragActive) { wireDragActive = false; if (!wireMode) { wireStart = null; wirePreview = null; } }
+  const a = canvasTouchScreen(e.touches[0]), b = canvasTouchScreen(e.touches[1]);
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  gesture = { d0: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), k0: view.k, w0: toWorld(mid.x, mid.y) };
+  gestureLock = true;
+}
+function updatePinch(e) {
+  if (!gesture || e.touches.length < 2) return;
+  const a = canvasTouchScreen(e.touches[0]), b = canvasTouchScreen(e.touches[1]);
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const d = Math.hypot(a.x - b.x, a.y - b.y);
+  const nk = clampK(gesture.k0 * d / gesture.d0);
+  view.k = nk; view.x = mid.x - gesture.w0.x * nk; view.y = mid.y - gesture.w0.y * nk;
+}
 
 // ---- QR Code ----
 // Lightweight QR code generator (Reed-Solomon + bit matrix) for the share URL.
@@ -3168,7 +3483,7 @@ function _renderQRFallback(canvas, url) {
 }
 
 // ---- Start ----
-setHint('Drag from sidebar to add · Click a terminal to start wiring · Double-click to edit · Power to simulate');
+setHint('Drag from sidebar to add · Click a terminal to start wiring · Double-click to edit (switch: toggle) · Power to simulate');
 render();
 updateReadings();
 
