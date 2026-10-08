@@ -388,12 +388,12 @@
             <div class="grid grid-cols-1 gap-0 h-fit">
                 
                 <!-- Optics Category -->
-                <div class="category-header" onclick="toggleCategory('optics-content')">
+                <div class="category-header collapsed-header" onclick="toggleCategory('optics-content')">
                     <span>Optics Simulations</span>
                     <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
                 
-                <div id="optics-content" class="category-content">
+                <div id="optics-content" class="category-content collapsed">
                     <div class="gallery-card" onclick="loadSimulation('Lenses Lab', 'https://darawa-io.github.io/ARLABS/lenses.html', ['Lenses_Lab_Report.pdf'])">
                         <img src="assets/lenses.png" alt="Lenses Virtual Lab Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Lenses+Lab'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Lenses Lab</span>
@@ -513,6 +513,19 @@
                     <div class="gallery-card" onclick="loadSimulation('Vectors', 'https://darawa-io.github.io/ARLABS/vector_lab.html', [])">
                         <img src="https://darawa-io.github.io/ARLABS/assets/vectors.png" alt="Vectors Physics Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Vectors'">
                         <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Vectors</span>
+                    </div>
+                </div>
+
+                <!-- Dynamics Category -->
+                <div class="category-header collapsed-header" onclick="toggleCategory('dynamics-content')">
+                    <span>Dynamics</span>
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                
+                <div id="dynamics-content" class="category-content collapsed">
+                    <div class="gallery-card" onclick="loadSimulation('Forces Lab', 'https://darawa-io.github.io/ARLABS/forces_lab.html', [])">
+                        <img src="https://darawa-io.github.io/ARLABS/assets/forces.png" alt="Forces Physics Simulation" class="sim-thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Forces+Lab'">
+                        <span class="font-bold text-[11px] tracking-widest uppercase text-[#0A4A7F]">Forces Lab</span>
                     </div>
                 </div>
                 
