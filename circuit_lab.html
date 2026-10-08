@@ -2292,7 +2292,10 @@ function openModal(c, screenX, screenY) {
         </div>`;
       d.querySelector(`[data-key="${key}-slider"]`).addEventListener('input', function() {
         const raw = parseFloat(this.value);
-        const actual = this.dataset.logscale === 'true' ? parseFloat(Math.pow(10, raw).toFixed(4)) : parseFloat(raw.toFixed(4));
+        const exact = this.dataset.logscale === 'true' ? Math.pow(10, raw) : raw;
+        // Slider values move in tenths: round UP to the next 0.1 (max one decimal place), inside min/max
+        const up = Math.ceil(exact * 10 - 1e-9) / 10;
+        const actual = parseFloat(Math.min(max, Math.max(min, up)).toFixed(1));
         d.querySelector(`[data-key="${key}"]`).value = actual;
         document.getElementById(`slv_${key}`).textContent = actual;
       });
@@ -3285,6 +3288,9 @@ function togglePower() {
 document.getElementById('btnPower').addEventListener('click', togglePower);
 document.getElementById('powerBtn').addEventListener('click', togglePower);
 
+// Start with power ON (runs the normal toggle so the buttons and LIVE indicator all agree)
+togglePower();
+
 document.getElementById('btnWire').addEventListener('click', () => {
   // The Wire button now just cancels an active wire mode
   if (wireMode || wireDragActive) {
@@ -3331,10 +3337,7 @@ document.getElementById('btnClear').addEventListener('click', () => {
   if (confirm('Clear all components and wires?')) {
     saveUndo();
     components = []; wires = []; nodes = []; selectedComp = null;
-    powerOn = false;
-    document.getElementById('btnPower').classList.remove('active');
-    document.getElementById('powerDot').classList.remove('on');
-    updateCircuit();
+    updateCircuit();            // power stays as it was (so the ON/OFF indicators stay correct)
   }
 });
 
