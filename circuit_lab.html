@@ -528,6 +528,92 @@
   .st-btn.validate:hover { background: rgba(57,255,20,0.1); }
   .st-btn.danger { border-color: var(--danger); color: var(--danger); }
   .st-btn.danger:hover { background: rgba(255,51,85,0.1); }
+
+  /* ── CHALLENGE MODE v2: menu + modules ── */
+  #student-test-overlay { justify-content: flex-start; overflow-y: auto; padding: 18px 0; box-sizing: border-box; }
+  #st-menu, #st-game { margin: auto 0; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+  #st-menu { display: flex; }
+  #st-game { display: none; }
+  #student-test-overlay.in-game #st-menu { display: none; }
+  #student-test-overlay.in-game #st-game { display: flex; }
+
+  .st-menu-title {
+    font-family: 'Roboto Mono', monospace; font-size: 24px; font-weight: 700;
+    color: var(--accent); letter-spacing: 1px; margin: 8px 0 0; text-align: center;
+  }
+  .st-menu-sub {
+    font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--dim);
+    text-align: center; max-width: 560px; line-height: 1.7; padding: 0 12px;
+  }
+  .st-cards { display: flex; gap: 16px; width: 960px; max-width: 97vw; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+  .st-card {
+    --c: var(--accent);
+    flex: 1 1 260px; max-width: 310px; text-align: left;
+    background: var(--panel); border: 1px solid var(--border); border-top: 3px solid var(--c);
+    border-radius: 14px; padding: 22px 20px; cursor: pointer; color: var(--text);
+    font-family: 'Roboto Mono', monospace;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  }
+  .st-card:hover { transform: translateY(-3px); border-color: var(--c); box-shadow: 0 8px 28px rgba(0,0,0,0.4); }
+  .st-card-icon { font-size: 30px; font-weight: 700; color: var(--c); line-height: 1.2; }
+  .st-card-title { font-size: 15px; font-weight: 700; color: var(--c); letter-spacing: 0.5px; }
+  .st-card-desc { font-size: 12px; line-height: 1.7; opacity: 0.8; }
+  .st-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .st-card-tags span {
+    font-size: 10px; border: 1px solid var(--border); border-radius: 12px;
+    padding: 2px 9px; color: var(--dim); letter-spacing: 0.5px;
+  }
+  .st-card-score { margin-top: auto; padding-top: 6px; font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+
+  .st-head-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .st-score {
+    font-family: 'Roboto Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    color: var(--accent3); border: 1px solid rgba(57,255,20,0.35);
+    border-radius: 20px; padding: 5px 12px; white-space: nowrap;
+  }
+
+  .st-ohm-hint {
+    font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--dim);
+    line-height: 1.8; margin-bottom: 12px; padding: 10px 12px;
+    border: 1px dashed var(--border); border-radius: 8px;
+  }
+  .st-ohm-hint b { color: var(--accent3); }
+  .st-q {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 10px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--panel2);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .st-q.ok  { border-color: rgba(57,255,20,0.55); background: rgba(57,255,20,0.07); }
+  .st-q.bad { border-color: rgba(255,51,85,0.55); background: rgba(255,51,85,0.07); }
+  .st-q-text { flex: 1; display: flex; flex-direction: column; gap: 2px; font-family: 'Roboto Mono', monospace; min-width: 0; }
+  .st-q-sym  { font-size: 17px; font-weight: 700; color: var(--accent); }
+  .st-q-desc { font-size: 11px; color: var(--dim); }
+  .st-q input[type=number] {
+    background: var(--panel); border: 1px solid var(--accent); border-radius: 6px; color: var(--accent);
+    font-family: 'Roboto Mono', monospace; font-size: 15px; font-weight: 700;
+    padding: 6px 8px; outline: none; width: 104px; text-align: center;
+  }
+  .st-q input[type=number]:focus { border-color: var(--accent2); }
+  .st-q .st-unit { font-family: 'Roboto Mono', monospace; font-size: 13px; color: var(--dim); width: 26px; }
+  .st-q-mark { width: 16px; font-family: 'Roboto Mono', monospace; font-weight: 700; text-align: center; }
+  .st-q.ok  .st-q-mark { color: var(--accent3); }
+  .st-q.bad .st-q-mark { color: var(--danger); }
+
+  #st-solution {
+    width: 960px; max-width: 97vw; box-sizing: border-box; padding: 12px 20px; display: none;
+    border: 1px solid rgba(255,224,102,0.4); background: rgba(255,224,102,0.06);
+    border-radius: 10px; font-family: 'Roboto Mono', monospace; font-size: 12px;
+    line-height: 1.9; color: var(--text);
+  }
+  #st-solution.show { display: block; }
+  #st-solution .st-sol-title { color: var(--accent4); letter-spacing: 2px; font-size: 10px; text-transform: uppercase; margin-bottom: 4px; }
+  #st-solution b { color: var(--accent4); }
+  .st-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  .st-resistor-ctrl input:disabled { opacity: 0.6; cursor: not-allowed; }
+  .st-q input:disabled { opacity: 0.7; cursor: not-allowed; }
+  .st-btn.hint { border-color: var(--accent4); color: var(--accent4); }
+  .st-btn.hint:hover { background: rgba(255,224,102,0.1); }
 </style>
 </head>
 <body>
@@ -3513,167 +3599,534 @@ document.getElementById('fabBar').addEventListener('touchstart', () => {}, { pas
 
 </script>
 
-<!-- STUDENT TEST MODE OVERLAY -->
+<!-- CHALLENGE MODE OVERLAY (menu + modules) -->
 <div id="student-test-overlay">
-  <div id="student-test-header-bar">
-    <div>
-      <span class="st-badge">📐 Challenge Mode</span>
-      <h2 id="st-mode-title">Series — Find Equivalent Resistance</h2>
+
+  <!-- ── Module menu ── -->
+  <div id="st-menu">
+    <span class="st-badge">📐 Challenge Mode</span>
+    <h2 class="st-menu-title">Choose a challenge</h2>
+    <div class="st-menu-sub">Test what you have learned. Each module generates random circuits, so you can practise as often as you like.</div>
+    <div class="st-cards">
+      <button class="st-card" style="--c:var(--accent4)" onclick="startStudentModule('resistance')">
+        <div class="st-card-icon">Ω</div>
+        <div class="st-card-title">Calculate the Resistance</div>
+        <div class="st-card-desc">Replace a resistor network by a single equivalent resistor R<sub>eq</sub>, then match the current.</div>
+        <div class="st-card-tags"><span>Series</span><span>Parallel</span><span>Mixed</span></div>
+        <div class="st-card-score" id="st-score-resistance"></div>
+      </button>
+      <button class="st-card" style="--c:var(--accent3)" onclick="startStudentModule('ohm')">
+        <div class="st-card-icon">V = I·R</div>
+        <div class="st-card-title">Apply Ohm's Law</div>
+        <div class="st-card-desc">Mixed circuits: find the voltage across and the current through selected resistors.</div>
+        <div class="st-card-tags"><span>Voltage</span><span>Current</span><span>Mixed circuits</span></div>
+        <div class="st-card-score" id="st-score-ohm"></div>
+      </button>
+      <button class="st-card" style="--c:var(--accent5)" onclick="startStudentModule('capacitor')">
+        <div class="st-card-icon">⊣⊢</div>
+        <div class="st-card-title">Calculate the Capacitance</div>
+        <div class="st-card-desc">Replace a capacitor network by a single equivalent capacitor C<sub>eq</sub>, then match the stored charge.</div>
+        <div class="st-card-tags"><span>Series</span><span>Parallel</span><span>Mixed</span></div>
+        <div class="st-card-score" id="st-score-capacitor"></div>
+      </button>
     </div>
-    <div class="st-type-btns">
-      <button class="st-type-btn on" id="st-btn-series" onclick="setStudentTestType('series')">Series</button>
-      <button class="st-type-btn" id="st-btn-parallel" onclick="setStudentTestType('parallel')">Parallel</button>
-      <button class="st-type-btn" id="st-btn-mixed" onclick="setStudentTestType('mixed')">Mixed</button>
+    <div id="student-test-btns">
+      <button class="st-btn danger" onclick="exitStudentTestMode()">&#10005; Exit Challenge</button>
     </div>
   </div>
-  <div id="student-test-main">
-    <div class="st-circuit-panel">
-      <div class="st-panel-label" id="st-left-label">Reference Circuit — 2 Resistors in Series</div>
-      <canvas id="st-canvas-left"></canvas>
-      <div class="st-circuit-info" id="st-left-info"></div>
-    </div>
-    <div class="st-circuit-panel">
-      <div class="st-panel-label">Your Equivalent Resistor</div>
-      <canvas id="st-canvas-right"></canvas>
-      <div class="st-resistor-ctrl">
-        <label>R<sub>eq</sub> =</label>
-        <input type="number" id="st-req-input" min="0.1" max="1000" step="0.1" value="10">
-        <span class="st-unit">&#937;</span>
-        <input type="range" id="st-req-slider" min="0.1" max="1000" step="0.1" value="10">
+
+  <!-- ── Active module ── -->
+  <div id="st-game">
+    <div id="student-test-header-bar">
+      <div>
+        <span class="st-badge" id="st-badge">📐 Challenge Mode</span>
+        <h2 id="st-mode-title">Series — Find Equivalent Resistance</h2>
       </div>
-      <div class="st-circuit-info" id="st-right-info">Adjust R<sub>eq</sub> until the current matches the left circuit.</div>
+      <div class="st-head-right">
+        <div class="st-type-btns" id="st-type-btns">
+          <button class="st-type-btn on" id="st-btn-series" onclick="setStudentTestType('series')">Series</button>
+          <button class="st-type-btn" id="st-btn-parallel" onclick="setStudentTestType('parallel')">Parallel</button>
+          <button class="st-type-btn" id="st-btn-mixed" onclick="setStudentTestType('mixed')">Mixed</button>
+        </div>
+        <div class="st-score" id="st-score"></div>
+      </div>
     </div>
-  </div>
-  <div id="st-feedback-bar"></div>
-  <div id="student-test-btns">
-    <button class="st-btn validate" onclick="validateStudentTest()">&#10003; Validate</button>
-    <button class="st-btn" onclick="newStudentTestChallenge()">&#8635; New Challenge</button>
-    <button class="st-btn danger" onclick="exitStudentTestMode()">&#10005; Exit Test Mode</button>
+
+    <div id="student-test-main">
+      <div class="st-circuit-panel">
+        <div class="st-panel-label" id="st-left-label">Reference Circuit — 2 Resistors in Series</div>
+        <canvas id="st-canvas-left"></canvas>
+        <div class="st-circuit-info" id="st-left-info"></div>
+      </div>
+      <div class="st-circuit-panel">
+        <div class="st-panel-label" id="st-right-label">Your Equivalent Resistor</div>
+
+        <!-- Equivalent R / C view -->
+        <div id="st-eq-view">
+          <canvas id="st-canvas-right"></canvas>
+          <div class="st-resistor-ctrl">
+            <label id="st-ctrl-label">R<sub>eq</sub> =</label>
+            <input type="number" id="st-req-input" min="0.1" max="1000" step="0.1" value="10">
+            <span class="st-unit" id="st-ctrl-unit">&#937;</span>
+            <input type="range" id="st-req-slider" min="0.1" max="1000" step="0.1" value="10">
+          </div>
+          <div class="st-circuit-info" id="st-right-info"></div>
+        </div>
+
+        <!-- Ohm's law view -->
+        <div id="st-ohm-view" style="display:none">
+          <div class="st-ohm-hint">
+            <b>V = I · R</b><br>
+            Series elements share the same current &nbsp;·&nbsp; parallel branches share the same voltage.<br>
+            Give <b>voltages in V</b> and <b>currents in mA</b>.
+          </div>
+          <div id="st-ohm-questions"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="st-solution"></div>
+    <div id="st-feedback-bar"></div>
+
+    <div id="student-test-btns">
+      <button class="st-btn validate" id="st-btn-validate" onclick="validateStudentTest()">&#10003; Validate</button>
+      <button class="st-btn hint" id="st-btn-solution" disabled onclick="toggleStudentSolution()">💡 Show solution</button>
+      <button class="st-btn" onclick="newStudentTestChallenge()">&#8635; New Challenge</button>
+      <button class="st-btn" onclick="backToChallengeMenu()">☰ Menu</button>
+      <button class="st-btn danger" onclick="exitStudentTestMode()">&#10005; Exit</button>
+    </div>
   </div>
 </div>
 <script>
-// ── STUDENT TEST MODE ─────────────────────────────────────
-let stType = 'series';
-let stR1 = 10, stR2 = 10, stR3 = 10;
-let stV = 9;
-let stMixedVariant = 0; // 0 = (R1+R2)∥R3, 1 = R1∥(R2 series R3 vertical)
+// ── CHALLENGE MODE v2 ─────────────────────────────────────
+// Modules: 'resistance' (equivalent R), 'ohm' (Ohm's law on mixed circuits), 'capacitor' (equivalent C)
+var ST_MOD = {
+  resistance: { sym:'R', unit:'Ω',  part:'Resistors',  eqNoun:'Equivalent Resistance',  rightLabel:'Your Equivalent Resistor',  badge:'Calculate the Resistance',  col:'var(--accent4)' },
+  ohm:        { sym:'R', unit:'Ω',  part:'Resistors',  eqNoun:'',                       rightLabel:'Your Answers — Voltage & Current', badge:"Apply Ohm's Law", col:'var(--accent4)' },
+  capacitor:  { sym:'C', unit:'µF', part:'Capacitors', eqNoun:'Equivalent Capacitance', rightLabel:'Your Equivalent Capacitor', badge:'Calculate the Capacitance', col:'var(--accent5)' }
+};
+var stModule = 'menu';          // 'menu' | 'resistance' | 'ohm' | 'capacitor'
+var stType = 'series';          // 'series' | 'parallel' | 'mixed'
+var stR1 = 10, stR2 = 10, stR3 = 10;   // component values (Ω or µF depending on module)
+var stV = 9;
+var stMixedVariant = 0;         // 0: (X1 series X2) parallel X3   |   1: X1 series (X2 parallel X3)
+var stOhmQs = [];
+var stSolved = false;
+var stLocked = false;   // true once the student has validated: answers frozen until New Challenge
+var stScore = { resistance:{ok:0,tries:0}, ohm:{ok:0,tries:0}, capacitor:{ok:0,tries:0} };
 
 document.getElementById('btnStudentTest').addEventListener('click', enterStudentTestMode);
 
+// ── Navigation ──
 function enterStudentTestMode() {
+  backToChallengeMenu();
   document.getElementById('student-test-overlay').classList.add('visible');
-  setStudentTestType('series');
+}
+function backToChallengeMenu() {
+  stModule = 'menu';
+  document.getElementById('student-test-overlay').classList.remove('in-game');
+  updateStScores();
 }
 function exitStudentTestMode() {
   document.getElementById('student-test-overlay').classList.remove('visible');
 }
-function setStudentTestType(type) {
-  stType = type;
-  document.getElementById('st-btn-series').classList.toggle('on', type === 'series');
-  document.getElementById('st-btn-parallel').classList.toggle('on', type === 'parallel');
-  document.getElementById('st-btn-mixed').classList.toggle('on', type === 'mixed');
-  var titles = { series: 'Series — Find Equivalent Resistance', parallel: 'Parallel — Find Equivalent Resistance', mixed: 'Mixed — Find Equivalent Resistance' };
-  var labels = { series: 'Reference Circuit — 2 Resistors in Series', parallel: 'Reference Circuit — 2 Resistors in Parallel', mixed: 'Reference Circuit — Mixed (Series + Parallel)' };
-  document.getElementById('st-mode-title').textContent = titles[type] || titles.series;
-  document.getElementById('st-left-label').textContent = labels[type] || labels.series;
+function startStudentModule(mod) {
+  stModule = mod;
+  var m = ST_MOD[mod], isOhm = (mod === 'ohm');
+  document.getElementById('student-test-overlay').classList.add('in-game');
+  document.getElementById('st-badge').textContent = '📐 ' + m.badge;
+  document.getElementById('st-type-btns').style.display = isOhm ? 'none' : '';
+  document.getElementById('st-eq-view').style.display   = isOhm ? 'none' : '';
+  document.getElementById('st-ohm-view').style.display  = isOhm ? '' : 'none';
+  document.getElementById('st-right-label').textContent = m.rightLabel;
+  document.getElementById('st-ctrl-label').innerHTML = m.sym + '<sub>eq</sub> =';
+  document.getElementById('st-ctrl-unit').textContent = m.unit;
+  stType = isOhm ? 'mixed' : 'series';
+  stSyncTypeButtons();
   newStudentTestChallenge();
 }
+function setStudentTestType(type) {
+  stType = type;
+  stSyncTypeButtons();
+  newStudentTestChallenge();
+}
+function stSyncTypeButtons() {
+  ['series','parallel','mixed'].forEach(function(t) {
+    document.getElementById('st-btn-' + t).classList.toggle('on', stType === t);
+  });
+}
+function stUpdateTitles() {
+  var m = ST_MOD[stModule], tName = { series:'Series', parallel:'Parallel', mixed:'Mixed' }[stType];
+  var title, label;
+  if (stModule === 'ohm') {
+    title = "Ohm's Law — Voltage & Current in a Mixed Circuit";
+    label = 'Mixed Circuit — 3 Resistors';
+  } else {
+    title = tName + ' — Find ' + m.eqNoun;
+    label = 'Reference Circuit — ' + (stType === 'mixed' ? 'Mixed (Series + Parallel)' : '2 ' + m.part + ' in ' + tName);
+  }
+  document.getElementById('st-mode-title').textContent = title;
+  document.getElementById('st-left-label').textContent = label;
+}
+function updateStScores() {
+  ['resistance','ohm','capacitor'].forEach(function(k) {
+    var s = stScore[k], el = document.getElementById('st-score-' + k);
+    if (el) el.textContent = s.tries ? ('✓ ' + s.ok + ' solved · ' + s.tries + ' attempts') : 'NOT ATTEMPTED YET';
+  });
+  var pill = document.getElementById('st-score');
+  if (pill && stModule !== 'menu') {
+    var s2 = stScore[stModule];
+    pill.textContent = '✓ ' + s2.ok + ' solved · ' + s2.tries + ' attempts';
+  }
+}
+
+// ── Helpers ──
+function stSub(i) { return ['₀','₁','₂','₃'][i] || String(i); }
+function stLbl(i) { var s = ST_MOD[stModule].sym; return i === 'eq' ? s + 'eq' : s + stSub(i); }
+function stPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function stNum(x) { return String(parseFloat(x.toFixed(2))); }
+// Series / parallel combination rules swap between resistors and capacitors
+function stSer(a, b) { return stModule === 'capacitor' ? (a * b) / (a + b) : a + b; }
+function stPar(a, b) { return stModule === 'capacitor' ? a + b : (a * b) / (a + b); }
+
+// ── New challenge ──
+// Lock/unlock answer entry. Locked = validated: no more editing, no more validating, solution available.
+function stSetLocked(on) {
+  stLocked = on;
+  document.getElementById('st-btn-validate').disabled = on;
+  document.getElementById('st-btn-solution').disabled = !on;
+  document.getElementById('st-req-input').disabled = on;
+  document.getElementById('st-req-slider').disabled = on;
+  stOhmQs.forEach(function(q) { var i = document.getElementById('st-ohm-in-' + q.id); if (i) i.disabled = on; });
+}
+
 function newStudentTestChallenge() {
-  if (stType === 'mixed') {
-    // Mixed: R1 in series with (R2 parallel R3). Values 10–100 in multiples of 10.
-    var multiples = [10,20,30,40,50,60,70,80,90,100];
-    stR1 = multiples[Math.floor(Math.random() * multiples.length)];
-    stR2 = multiples[Math.floor(Math.random() * multiples.length)];
-    stR3 = multiples[Math.floor(Math.random() * multiples.length)];
+  stSolved = false;
+  stSetLocked(false);
+  var fb = document.getElementById('st-feedback-bar');
+  fb.className = ''; fb.style.display = 'none';
+  document.getElementById('st-solution').classList.remove('show');
+  var multiples = [10,20,30,40,50,60,70,80,90,100];
+
+  if (stModule === 'ohm') {
+    stType = 'mixed';
+    stR1 = stPick(multiples); stR2 = stPick(multiples); stR3 = stPick(multiples);
+    stV = stPick([6, 9, 12, 18, 24]);
     stMixedVariant = Math.floor(Math.random() * 2);
-    var correctR = stMixedVariant === 0
-      ? (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2)   // (R1+R2)∥R3
-      : stR1 + (stR2 * stR3) / (stR2 + stR3);            // R1 series (R2∥R3)
-    var sliderMax = Math.ceil(correctR / 100) * 100;
-    if (sliderMax <= correctR) sliderMax += 100; // ensure strictly above
+    stBuildOhmQuestions();
+    stUpdateTitles();
+    drawStudentLeftCircuit();
+    updateStudentInfoLeft();
+    updateStScores();
+    return;
+  }
+
+  stV = 9;
+  if (stType === 'mixed') {
+    stR1 = stPick(multiples); stR2 = stPick(multiples); stR3 = stPick(multiples);
+    stMixedVariant = Math.floor(Math.random() * 2);
   } else {
     stR1 = Math.floor(Math.random() * 20) + 1;
     stR2 = Math.floor(Math.random() * 20) + 1;
-    stR3 = stR2; // unused for series/parallel
-    var sliderMax = 2 * (stR1 + stR2);
+    stR3 = stR2; // unused
+  }
+  var correct = stCorrectEq();
+  var sliderMax;
+  if (stType === 'mixed') {
+    sliderMax = Math.ceil(correct / 100) * 100;
+    if (sliderMax <= correct) sliderMax += 100;
+  } else {
+    sliderMax = 2 * (stR1 + stR2);
   }
   var sliderEl = document.getElementById('st-req-slider');
   var inputEl  = document.getElementById('st-req-input');
   sliderEl.min = '0.1'; sliderEl.max = String(sliderMax); sliderEl.step = '0.1';
   inputEl.min  = '0.1'; inputEl.max  = String(sliderMax); inputEl.step  = '0.1';
-  var fb = document.getElementById('st-feedback-bar');
-  fb.className = ''; fb.style.display = 'none';
   var wrongDefault = parseFloat(Math.max(0.1, stR1 + 0.5).toFixed(1));
-  inputEl.value  = wrongDefault;
-  sliderEl.value = wrongDefault;
+  inputEl.value = wrongDefault; sliderEl.value = wrongDefault;
+
+  stUpdateTitles();
   drawStudentLeftCircuit();
   drawStudentRightCircuit(wrongDefault);
   updateStudentInfoLeft();
   updateStudentRightInfo(wrongDefault);
+  updateStScores();
+
   sliderEl.oninput = function() {
     var v = parseFloat(parseFloat(sliderEl.value).toFixed(1));
     inputEl.value = v;
-    drawStudentRightCircuit(v);
-    updateStudentRightInfo(v);
+    drawStudentRightCircuit(v); updateStudentRightInfo(v);
   };
   inputEl.oninput = function() {
     var v = parseFloat(inputEl.value);
     if (isNaN(v)) return;
-    var clamped = Math.max(0.1, Math.min(sliderMax, v));
-    sliderEl.value = clamped;
-    drawStudentRightCircuit(clamped);
-    updateStudentRightInfo(clamped);
+    var c = Math.max(0.1, Math.min(sliderMax, v));
+    sliderEl.value = c;
+    drawStudentRightCircuit(c); updateStudentRightInfo(c);
   };
   inputEl.onblur = function() {
     var v = parseFloat(inputEl.value);
     if (isNaN(v)) v = 0.1;
     v = parseFloat(Math.max(0.1, Math.min(sliderMax, v)).toFixed(1));
-    inputEl.value = v;
-    sliderEl.value = v;
-    drawStudentRightCircuit(v);
-    updateStudentRightInfo(v);
+    inputEl.value = v; sliderEl.value = v;
+    drawStudentRightCircuit(v); updateStudentRightInfo(v);
   };
 }
-function stCorrectR() {
-  if (stType === 'series') return stR1 + stR2;
-  if (stType === 'parallel') return (stR1 * stR2) / (stR1 + stR2);
-  // mixed: two variants (variant set per challenge in newStudentTestChallenge)
-  if (stMixedVariant === 0) return (stR3 * (stR1 + stR2)) / (stR3 + stR1 + stR2); // (R1+R2)∥R3
-  return stR1 + (stR2 * stR3) / (stR2 + stR3); // R1 series (R2∥R3)
+
+// ── Equivalent value (R or C) ──
+function stCorrectEq() {
+  if (stType === 'series')   return stSer(stR1, stR2);
+  if (stType === 'parallel') return stPar(stR1, stR2);
+  return stMixedVariant === 0
+    ? stPar(stSer(stR1, stR2), stR3)      // (X1 – X2 in series) ∥ X3
+    : stSer(stR1, stPar(stR2, stR3));     // X1 in series with (X2 ∥ X3)
 }
-function stCurrentLeft() {
-  return stV / stCorrectR();
+// What the student has to "match": current for resistors, stored charge for capacitors
+function stReadoutText(eq) {
+  if (stModule === 'capacitor') return 'Q = ' + (eq * stV).toFixed(1) + ' µC';
+  return 'I = ' + (stV / Math.max(eq, 0.001) * 1000).toFixed(2) + ' mA';
 }
-function stCurrentRight(req) { return stV / Math.max(req, 0.001); }
 function updateStudentInfoLeft() {
-  var I = stCurrentLeft();
-  var rInfo = stType === 'mixed'
-    ? 'R₁ = <b style="color:var(--accent4)">' + stR1 + ' Ω</b> &nbsp; R₂ = <b style="color:var(--accent4)">' + stR2 + ' Ω</b> &nbsp; R₃ = <b style="color:var(--accent4)">' + stR3 + ' Ω</b>'
-    : 'R₁ = <b style="color:var(--accent4)">' + stR1 + ' Ω</b> &nbsp; R₂ = <b style="color:var(--accent4)">' + stR2 + ' Ω</b>';
-  document.getElementById('st-left-info').innerHTML =
-    rInfo + ' &nbsp; Battery = <b style="color:var(--accent)">' + stV + ' V</b> &nbsp;&nbsp; I = <b style="color:var(--accent3)">' + (I*1000).toFixed(2) + ' mA</b>';
+  var m = ST_MOD[stModule], n = (stType === 'mixed') ? 3 : 2, vals = [stR1, stR2, stR3], parts = [];
+  for (var i = 1; i <= n; i++) {
+    parts.push(m.sym + stSub(i) + ' = <b style="color:' + m.col + '">' + vals[i-1] + ' ' + m.unit + '</b>');
+  }
+  var html = parts.join(' &nbsp; ') + ' &nbsp; Battery = <b style="color:var(--accent)">' + stV + ' V</b>';
+  if (stModule !== 'ohm') {
+    html += ' &nbsp;&nbsp; <b style="color:var(--accent3)">' + stReadoutText(stCorrectEq()) + '</b>';
+  }
+  document.getElementById('st-left-info').innerHTML = html;
 }
-function updateStudentRightInfo(req) {
-  var I = stCurrentRight(req);
+function updateStudentRightInfo(eq) {
+  var m = ST_MOD[stModule];
+  var goal = stModule === 'capacitor' ? 'the stored charge' : 'the current';
   document.getElementById('st-right-info').innerHTML =
-    'R<sub>eq</sub> = <b style="color:var(--accent4)">' + parseFloat(req).toFixed(1) + ' Ω</b> &nbsp; Battery = <b style="color:var(--accent)">' + stV + ' V</b> &nbsp;&nbsp; I = <b style="color:var(--accent3)">' + (I*1000).toFixed(2) + ' mA</b><br><span style="color:var(--dim)">Adjust R<sub>eq</sub> until the current matches the left circuit.</span>';
+    m.sym + '<sub>eq</sub> = <b style="color:' + m.col + '">' + parseFloat(eq).toFixed(1) + ' ' + m.unit + '</b> &nbsp; Battery = <b style="color:var(--accent)">' + stV + ' V</b> &nbsp;&nbsp; <b style="color:var(--accent3)">' + stReadoutText(eq) + '</b><br>' +
+    '<span style="color:var(--dim)">Adjust ' + m.sym + '<sub>eq</sub> until ' + goal + ' matches the left circuit.</span>';
 }
+
+// ── Ohm's law module ──
+function stOhmValues() {
+  var V = stV, out = {};
+  if (stMixedVariant === 0) {
+    // (R1 + R2) ∥ R3
+    var I12 = V / (stR1 + stR2), I3 = V / stR3;
+    out.V1 = I12 * stR1; out.V2 = I12 * stR2; out.V3 = V;
+    out.I1 = I12 * 1000; out.I2 = I12 * 1000; out.I3 = I3 * 1000; out.It = (I12 + I3) * 1000;
+  } else {
+    // R1 + (R2 ∥ R3)
+    var Rp = (stR2 * stR3) / (stR2 + stR3), It = V / (stR1 + Rp), Vp = It * Rp;
+    out.V1 = It * stR1; out.V2 = Vp; out.V3 = Vp;
+    out.I1 = It * 1000; out.I2 = (Vp / stR2) * 1000; out.I3 = (Vp / stR3) * 1000; out.It = It * 1000;
+  }
+  return out;
+}
+function stBuildOhmQuestions() {
+  var vals = stOhmValues();
+  var pool = [];
+  [1,2,3].forEach(function(i) { pool.push({ kind:'V', idx:i }); });
+  [1,2,3,'t'].forEach(function(i) { pool.push({ kind:'I', idx:i }); });
+  // shuffle
+  for (var i = pool.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1)), t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+  }
+  // guarantee at least one voltage and one current, then fill up to 4 questions
+  var firstV = pool.filter(function(q) { return q.kind === 'V'; })[0];
+  var firstI = pool.filter(function(q) { return q.kind === 'I'; })[0];
+  var picked = [firstV, firstI];
+  pool.forEach(function(q) { if (picked.length < 4 && picked.indexOf(q) < 0) picked.push(q); });
+  picked.sort(function(a, b) {
+    if (a.kind !== b.kind) return a.kind === 'V' ? -1 : 1;
+    return String(a.idx).localeCompare(String(b.idx));
+  });
+  stOhmQs = picked.map(function(q) {
+    var key = q.kind + (q.idx === 't' ? 't' : q.idx);
+    var sym, desc;
+    if (q.kind === 'V') { sym = 'V<sub>' + q.idx + '</sub>'; desc = 'Voltage across R' + stSub(q.idx); }
+    else if (q.idx === 't') { sym = 'I<sub>tot</sub>'; desc = 'Total current drawn from the battery'; }
+    else { sym = 'I<sub>' + q.idx + '</sub>'; desc = 'Current through R' + stSub(q.idx); }
+    return { id:key, kind:q.kind, idx:q.idx, sym:sym, desc:desc, unit:(q.kind === 'V' ? 'V' : 'mA'), answer:vals[key] };
+  });
+  var host = document.getElementById('st-ohm-questions');
+  host.innerHTML = stOhmQs.map(function(q) {
+    return '<div class="st-q" id="st-q-' + q.id + '">' +
+      '<div class="st-q-text"><span class="st-q-sym">' + q.sym + '</span><span class="st-q-desc">' + q.desc + '</span></div>' +
+      '<input type="number" step="any" id="st-ohm-in-' + q.id + '" placeholder="?">' +
+      '<span class="st-unit">' + q.unit + '</span><span class="st-q-mark"></span></div>';
+  }).join('');
+  stOhmQs.forEach(function(q) {
+    var inp = document.getElementById('st-ohm-in-' + q.id);
+    inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') validateStudentTest(); });
+    inp.addEventListener('input', function() {
+      var row = document.getElementById('st-q-' + q.id);
+      row.classList.remove('ok','bad'); row.querySelector('.st-q-mark').textContent = '';
+    });
+  });
+}
+function stTol(ans) { return Math.max(0.02 * Math.abs(ans), 0.02); } // ±2 % (or 0.02 for tiny values)
+function validateOhm() {
+  var missing = stOhmQs.some(function(q) { return isNaN(parseFloat(document.getElementById('st-ohm-in-' + q.id).value)); });
+  if (missing) {
+    var fb0 = document.getElementById('st-feedback-bar');
+    fb0.style.display = ''; fb0.className = 'wrong';
+    fb0.textContent = 'Please fill in every answer before validating — you only get one attempt per challenge.';
+    return;
+  }
+  var ok = 0, unitSlip = false, empty = 0;
+  stOhmQs.forEach(function(q) {
+    var inp = document.getElementById('st-ohm-in-' + q.id);
+    var row = document.getElementById('st-q-' + q.id);
+    var v = parseFloat(inp.value), tol = stTol(q.answer), good = false;
+    if (isNaN(v)) { empty++; row.classList.remove('ok'); row.classList.add('bad'); row.querySelector('.st-q-mark').textContent = '✗'; return; }
+    good = Math.abs(v - q.answer) <= tol;
+    if (!good && q.kind === 'I' && (Math.abs(v * 1000 - q.answer) <= tol || Math.abs(v / 1000 - q.answer) <= tol)) unitSlip = true;
+    row.classList.toggle('ok', good); row.classList.toggle('bad', !good);
+    row.querySelector('.st-q-mark').textContent = good ? '✓' : '✗';
+    if (good) ok++;
+  });
+  var n = stOhmQs.length, fb = document.getElementById('st-feedback-bar');
+  stScore.ohm.tries++;
+  fb.style.display = '';
+  if (ok === n) {
+    if (!stSolved) { stSolved = true; stScore.ohm.ok++; }
+    fb.className = 'correct';
+    fb.textContent = '✓ Excellent! All ' + n + ' answers are correct. Ohm\'s law (V = I·R) holds for every element.';
+  } else {
+    fb.className = 'wrong';
+    fb.textContent = '✗ ' + ok + ' of ' + n + ' correct. ' +
+      (unitSlip ? 'Careful with units — currents are in mA. ' : '') +
+      'Press “Show solution” to see the worked answer, or start a New Challenge.';
+  }
+  stSetLocked(true);
+  updateStScores();
+}
+
+// ── Validation (R / C modules) ──
 function validateStudentTest() {
+  if (stLocked) return;
+  if (stModule === 'ohm') { validateOhm(); return; }
+  var m = ST_MOD[stModule];
   var req = parseFloat(document.getElementById('st-req-input').value) || 0.1;
-  var correctR = parseFloat(stCorrectR().toFixed(2));
-  var diff = Math.abs(req - correctR);
+  var correct = parseFloat(stCorrectEq().toFixed(2));
+  var diff = Math.abs(req - correct);
   var fb = document.getElementById('st-feedback-bar');
-  var IL = stCurrentLeft();
+  var name = m.sym + '<sub>eq</sub>';
+  stScore[stModule].tries++;
   fb.style.display = '';
   if (diff <= 0.1) {
+    if (!stSolved) { stSolved = true; stScore[stModule].ok++; }
     fb.className = 'correct';
-    fb.textContent = '✓ Correct! Equivalent resistance = ' + correctR + ' Ω. Both circuits carry ' + (IL*1000).toFixed(2) + ' mA — electrically equivalent!';
+    fb.innerHTML = stModule === 'capacitor'
+      ? '✓ Correct! Equivalent capacitance = ' + correct + ' µF. Both networks store ' + (correct * stV).toFixed(1) + ' µC at ' + stV + ' V — electrically equivalent!'
+      : '✓ Correct! Equivalent resistance = ' + correct + ' Ω. Both circuits carry ' + (stV / correct * 1000).toFixed(2) + ' mA — electrically equivalent!';
   } else {
-    var dir = req < correctR ? 'too low — try increasing Rᵉq' : 'too high — try decreasing Rᵉq';
+    var dir = req < correct ? 'too low' : 'too high';
     fb.className = 'wrong';
-    fb.textContent = '✗ Not quite. Your Rᵉq differs by ' + diff.toFixed(2) + ' Ω (' + dir + '). Try again!';
+    fb.innerHTML = '✗ Not quite. Your ' + name + ' differs by ' + diff.toFixed(2) + ' ' + m.unit + ' (' + dir + '). Press “Show solution” to see the worked answer, or start a New Challenge.';
   }
+  stSetLocked(true);
+  updateStScores();
 }
+
+// ── Worked solution ──
+function toggleStudentSolution() {
+  if (!stLocked) return; // solution only available after validating
+  var box = document.getElementById('st-solution');
+  if (box.classList.contains('show')) { box.classList.remove('show'); return; }
+  box.innerHTML = '<div class="st-sol-title">Worked solution</div>' + stSolutionHTML();
+  box.classList.add('show');
+}
+function stSolutionHTML() {
+  var m = ST_MOD[stModule], s = m.sym, u = m.unit, f = stNum, L = [];
+  var X = function(i) { return s + '<sub>' + i + '</sub>'; };
+  var a = stR1, b = stR2, c = stR3;
+
+  if (stModule === 'ohm') {
+    var v = stOhmValues(), V = stV;
+    if (stMixedVariant === 0) {
+      var rs = a + b;
+      L.push('R<sub>1</sub> and R<sub>2</sub> are in series (same current): I<sub>1</sub> = I<sub>2</sub> = V / (R<sub>1</sub>+R<sub>2</sub>) = ' + V + ' / ' + rs + ' = <b>' + f(v.I1) + ' mA</b>');
+      L.push('V<sub>1</sub> = I<sub>1</sub>·R<sub>1</sub> = <b>' + f(v.V1) + ' V</b> &nbsp; V<sub>2</sub> = I<sub>2</sub>·R<sub>2</sub> = <b>' + f(v.V2) + ' V</b>');
+      L.push('R<sub>3</sub> is in parallel with that branch, so it sees the full battery voltage: V<sub>3</sub> = <b>' + V + ' V</b>, I<sub>3</sub> = V<sub>3</sub> / R<sub>3</sub> = <b>' + f(v.I3) + ' mA</b>');
+      L.push('The battery supplies both branches: I<sub>tot</sub> = I<sub>1</sub> + I<sub>3</sub> = <b>' + f(v.It) + ' mA</b>');
+    } else {
+      var rp = (b * c) / (b + c), rt = a + rp;
+      L.push('R<sub>2</sub> ∥ R<sub>3</sub> = R<sub>2</sub>R<sub>3</sub> / (R<sub>2</sub>+R<sub>3</sub>) = ' + f(rp) + ' Ω &nbsp;→&nbsp; R<sub>tot</sub> = R<sub>1</sub> + ' + f(rp) + ' = ' + f(rt) + ' Ω');
+      L.push('I<sub>tot</sub> = V / R<sub>tot</sub> = ' + V + ' / ' + f(rt) + ' = <b>' + f(v.It) + ' mA</b>');
+      L.push('R<sub>1</sub> is in series with the parallel group, so I<sub>1</sub> = I<sub>tot</sub> = <b>' + f(v.I1) + ' mA</b> and V<sub>1</sub> = I<sub>1</sub>·R<sub>1</sub> = <b>' + f(v.V1) + ' V</b>');
+      L.push('The parallel group gets the rest: V<sub>2</sub> = V<sub>3</sub> = V − V<sub>1</sub> = <b>' + f(v.V2) + ' V</b>');
+      L.push('I<sub>2</sub> = V<sub>2</sub> / R<sub>2</sub> = <b>' + f(v.I2) + ' mA</b> &nbsp; I<sub>3</sub> = V<sub>3</sub> / R<sub>3</sub> = <b>' + f(v.I3) + ' mA</b> &nbsp; (check: I<sub>2</sub> + I<sub>3</sub> = I<sub>tot</sub>)');
+    }
+    return L.join('<br>');
+  }
+
+  var cap = (stModule === 'capacitor'), eq = stCorrectEq(), E = s + '<sub>eq</sub>';
+  var serFormula = cap ? (E + ' = ' + X(1) + '·' + X(2) + ' / (' + X(1) + '+' + X(2) + ')') : (E + ' = ' + X(1) + ' + ' + X(2));
+  var parFormula = cap ? (E + ' = ' + X(1) + ' + ' + X(2)) : (E + ' = ' + X(1) + '·' + X(2) + ' / (' + X(1) + '+' + X(2) + ')');
+  if (stType === 'series') {
+    L.push((cap ? 'Capacitors in series: ' : 'Resistors in series: ') + serFormula + ' = ' + f(a) + ', ' + f(b) + ' → <b>' + f(eq) + ' ' + u + '</b>');
+  } else if (stType === 'parallel') {
+    L.push((cap ? 'Capacitors in parallel: ' : 'Resistors in parallel: ') + parFormula + ' = ' + f(a) + ', ' + f(b) + ' → <b>' + f(eq) + ' ' + u + '</b>');
+  } else if (stMixedVariant === 0) {
+    var s12 = stSer(a, b);
+    L.push(X(1) + ' and ' + X(2) + ' are in series: ' + s + '<sub>12</sub> = ' + f(s12) + ' ' + u);
+    L.push(s + '<sub>12</sub> is in parallel with ' + X(3) + ': ' + E + ' = <b>' + f(eq) + ' ' + u + '</b>');
+  } else {
+    var p23 = stPar(b, c);
+    L.push(X(2) + ' and ' + X(3) + ' are in parallel: ' + s + '<sub>23</sub> = ' + f(p23) + ' ' + u);
+    L.push(X(1) + ' is in series with ' + s + '<sub>23</sub>: ' + E + ' = <b>' + f(eq) + ' ' + u + '</b>');
+  }
+  L.push(cap
+    ? 'Check: Q = C<sub>eq</sub>·V = ' + f(eq) + ' × ' + stV + ' = ' + (eq * stV).toFixed(1) + ' µC'
+    : 'Check: I = V / R<sub>eq</sub> = ' + stV + ' / ' + f(eq) + ' = ' + (stV / eq * 1000).toFixed(2) + ' mA');
+  return L.join('<br>');
+}
+
+// ── Capacitor symbols + component dispatch ──
+function _stCapH(cx, rx, cy, C, label, editable) {
+  var col = editable ? '#00d4ff' : '#b44aff', rw = 60, rh = 34;
+  cx.save();
+  cx.fillStyle = 'rgba(6,8,14,1)'; cx.fillRect(rx - rw/2, cy - rh/2, rw, rh);
+  cx.strokeStyle = '#1a5070'; cx.lineWidth = 2.5; cx.lineCap = 'round';
+  cx.beginPath(); cx.moveTo(rx - rw/2, cy); cx.lineTo(rx - 6, cy); cx.moveTo(rx + 6, cy); cx.lineTo(rx + rw/2, cy); cx.stroke();
+  cx.strokeStyle = col; cx.lineWidth = 3.5; cx.lineCap = 'butt'; cx.shadowColor = col; cx.shadowBlur = 8;
+  cx.beginPath(); cx.moveTo(rx - 6, cy - 16); cx.lineTo(rx - 6, cy + 16); cx.moveTo(rx + 6, cy - 16); cx.lineTo(rx + 6, cy + 16); cx.stroke();
+  cx.shadowBlur = 0;
+  cx.fillStyle = col; cx.textAlign = 'center';
+  cx.font = '12px "Roboto Mono"'; cx.fillText(label, rx, cy - rh/2 - 6);
+  cx.font = 'bold 14px "Roboto Mono"'; cx.fillText(parseFloat(C).toFixed(1) + 'µF', rx, cy + rh/2 + 14);
+  if (editable) { cx.fillStyle = 'rgba(0,212,255,0.4)'; cx.font = '9px "Roboto Mono"'; cx.fillText('▲ editable', rx, cy + rh/2 + 28); }
+  cx.restore();
+}
+function _stCapV(cx, x, cy, C, label) {
+  var col = '#b44aff', rh = 60, rw = 34;
+  cx.save();
+  cx.fillStyle = 'rgba(6,8,14,1)'; cx.fillRect(x - rw/2, cy - rh/2, rw, rh);
+  cx.strokeStyle = '#1a5070'; cx.lineWidth = 2.5; cx.lineCap = 'round';
+  cx.beginPath(); cx.moveTo(x, cy - rh/2); cx.lineTo(x, cy - 6); cx.moveTo(x, cy + 6); cx.lineTo(x, cy + rh/2); cx.stroke();
+  cx.strokeStyle = col; cx.lineWidth = 3.5; cx.lineCap = 'butt'; cx.shadowColor = col; cx.shadowBlur = 8;
+  cx.beginPath(); cx.moveTo(x - 16, cy - 6); cx.lineTo(x + 16, cy - 6); cx.moveTo(x - 16, cy + 6); cx.lineTo(x + 16, cy + 6); cx.stroke();
+  cx.shadowBlur = 0;
+  cx.fillStyle = col; cx.textAlign = 'right';
+  cx.font = '12px "Roboto Mono"'; cx.fillText(label, x - 24, cy - 2);
+  cx.font = 'bold 12px "Roboto Mono"'; cx.fillText(parseFloat(C).toFixed(0) + 'µF', x - 24, cy + 14);
+  cx.restore();
+}
+function _stCompH(cx, x, cy, val, label, editable) {
+  if (stModule === 'capacitor') _stCapH(cx, x, cy, val, label, editable);
+  else _stResistorH(cx, x, cy, val, label, editable);
+}
+function _stCompV(cx, x, cy, val, label) {
+  if (stModule === 'capacitor') _stCapV(cx, x, cy, val, label);
+  else _stResistorV(cx, x, cy, val, label);
+}
+// Bottom-left readout on the canvases (hidden in Ohm's-law mode so it does not give the answer away)
+function stDrawReadout(cx, H, eq) {
+  if (stModule === 'ohm') return;
+  cx.fillStyle = 'rgba(57,255,20,0.7)'; cx.font = '12px "Roboto Mono"'; cx.textAlign = 'left';
+  cx.fillText(stReadoutText(eq), 6, H - 6);
+}
+
 // ── Drawing helpers ──
 function _stCanvas(id) {
   var c = document.getElementById(id);
@@ -3792,8 +4245,8 @@ function drawStudentLeftCircuit() {
     _stSeg(cx,rightX,topY,rightX,botY); _stSeg(cx,leftX,topY,leftX,botY);
     _stSeg(cx,leftX,botY,batL,botY); _stSeg(cx,batR,botY,rightX,botY);
     _stBatteryH(cx,midX,botY,stV);
-    _stResistorH(cx,r1CX,topY,stR1,'R₁',false);
-    _stResistorH(cx,r2CX,topY,stR2,'R₂',false);
+    _stCompH(cx,r1CX,topY,stR1,stLbl(1),false);
+    _stCompH(cx,r2CX,topY,stR2,stLbl(2),false);
     _stNode(cx,leftX,topY);_stNode(cx,leftX,botY);_stNode(cx,rightX,topY);_stNode(cx,rightX,botY);
     _stNode(cx,r1L,topY);_stNode(cx,r1R,topY);_stNode(cx,r2L,topY);_stNode(cx,r2R,topY);
     _stNode(cx,batL,botY);_stNode(cx,batR,botY);
@@ -3806,8 +4259,8 @@ function drawStudentLeftCircuit() {
     _stSeg(cx,leftX,brBotY,leftX,botY);_stSeg(cx,rightX,brBotY,rightX,botY);
     _stSeg(cx,leftX,botY,batL2,botY);_stSeg(cx,batR2,botY,rightX,botY);
     _stBatteryH(cx,midX,botY,stV);
-    _stResistorH(cx,rMidX,brTopY,stR1,'R₁',false);
-    _stResistorH(cx,rMidX,brBotY,stR2,'R₂',false);
+    _stCompH(cx,rMidX,brTopY,stR1,stLbl(1),false);
+    _stCompH(cx,rMidX,brBotY,stR2,stLbl(2),false);
     _stNode(cx,leftX,brTopY);_stNode(cx,rightX,brTopY);_stNode(cx,leftX,brBotY);_stNode(cx,rightX,brBotY);
     _stNode(cx,leftX,botY);_stNode(cx,rightX,botY);
     _stNode(cx,rL,brTopY);_stNode(cx,rR,brTopY);_stNode(cx,rL,brBotY);_stNode(cx,rR,brBotY);
@@ -3837,9 +4290,9 @@ function drawStudentLeftCircuit() {
       _stSeg(cx, r12X, r2MidY + rh,   r12X, botY);
 
       _stBatteryV(cx, batX, midY, stV);
-      _stResistorV(cx, r3X,  midY,   stR3, 'R₃');
-      _stResistorV(cx, r12X, r1MidY, stR1, 'R₁');
-      _stResistorV(cx, r12X, r2MidY, stR2, 'R₂');
+      _stCompV(cx, r3X,  midY,   stR3, stLbl(3));
+      _stCompV(cx, r12X, r1MidY, stR1, stLbl(1));
+      _stCompV(cx, r12X, r2MidY, stR2, stLbl(2));
 
       _stNode(cx, batX, topY); _stNode(cx, batX, botY);
       _stNode(cx, r3X,  topY); _stNode(cx, r3X,  botY);
@@ -3868,9 +4321,9 @@ function drawStudentLeftCircuit() {
       _stSeg(cx, r3X2, midY1 + 30, r3X2, botY);
 
       _stBatteryV(cx, leftX, midY1, stV);
-      _stResistorH(cx, r1CX, topY, stR1, 'R₁', false);
-      _stResistorV(cx, r2X,  midY1, stR2, 'R₂');
-      _stResistorV(cx, r3X2, midY1, stR3, 'R₃');
+      _stCompH(cx, r1CX, topY, stR1, stLbl(1), false);
+      _stCompV(cx, r2X,  midY1, stR2, stLbl(2));
+      _stCompV(cx, r3X2, midY1, stR3, stLbl(3));
 
       _stNode(cx, leftX, topY); _stNode(cx, leftX, botY);
       _stNode(cx, r1CX - rw1/2, topY); _stNode(cx, r1CX + rw1/2, topY);
@@ -3878,8 +4331,7 @@ function drawStudentLeftCircuit() {
       _stNode(cx, r2X, botY); _stNode(cx, r3X2, botY);
     }
   }
-  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Roboto Mono"'; cx.textAlign='left';
-  cx.fillText('I = '+(stCurrentLeft()*1000).toFixed(2)+' mA',6,H-6);
+  stDrawReadout(cx,H,stCorrectEq());
 }
 function drawStudentRightCircuit(req) {
   var o=_stCanvas('st-canvas-right'), cx=o.ctx, W=o.W, H=o.H;
@@ -3889,11 +4341,10 @@ function drawStudentRightCircuit(req) {
   _stSeg(cx,rightX,topY,rightX,botY); _stSeg(cx,leftX,topY,leftX,botY);
   _stSeg(cx,leftX,botY,batL,botY); _stSeg(cx,batR,botY,rightX,botY);
   _stBatteryH(cx,midX,botY,stV);
-  _stResistorH(cx,midX,topY,req,'Rᵉq',true);
+  _stCompH(cx,midX,topY,req,stLbl('eq'),true);
   _stNode(cx,leftX,topY);_stNode(cx,leftX,botY);_stNode(cx,rightX,topY);_stNode(cx,rightX,botY);
   _stNode(cx,rL,topY);_stNode(cx,rR,topY);_stNode(cx,batL,botY);_stNode(cx,batR,botY);
-  cx.fillStyle='rgba(57,255,20,0.7)'; cx.font='12px "Roboto Mono"'; cx.textAlign='left';
-  cx.fillText('I = '+(stCurrentRight(req)*1000).toFixed(2)+' mA',6,H-6);
+  stDrawReadout(cx,H,req);
 }
 </script>
 
