@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Air-Presenter · Interactive HTML Presentations with Hand Tracking</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap">
+<style>
+:root{
+  --bg:#06080f; --panel:rgba(13,17,32,.88); --line:rgba(180,200,255,.13);
+  --amber:#ffc857; --blue:#5bc8ff; --violet:#b57aff; --green:#4dffa0; --red:#ff5e72;
+  --text:#e6eeff; --muted:rgba(180,210,255,.52);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-weight:300;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+h1,h2,h3{font-family:'Syne',sans-serif;font-weight:800;letter-spacing:.2px;}
+button{font-family:inherit;}
+
+#cam{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);z-index:0;display:none;filter:saturate(.85) brightness(.62) contrast(1.05);}
+body.ar #cam{display:block;}
+#scrim{position:fixed;inset:0;z-index:1;display:none;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,rgba(6,8,15,.30),rgba(6,8,15,.82) 78%);}
+body.ar #scrim{display:block;}
+#arCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;}
+#pointerCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:9999;pointer-events:none;}
+
+#app{position:fixed;inset:0;z-index:3;display:flex;flex-direction:column;}
+#topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 18px;background:linear-gradient(180deg,rgba(6,8,15,.85),rgba(6,8,15,0));}
+.brand{display:flex;align-items:center;gap:11px;}
+.brand .mark{width:34px;height:34px;border-radius:10px;flex-shrink:0;background:conic-gradient(from 210deg,var(--amber),var(--blue),var(--violet),var(--amber));box-shadow:0 0 20px rgba(91,200,255,.35);position:relative;}
+.brand .mark::after{content:'';position:absolute;inset:5px;border-radius:6px;background:#06080f;}
+.brand h1{font-size:13.5px;letter-spacing:1.4px;color:#fff;}
+.brand p{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+#counter{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);min-width:52px;text-align:center;}
+.btn{font-family:'Space Mono',monospace;font-size:11.5px;letter-spacing:.4px;padding:9px 15px;border-radius:12px;border:1px solid rgba(180,200,255,.22);background:rgba(180,200,255,.06);color:var(--blue);cursor:pointer;transition:all .18s;white-space:nowrap;}
+.btn:hover{background:rgba(180,200,255,.15);}
+.btn.amber{color:var(--amber);border-color:rgba(255,200,87,.35);background:rgba(255,200,87,.07);}
+.btn.amber:hover{background:rgba(255,200,87,.18);}
+.btn.green{color:var(--green);border-color:rgba(77,255,160,.35);background:rgba(77,255,160,.07);}
+.btn.green:hover{background:rgba(77,255,160,.18);}
+.btn.big{font-size:13.5px;padding:14px 24px;border-radius:14px;}
+.btn:disabled{opacity:.32;cursor:not-allowed;}
+.btn.on{background:rgba(255,200,87,.22);border-color:var(--amber);color:#fff;}
+
+#stage{position:relative;flex:1;overflow:hidden;}
+.slide{position:absolute;inset:0;padding:8px 22px 14px;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(16px) scale(.99);transition:opacity .34s ease,transform .34s ease;pointer-events:none;}
+.slide.on{opacity:1;transform:none;pointer-events:auto;}
+.slide-inner{width:min(1200px,100%);max-height:100%;overflow-y:auto;padding:6px 4px 18px;position:relative;}
+.slide-inner.center{text-align:center;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:3.5px;color:var(--amber);text-transform:uppercase;margin-bottom:10px;}
+.slide h2{font-size:clamp(20px,2.6vw,32px);color:#fff;line-height:1.15;margin-bottom:10px;}
+.slide h2 em{font-style:normal;color:var(--amber);}
+.lede{font-size:clamp(12.5px,1.25vw,15px);line-height:1.65;color:rgba(210,222,250,.85);max-width:900px;margin-bottom:16px;}
+.center .lede{margin-left:auto;margin-right:auto;}
+.lede b{color:#fff;font-weight:500;}
+.hint{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,200,255,.35);margin-top:14px;letter-spacing:.5px;}
+
+.hot{cursor:pointer;}
+.hot-on{outline:3px solid var(--amber);outline-offset:4px;box-shadow:0 0 30px rgba(255,200,87,.5),inset 0 0 20px rgba(255,200,87,.08);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(.94)}100%{transform:scale(1)}}
+.fired{animation:pop .26s ease;}
+
+.intro-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:2;width:min(620px,72vw);}
+.intro-center h2{font-size:clamp(22px,3.2vw,40px);line-height:1.1;}
+.intro-center .lede{max-width:560px;margin:0 auto 18px;}
+
+.float-panel{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(0,0,0,.45);transition:box-shadow .25s,border-color .25s,left .08s linear,top .08s linear;display:flex;flex-direction:column;z-index:3;}
+.float-panel.grabbed{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,200,87,.45),0 18px 50px rgba(0,0,0,.6);cursor:grabbing;transition:none;}
+.float-panel.locked{border-color:rgba(180,200,255,.25);}
+.float-panel.enlarged{position:fixed!important;left:5vw!important;top:5vh!important;width:90vw!important;height:90vh!important;z-index:20;transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease;}
+.panel-header{flex-shrink:0;padding:8px 12px;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02);cursor:grab;user-select:none;}
+.panel-header .dot-indicator{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);transition:.25s;}
+.panel-header .dot-indicator.live{background:var(--green);box-shadow:0 0 8px var(--green);}
+.panel-body{flex:1;overflow:hidden;position:relative;min-height:0;display:flex;flex-direction:column;}
+.browser-chrome{flex-shrink:0;padding:6px 10px;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.35);border-bottom:1px solid var(--line);}
+.browser-dots{display:flex;gap:4px;}
+.browser-dots span{width:8px;height:8px;border-radius:50%;background:rgba(180,200,255,.22);}
+.browser-dots span:nth-child(1){background:#ff5f57;}
+.browser-dots span:nth-child(2){background:#febc2e;}
+.browser-dots span:nth-child(3){background:#28c840;}
+.browser-url{flex:1;font-family:'Space Mono',monospace;font-size:9px;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,.05);color:rgba(200,220,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.browser-viewport{flex:1;overflow:hidden;position:relative;background:#fff;min-height:0;}
+.browser-iframe{position:absolute;inset:0;width:100%;height:100%;border:none;background:#fff;display:block;}
+.panel-hint{flex-shrink:0;padding:6px 10px;font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,.55);line-height:1.55;border-top:1px solid var(--line);background:rgba(0,0,0,.28);}
+.panel-hint b{color:var(--amber);}
+.panel-hint .ok{color:var(--green);}
+
+#arlabsPanel{left:4%;top:12%;width:min(340px,38vw);height:min(300px,44vh);}
+#promptingPanel{right:4%;top:12%;width:min(300px,34vw);height:min(200px,30vh);}
+@media (max-width:860px){
+  #arlabsPanel{left:3%;top:8%;width:46vw;height:32vh;}
+  #promptingPanel{right:3%;top:8%;width:40vw;height:22vh;}
+  .intro-center{width:80vw;}
+}
+
+.two-col{display:grid;grid-template-columns:1fr 1.15fr;gap:20px;}
+@media (max-width:860px){.two-col{grid-template-columns:1fr;}}
+.col-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+.chips{display:flex;flex-wrap:wrap;gap:9px;}
+.chip{font-family:'Space Mono',monospace;font-size:11px;padding:11px 15px;border-radius:12px;border:1px solid rgba(180,200,255,.2);background:rgba(180,200,255,.05);color:rgba(220,232,255,.8);cursor:pointer;transition:.18s;}
+.chip small{display:block;font-size:8.5px;color:rgba(180,200,255,.4);margin-top:3px;letter-spacing:.2px;}
+.chip.on{background:rgba(77,255,160,.14);border-color:rgba(77,255,160,.5);color:#fff;}
+.chip.on small{color:rgba(180,255,215,.65);}
+.prompt-wrap{position:relative;}
+.prompt{font-family:'Space Mono',monospace;font-size:10.5px;line-height:1.75;background:rgba(4,7,15,.75);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:rgba(200,220,255,.9);white-space:pre-wrap;word-break:break-word;max-height:290px;overflow-y:auto;margin-bottom:10px;position:relative;}
+.prompt-highlight{position:absolute;left:0;right:0;height:20px;background:rgba(255,200,87,.18);border-left:3px solid var(--amber);pointer-events:none;display:none;z-index:2;transition:top .08s linear;}
+.prompt-scroll-hint{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,.35);letter-spacing:.5px;margin-bottom:6px;}
+.prompt-scroll-hint b{color:var(--amber);}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;cursor:pointer;transition:.2s;backdrop-filter:blur(12px);}
+.card:hover{border-color:rgba(180,200,255,.3);}
+.card .ico{font-size:19px;margin-bottom:8px;display:block;}
+.card h3{font-size:14px;color:#fff;margin-bottom:6px;font-family:'Syne',sans-serif;font-weight:700;}
+.card p{font-size:12px;line-height:1.6;color:rgba(205,218,245,.75);}
+.card .more{max-height:0;overflow:hidden;transition:max-height .35s ease,margin .35s ease;font-size:11.5px;line-height:1.65;color:var(--amber);border-left:2px solid rgba(255,200,87,.35);padding-left:10px;margin-top:0;}
+.card.open{border-color:rgba(255,200,87,.45);}
+.card.open .more{max-height:180px;margin-top:10px;}
+
+/* ---- CHATBOT CIRCLES ---- */
+.chatbot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:820px;margin:10px auto 0;}
+@media (max-width:760px){.chatbot-grid{grid-template-columns:repeat(2,1fr);}}
+.chatbot{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.chatbot .circle{
+  width:130px;height:130px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(13,17,32,.9);
+  border:2px solid rgba(180,200,255,.22);
+  box-shadow:0 8px 24px rgba(0,0,0,.45);
+  transition:border-color .2s, box-shadow .2s, transform .2s;
+  cursor:pointer;overflow:hidden;
+}
+.chatbot .circle img{width:68px;height:68px;object-fit:contain;display:block;}
+.chatbot .circle:hover{border-color:rgba(91,200,255,.55);}
+.chatbot .circle.hot-on{
+  outline:3px solid var(--amber);outline-offset:4px;
+  box-shadow:0 0 30px rgba(255,200,87,.55);
+  transform:scale(1.04);
+}
+.chatbot .name{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1.2px;color:rgba(220,232,255,.9);text-transform:uppercase;}
+.chatbot .sub{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,.45);letter-spacing:.4px;}
+
+/* ---- QR MODAL ---- */
+#qrModal{
+  position:fixed;inset:0;z-index:50;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(4,6,18,.86);backdrop-filter:blur(10px);
+}
+#qrModal.show{display:flex;}
+#qrModalBox{
+  background:rgba(13,17,32,.98);
+  border:2px solid rgba(255,200,87,.45);
+  border-radius:24px;padding:30px 34px 26px;text-align:center;
+  max-width:440px;width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+  animation:qrIn .28s ease;
+}
+@keyframes qrIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+#qrModalBox .qr-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--amber);text-transform:uppercase;margin-bottom:16px;}
+#qrModalBox img{width:280px;height:280px;border-radius:14px;background:#fff;padding:14px;display:block;margin:0 auto 16px;}
+#qrModalBox .qr-url{font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(200,220,255,.85);word-break:break-all;line-height:1.6;margin-bottom:6px;}
+#qrModalBox .qr-hint{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,.45);letter-spacing:.5px;}
+
+/* ---- SIMON SAYS ---- */
+.simon-stage{
+  background:linear-gradient(180deg,rgba(13,17,32,.95),rgba(6,8,15,.95));
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:30px 26px;
+  max-width:640px;
+  margin:14px auto 0;
+  text-align:center;position:relative;overflow:hidden;
+  transition:border-color .3s, box-shadow .3s;
+}
+.simon-stage.detected{
+  border-color:var(--green);
+  box-shadow:0 0 40px rgba(77,255,160,.35);
+  animation:simonPop .4s ease;
+}
+@keyframes simonPop{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+.simon-emoji{font-size:96px;line-height:1;margin-bottom:14px;display:block;filter:drop-shadow(0 8px 24px rgba(255,200,87,.35));}
+.simon-prompt{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(22px,3.2vw,38px);color:#fff;margin-bottom:8px;}
+.simon-hint{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.5px;margin-bottom:18px;min-height:16px;}
+.simon-progress{display:flex;gap:28px;justify-content:center;font-family:'Space Mono',monospace;font-size:12px;color:rgba(220,232,255,.8);}
+.simon-progress b{color:var(--amber);font-size:16px;display:block;margin-top:2px;}
+.simon-progress span{display:flex;flex-direction:column;align-items:center;}
+.simon-status{
+  position:absolute;top:14px;right:18px;
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(180,200,255,.4);
+}
+.simon-status.live{color:var(--green);}
+
+/* ---- ACTIVITY MENU ---- */
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+.menu-card{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;cursor:pointer;transition:.22s;color:var(--text);backdrop-filter:blur(12px);}
+.menu-card:hover{border-color:rgba(91,200,255,.5);transform:translateY(-3px);}
+.mc-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2.5px;color:var(--blue);}
+.menu-card h3{font-size:17px;color:#fff;margin:9px 0 7px;}
+.menu-card p{font-size:12.5px;line-height:1.6;color:rgba(205,218,245,.78);}
+.mc-foot{display:block;margin-top:12px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,.4);letter-spacing:.6px;}
+
+.qbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;backdrop-filter:blur(12px);}
+.qtext{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:#fff;line-height:1.45;margin-bottom:16px;}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;}
+.opt{text-align:left;padding:14px 16px;border-radius:13px;border:1px solid rgba(180,200,255,.2);background:rgba(180,200,255,.05);color:var(--text);font-size:13.5px;cursor:pointer;transition:.18s;font-family:'DM Sans',sans-serif;}
+.opt:hover:not(:disabled){background:rgba(91,200,255,.14);border-color:rgba(91,200,255,.4);}
+.opt:disabled{cursor:default;}
+.opt.ok{border-color:var(--green);background:rgba(77,255,160,.16);color:#fff;}
+.opt.bad{border-color:var(--red);background:rgba(255,94,114,.16);color:#fff;}
+.fb{margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(255,200,87,.07);border:1px solid rgba(255,200,87,.28);font-size:12.5px;line-height:1.65;color:rgba(235,240,255,.92);display:none;}
+.fb.show{display:block;}
+.fb b{color:var(--amber);}
+
+.math-wrap{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;}
+@media (max-width:900px){.math-wrap{grid-template-columns:1fr;}}
+#mathCanvas{width:100%;height:min(48vh,380px);display:block;border-radius:16px;border:1px solid var(--line);background:#080b16;}
+.math-side{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(12px);}
+.eq{font-family:'Space Mono',monospace;font-size:15px;color:var(--amber);margin-bottom:16px;letter-spacing:.5px;}
+.sl{display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);margin-bottom:12px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:3px;background:rgba(180,200,255,.15);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--violet);box-shadow:0 0 10px rgba(181,122,255,.7);cursor:pointer;}
+.sl span{min-width:44px;text-align:right;color:var(--blue);}
+.note{font-family:'Space Mono',monospace;font-size:10px;line-height:1.7;color:rgba(180,200,255,.55);border-top:1px solid var(--line);padding-top:12px;margin-top:6px;}
+.note b{color:var(--green);}
+
+.chem-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:900px){.chem-wrap{grid-template-columns:1fr;}}
+#chemCanvas{width:100%;height:min(46vh,340px);display:block;border-radius:16px;border:1px solid var(--line);background:radial-gradient(circle at 50% 40%,#101a33,#05070d 70%);}
+
+.fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;}
+.fb-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;cursor:pointer;transition:.2s;backdrop-filter:blur(12px);}
+.fb-card:hover{border-color:rgba(180,200,255,.3);}
+.fb-card .said{font-size:12.5px;line-height:1.6;color:rgba(255,140,150,.9);margin-bottom:8px;}
+.fb-card .said::before{content:'“';}
+.fb-card .said::after{content:'”';}
+.fb-card .fix{max-height:0;overflow:hidden;transition:max-height .35s ease,margin .35s ease;font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;color:var(--green);border-left:2px solid rgba(77,255,160,.4);padding-left:10px;}
+.fb-card.open .fix{max-height:200px;margin-top:10px;}
+.fb-card .tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);}
+
+.loop{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:22px 0;}
+.loop-step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-family:'Space Mono',monospace;font-size:11px;color:rgba(215,228,255,.85);backdrop-filter:blur(12px);}
+.loop-step b{color:var(--amber);display:block;font-size:9px;letter-spacing:2px;margin-bottom:5px;}
+
+#dots{flex-shrink:0;display:flex;gap:6px;justify-content:center;padding:10px 0 16px;}
+.dot{width:30px;height:26px;border-radius:9px;border:1px solid transparent;background:transparent;cursor:pointer;position:relative;padding:0;}
+.dot::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:rgba(180,200,255,.22);transition:.2s;}
+.dot.on::after{background:var(--amber);box-shadow:0 0 14px rgba(255,200,87,.8);width:24px;border-radius:6px;}
+
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:rgba(180,200,255,.18);border-radius:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+
+<video id="cam" playsinline autoplay muted></video>
+<div id="scrim"></div>
+<canvas id="arCanvas"></canvas>
+<canvas id="pointerCanvas"></canvas>
+
+<!-- QR MODAL -->
+<div id="qrModal">
+  <div id="qrModalBox">
+    <div class="qr-label" id="qrLabel">SCAN TO OPEN</div>
+    <img id="qrImage" src="" alt="QR code">
+    <div class="qr-url" id="qrUrl"></div>
+    <div class="qr-hint">Close your left hand into a fist to dismiss</div>
+  </div>
+</div>
+
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <h1>AIR-PRESENTER</h1>
+        <p>KPI → prompt → HTML → feedback</p>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn hot" data-action="prev">◀ Prev</button>
+      <span id="counter">1 / 11</span>
+      <button class="btn hot" data-action="next">Next ▶</button>
+      <button class="btn amber hot" id="arBtn">🎥 AR Mode</button>
+      <button class="btn hot" id="swapBtn" style="font-size:10px;">⇄ Swap Hands</button>
+    </div>
+  </header>
+
+  <main id="stage">
+
+    <!-- 0 · INTRO -->
+    <section class="slide on" id="intro">
+      <div class="slide-inner" style="width:100%;max-height:100%;overflow:visible;position:relative;">
+        <div id="arlabsPanel" class="float-panel locked">
+          <div class="panel-header" id="panelHeader">
+            <span>🌐 ARLABS Browser</span>
+            <span class="dot-indicator" id="arlabsDot"></span>
+          </div>
+          <div class="panel-body">
+            <div class="browser-chrome">
+              <div class="browser-dots"><span></span><span></span><span></span></div>
+              <div class="browser-url">darawa-io.github.io/ARLABS/index.html#</div>
+            </div>
+            <div class="browser-viewport" id="browserViewport">
+              <iframe id="arlabsFrame" class="browser-iframe" title="ARLABS index page"
+                loading="eager" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+          </div>
+          <div class="panel-hint" id="panelHint">
+            <b>Left finger</b> on header 1s to grab · move · stop 1s to lock.
+            <b>Left fist → open</b> = enlarge, <b>open → fist</b> = shrink.
+            <b>Right finger</b> = the only hand that clicks.
+          </div>
+        </div>
+
+        <div id="promptingPanel" class="float-panel hot" data-action="goto" data-target="kpi">
+          <div class="panel-header" style="cursor:pointer;">
+            <span>📝 Prompting</span>
+            <span style="color:var(--amber);">→ KPI slide</span>
+          </div>
+          <div class="panel-body" style="padding:14px 16px;display:flex;flex-direction:column;justify-content:center;">
+            <p style="font-size:13px;line-height:1.6;color:rgba(210,222,250,.9);margin:0;">
+              Upload the main idea (KPIs) to the chatbot<br>and ask for the HTML file.
+            </p>
+            <p style="font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);margin-top:10px;letter-spacing:.5px;">
+              Point here to open →
+            </p>
+          </div>
+        </div>
+
+        <div class="intro-center">
+          <div class="eyebrow">Teacher Tech Lab · Build-along</div>
+          <h2>Interactive presentations<br>you steer <em>with your finger</em></h2>
+          <p class="lede">
+            One KPI list, one conversation with a chatbot, one <b>.html</b> file — and lessons in
+            English, Maths and Chemistry that students control by pointing at the air.
+          </p>
+          <div class="title-actions" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn amber big hot" id="arBtn2">🎥 Turn on AR Mode</button>
+            <button class="btn big hot" data-action="next">Show me how ▶</button>
+          </div>
+          <p class="hint" style="margin-top:16px;">
+            Left finger scrolls the panel · Left fist toggles its size · Right finger clicks.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1 · KPI -->
+    <section class="slide" id="kpi">
+      <div class="slide-inner">
+        <div class="eyebrow">Step 1 · The main idea</div>
+        <h2>Upload the KPIs, ask for the HTML</h2>
+        <p class="lede">A chatbot can't read your mind — but it can read a list. Point at the KPIs you want (or click them); the prompt writes itself on the right.</p>
+        <div class="two-col">
+          <div>
+            <div class="col-title">Pick your KPIs</div>
+            <div class="chips" id="kpiChips"></div>
+          </div>
+          <div>
+            <div class="col-title">Prompt sent to the chatbot</div>
+            <div class="prompt-scroll-hint"><b>Right finger:</b> scroll prompt &nbsp;·&nbsp; <b>Left finger:</b> highlight line</div>
+            <div class="prompt-wrap">
+              <div class="prompt-highlight" id="promptHighlight"></div>
+              <pre class="prompt" id="promptOut"></pre>
+            </div>
+            <button class="btn green hot" id="copyPrompt">⧉ Copy prompt</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · CHATBOTS (moved from slide 4) -->
+    <section class="slide" id="chatbots">
+      <div class="slide-inner">
+        <div class="eyebrow">Step 2 · Choose your assistant</div>
+        <h2>Which chatbot will you build with?</h2>
+        <p class="lede">Hold your <b>right index finger</b> on a circle for <b>1 second</b> to reveal its QR code. Close your <b>left hand into a fist</b> to dismiss it.</p>
+        <div class="chatbot-grid" id="chatbotGrid"></div>
+        <p class="hint" style="text-align:center;margin-top:18px;">All four can generate a single self‑contained HTML file from your KPI prompt.</p>
+      </div>
+    </section>
+
+    <!-- 3 · ADVANTAGES (moved from slide 3) -->
+    <section class="slide" id="advantages">
+      <div class="slide-inner">
+        <div class="eyebrow">Step 3 · The format</div>
+        <h2>Why deliver it as HTML?</h2>
+        <p class="lede">Point at a card to open it up.</p>
+        <div class="cards" id="advCards"></div>
+      </div>
+    </section>
+
+    <!-- 4 · MENU -->
+    <section class="slide" id="menu">
+      <div class="slide-inner">
+        <div class="eyebrow">Step 4 · Activity examples</div>
+        <h2>Same recipe, four subjects</h2>
+        <p class="lede">The content changes; the <b>interaction pattern</b> is what you swap. Point at a card to jump in.</p>
+        <div class="menu-grid">
+          <button class="menu-card hot" data-action="goto" data-target="english">
+            <span class="mc-tag">ENGLISH · 1</span>
+            <h3>Grammar in the air</h3>
+            <p>Four verb forms float on screen. Point at the one that completes the sentence; the explanation appears instantly.</p>
+            <span class="mc-foot">Pattern: hover + dwell select → instant feedback</span>
+          </button>
+          <button class="menu-card hot" data-action="goto" data-target="simon">
+            <span class="mc-tag">ENGLISH · 2</span>
+            <h3>Simon says</h3>
+            <p>Perform the hand or face gesture the system calls out. Score points for every correct gesture and try to keep your streak alive.</p>
+            <span class="mc-foot">Pattern: gesture recognition → game loop</span>
+          </button>
+          <button class="menu-card hot" data-action="goto" data-target="math">
+            <span class="mc-tag">MATHEMATICS</span>
+            <h3>Two hands, one parabola</h3>
+            <p>Right hand moves the vertex sideways, left hand moves it up and down, the gap between your hands changes the width.</p>
+            <span class="mc-foot">Pattern: bimanual continuous control</span>
+          </button>
+          <button class="menu-card hot" data-action="goto" data-target="chem">
+            <span class="mc-tag">CHEMISTRY</span>
+            <h3>Hold a molecule</h3>
+            <p>Rotate a water molecule by turning your palm, pull your hands apart to zoom — then answer the bonding question.</p>
+            <span class="mc-foot">Pattern: 3D object mapped to hand orientation</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · ENGLISH (grammar) -->
+    <section class="slide" id="english">
+      <div class="slide-inner">
+        <div class="eyebrow">Activity · English · Grammar</div>
+        <h2>Point at the verb form that fits</h2>
+        <p class="lede">Hover your index finger over an option for <b>0.9 s</b> — or pinch your thumb and finger to fire instantly.</p>
+        <div class="qbox">
+          <div class="qtext" id="engQ">…</div>
+          <div class="opts" id="engOpts"></div>
+          <div class="fb" id="engFb"></div>
+          <button class="btn green hot" id="engNext" style="margin-top:14px;display:none;">Next sentence ▶</button>
+        </div>
+        <div class="note" style="margin-top:14px;border:none;padding:0;">
+          KPI hit: <b>immediate feedback</b> — the learner never waits for the teacher to mark it.
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · ENGLISH · SIMON SAYS -->
+    <section class="slide" id="simon">
+      <div class="slide-inner center">
+        <div class="eyebrow">Activity · English · Simon says</div>
+        <h2>Do what Simon says</h2>
+        <p class="lede">A gesture appears — perform it in front of the camera. As soon as the system recognises it, Simon moves on to the next one.</p>
+
+        <div class="simon-stage" id="simonStage">
+          <div class="simon-status" id="simonStatus">IDLE</div>
+          <div class="simon-emoji" id="simonEmoji">🎯</div>
+          <div class="simon-prompt" id="simonPrompt">Press Start to play</div>
+          <div class="simon-hint" id="simonHint">Turn on AR Mode first</div>
+          <div class="simon-progress">
+            <span>Score<b id="simonScore">0</b></span>
+            <span>Streak<b id="simonStreak">0</b></span>
+            <span>Best<b id="simonBest">0</b></span>
+          </div>
+        </div>
+
+        <button class="btn green big hot" id="simonStart" style="margin-top:20px;">▶ Start Simon says</button>
+      </div>
+    </section>
+
+    <!-- 7 · MATH -->
+    <section class="slide" id="math">
+      <div class="slide-inner">
+        <div class="eyebrow">Activity · Mathematics</div>
+        <h2>Two hands shape the parabola</h2>
+        <p class="lede">With AR on: <b>right index</b> sets <b>h</b>, <b>left index</b> sets <b>k</b>, and the distance between your hands sets <b>a</b>. No camera? Use the sliders.</p>
+        <div class="math-wrap">
+          <canvas id="mathCanvas"></canvas>
+          <div class="math-side">
+            <div class="eq" id="mathEq">y = 1.00(x − 0.00)² + 0.00</div>
+            <label class="sl">a <input type="range" id="slA" min="0.2" max="3" step="0.05" value="1"><span id="lblA">1.00</span></label>
+            <label class="sl">h <input type="range" id="slH" min="-4" max="4" step="0.1" value="0"><span id="lblH">0.0</span></label>
+            <label class="sl">k <input type="range" id="slK" min="-4" max="4" step="0.1" value="0"><span id="lblK">0.0</span></label>
+            <div class="note">KPI hit: <b>the learner owns the parameter.</b> The graph is the feedback — change <b>a</b> and the arms open, change <b>h</b> and the whole curve slides.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · CHEM -->
+    <section class="slide" id="chem">
+      <div class="slide-inner">
+        <div class="eyebrow">Activity · Chemistry</div>
+        <h2>Hold the water molecule in your hand</h2>
+        <p class="lede">Turn your palm to rotate it. Pull both hands apart to zoom in and out.</p>
+        <div class="chem-wrap">
+          <canvas id="chemCanvas"></canvas>
+          <div class="qbox">
+            <div class="qtext">In a water molecule, the O–H bond is…</div>
+            <div class="opts" id="chemOpts"></div>
+            <div class="fb" id="chemFb"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · FEEDBACK -->
+    <section class="slide" id="feedback">
+      <div class="slide-inner">
+        <div class="eyebrow">Step 5 · Close the loop</div>
+        <h2>Feed the result back to the chatbot</h2>
+        <p class="lede">The first build is never the last one. Point at a complaint to see the re-prompt that fixes it.</p>
+        <div class="fb-grid" id="fbGrid"></div>
+        <p class="hint">Rule of thumb: describe the <b>behaviour</b> you saw, not the code you think you need.</p>
+      </div>
+    </section>
+
+    <!-- 10 · RECAP -->
+    <section class="slide" id="recap">
+      <div class="slide-inner center">
+        <div class="eyebrow">Recap</div>
+        <h2>The whole loop</h2>
+        <div class="loop">
+          <div class="loop-step"><b>01</b>Write the KPIs</div>
+          <div class="loop-step"><b>02</b>Ask for one .html file</div>
+          <div class="loop-step"><b>03</b>Open it — no install</div>
+          <div class="loop-step"><b>04</b>Test it with learners</div>
+          <div class="loop-step"><b>05</b>Describe what failed</div>
+          <div class="loop-step"><b>06</b>Re-prompt &amp; rebuild</div>
+        </div>
+        <p class="lede" style="margin:0 auto 18px;">One file. Any device. Mouse, touch or bare hands. And every iteration costs one sentence, not one week.</p>
+        <div class="title-actions">
+          <button class="btn amber big hot" id="arBtn3">🎥 Try AR Mode</button>
+          <button class="btn big hot" data-action="goto" data-target="intro">⟲ Back to the start</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer id="dots"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script>
+'use strict';
+
+/* ============================================================
+   0 · HELPERS
+   ============================================================ */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp  = (a,b,t) => a + (b-a)*t;
+
+/* ============================================================
+   0.5 · FRESH START
+   ============================================================ */
+window.addEventListener('pageshow', (e) => { if (e.persisted) window.location.reload(); });
+function hardResetPanels(){
+  $$('.float-panel').forEach(p => {
+    p.style.left = ''; p.style.top = ''; p.style.width = ''; p.style.height = '';
+    p.classList.remove('enlarged', 'grabbed');
+    p.classList.add('locked');
+  });
+}
+
+/* ============================================================
+   1 · SLIDE ENGINE
+   ============================================================ */
+const slides = $$('.slide');
+const dotsEl = $('#dots');
+let cur = 0;
+
+slides.forEach(s => {
+  const b = document.createElement('button');
+  b.className = 'dot hot';
+  b.dataset.action = 'goto';
+  b.dataset.target = s.id;
+  dotsEl.appendChild(b);
+});
+
+function goTo(i){
+  i = clamp(i, 0, slides.length - 1);
+  if(i === cur) return;
+  cur = i;
+  slides.forEach((s,k) => s.classList.toggle('on', k === cur));
+  $$('#dots .dot').forEach((d,k) => d.classList.toggle('on', k === cur));
+  $('#counter').textContent = (cur+1) + ' / ' + slides.length;
+  hoverEl = null; hoverFromIframe = false; dwellT = 0; armed = true;
+  $$('.hot-on').forEach(e => e.classList.remove('hot-on'));
+  const hl = $('#promptHighlight');
+  if(hl) hl.style.display = 'none';
+  if(!slideIs('intro')) resetPanel();
+  hideQRModal();
+  // Stop Simon says when leaving the slide
+  if(cur !== slides.findIndex(s => s.id === 'simon')) stopSimon();
+  onSlideChange();
+}
+function onSlideChange(){ resizeMath(); resizeChem(); }
+function slideIs(id){ return slides[cur] && slides[cur].id === id; }
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const a = el.dataset.action;
+  if(a === 'next') goTo(cur + 1);
+  else if(a === 'prev') goTo(cur - 1);
+  else if(a === 'goto'){
+    const i = slides.findIndex(s => s.id === el.dataset.target);
+    if(i >= 0) goTo(i);
+  }
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === ' '){ goTo(cur + 1); e.preventDefault(); }
+  if(e.key === 'ArrowLeft'){ goTo(cur - 1); }
+});
+
+/* ============================================================
+   2 · KPI PROMPT BUILDER
+   ============================================================ */
+const KPIS = [
+  {t:'Learner-centred',d:'the student acts, not just watches'},
+  {t:'Hands-on interaction',d:'every slide asks for a gesture'},
+  {t:'Immediate feedback',d:'right/wrong in under a second'},
+  {t:'Measurable outcome',d:'each activity maps to one KPI'},
+  {t:'Any device, no install',d:'one .html file, opens in a browser'},
+  {t:'Free hosting + QR',d:'GitHub Pages, join by scanning'},
+];
+KPIS.forEach((k,i) => {
+  const b = document.createElement('button');
+  b.className = 'chip hot';
+  b.dataset.idx = i;
+  b.innerHTML = k.t + '<small>' + k.d + '</small>';
+  b.addEventListener('click', () => { b.classList.toggle('on'); buildPrompt(); });
+  $('#kpiChips').appendChild(b);
+});
+function buildPrompt(){
+  const sel = $$('#kpiChips .chip.on').map(c => KPIS[parseInt(c.dataset.idx, 10)]);
+  $('#promptOut').textContent =
+`ROLE: You are a front-end developer who builds classroom interactives.
+
+TASK: Create ONE self-contained HTML file — an interactive presentation.
+
+MAIN IDEA (the KPIs it must hit):
+${sel.length ? sel.map((k,i)=>`  ${i+1}. ${k.t} — ${k.d}`).join('\n') : '  (select at least one KPI above)'}
+
+CONTENT: [paste your lesson content here]
+
+CONSTRAINTS
+  • a single .html file — no build step, no server, no install
+  • works with mouse, touch AND air gestures (MediaPipe Hands + FaceMesh)
+  • every interactive target >= 120 px, so it can be hit from across the room
+  • 60 fps on a mid-range tablet; cap devicePixelRatio at 1.5
+  • keyboard arrows + visible focus ring for accessibility
+  • one concept per slide, never a wall of text
+
+OUTPUT: the complete HTML file, ready to save and open.`;
+}
+buildPrompt();
+$('#copyPrompt').addEventListener('click', async function(){
+  try{ await navigator.clipboard.writeText($('#promptOut').textContent); this.textContent = '✓ Copied'; }
+  catch(err){ this.textContent = 'Select & copy manually'; }
+  setTimeout(() => this.textContent = '⧉ Copy prompt', 1600);
+});
+
+/* ============================================================
+   3 · ADVANTAGES
+   ============================================================ */
+const ADV = [
+  {ico:'📄',t:'One file, zero install',s:'A .html file opens in any browser on any device.',m:'No app store, no licences. Email it, share it, host it free on GitHub Pages.'},
+  {ico:'⚡',t:'Real interaction, not a video',s:'Camera, microphone, 3D, sensors — all built in.',m:'The browser already speaks to the webcam and speakers. Hand tracking is one CDN link away.'},
+  {ico:'🔁',t:'Iterate in one sentence',s:'Plain text = easy to diff and easy to re-prompt.',m:'"Make the buttons bigger" is a 30-second round trip.'},
+  {ico:'📶',t:'Runs on any OS',s:'Windows, Android, iOS, Linux, a projector PC.',m:'Anything with a browser.'},
+  {ico:'📊',t:'Data flows back to you',s:'Forms, QR codes, timing, scores.',m:'Add a form link or QR overlay and every activity becomes a formative assessment.'},
+  {ico:'🔓',t:'No vendor lock-in',s:'You own the source, forever.',m:'The file keeps working in five years — and you can hand it to a colleague.'},
+];
+ADV.forEach(a => {
+  const d = document.createElement('div');
+  d.className = 'card hot';
+  d.innerHTML = `<span class="ico">${a.ico}</span><h3>${a.t}</h3><p>${a.s}</p><div class="more">${a.m}</div>`;
+  $('#advCards').appendChild(d);
+});
+$('#advCards').addEventListener('click', e => {
+  const c = e.target.closest('.card'); if(c) c.classList.toggle('open');
+});
+
+/* ============================================================
+   3.5 · CHATBOTS
+   ============================================================ */
+const CHATBOTS = [
+  {name:'ChatGPT', sub:'OpenAI', url:'https://chatgpt.com',
+   logo:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/ChatGPT-Logo.svg/512px-ChatGPT-Logo.svg.png'},
+  {name:'DeepSeek', sub:'深度求索', url:'https://chat.deepseek.com',
+   logo:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Deepseek-logo-icon.svg/512px-Deepseek-logo-icon.svg.png'},
+  {name:'Gemini', sub:'Google', url:'https://gemini.google.com',
+   logo:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Google_Gemini_icon_2025.svg/512px-Google_Gemini_icon_2025.svg.png'},
+  {name:'Claude', sub:'Anthropic', url:'https://claude.ai',
+   logo:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Claude_AI_symbol.svg/512px-Claude_AI_symbol.svg.png'},
+];
+(function renderChatbots(){
+  const grid = $('#chatbotGrid');
+  CHATBOTS.forEach(cb => {
+    const wrap = document.createElement('div');
+    wrap.className = 'chatbot';
+    wrap.innerHTML = `
+      <div class="circle hot" data-qr-url="${cb.url}" data-qr-name="${cb.name}">
+        <img src="${cb.logo}" alt="${cb.name} logo"
+             onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'font-family:Space Mono;font-size:13px;color:rgba(220,232,255,.9);\\'>${cb.name}</span>';">
+      </div>
+      <div class="name">${cb.name}</div>
+      <div class="sub">${cb.sub}</div>
+    `;
+    grid.appendChild(wrap);
+  });
+})();
+
+/* ============================================================
+   3.6 · QR MODAL
+   ============================================================ */
+let qrVisible = false;
+function showQRModal(url, name){
+  const modal = $('#qrModal');
+  const img   = $('#qrImage');
+  $('#qrLabel').textContent = name.toUpperCase();
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=560x560&margin=10&data=' + encodeURIComponent(url);
+  $('#qrUrl').textContent = url;
+  modal.classList.add('show');
+  qrVisible = true;
+}
+function hideQRModal(){
+  if(!qrVisible && !$('#qrModal').classList.contains('show')) return;
+  $('#qrModal').classList.remove('show');
+  qrVisible = false;
+}
+$('#qrModal').addEventListener('click', (e) => {
+  if(e.target.id === 'qrModal') hideQRModal();
+});
+
+/* ============================================================
+   4 · ENGLISH (grammar)
+   ============================================================ */
+const ENG = [
+  {q:'By the time the bell rang, the students ______ their essays.',o:['had submitted','have submitted','submitted','were submitting'],a:0,w:'Past perfect ("had submitted") marks the earlier of two past events.'},
+  {q:'If I ______ taller, I would join the basketball team.',o:['were','am','will be','would be'],a:0,w:'The second conditional uses "were" for every subject.'},
+  {q:'She asked me where I ______ from.',o:['came','come','had come','will come'],a:0,w:'Reported speech backshifts the tense: come → came.'},
+  {q:'The results ______ published tomorrow morning.',o:['will be','will','are being','have'],a:0,w:'Future passive: will + be + past participle.'},
+];
+let engIdx = 0, engLocked = false;
+function renderEnglish(){
+  const Q = ENG[engIdx];
+  engLocked = false;
+  $('#engQ').textContent = Q.q;
+  $('#engFb').className = 'fb';
+  $('#engFb').textContent = '';
+  $('#engNext').style.display = 'none';
+  const wrap = $('#engOpts');
+  wrap.innerHTML = '';
+  const order = Q.o.map((t,i) => ({t, ok: i === Q.a}));
+  for(let i = order.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [order[i],order[j]] = [order[j],order[i]]; }
+  order.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt hot';
+    b.textContent = o.t;
+    b.dataset.ok = o.ok ? '1' : '0';
+    wrap.appendChild(b);
+  });
+}
+$('#engOpts').addEventListener('click', e => {
+  const b = e.target.closest('.opt');
+  if(!b || engLocked) return;
+  engLocked = true;
+  const Q = ENG[engIdx];
+  const correct = b.dataset.ok === '1';
+  $$('#engOpts .opt').forEach(x => { x.disabled = true; if(x.dataset.ok === '1') x.classList.add('ok'); });
+  if(!correct) b.classList.add('bad');
+  const fb = $('#engFb');
+  fb.className = 'fb show';
+  fb.innerHTML = '<b>' + (correct ? 'Correct. ' : 'Not quite. ') + '</b>' + Q.w;
+  $('#engNext').style.display = 'inline-block';
+});
+$('#engNext').addEventListener('click', () => { engIdx = (engIdx + 1) % ENG.length; renderEnglish(); });
+renderEnglish();
+
+/* ============================================================
+   4.5 · SIMON SAYS
+   ============================================================ */
+const SIMON_GESTURES = [
+  {type:'hand', emoji:'✊', label:'Make a fist', hint:'Close all your fingers',
+   detect: lm => isFist(lm)},
+  {type:'hand', emoji:'✋', label:'Open palm', hint:'Spread every finger wide',
+   detect: lm => isOpenPalm(lm)},
+  {type:'hand', emoji:'👍', label:'Thumbs up', hint:'Thumb out, other fingers closed',
+   detect: lm => handThumbsUp(lm)},
+  {type:'hand', emoji:'✌️', label:'Peace sign', hint:'Index and middle finger out',
+   detect: lm => handPeace(lm)},
+  {type:'hand', emoji:'☝️', label:'Point up', hint:'Only your index finger up',
+   detect: lm => handPointOnly(lm)},
+  {type:'face', emoji:'😊', label:'Smile', hint:'Give the camera a big smile',
+   detect: lm => faceSmile(lm)},
+  {type:'face', emoji:'😮', label:'Open your mouth', hint:'Open wide, like saying "oh"',
+   detect: lm => faceMouthOpen(lm)},
+  {type:'face', emoji:'🤨', label:'Raise your eyebrows', hint:'Surprise! Lift those brows',
+   detect: lm => faceBrowRaise(lm)},
+];
+
+const simon = {
+  running:false,
+  idx:0,
+  score:0,
+  streak:0,
+  best:0,
+  lastFireAt:0,
+  lockUntil:0,
+  detections:0, // consecutive frames of detection to be robust
+};
+
+function simonPick(){
+  // Avoid the same gesture twice in a row
+  let next = simon.idx;
+  while(next === simon.idx && SIMON_GESTURES.length > 1){
+    next = Math.floor(Math.random() * SIMON_GESTURES.length);
+  }
+  simon.idx = next;
+  simon.detections = 0;
+}
+
+function renderSimon(){
+  const g = SIMON_GESTURES[simon.idx];
+  $('#simonEmoji').textContent = g.emoji;
+  $('#simonPrompt').textContent = g.label;
+  $('#simonHint').textContent = g.hint + (g.type === 'face' ? '  ·  (face gesture)' : '  ·  (hand gesture)');
+  $('#simonScore').textContent = simon.score;
+  $('#simonStreak').textContent = simon.streak;
+  $('#simonBest').textContent = simon.best;
+}
+
+function startSimon(){
+  simon.running = true;
+  simon.score = 0;
+  simon.streak = 0;
+  simon.lockUntil = performance.now() + 800;
+  simon.idx = -1;
+  simonPick();
+  renderSimon();
+  $('#simonStart').textContent = '⟲ Restart';
+  $('#simonStatus').textContent = 'LIVE';
+  $('#simonStatus').classList.add('live');
+}
+function stopSimon(){
+  simon.running = false;
+  $('#simonStart').textContent = '▶ Start Simon says';
+  $('#simonStatus').textContent = 'IDLE';
+  $('#simonStatus').classList.remove('live');
+  $('#simonStage').classList.remove('detected');
+  $('#simonEmoji').textContent = '🎯';
+  $('#simonPrompt').textContent = 'Press Start to play';
+  $('#simonHint').textContent = 'Turn on AR Mode first';
+}
+$('#simonStart').addEventListener('click', () => {
+  if(simon.running){ stopSimon(); setTimeout(startSimon, 60); }
+  else if(!arOn){ alert('Turn on AR Mode first — Simon needs the camera to see your gestures.'); }
+  else startSimon();
+});
+
+function updateSimon(){
+  if(!slideIs('simon')) return;
+  if(!arOn){
+    $('#simonHint').textContent = 'Turn on AR Mode to play';
+    return;
+  }
+  if(!simon.running) return;
+
+  const now = performance.now();
+  if(now < simon.lockUntil) return;
+
+  const g = SIMON_GESTURES[simon.idx];
+  let detected = false;
+
+  if(g.type === 'hand'){
+    for(const h of handData){
+      if(!h.raw) continue;
+      try { if(g.detect(h.raw)) { detected = true; break; } } catch(e){}
+    }
+  } else if(g.type === 'face'){
+    if(faceLandmarks){
+      try { if(g.detect(faceLandmarks)) detected = true; } catch(e){}
+    }
+  }
+
+  if(detected){
+    simon.detections++;
+    if(simon.detections >= 2){ // require 2 consecutive frames for stability
+      simon.score++;
+      simon.streak++;
+      if(simon.streak > simon.best) simon.best = simon.streak;
+      renderSimon();
+
+      $('#simonStage').classList.add('detected');
+      $('#simonEmoji').textContent = '✅';
+      $('#simonPrompt').textContent = 'Well done!';
+      $('#simonHint').textContent = 'Simon is picking the next gesture…';
+
+      simon.lockUntil = now + 1500;
+      setTimeout(() => {
+        $('#simonStage').classList.remove('detected');
+        if(!simon.running) return;
+        simonPick();
+        renderSimon();
+      }, 1400);
+    }
+  } else {
+    simon.detections = 0;
+  }
+}
+
+/* ---------- hand gesture detectors ---------- */
+function handThumbsUp(lm){
+  const thumbExt = dist3(lm[4], lm[0]) > dist3(lm[3], lm[0]) * 1.15;
+  const indexExt = isFingerExtended(lm, 8, 6, 0);
+  const middleExt = isFingerExtended(lm, 12, 10, 0);
+  const ringExt = isFingerExtended(lm, 16, 14, 0);
+  const pinkyExt = isFingerExtended(lm, 20, 18, 0);
+  return thumbExt && !indexExt && !middleExt && !ringExt && !pinkyExt;
+}
+function handPeace(lm){
+  return isFingerExtended(lm, 8, 6, 0) &&
+         isFingerExtended(lm, 12, 10, 0) &&
+         !isFingerExtended(lm, 16, 14, 0) &&
+         !isFingerExtended(lm, 20, 18, 0);
+}
+function handPointOnly(lm){
+  return isFingerExtended(lm, 8, 6, 0) &&
+         !isFingerExtended(lm, 12, 10, 0) &&
+         !isFingerExtended(lm, 16, 14, 0) &&
+         !isFingerExtended(lm, 20, 18, 0);
+}
+
+/* ---------- face gesture detectors (FaceMesh 468 landmarks) ---------- */
+// Face height reference points: 10 (top of forehead), 152 (chin)
+function faceSize(lm){
+  return Math.hypot(lm[10].x - lm[152].x, lm[10].y - lm[152].y);
+}
+// Smile: mouth corners (61, 291) curve up above the upper inner lip (13)
+function faceSmile(lm){
+  const h = faceSize(lm);
+  if(h < 1e-5) return false;
+  const cornerY = (lm[61].y + lm[291].y) / 2;
+  const upperLipY = lm[13].y;
+  // When smiling, corners rise toward / above the upper lip
+  const lift = (upperLipY - cornerY) / h;
+  return lift > 0.010;
+}
+// Mouth open: distance between upper inner lip (13) and lower inner lip (14)
+function faceMouthOpen(lm){
+  const h = faceSize(lm);
+  if(h < 1e-5) return false;
+  const mouthGap = Math.hypot(lm[13].x - lm[14].x, lm[13].y - lm[14].y);
+  return mouthGap / h > 0.045;
+}
+// Brow raise: eyebrow (70, 300) lifted above eye (159, 386), normalised by eye width
+function faceBrowRaise(lm){
+  const browL = Math.hypot(lm[70].x - lm[159].x, lm[70].y - lm[159].y);
+  const browR = Math.hypot(lm[300].x - lm[386].x, lm[300].y - lm[386].y);
+  const eyeL  = Math.hypot(lm[33].x - lm[133].x, lm[33].y - lm[133].y);
+  const eyeR  = Math.hypot(lm[362].x - lm[263].x, lm[362].y - lm[263].y);
+  const denom = eyeL + eyeR;
+  if(denom < 1e-5) return false;
+  return (browL + browR) / denom > 1.35;
+}
+
+/* ============================================================
+   5 · MATH
+   ============================================================ */
+const mc = $('#mathCanvas');
+const mctx = mc.getContext('2d');
+const M = {a:1, h:0, k:0, ta:1, th:0, tk:0};
+function resizeMath(){
+  const r = mc.getBoundingClientRect();
+  if(r.width < 2) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  mc.width = Math.round(r.width*dpr);
+  mc.height = Math.round(r.height*dpr);
+}
+window.addEventListener('resize', resizeMath);
+['slA','slH','slK'].forEach((id,i) => {
+  $('#'+id).addEventListener('input', function(){
+    const v = parseFloat(this.value);
+    if(i===0) M.ta = v; else if(i===1) M.th = v; else M.tk = v;
+  });
+});
+function drawMath(){
+  const W = mc.width, H = mc.height;
+  if(W < 4) return;
+  const c = mctx;
+  const pad = 26;
+  const s = Math.min((W-pad*2)/11, (H-pad*2)/11);
+  const cx = W/2, cy = H/2;
+  const X = x => cx + x*s, Y = y => cy - y*s;
+  c.setTransform(1,0,0,1,0,0);
+  c.fillStyle = '#080b16'; c.fillRect(0,0,W,H);
+  c.strokeStyle = 'rgba(120,150,220,.10)'; c.lineWidth = 1;
+  for(let i=-5;i<=5;i++){ c.beginPath(); c.moveTo(X(i),Y(-5.5)); c.lineTo(X(i),Y(5.5)); c.stroke(); c.beginPath(); c.moveTo(X(-5.5),Y(i)); c.lineTo(X(5.5),Y(i)); c.stroke(); }
+  c.strokeStyle = 'rgba(180,200,255,.42)'; c.lineWidth = 1.6;
+  c.beginPath(); c.moveTo(X(-5.5),Y(0)); c.lineTo(X(5.5),Y(0)); c.stroke();
+  c.beginPath(); c.moveTo(X(0),Y(-5.5)); c.lineTo(X(0),Y(5.5)); c.stroke();
+  c.strokeStyle = '#5bc8ff'; c.lineWidth = Math.max(2,s*0.08);
+  c.beginPath();
+  let started = false;
+  for(let x=-5.4;x<=5.4;x+=0.04){
+    const y = M.a*(x-M.h)*(x-M.h)+M.k;
+    if(y<-6||y>6){ started=false; continue; }
+    if(!started){ c.moveTo(X(x),Y(y)); started=true; } else c.lineTo(X(x),Y(y));
+  }
+  c.stroke();
+  const vx = X(M.h), vy = Y(M.k);
+  c.fillStyle = '#ffc857'; c.beginPath(); c.arc(vx,vy,Math.max(4,s*0.14),0,6.283); c.fill();
+  c.strokeStyle = 'rgba(255,200,87,.35)'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(vx,vy); c.lineTo(X(0),vy); c.stroke();
+  c.beginPath(); c.moveTo(vx,vy); c.lineTo(vx,Y(0)); c.stroke();
+  const fs = Math.max(9,Math.min(13,s*0.34));
+  c.font = '700 ' + fs + 'px "Space Mono", monospace';
+  c.fillStyle = '#ffc857'; c.textAlign = 'left';
+  c.fillText('vertex (' + M.h.toFixed(1) + ', ' + M.k.toFixed(1) + ')', vx+10, vy-10);
+  c.fillStyle = 'rgba(180,200,255,.55)';
+  c.fillText('y = ' + M.a.toFixed(2) + '(x − ' + M.h.toFixed(2) + ')² + ' + M.k.toFixed(2), 12, 18);
+}
+function updateMath(dt){
+  if(arOn && handData.length){
+    const ptr = handData.find(h => h.pointer) || handData[0];
+    const aux = handData.find(h => !h.pointer);
+    const r = mc.getBoundingClientRect();
+    if(r.width > 2){
+      M.th = clamp(((ptr.pts[8].x - r.left)/r.width - 0.5)*10, -4, 4);
+      if(aux) M.tk = clamp((0.5 - (aux.pts[8].y - r.top)/r.height)*9, -4, 4);
+      if(aux){
+        const d = Math.hypot(ptr.pts[8].x-aux.pts[8].x, ptr.pts[8].y-aux.pts[8].y);
+        M.ta = clamp(d / Math.max(220, r.width*0.55) * 2.4, 0.2, 3);
+      }
+    }
+  }
+  const sp = arOn ? 0.22 : 1;
+  M.a = lerp(M.a, M.ta, sp); M.h = lerp(M.h, M.th, sp); M.k = lerp(M.k, M.tk, sp);
+  $('#slA').value = M.ta.toFixed(2); $('#lblA').textContent = M.ta.toFixed(2);
+  $('#slH').value = M.th.toFixed(1); $('#lblH').textContent = M.th.toFixed(1);
+  $('#slK').value = M.tk.toFixed(1); $('#lblK').textContent = M.tk.toFixed(1);
+  $('#mathEq').textContent = 'y = ' + M.a.toFixed(2) + '(x − ' + M.h.toFixed(2) + ')² + ' + M.k.toFixed(2);
+  drawMath();
+}
+
+/* ============================================================
+   6 · CHEMISTRY
+   ============================================================ */
+const chemCanvas = $('#chemCanvas');
+let chemReady = false, chemRenderer = null, chemScene = null, chemCam = null, molGroup = null;
+const molQuat = new THREE.Quaternion();
+let molScale = 1, molScaleTarget = 1;
+function buildMolecule(){
+  const g = new THREE.Group();
+  const matO = new THREE.MeshStandardMaterial({color:0xff5e72, roughness:.35, metalness:.25, emissive:0x40101a});
+  const matH = new THREE.MeshStandardMaterial({color:0xe9f0ff, roughness:.4, metalness:.2, emissive:0x1a2438});
+  const matB = new THREE.MeshStandardMaterial({color:0x7f92b3, roughness:.5, metalness:.3});
+  const o = new THREE.Mesh(new THREE.SphereGeometry(0.82,32,32), matO); g.add(o);
+  const half = (104.45/2)*Math.PI/180;
+  const L = 1.55;
+  [-1,1].forEach(side => {
+    const x = Math.sin(half)*L*side, y = -Math.cos(half)*L;
+    const h = new THREE.Mesh(new THREE.SphereGeometry(0.46,24,24), matH); h.position.set(x,y,0); g.add(h);
+    const mid = new THREE.Vector3().addVectors(o.position, h.position).multiplyScalar(0.5);
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,L,12), matB);
+    b.position.copy(mid); b.lookAt(h.position); b.rotateX(Math.PI/2); g.add(b);
+  });
+  return g;
+}
+function initChem(){
+  if(chemReady) return;
+  if(typeof THREE === 'undefined') return;
+  chemReady = true;
+  chemRenderer = new THREE.WebGLRenderer({canvas: chemCanvas, antialias:true, alpha:true});
+  chemRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  chemScene = new THREE.Scene();
+  chemCam = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  chemCam.position.set(0,0,6);
+  chemScene.add(new THREE.AmbientLight(0xffffff, 1.7));
+  const d1 = new THREE.DirectionalLight(0xffffff, 1.25); d1.position.set(4,6,6); chemScene.add(d1);
+  const d2 = new THREE.DirectionalLight(0x88aaff, .7);  d2.position.set(-6,-4,-3); chemScene.add(d2);
+  molGroup = buildMolecule(); molGroup.rotation.x = 0.25; chemScene.add(molGroup);
+  resizeChem();
+}
+function resizeChem(){
+  if(!chemReady) return;
+  const r = chemCanvas.getBoundingClientRect();
+  if(r.width < 2) return;
+  chemRenderer.setSize(r.width, r.height, false);
+  chemCam.aspect = r.width / r.height;
+  chemCam.updateProjectionMatrix();
+}
+function lmVec(lm){ return new THREE.Vector3(-lm.x, -lm.y, -lm.z*2); }
+function renderChem(){
+  if(!chemReady) return;
+  const hand = handData.find(h => h.pointer) || handData[0];
+  if(hand && hand.raw){
+    const wv = lmVec(hand.raw[0]), mv = lmVec(hand.raw[9]);
+    const iv = lmVec(hand.raw[5]), pv = lmVec(hand.raw[17]);
+    const yAx = new THREE.Vector3().subVectors(mv,wv).normalize();
+    const xAx = new THREE.Vector3().subVectors(iv,pv).normalize();
+    const zAx = new THREE.Vector3().crossVectors(xAx,yAx).normalize();
+    xAx.crossVectors(yAx,zAx).normalize();
+    const m4 = new THREE.Matrix4().makeBasis(xAx,yAx,zAx);
+    molQuat.setFromRotationMatrix(m4);
+    molGroup.quaternion.slerp(molQuat, 0.16);
+    if(handData.length > 1){
+      const d = Math.hypot(handData[0].pts[8].x-handData[1].pts[8].x, handData[0].pts[8].y-handData[1].pts[8].y);
+      molScaleTarget = clamp(d/380, 0.55, 2.1);
+    } else molScaleTarget = 1;
+  } else { molGroup.rotateY(0.006); molScaleTarget = 1; }
+  molScale = lerp(molScale, molScaleTarget, 0.1);
+  molGroup.scale.setScalar(molScale);
+  chemRenderer.render(chemScene, chemCam);
+}
+const CHEM = {a:0, w:'Oxygen pulls the shared electrons harder than hydrogen (it is more electronegative), so the bond is polar — and because the molecule is bent, that gives water its δ+ / δ− ends.'};
+const chemOpts = ['polar covalent','ionic','metallic','non-polar covalent'];
+let chemLocked = false;
+(function(){
+  const wrap = $('#chemOpts');
+  const order = chemOpts.map((t,i) => ({t, ok: i === CHEM.a}));
+  for(let i=order.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [order[i],order[j]] = [order[j],order[i]]; }
+  order.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt hot'; b.textContent = o.t; b.dataset.ok = o.ok ? '1' : '0';
+    wrap.appendChild(b);
+  });
+})();
+$('#chemOpts').addEventListener('click', e => {
+  const b = e.target.closest('.opt');
+  if(!b || chemLocked) return;
+  chemLocked = true;
+  $$('#chemOpts .opt').forEach(x => { x.disabled = true; if(x.dataset.ok === '1') x.classList.add('ok'); });
+  if(b.dataset.ok !== '1') b.classList.add('bad');
+  const fb = $('#chemFb');
+  fb.className = 'fb show';
+  fb.innerHTML = '<b>' + (b.dataset.ok === '1' ? 'Correct. ' : 'Not quite. ') + '</b>' + CHEM.w;
+});
+
+/* ============================================================
+   7 · FEEDBACK CARDS
+   ============================================================ */
+const FB = [
+  {tag:'USABILITY',said:'The buttons are too small — I keep missing them with my hand.',fix:'Re-prompt: "Make every interactive target at least 120 px, add a 0.9 s dwell ring that fills visibly, and highlight the target on hover."'},
+  {tag:'ORIENTATION',said:'I never know where my finger is pointing.',fix:'Re-prompt: "Draw a live cursor ring at each index fingertip, mirror the camera preview so movement feels natural, and label the two hands POINTER and AUX."'},
+  {tag:'COMPATIBILITY',said:'It runs on my laptop but stutters on the class tablets.',fix:'Re-prompt: "Cap devicePixelRatio at 1.5, throttle heavy redraws to 30 fps, and use one shared hand-tracking loop."'},
+  {tag:'ACCESSIBILITY',said:'One of my students is left-handed and the model flips upside down.',fix:'Re-prompt: "Separate the handedness label from the pointer role. Add a Swap Hands toggle."'},
+  {tag:'CONTENT',said:'It looks great but it does not actually teach anything.',fix:'Re-prompt: "Each slide must hit exactly one KPI and end with a checkable answer."'},
+  {tag:'PEDAGOGY',said:'Students play with it and forget the concept.',fix:'Re-prompt: "Add a one-line takeaway under every activity that names the concept in words the learner can repeat back."'},
+];
+FB.forEach(f => {
+  const d = document.createElement('div');
+  d.className = 'fb-card hot';
+  d.innerHTML = `<div class="tag">${f.tag}</div><div class="said">${f.said}</div><div class="fix">${f.fix}</div>`;
+  $('#fbGrid').appendChild(d);
+});
+$('#fbGrid').addEventListener('click', e => {
+  const c = e.target.closest('.fb-card'); if(c) c.classList.toggle('open');
+});
+
+/* ============================================================
+   8 · ARLABS LOADER
+   ============================================================ */
+const ARLABS_URL = 'https://darawa-io.github.io/ARLABS/index.html';
+async function loadArlabs(){
+  const iframe = $('#arlabsFrame');
+  try {
+    const resp = await fetch(ARLABS_URL, { mode: 'cors', cache: 'no-store' });
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    let html = await resp.text();
+    if(!/<base\s/i.test(html)){
+      html = html.replace(/<head([^>]*)>/i, '<head$1><base href="' + ARLABS_URL.replace(/index\.html?$/i, '') + '">');
+    }
+    iframe.srcdoc = html;
+    panel.srcdocMode = true;
+    if(panel.hintEl){
+      panel.hintEl.innerHTML =
+        '<span class="ok">✅ ARLABS loaded (scrollable + clickable).</span> ' +
+        '<b>Left finger</b> moves/scroolls · <b>Left fist→open</b> toggles size · <b>Right finger</b> clicks.';
+    }
+  } catch(err){
+    console.warn('[ARLABS] CORS fetch failed, using direct src:', err && err.message);
+    iframe.src = ARLABS_URL;
+    panel.srcdocMode = false;
+    if(panel.hintEl){
+      panel.hintEl.innerHTML =
+        '⚠ Cross-origin fallback: scrolling works, clicking inside the page is limited by the browser. ' +
+        '<b>Left finger</b> moves/scroolls · <b>Left fist→open</b> toggles size.';
+    }
+  }
+}
+
+/* ============================================================
+   9 · HAND + FACE TRACKING
+   ============================================================ */
+const videoEl   = $('#cam');
+const arCanvas  = $('#arCanvas');
+const arCtx     = arCanvas.getContext('2d');
+const ptrCanvas = $('#pointerCanvas');
+const ptrCtx    = ptrCanvas.getContext('2d');
+
+let arOn = false;
+let hands = null, faceMesh = null, mpCam = null;
+let handData = [];
+let faceLandmarks = null;
+let swapHands = false;
+
+let hoverEl = null;
+let hoverFromIframe = false;
+let dwellT = 0, armed = true;
+const DWELL_MS = 900;
+
+const CONN = [
+  [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
+  [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
+  [13,17],[17,18],[18,19],[19,20],[0,17]
+];
+
+function resizeAR(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  [arCanvas, ptrCanvas].forEach(cv => {
+    cv.width  = Math.round(window.innerWidth  * dpr);
+    cv.height = Math.round(window.innerHeight * dpr);
+  });
+}
+window.addEventListener('resize', resizeAR);
+resizeAR();
+
+function mapPoint(lm, W, H){
+  const vw = videoEl.videoWidth  || 640;
+  const vh = videoEl.videoHeight || 480;
+  const s  = Math.max(W/vw, H/vh);
+  const dw = vw*s, dh = vh*s;
+  const ox = (W-dw)/2, oy = (H-dh)/2;
+  return { x: ox + (1-lm.x)*dw, y: oy + lm.y*dh };
+}
+
+function roleOf(label){
+  const isRight = label === 'Right';
+  return (isRight !== swapHands) ? 'pointer' : 'aux';
+}
+
+function dist3(a,b){ return Math.hypot(a.x-b.x, a.y-b.y, (a.z||0)-(b.z||0)); }
+function isFingerExtended(lm, tip, pip, wrist){
+  return dist3(lm[tip], lm[wrist]) > dist3(lm[pip], lm[wrist]) * 1.15;
+}
+function isFist(lm){
+  const fingers = [[8,6],[12,10],[16,14],[20,18]];
+  return fingers.every(([tip,pip]) => !isFingerExtended(lm, tip, pip, 0));
+}
+function isOpenPalm(lm){
+  const fingers = [[8,6],[12,10],[16,14],[20,18]];
+  return fingers.every(([tip,pip]) => isFingerExtended(lm, tip, pip, 0));
+}
+function isPointing(lm){ return isFingerExtended(lm, 8, 6, 0); }
+
+/* ---------- iframe access ---------- */
+function iframeDoc(){
+  const iframe = $('#arlabsFrame');
+  if(!iframe) return null;
+  try {
+    const d = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+    if(!d || !d.documentElement || !d.body) return null;
+    return d;
+  } catch(e){ return null; }
+}
+function iframeRect(){
+  const iframe = $('#arlabsFrame');
+  return iframe ? iframe.getBoundingClientRect() : null;
+}
+function scrollIframeAt(x, y, deltaY){
+  const doc = iframeDoc(); const ir = iframeRect();
+  if(!doc || !ir) return false;
+  if(x < ir.left || x > ir.right || y < ir.top || y > ir.bottom) return false;
+  try {
+    const scroller = doc.scrollingElement || doc.documentElement || doc.body;
+    if(!scroller) return false;
+    scroller.scrollTop = Math.max(0, scroller.scrollTop + deltaY);
+    return true;
+  } catch(e){ return false; }
+}
+function clickIframeAt(x, y){
+  const doc = iframeDoc(); const ir = iframeRect();
+  if(!doc || !ir) return false;
+  if(x < ir.left || x > ir.right || y < ir.top || y > ir.bottom) return false;
+  try {
+    const el = doc.elementFromPoint(x - ir.left, y - ir.top);
+    if(!el) return false;
+    const clickable = (el.closest && el.closest('a, button, [onclick], [role="button"], .category, .card, li')) || el;
+    if(clickable && typeof clickable.click === 'function'){ clickable.click(); return true; }
+    if(el && typeof el.click === 'function'){ el.click(); return true; }
+  } catch(e){}
+  return false;
+}
+
+/* ---------- panel state ---------- */
+const panel = {
+  el:null, headerEl:null, hintEl:null, dotEl:null,
+  grabbed:false, locked:true, enlarged:false,
+  x:0, y:0, baseX:0, baseY:0,
+  grabOffsetX:0, grabOffsetY:0,
+  grabDwell:0, stopDwell:0,
+  lastPx:null, lastPy:null,
+  iframeScrollLastY:null,
+  prevLeftState:null,
+  leftHandSeenAt:0,
+  leftHandFirstSeenAt:0,
+  gestureCooldown:0,
+  srcdocMode:false,
+};
+function initPanel(){
+  panel.el       = $('#arlabsPanel');
+  panel.headerEl = $('#panelHeader');
+  panel.hintEl   = $('#panelHint');
+  panel.dotEl    = $('#arlabsDot');
+  const r = panel.el.getBoundingClientRect();
+  panel.x = r.left; panel.y = r.top;
+  panel.baseX = r.left; panel.baseY = r.top;
+  panel.el.classList.add('locked');
+  panel.prevLeftState = null;
+  panel.leftHandSeenAt = 0;
+  panel.leftHandFirstSeenAt = 0;
+  panel.gestureCooldown = 0;
+  panel.iframeScrollLastY = null;
+}
+function resetPanel(){
+  if(!panel.el) return;
+  panel.enlarged = false;
+  panel.el.classList.remove('enlarged');
+  panel.el.style.left = panel.baseX + 'px';
+  panel.el.style.top  = panel.baseY + 'px';
+  panel.x = panel.baseX; panel.y = panel.baseY;
+  panel.grabbed = false; panel.locked = true;
+  panel.el.classList.remove('grabbed');
+  panel.el.classList.add('locked');
+  panel.grabDwell = 0; panel.stopDwell = 0;
+  panel.iframeScrollLastY = null;
+  panel.prevLeftState = null;
+  panel.leftHandSeenAt = 0;
+  panel.leftHandFirstSeenAt = 0;
+  panel.gestureCooldown = 0;
+}
+function setPanelEnlarged(on){
+  if(!panel.el) return;
+  if(panel.enlarged === on) return;
+  panel.enlarged = on;
+  panel.el.classList.toggle('enlarged', on);
+}
+
+/* ---------- Left hand gesture, runs on EVERY slide ----------
+   1. If the QR modal is up, a fresh fist close hides it (top priority).
+   2. On the intro slide, fist→open enlarges the panel, open→fist shrinks it.
+---------------------------------------------------------------- */
+function updateLeftHandGestures(){
+  const now = performance.now();
+  const leftHand = handData.find(h => !h.pointer);
+
+  if(!leftHand || !leftHand.raw){
+    if(now - panel.leftHandSeenAt > 500){
+      panel.prevLeftState = null;
+      panel.leftHandFirstSeenAt = 0;
+    }
+    if(panel.dotEl) panel.dotEl.classList.remove('live');
+    return;
+  }
+  if(panel.leftHandSeenAt === 0 || (now - panel.leftHandSeenAt) > 500){
+    panel.leftHandFirstSeenAt = now;
+    panel.prevLeftState = null;
+  }
+  panel.leftHandSeenAt = now;
+  if(panel.dotEl) panel.dotEl.classList.add('live');
+
+  let state = null;
+  if(isFist(leftHand.raw)) state = 'fist';
+  else if(isOpenPalm(leftHand.raw)) state = 'open';
+  if(state === null) return;
+
+  const prev = panel.prevLeftState;
+  const visibleFor = panel.leftHandFirstSeenAt ? (now - panel.leftHandFirstSeenAt) : 0;
+  const sinceLast  = now - panel.gestureCooldown;
+
+  // ---- Top priority: a fresh fist close hides the QR ----
+  if(state === 'fist' && prev !== 'fist' && qrVisible){
+    hideQRModal();
+    panel.prevLeftState = state;
+    panel.gestureCooldown = now;
+    return;
+  }
+
+  // ---- Panel size toggle: only on the intro slide, with debounce ----
+  if(slideIs('intro') && prev !== null && prev !== state && visibleFor > 400 && sinceLast > 1200){
+    if(prev === 'fist' && state === 'open' && !panel.enlarged){
+      setPanelEnlarged(true);
+      panel.gestureCooldown = now;
+    } else if(prev === 'open' && state === 'fist' && panel.enlarged){
+      setPanelEnlarged(false);
+      panel.gestureCooldown = now;
+    }
+  }
+  panel.prevLeftState = state;
+}
+
+/* ---------- Left hand also drives the panel (drag + scroll) ---------- */
+function updatePanelGestures(dt){
+  if(!panel.el) return;
+  if(!slideIs('intro')) return;
+
+  const leftHand = handData.find(h => !h.pointer);
+  if(!leftHand || !leftHand.raw){
+    panel.grabDwell = 0;
+    panel.stopDwell = 0;
+    panel.iframeScrollLastY = null;
+    return;
+  }
+
+  const tip = leftHand.pts[8];
+  const px = tip.x, py = tip.y;
+  const pr = panel.el.getBoundingClientRect();
+  const now = performance.now();
+
+  if(panel.grabbed){
+    panel.x = px - panel.grabOffsetX;
+    panel.y = py - panel.grabOffsetY;
+    panel.el.style.left = panel.x + 'px';
+    panel.el.style.top  = panel.y + 'px';
+
+    const moved = Math.hypot(px - (panel.lastPx ?? px), py - (panel.lastPy ?? py));
+    if(moved < 1.4){
+      panel.stopDwell += dt * 1000;
+      if(panel.stopDwell >= 1000){
+        panel.grabbed = false;
+        panel.locked = true;
+        panel.stopDwell = 0;
+        panel.el.classList.remove('grabbed');
+        panel.el.classList.add('locked');
+        panel.baseX = panel.x;
+        panel.baseY = panel.y;
+      }
+    } else panel.stopDwell = 0;
+    panel.lastPx = px; panel.lastPy = py;
+    panel.iframeScrollLastY = null;
+    return;
+  }
+
+  const recentGesture = (now - panel.gestureCooldown) < 600;
+  const hr = panel.headerEl.getBoundingClientRect();
+  const inHeader = px >= hr.left && px <= hr.right && py >= hr.top && py <= hr.bottom;
+  if(inHeader && !panel.enlarged && !recentGesture){
+    panel.grabDwell += dt * 1000;
+    if(panel.grabDwell >= 1000){
+      panel.grabbed = true;
+      panel.locked = false;
+      panel.grabOffsetX = px - pr.left;
+      panel.grabOffsetY = py - pr.top;
+      panel.lastPx = px; panel.lastPy = py;
+      panel.stopDwell = 0; panel.grabDwell = 0;
+      panel.el.classList.add('grabbed');
+      panel.el.classList.remove('locked');
+    }
+  } else panel.grabDwell = 0;
+
+  if(!panel.grabbed){
+    const ir = iframeRect();
+    const inIframe = ir && px >= ir.left && px <= ir.right && py >= ir.top && py <= ir.bottom;
+    if(inIframe){
+      if(panel.iframeScrollLastY !== null){
+        const deltaY = py - panel.iframeScrollLastY;
+        scrollIframeAt(px, py, deltaY);
+      }
+      panel.iframeScrollLastY = py;
+    } else {
+      panel.iframeScrollLastY = null;
+    }
+  }
+}
+
+/* ---------- Hot elements ---------- */
+function getHotEls(){
+  const out = [];
+  const W = window.innerWidth, H = window.innerHeight;
+  $$('.hot').forEach(el => {
+    if(el.disabled) return;
+    const sl = el.closest('.slide');
+    if(sl && !sl.classList.contains('on')) return;
+    const r = el.getBoundingClientRect();
+    if(r.width < 4 || r.height < 4) return;
+    if(r.bottom < 0 || r.top > H || r.right < 0 || r.left > W) return;
+    out.push(el);
+  });
+  return out;
+}
+
+/* ---------- RIGHT pointer (the ONLY hand that clicks) ---------- */
+function updatePointer(dt){
+  // While the QR modal is up, ignore pointer firing
+  if(qrVisible){
+    if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
+    hoverEl = null; hoverFromIframe = false; dwellT = 0;
+    return;
+  }
+  if(!arOn || !handData.length){
+    if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
+    hoverEl = null; hoverFromIframe = false;
+    return;
+  }
+  const ptr = handData.find(h => h.pointer);
+  if(!ptr || !ptr.raw){
+    hoverEl = null; hoverFromIframe = false;
+    return;
+  }
+  if(!isPointing(ptr.raw)){
+    if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
+    hoverEl = null; hoverFromIframe = false;
+    dwellT = 0; armed = true;
+    return;
+  }
+
+  const dpr = arCanvas.width / window.innerWidth;
+  const px = ptr.pts[8].x / dpr;
+  const py = ptr.pts[8].y / dpr;
+
+  const ir = iframeRect();
+  const overIframe = ir && px >= ir.left && px <= ir.right && py >= ir.top && py <= ir.bottom;
+
+  let target = null, fromIframe = false;
+  if(overIframe){
+    target = $('#arlabsFrame');
+    fromIframe = true;
+  } else {
+    for(const el of getHotEls()){
+      const r = el.getBoundingClientRect();
+      if(px >= r.left - 8 && px <= r.right + 8 && py >= r.top - 8 && py <= r.bottom + 8){
+        target = el; break;
+      }
+    }
+  }
+
+  if(target !== hoverEl){
+    if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
+    hoverEl = target;
+    hoverFromIframe = fromIframe;
+    if(hoverEl && !fromIframe && hoverEl.classList) hoverEl.classList.add('hot-on');
+    dwellT = 0; armed = true;
+  }
+
+  if(ptr.pinch && hoverEl && armed){ doFire(px, py); armed = false; dwellT = 0; return; }
+  if(hoverEl && armed){
+    dwellT += dt * 1000;
+    if(dwellT >= DWELL_MS){ doFire(px, py); armed = false; dwellT = 0; }
+  }
+}
+function doFire(px, py){
+  if(!hoverEl) return;
+  if(hoverEl.dataset && hoverEl.dataset.qrUrl){
+    showQRModal(hoverEl.dataset.qrUrl, hoverEl.dataset.qrName || 'CHATBOT');
+    return;
+  }
+  if(hoverFromIframe){
+    const ok = clickIframeAt(px, py);
+    if(panel.hintEl){
+      const orig = panel.hintEl.innerHTML;
+      panel.hintEl.innerHTML = ok
+        ? '<span class="ok">🖱 Clicked inside ARLABS</span>'
+        : '⚠ Could not click inside ARLABS (cross-origin).';
+      setTimeout(() => { panel.hintEl.innerHTML = orig; }, 1400);
+    }
+  } else {
+    if(hoverEl.classList) hoverEl.classList.add('fired');
+    if(hoverEl.classList) setTimeout(() => hoverEl.classList.remove('fired'), 280);
+    try { hoverEl.click(); } catch(e){}
+  }
+}
+
+/* ---------- KPI prompt gestures ---------- */
+function updatePromptGestures(){
+  if(!slideIs('kpi')) return;
+  const pre = $('#promptOut');
+  const hl  = $('#promptHighlight');
+  if(!pre || !hl) return;
+  const rightHand = handData.find(h => h.pointer);
+  const leftHand  = handData.find(h => !h.pointer);
+  const dpr = arCanvas.width / window.innerWidth;
+
+  if(rightHand && rightHand.raw){
+    const r = pre.getBoundingClientRect();
+    const y = rightHand.pts[8].y / dpr;
+    const rel = clamp((y - r.top) / r.height, 0, 1);
+    pre.scrollTop = rel * (pre.scrollHeight - pre.clientHeight);
+  }
+  if(leftHand && leftHand.raw){
+    const r = pre.getBoundingClientRect();
+    const y = leftHand.pts[8].y / dpr;
+    const rel = clamp((y - r.top) / r.height, 0, 1);
+    hl.style.display = 'block';
+    hl.style.top = (r.top + rel * r.height) + 'px';
+    hl.style.height = '18px';
+  } else hl.style.display = 'none';
+}
+
+/* ---------- Draw skeletons ---------- */
+function drawAR(){
+  const c = arCtx;
+  const W = arCanvas.width, H = arCanvas.height;
+  const k = W / window.innerWidth;
+  c.setTransform(1,0,0,1,0,0);
+  c.clearRect(0,0,W,H);
+  if(!arOn) return;
+
+  handData.forEach(h => {
+    const col = h.pointer ? '255,200,87' : '91,200,255';
+    c.strokeStyle = 'rgba(' + col + ',.5)';
+    c.lineWidth = 2.2 * k;
+    c.beginPath();
+    CONN.forEach(([i,j]) => {
+      c.moveTo(h.pts[i].x, h.pts[i].y);
+      c.lineTo(h.pts[j].x, h.pts[j].y);
+    });
+    c.stroke();
+    c.fillStyle = 'rgba(' + col + ',.85)';
+    h.pts.forEach(p => { c.beginPath(); c.arc(p.x, p.y, 2.2*k, 0, 6.283); c.fill(); });
+    c.font = '700 ' + (10*k) + 'px "Space Mono", monospace';
+    c.fillStyle = 'rgba(' + col + ',.85)';
+    c.textAlign = 'left';
+    c.fillText(h.pointer ? 'POINTER' : 'AUX', h.pts[0].x + 12*k, h.pts[0].y + 4*k);
+  });
+
+  if(!handData.length){
+    c.font = '700 ' + (12*k) + 'px "Space Mono", monospace';
+    c.fillStyle = 'rgba(255,255,255,.5)';
+    c.textAlign = 'center';
+    c.fillText('show a hand to the camera · point with your index finger', W/2, H - 60*k);
+  }
+}
+
+/* ---------- Tip pointers + dwell ring for BOTH hands ---------- */
+function drawPointers(){
+  const c = ptrCtx;
+  const W = ptrCanvas.width, H = ptrCanvas.height;
+  const k = W / window.innerWidth;
+  c.setTransform(1,0,0,1,0,0);
+  c.clearRect(0,0,W,H);
+  if(!arOn || !handData.length) return;
+
+  handData.forEach(h => {
+    const tip = h.pts[8];
+    const col = h.pointer ? '255,200,87' : '91,200,255';
+    const label = h.pointer ? 'RIGHT · CLICK' : 'LEFT · MOVE';
+    const pointing = h.raw && isPointing(h.raw);
+
+    c.strokeStyle = 'rgba(' + col + ',' + (pointing ? '.28' : '.14') + ')';
+    c.lineWidth = 8*k;
+    c.beginPath(); c.arc(tip.x, tip.y, 26*k, 0, 6.283); c.stroke();
+
+    c.strokeStyle = 'rgb(' + col + ')';
+    c.globalAlpha = pointing ? 1 : 0.55;
+    c.lineWidth = 2.5*k;
+    c.beginPath(); c.arc(tip.x, tip.y, 22*k, 0, 6.283); c.stroke();
+    c.globalAlpha = 1;
+
+    c.fillStyle = 'rgb(' + col + ')';
+    c.beginPath(); c.arc(tip.x, tip.y, 5*k, 0, 6.283); c.fill();
+
+    if(h.pointer && hoverEl && dwellT > 0 && armed){
+      const prog = clamp(dwellT / DWELL_MS, 0, 1);
+      c.strokeStyle = '#ffc857';
+      c.lineWidth = 4.5*k;
+      c.beginPath();
+      c.arc(tip.x, tip.y, 22*k, -Math.PI/2, -Math.PI/2 + prog * 6.283);
+      c.stroke();
+      c.fillStyle = 'rgba(255,200,87,' + (0.08 + prog * 0.14) + ')';
+      c.beginPath(); c.arc(tip.x, tip.y, 20*k, 0, 6.283); c.fill();
+    }
+
+    c.font = '700 ' + (10*k) + 'px "Space Mono", monospace';
+    c.fillStyle = 'rgba(' + col + ',.9)';
+    c.textAlign = 'center';
+    c.fillText(label, tip.x, tip.y + 44*k);
+  });
+}
+
+/* ---------- Hand results ---------- */
+function onHandsResults(res){
+  const W = arCanvas.width, H = arCanvas.height;
+  handData = [];
+  if(res.multiHandLandmarks){
+    res.multiHandLandmarks.forEach((lm, i) => {
+      const mpLabel = (res.multiHandedness && res.multiHandedness[i])
+        ? res.multiHandedness[i].label : 'Right';
+      // MediaPipe assumes mirrored selfie; swap to match the user's real hands
+      const label = (mpLabel === 'Right') ? 'Left' : 'Right';
+      const pts = lm.map(p => mapPoint(p, W, H));
+      const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+      handData.push({
+        label,
+        pts,
+        raw: lm,
+        pointer: roleOf(label) === 'pointer',
+        pinch: pinchDist < 0.055
+      });
+    });
+  }
+  handData.sort((a,b) => (b.pointer ? 1 : 0) - (a.pointer ? 1 : 0));
+}
+
+/* ---------- Face results ---------- */
+function onFaceResults(res){
+  if(res.multiFaceLandmarks && res.multiFaceLandmarks.length){
+    faceLandmarks = res.multiFaceLandmarks[0];
+  } else {
+    faceLandmarks = null;
+  }
+}
+
+/* ---------- Start / stop AR ---------- */
+function ensureHands(){
+  if(hands) return true;
+  if(typeof Hands === 'undefined' || typeof Camera === 'undefined') return false;
+  hands = new Hands({locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + f});
+  hands.setOptions({maxNumHands:2, modelComplexity:1, minDetectionConfidence:0.6, minTrackingConfidence:0.6});
+  hands.onResults(onHandsResults);
+  return true;
+}
+function ensureFaceMesh(){
+  if(faceMesh) return true;
+  if(typeof FaceMesh === 'undefined') return false;
+  faceMesh = new FaceMesh({locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/' + f});
+  faceMesh.setOptions({maxNumFaces:1, refineLandmarks:false, minDetectionConfidence:0.5, minTrackingConfidence:0.5});
+  faceMesh.onResults(onFaceResults);
+  return true;
+}
+
+async function startAR(){
+  if(arOn) return;
+  if(!ensureHands()){
+    alert('Hand-tracking library could not load. AR mode needs an internet connection for the MediaPipe CDN.');
+    return;
+  }
+  ensureFaceMesh(); // best-effort; Simon says falls back to hand-only if it fails
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width:{ideal:640}, height:{ideal:480}, facingMode:'user' },
+      audio: false
+    });
+    videoEl.srcObject = stream;
+    await videoEl.play();
+
+    document.body.classList.add('ar');
+    arOn = true;
+    setArButtons(true);
+
+    mpCam = new Camera(videoEl, {
+      onFrame: async () => {
+        try{ await hands.send({image: videoEl}); }catch(e){}
+        // Only run FaceMesh when needed, to save CPU
+        if(faceMesh && slideIs('simon')){
+          try{ await faceMesh.send({image: videoEl}); }catch(e){}
+        }
+      },
+      width: 640, height: 480
+    });
+    mpCam.start();
+  }catch(err){
+    alert('Could not access the camera: ' + (err && err.message ? err.message : err));
+    document.body.classList.remove('ar');
+    arOn = false;
+    setArButtons(false);
+  }
+}
+function stopAR(){
+  if(!arOn) return;
+  document.body.classList.remove('ar');
+  if(mpCam){ try{ mpCam.stop(); }catch(e){} mpCam = null; }
+  if(videoEl.srcObject){
+    videoEl.srcObject.getTracks().forEach(t => t.stop());
+    videoEl.srcObject = null;
+  }
+  arOn = false;
+  handData = [];
+  faceLandmarks = null;
+  setArButtons(false);
+  if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
+  hoverEl = null; hoverFromIframe = false;
+  stopSimon();
+  drawAR();
+  drawPointers();
+}
+function setArButtons(on){
+  [$('#arBtn'), $('#arBtn2'), $('#arBtn3')].forEach(b => {
+    if(!b) return;
+    b.textContent = on ? '⏹ Exit AR' : '🎥 AR Mode';
+    b.classList.toggle('on', on);
+  });
+}
+
+/* ============================================================
+   10 · WIRE UP BUTTONS
+   ============================================================ */
+function toggleAR(){ arOn ? stopAR() : startAR(); }
+$('#arBtn').addEventListener('click', toggleAR);
+$('#arBtn2').addEventListener('click', toggleAR);
+$('#arBtn3').addEventListener('click', toggleAR);
+
+$('#swapBtn').addEventListener('click', () => {
+  swapHands = !swapHands;
+  $('#swapBtn').textContent = swapHands ? '⇄ Hands Swapped' : '⇄ Swap Hands';
+  $('#swapBtn').classList.toggle('on', swapHands);
+});
+
+/* ============================================================
+   11 · MAIN LOOP
+   ============================================================ */
+let last = performance.now();
+let chemAccum = 0;
+
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+
+  updatePointer(dt);
+  updateLeftHandGestures(); // runs on every slide
+  updatePanelGestures(dt);  // drag/scroll only on intro
+  updatePromptGestures();
+  updateSimon();
+  drawAR();
+  drawPointers();
+
+  if(slideIs('math')) updateMath(dt);
+  if(slideIs('chem')){
+    if(!chemReady) initChem();
+    chemAccum += dt;
+    if(chemAccum > 0.033){ chemAccum = 0; renderChem(); }
+  }
+}
+
+/* ============================================================
+   12 · BOOT
+   ============================================================ */
+goTo(0);
+hardResetPanels();
+initPanel();
+resizeMath();
+loadArlabs();
+setTimeout(() => { initChem(); resizeChem(); resizeMath(); initPanel(); }, 400);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
