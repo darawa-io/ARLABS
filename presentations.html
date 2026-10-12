@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Air-Presenter · Interactive HTML Presentations with Hand Tracking</title>
+<title>Interactive Presentations with a Chatbot</title>
+<link rel="icon" type="image/png" href="assets/logo1.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
 :root{
@@ -27,8 +28,8 @@ body.ar #scrim{display:block;}
 #app{position:fixed;inset:0;z-index:3;display:flex;flex-direction:column;}
 #topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 18px;background:linear-gradient(180deg,rgba(6,8,15,.85),rgba(6,8,15,0));}
 .brand{display:flex;align-items:center;gap:11px;}
-.brand .mark{width:34px;height:34px;border-radius:10px;flex-shrink:0;background:conic-gradient(from 210deg,var(--amber),var(--blue),var(--violet),var(--amber));box-shadow:0 0 20px rgba(91,200,255,.35);position:relative;}
-.brand .mark::after{content:'';position:absolute;inset:5px;border-radius:6px;background:#06080f;}
+.brand .mark{width:38px;height:38px;flex-shrink:0;opacity:0.9;display:flex;align-items:center;justify-content:center;}
+.brand .mark svg{width:100%;height:100%;}
 .brand h1{font-size:13.5px;letter-spacing:1.4px;color:#fff;}
 .brand p{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:2px;}
 .nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
@@ -42,6 +43,27 @@ body.ar #scrim{display:block;}
 .btn.big{font-size:13.5px;padding:14px 24px;border-radius:14px;}
 .btn:disabled{opacity:.32;cursor:not-allowed;}
 .btn.on{background:rgba(255,200,87,.22);border-color:var(--amber);color:#fff;}
+
+#qrBtn{
+  width:36px;height:36px;padding:0;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:10px;
+  background:rgba(255,200,87,.07);
+  border:1px solid rgba(255,200,87,.3);
+  color:rgba(255,200,87,.7);
+  cursor:pointer;transition:all .2s;
+}
+#qrBtn:hover{background:rgba(255,200,87,.18);color:#ffc857;border-color:rgba(255,200,87,.6);}
+#qrBtn svg{width:18px;height:18px;display:block;}
+
+#qrBtnModal{display:none;position:fixed;inset:0;z-index:60;background:rgba(4,6,18,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#qrBtnModal.show{display:flex;}
+#qrBtnBox{background:rgba(6,8,20,.97);border:1px solid rgba(255,200,87,.3);border-radius:20px;padding:26px 24px 22px;text-align:center;position:relative;max-width:300px;width:90%;}
+#qrBtnBox h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(255,200,87,.5);text-transform:uppercase;margin-bottom:14px;}
+#qrBtnBox img{width:200px;height:200px;border-radius:12px;border:2px solid rgba(255,200,87,.2);display:block;margin:0 auto 14px;background:#fff;padding:10px;}
+#qrBtnBox p{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(255,200,87,.45);letter-spacing:1px;word-break:break-all;line-height:1.7;}
+#qrBtnClose{position:absolute;top:10px;right:13px;background:none;border:none;color:rgba(255,200,87,.45);font-size:17px;cursor:pointer;line-height:1;transition:color .2s;padding:2px 4px;}
+#qrBtnClose:hover{color:#ffc857;}
 
 #stage{position:relative;flex:1;overflow:hidden;}
 .slide{position:absolute;inset:0;padding:8px 22px 14px;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(16px) scale(.99);transition:opacity .34s ease,transform .34s ease;pointer-events:none;}
@@ -118,66 +140,27 @@ body.ar #scrim{display:block;}
 .card.open{border-color:rgba(255,200,87,.45);}
 .card.open .more{max-height:180px;margin-top:10px;}
 
-/* ---- CHATBOT CIRCLES ---- */
 .chatbot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:820px;margin:10px auto 0;}
 @media (max-width:760px){.chatbot-grid{grid-template-columns:repeat(2,1fr);}}
 .chatbot{display:flex;flex-direction:column;align-items:center;gap:12px;}
-.chatbot .circle{
-  width:130px;height:130px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(13,17,32,.9);
-  border:2px solid rgba(180,200,255,.22);
-  box-shadow:0 8px 24px rgba(0,0,0,.45);
-  transition:border-color .2s, box-shadow .2s, transform .2s;
-  cursor:pointer;overflow:hidden;
-}
+.chatbot .circle{width:130px;height:130px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(13,17,32,.9);border:2px solid rgba(180,200,255,.22);box-shadow:0 8px 24px rgba(0,0,0,.45);transition:border-color .2s, box-shadow .2s, transform .2s;cursor:pointer;overflow:hidden;}
 .chatbot .circle img{width:68px;height:68px;object-fit:contain;display:block;}
 .chatbot .circle:hover{border-color:rgba(91,200,255,.55);}
-.chatbot .circle.hot-on{
-  outline:3px solid var(--amber);outline-offset:4px;
-  box-shadow:0 0 30px rgba(255,200,87,.55);
-  transform:scale(1.04);
-}
+.chatbot .circle.hot-on{outline:3px solid var(--amber);outline-offset:4px;box-shadow:0 0 30px rgba(255,200,87,.55);transform:scale(1.04);}
 .chatbot .name{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1.2px;color:rgba(220,232,255,.9);text-transform:uppercase;}
 .chatbot .sub{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(180,200,255,.45);letter-spacing:.4px;}
 
-/* ---- QR MODAL ---- */
-#qrModal{
-  position:fixed;inset:0;z-index:50;display:none;
-  align-items:center;justify-content:center;
-  background:rgba(4,6,18,.86);backdrop-filter:blur(10px);
-}
+#qrModal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(4,6,18,.86);backdrop-filter:blur(10px);}
 #qrModal.show{display:flex;}
-#qrModalBox{
-  background:rgba(13,17,32,.98);
-  border:2px solid rgba(255,200,87,.45);
-  border-radius:24px;padding:30px 34px 26px;text-align:center;
-  max-width:440px;width:90%;
-  box-shadow:0 20px 60px rgba(0,0,0,.7);
-  animation:qrIn .28s ease;
-}
+#qrModalBox{background:rgba(13,17,32,.98);border:2px solid rgba(255,200,87,.45);border-radius:24px;padding:30px 34px 26px;text-align:center;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.7);animation:qrIn .28s ease;}
 @keyframes qrIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 #qrModalBox .qr-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--amber);text-transform:uppercase;margin-bottom:16px;}
 #qrModalBox img{width:280px;height:280px;border-radius:14px;background:#fff;padding:14px;display:block;margin:0 auto 16px;}
 #qrModalBox .qr-url{font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(200,220,255,.85);word-break:break-all;line-height:1.6;margin-bottom:6px;}
 #qrModalBox .qr-hint{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,.45);letter-spacing:.5px;}
 
-/* ---- SIMON SAYS ---- */
-.simon-stage{
-  background:linear-gradient(180deg,rgba(13,17,32,.95),rgba(6,8,15,.95));
-  border:1px solid var(--line);
-  border-radius:24px;
-  padding:30px 26px;
-  max-width:640px;
-  margin:14px auto 0;
-  text-align:center;position:relative;overflow:hidden;
-  transition:border-color .3s, box-shadow .3s;
-}
-.simon-stage.detected{
-  border-color:var(--green);
-  box-shadow:0 0 40px rgba(77,255,160,.35);
-  animation:simonPop .4s ease;
-}
+.simon-stage{background:linear-gradient(180deg,rgba(13,17,32,.95),rgba(6,8,15,.95));border:1px solid var(--line);border-radius:24px;padding:30px 26px;max-width:640px;margin:14px auto 0;text-align:center;position:relative;overflow:hidden;transition:border-color .3s, box-shadow .3s;}
+.simon-stage.detected{border-color:var(--green);box-shadow:0 0 40px rgba(77,255,160,.35);animation:simonPop .4s ease;}
 @keyframes simonPop{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
 .simon-emoji{font-size:96px;line-height:1;margin-bottom:14px;display:block;filter:drop-shadow(0 8px 24px rgba(255,200,87,.35));}
 .simon-prompt{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(22px,3.2vw,38px);color:#fff;margin-bottom:8px;}
@@ -185,15 +168,9 @@ body.ar #scrim{display:block;}
 .simon-progress{display:flex;gap:28px;justify-content:center;font-family:'Space Mono',monospace;font-size:12px;color:rgba(220,232,255,.8);}
 .simon-progress b{color:var(--amber);font-size:16px;display:block;margin-top:2px;}
 .simon-progress span{display:flex;flex-direction:column;align-items:center;}
-.simon-status{
-  position:absolute;top:14px;right:18px;
-  font-family:'Space Mono',monospace;font-size:9px;
-  letter-spacing:1.5px;text-transform:uppercase;
-  color:rgba(180,200,255,.4);
-}
+.simon-status{position:absolute;top:14px;right:18px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,200,255,.4);}
 .simon-status.live{color:var(--green);}
 
-/* ---- ACTIVITY MENU ---- */
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
 .menu-card{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;cursor:pointer;transition:.22s;color:var(--text);backdrop-filter:blur(12px);}
 .menu-card:hover{border-color:rgba(91,200,255,.5);transform:translateY(-3px);}
@@ -219,16 +196,39 @@ body.ar #scrim{display:block;}
 #mathCanvas{width:100%;height:min(48vh,380px);display:block;border-radius:16px;border:1px solid var(--line);background:#080b16;}
 .math-side{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(12px);}
 .eq{font-family:'Space Mono',monospace;font-size:15px;color:var(--amber);margin-bottom:16px;letter-spacing:.5px;}
-.sl{display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);margin-bottom:12px;}
-.sl input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:3px;background:rgba(180,200,255,.15);outline:none;}
-.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--violet);box-shadow:0 0 10px rgba(181,122,255,.7);cursor:pointer;}
+.sl{display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);margin-bottom:12px;padding:6px 8px;border-radius:10px;border:1px solid transparent;transition:all .2s;}
+.sl.grabbed{border-color:var(--amber);background:rgba(255,200,87,.08);}
+.sl.grabbed span{color:var(--amber);font-weight:700;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:3px;background:rgba(180,200,255,.15);outline:none;pointer-events:auto;transition:height .2s;}
+.sl.grabbed input[type=range]{height:6px;background:rgba(255,200,87,.3);}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--violet);box-shadow:0 0 10px rgba(181,122,255,.7);cursor:pointer;transition:all .2s;}
+.sl.grabbed input[type=range]::-webkit-slider-thumb{background:var(--amber);box-shadow:0 0 16px rgba(255,200,87,.9);width:22px;height:22px;}
 .sl span{min-width:44px;text-align:right;color:var(--blue);}
 .note{font-family:'Space Mono',monospace;font-size:10px;line-height:1.7;color:rgba(180,200,255,.55);border-top:1px solid var(--line);padding-top:12px;margin-top:6px;}
 .note b{color:var(--green);}
 
+.poly-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;max-width:1000px;margin:0 auto;}
+@media (max-width:900px){.poly-wrap{grid-template-columns:1fr;}}
+#polyCanvas{width:100%;height:min(52vh,420px);display:block;border-radius:16px;border:1px solid var(--line);background:radial-gradient(circle at 50% 40%,#101a33,#05070d 70%);}
+.poly-side{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;backdrop-filter:blur(12px);display:flex;flex-direction:column;gap:12px;}
+.poly-count{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.poly-num{font-family:'Syne',sans-serif;font-size:64px;font-weight:800;color:var(--amber);line-height:1;text-align:center;transition:color .2s, transform .15s;}
+.poly-num.pulse{transform:scale(1.08);}
+.poly-num.bad{color:var(--red);}
+.poly-hands{font-family:'Space Mono',monospace;font-size:9.5px;color:rgba(180,200,255,.55);text-align:center;letter-spacing:.6px;min-height:14px;}
+.poly-hands .live{color:var(--green);}
+.poly-msg{font-family:'Space Mono',monospace;font-size:11px;color:rgba(220,232,255,.85);line-height:1.6;text-align:center;min-height:36px;}
+.poly-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--green);text-align:center;margin-top:4px;min-height:24px;}
+.poly-help{font-family:'Space Mono',monospace;font-size:9px;color:rgba(180,200,255,.5);line-height:1.6;border-top:1px solid var(--line);padding-top:10px;margin-top:auto;}
+.poly-help b{color:var(--amber);}
+
 .chem-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media (max-width:900px){.chem-wrap{grid-template-columns:1fr;}}
 #chemCanvas{width:100%;height:min(46vh,340px);display:block;border-radius:16px;border:1px solid var(--line);background:radial-gradient(circle at 50% 40%,#101a33,#05070d 70%);}
+.chem-selector{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.chem-chip{font-family:'Space Mono',monospace;font-size:9.5px;padding:6px 11px;border-radius:9px;border:1px solid rgba(180,200,255,.2);background:rgba(180,200,255,.05);color:rgba(220,232,255,.7);cursor:pointer;transition:.18s;}
+.chem-chip:hover{background:rgba(91,200,255,.14);}
+.chem-chip.on{background:rgba(77,255,160,.16);border-color:var(--green);color:#fff;}
 
 .fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;}
 .fb-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;cursor:pointer;transition:.2s;backdrop-filter:blur(12px);}
@@ -261,7 +261,6 @@ body.ar #scrim{display:block;}
 <canvas id="arCanvas"></canvas>
 <canvas id="pointerCanvas"></canvas>
 
-<!-- QR MODAL -->
 <div id="qrModal">
   <div id="qrModalBox">
     <div class="qr-label" id="qrLabel">SCAN TO OPEN</div>
@@ -271,18 +270,36 @@ body.ar #scrim{display:block;}
   </div>
 </div>
 
+<div id="qrBtnModal">
+  <div id="qrBtnBox">
+    <button id="qrBtnClose">&#x2715;</button>
+    <h3>Open on device</h3>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&color=ffc857&bgcolor=06080f&data=https%3A%2F%2Fdarawa-io.github.io%2FARLABS%2Fpresentations.html" alt="QR code">
+    <p>darawa-io.github.io/ARLABS/presentations.html</p>
+  </div>
+</div>
+
 <div id="app">
   <header id="topbar">
     <div class="brand">
-      <div class="mark"></div>
+      <div class="mark">
+        <svg viewBox="0 0 600 652" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g fill="#BBBBBB" transform="translate(0 652) scale(0.1 -0.1)"><path d="m2780,6013c-410,-25 -836,-170 -1195,-408c-666,-441 -1097,-1146 -1185,-1935c-16,-136 -16,-426 -1,-560c40,-359 168,-736 362,-1067c88,-149 80,-146 124,-48l37,84l-65,124c-162,308 -258,604 -297,922c-27,216 -9,559 41,795c133,616 538,1198 1079,1552c388,254 819,382 1285,381c364,-1 676,-74 1010,-238c755,-369 1283,-1119 1375,-1955c16,-142 13,-437 -5,-575c-13,-97 -52,-275 -91,-412c-3,-13 -2,-23 2,-23c29,0 160,115 189,165c53,90 87,417 74,712c-24,527 -209,1028 -544,1474c-110,146 -362,395 -513,508c-504,374 -1063,542 -1682,504z"/><path d="m2879,5460c-78,-23 -124,-92 -116,-173c2,-26 13,-61 24,-75c18,-25 71,-66 94,-74c6,-2 7,-306 3,-860l-7,-857l-31,-7c-88,-19 -177,-90 -224,-179c-24,-44 -27,-61 -27,-145c0,-85 3,-101 28,-148c38,-73 108,-137 176,-163c77,-29 195,-24 266,11c61,30 126,95 156,156c27,57 36,164 20,231c-27,107 -116,200 -223,231l-58,17l0,858c0,652 3,858 12,855c12,-4 93,-121 415,-595c332,-490 680,-1001 760,-1115l54,-77l-34,-38c-66,-73 -82,-117 -82,-223c0,-80 4,-102 24,-140c32,-61 96,-126 156,-158c44,-24 61,-27 145,-27c84,0 102,3 152,28c115,56 182,167 182,297c0,90 -26,159 -84,223c-95,104 -198,130 -366,92c-35,-8 -25,-20 -260,325c-47,69 -136,199 -198,290c-99,145 -562,827 -730,1075l-61,90l22,45c28,53 28,82 4,135c-24,52 -56,80 -106,94c-45,12 -50,12 -86,1z"/><path d="m5455,2629c-22,-18 -62,-53 -88,-78l-48,-46l3,-565c2,-440 0,-587 -11,-663c-7,-54 -11,-101 -7,-104c12,-12 115,106 146,168c55,108 60,155 58,554c0,198 -4,451 -7,563l-6,202l-40,-31z"/><path d="m5002,2384c-110,-87 -108,-77 -93,-472c12,-337 8,-406 -24,-456c-26,-39 -76,-56 -185,-63c-118,-7 -127,0 -89,75c20,39 24,62 24,133c0,79 -3,92 -35,155c-63,123 -167,180 -316,172c-73,-4 -94,-10 -167,-46c-109,-54 -206,-143 -314,-289c-47,-64 -90,-113 -100,-113c-14,0 -15,13 -10,123c3,68 2,129 -2,136c-10,16 -60,-5 -110,-47c-32,-27 -34,-31 -41,-127c-9,-118 -13,-131 -51,-150c-35,-19 -162,-20 -177,-2c-5,6 -16,38 -23,71c-7,32 -20,68 -30,79c-17,21 -17,21 -83,-43l-67,-65l31,-95l31,-94l-27,-51c-84,-156 -257,-350 -384,-430l-45,-28l58,-20c61,-20 67,-33 26,-55c-33,-18 -146,-8 -284,24c-179,42 -191,42 -250,-3c-72,-56 -68,-72 29,-106c174,-61 385,-84 475,-52c63,22 127,70 228,173c117,118 214,246 259,342c20,41 41,86 47,100c10,19 30,29 102,50c50,15 104,34 122,43c43,23 55,21 84,-9c53,-57 66,-59 294,-57c147,1 236,7 295,18c141,28 192,29 272,9c48,-13 107,-19 173,-18c177,1 292,53 368,166c79,120 93,243 77,718c-7,195 -13,356 -14,358c-2,1 -35,-23 -74,-54zm-625,-682c76,-39 120,-121 95,-177c-16,-35 -141,-92 -252,-115c-107,-22 -357,-37 -379,-22c-20,14 -7,39 67,127c75,88 192,175 269,200c61,19 147,13 200,-13z"/><path d="m1084,2227l-69,-68l58,-54c32,-30 65,-55 73,-55c8,0 39,22 68,50l53,50l29,-31c16,-17 43,-39 61,-50c38,-24 49,-20 112,45l44,45l-58,65c-31,36 -60,66 -64,66c-4,0 -33,-27 -65,-59l-58,-59l-58,61l-58,62l-68,-68z"/><path d="m2769,2272c-14,-9 -53,-41 -87,-71l-62,-54l1,-588c1,-481 4,-586 15,-582c21,8 89,102 123,170c18,36 35,91 41,130c10,73 11,702 1,895l-6,118l-26,-18z"/><path d="m3941,2219l-64,-70l64,-65c35,-35 69,-64 75,-64c19,0 114,108 114,130c0,19 -104,141 -119,139c-3,0 -35,-32 -70,-70z"/><path d="m1195,1926c-57,-49 -175,-226 -214,-320c-21,-50 -25,-78 -26,-156c0,-86 3,-100 29,-147c82,-148 314,-188 485,-83c153,94 200,287 114,469c-32,67 -107,149 -183,201c-57,38 -133,80 -147,80c-5,0 -31,-20 -58,-44zm122,-226c58,-33 113,-95 142,-161c28,-60 26,-90 -6,-121c-39,-38 -78,-50 -154,-51c-145,0 -230,90 -185,198c30,71 111,162 146,165c3,0 28,-13 57,-30z"/><path d="m2013,1864c-129,-47 -223,-209 -223,-384c0,-170 75,-259 242,-290c54,-10 69,-9 212,16l39,7l-23,-42c-25,-43 -119,-141 -180,-187c-99,-74 -221,-111 -394,-120c-150,-8 -162,-13 -110,-47c98,-65 239,-102 359,-95c196,13 383,179 458,407c99,297 29,607 -160,718c-56,32 -157,40 -220,17zm138,-200c57,-28 121,-135 135,-221c6,-40 5,-42 -20,-49c-15,-3 -64,-4 -110,-2c-193,10 -273,123 -169,239c52,57 98,67 164,33z"/><path d="m4400,1011c-14,-5 -70,-38 -125,-75c-198,-132 -417,-229 -649,-286c-129,-31 -323,-60 -409,-60c-128,0 -265,-47 -322,-109c-37,-41 -13,-46 238,-46c304,0 484,29 744,119c255,89 534,253 723,424l45,41l-110,0c-60,-1 -121,-4 -135,-8z"/></g></svg>
+      </div>
       <div>
-        <h1>AIR-PRESENTER</h1>
+        <h1>INTERACTIVE PRESENTATIONS</h1>
         <p>KPI → prompt → HTML → feedback</p>
       </div>
     </div>
     <div class="nav">
+      <button id="qrBtn" class="hot" title="Open presentations on another device" aria-label="Show QR code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+          <path d="M14 14h2v2h-2z M18 14h3 M14 18h2 M18 18h3v3 M21 15v1"/><path d="M16 16h2"/>
+        </svg>
+      </button>
       <button class="btn hot" data-action="prev">◀ Prev</button>
-      <span id="counter">1 / 11</span>
+      <span id="counter">1 / 12</span>
       <button class="btn hot" data-action="next">Next ▶</button>
       <button class="btn amber hot" id="arBtn">🎥 AR Mode</button>
       <button class="btn hot" id="swapBtn" style="font-size:10px;">⇄ Swap Hands</button>
@@ -333,7 +350,7 @@ body.ar #scrim{display:block;}
 
         <div class="intro-center">
           <div class="eyebrow">Teacher Tech Lab · Build-along</div>
-          <h2>Interactive presentations<br>you steer <em>with your finger</em></h2>
+          <h2>Interactive presentations<br><em>with a chatbot</em></h2>
           <p class="lede">
             One KPI list, one conversation with a chatbot, one <b>.html</b> file — and lessons in
             English, Maths and Chemistry that students control by pointing at the air.
@@ -373,7 +390,7 @@ body.ar #scrim{display:block;}
       </div>
     </section>
 
-    <!-- 2 · CHATBOTS (moved from slide 4) -->
+    <!-- 2 · CHATBOTS -->
     <section class="slide" id="chatbots">
       <div class="slide-inner">
         <div class="eyebrow">Step 2 · Choose your assistant</div>
@@ -384,7 +401,7 @@ body.ar #scrim{display:block;}
       </div>
     </section>
 
-    <!-- 3 · ADVANTAGES (moved from slide 3) -->
+    <!-- 3 · ADVANTAGES -->
     <section class="slide" id="advantages">
       <div class="slide-inner">
         <div class="eyebrow">Step 3 · The format</div>
@@ -398,7 +415,7 @@ body.ar #scrim{display:block;}
     <section class="slide" id="menu">
       <div class="slide-inner">
         <div class="eyebrow">Step 4 · Activity examples</div>
-        <h2>Same recipe, four subjects</h2>
+        <h2>Same recipe, five activities</h2>
         <p class="lede">The content changes; the <b>interaction pattern</b> is what you swap. Point at a card to jump in.</p>
         <div class="menu-grid">
           <button class="menu-card hot" data-action="goto" data-target="english">
@@ -414,22 +431,28 @@ body.ar #scrim{display:block;}
             <span class="mc-foot">Pattern: gesture recognition → game loop</span>
           </button>
           <button class="menu-card hot" data-action="goto" data-target="math">
-            <span class="mc-tag">MATHEMATICS</span>
-            <h3>Two hands, one parabola</h3>
-            <p>Right hand moves the vertex sideways, left hand moves it up and down, the gap between your hands changes the width.</p>
-            <span class="mc-foot">Pattern: bimanual continuous control</span>
+            <span class="mc-tag">MATHEMATICS · 1</span>
+            <h3>Parabola explorer</h3>
+            <p>Grab a slider with your index finger and slide it. The graph is the feedback — the arms open, the vertex slides.</p>
+            <span class="mc-foot">Pattern: grab-and-drag parameter playground</span>
+          </button>
+          <button class="menu-card hot" data-action="goto" data-target="poly">
+            <span class="mc-tag">MATHEMATICS · 2</span>
+            <h3>Polyhedrons</h3>
+            <p>Show how many faces with your fingers — a closed fist counts as 10. The Platonic solid appears, then open your right fist to unfold it into a flat net.</p>
+            <span class="mc-foot">Pattern: gesture count → 3D reveal → edge unfold</span>
           </button>
           <button class="menu-card hot" data-action="goto" data-target="chem">
             <span class="mc-tag">CHEMISTRY</span>
             <h3>Hold a molecule</h3>
-            <p>Rotate a water molecule by turning your palm, pull your hands apart to zoom — then answer the bonding question.</p>
+            <p>Pick from six molecules, rotate them with your palm, pull your hands apart to zoom — then answer the bonding question.</p>
             <span class="mc-foot">Pattern: 3D object mapped to hand orientation</span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- 5 · ENGLISH (grammar) -->
+    <!-- 5 · ENGLISH grammar -->
     <section class="slide" id="english">
       <div class="slide-inner">
         <div class="eyebrow">Activity · English · Grammar</div>
@@ -447,7 +470,7 @@ body.ar #scrim{display:block;}
       </div>
     </section>
 
-    <!-- 6 · ENGLISH · SIMON SAYS -->
+    <!-- 6 · SIMON SAYS -->
     <section class="slide" id="simon">
       <div class="slide-inner center">
         <div class="eyebrow">Activity · English · Simon says</div>
@@ -470,34 +493,59 @@ body.ar #scrim{display:block;}
       </div>
     </section>
 
-    <!-- 7 · MATH -->
+    <!-- 7 · MATH parabola -->
     <section class="slide" id="math">
       <div class="slide-inner">
-        <div class="eyebrow">Activity · Mathematics</div>
-        <h2>Two hands shape the parabola</h2>
-        <p class="lede">With AR on: <b>right index</b> sets <b>h</b>, <b>left index</b> sets <b>k</b>, and the distance between your hands sets <b>a</b>. No camera? Use the sliders.</p>
+        <div class="eyebrow">Activity · Mathematics · Parabola</div>
+        <h2>Grab a slider, watch the parabola</h2>
+        <p class="lede">Place your <b>right index finger</b> on a slider — it lights up and starts following your finger. Move your hand away to release it. The vertex always sits at (h, k).</p>
         <div class="math-wrap">
           <canvas id="mathCanvas"></canvas>
           <div class="math-side">
             <div class="eq" id="mathEq">y = 1.00(x − 0.00)² + 0.00</div>
-            <label class="sl">a <input type="range" id="slA" min="0.2" max="3" step="0.05" value="1"><span id="lblA">1.00</span></label>
-            <label class="sl">h <input type="range" id="slH" min="-4" max="4" step="0.1" value="0"><span id="lblH">0.0</span></label>
-            <label class="sl">k <input type="range" id="slK" min="-4" max="4" step="0.1" value="0"><span id="lblK">0.0</span></label>
-            <div class="note">KPI hit: <b>the learner owns the parameter.</b> The graph is the feedback — change <b>a</b> and the arms open, change <b>h</b> and the whole curve slides.</div>
+            <label class="sl" id="slWrapA">a <input type="range" id="slA" min="-3" max="3" step="0.05" value="1"><span id="lblA">1.00</span></label>
+            <label class="sl" id="slWrapH">h <input type="range" id="slH" min="-4" max="4" step="0.1" value="0"><span id="lblH">0.0</span></label>
+            <label class="sl" id="slWrapK">k <input type="range" id="slK" min="-4" max="4" step="0.1" value="0"><span id="lblK">0.0</span></label>
+            <div class="note">KPI hit: <b>the learner owns the parameter.</b> Drag <b>a</b> through 0 to watch the parabola flip.</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 8 · CHEM -->
+    <!-- 8 · POLYHEDRONS -->
+    <section class="slide" id="poly">
+      <div class="slide-inner">
+        <div class="eyebrow">Activity · Mathematics · Polyhedrons</div>
+        <h2>How many faces?</h2>
+        <p class="lede">Show the number with your fingers — you can use <b>both hands</b>. A <b>closed fist counts as 10</b>, so 12 is a fist plus two fingers. Press <b>Confirm</b> when ready. Open your <b>right fist</b> to unfold the solid along its edges into a flat net; close it to fold back. Rotate your <b>left hand</b> to spin the model.</p>
+        <div class="poly-wrap">
+          <canvas id="polyCanvas"></canvas>
+          <div class="poly-side">
+            <div class="poly-count">Faces detected</div>
+            <div class="poly-num" id="polyNum">0</div>
+            <div class="poly-hands" id="polyHands"></div>
+            <div class="poly-msg" id="polyMsg">Show the number of faces with your fingers, then press Confirm.</div>
+            <div class="poly-name" id="polyName"></div>
+            <button class="btn green hot" id="polyConfirm">Confirm number of faces</button>
+            <button class="btn hot" id="polyReset">Reset</button>
+            <div class="poly-help">
+              <b>Fist = 10</b> · e.g. fist + 2 fingers = 12 · Right fist → open = edge-unfold · Right fist → close = fold · Left hand rotate = spin
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · CHEMISTRY -->
     <section class="slide" id="chem">
       <div class="slide-inner">
         <div class="eyebrow">Activity · Chemistry</div>
-        <h2>Hold the water molecule in your hand</h2>
-        <p class="lede">Turn your palm to rotate it. Pull both hands apart to zoom in and out.</p>
+        <h2>Hold the molecule in your hand</h2>
+        <p class="lede">Pick a molecule, turn your palm to rotate it, pull your hands apart to zoom in and out.</p>
         <div class="chem-wrap">
           <canvas id="chemCanvas"></canvas>
           <div class="qbox">
+            <div class="chem-selector" id="chemSelector"></div>
             <div class="qtext">In a water molecule, the O–H bond is…</div>
             <div class="opts" id="chemOpts"></div>
             <div class="fb" id="chemFb"></div>
@@ -506,7 +554,7 @@ body.ar #scrim{display:block;}
       </div>
     </section>
 
-    <!-- 9 · FEEDBACK -->
+    <!-- 10 · FEEDBACK -->
     <section class="slide" id="feedback">
       <div class="slide-inner">
         <div class="eyebrow">Step 5 · Close the loop</div>
@@ -517,7 +565,7 @@ body.ar #scrim{display:block;}
       </div>
     </section>
 
-    <!-- 10 · RECAP -->
+    <!-- 11 · RECAP -->
     <section class="slide" id="recap">
       <div class="slide-inner center">
         <div class="eyebrow">Recap</div>
@@ -550,17 +598,11 @@ body.ar #scrim{display:block;}
 <script>
 'use strict';
 
-/* ============================================================
-   0 · HELPERS
-   ============================================================ */
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const lerp  = (a,b,t) => a + (b-a)*t;
 
-/* ============================================================
-   0.5 · FRESH START
-   ============================================================ */
 window.addEventListener('pageshow', (e) => { if (e.persisted) window.location.reload(); });
 function hardResetPanels(){
   $$('.float-panel').forEach(p => {
@@ -597,12 +639,19 @@ function goTo(i){
   const hl = $('#promptHighlight');
   if(hl) hl.style.display = 'none';
   if(!slideIs('intro')) resetPanel();
-  hideQRModal();
-  // Stop Simon says when leaving the slide
+  closeAnyModal();
   if(cur !== slides.findIndex(s => s.id === 'simon')) stopSimon();
+  if(cur !== slides.findIndex(s => s.id === 'poly')) lastLeftHandAngle = null;
+  releaseSlider();
   onSlideChange();
 }
-function onSlideChange(){ resizeMath(); resizeChem(); }
+function onSlideChange(){
+  requestAnimationFrame(() => {
+    resizeMath(); drawMath();
+    resizeChem();
+    resizePoly();
+  });
+}
 function slideIs(id){ return slides[cur] && slides[cur].id === id; }
 
 document.addEventListener('click', e => {
@@ -622,7 +671,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* ============================================================
-   2 · KPI PROMPT BUILDER
+   2 · KPI PROMPT
    ============================================================ */
 const KPIS = [
   {t:'Learner-centred',d:'the student acts, not just watches'},
@@ -720,17 +769,21 @@ const CHATBOTS = [
   });
 })();
 
-/* ============================================================
-   3.6 · QR MODAL
-   ============================================================ */
+/* ---- Modal helpers (QR modal + topbar QR modal are both closeable) ---- */
 let qrVisible = false;
+
+function anyModalOpen(){
+  return qrVisible || $('#qrBtnModal').classList.contains('show');
+}
+function closeAnyModal(){
+  hideQRModal();
+  $('#qrBtnModal').classList.remove('show');
+}
 function showQRModal(url, name){
-  const modal = $('#qrModal');
-  const img   = $('#qrImage');
   $('#qrLabel').textContent = name.toUpperCase();
-  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=560x560&margin=10&data=' + encodeURIComponent(url);
+  $('#qrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=560x560&margin=10&data=' + encodeURIComponent(url);
   $('#qrUrl').textContent = url;
-  modal.classList.add('show');
+  $('#qrModal').classList.add('show');
   qrVisible = true;
 }
 function hideQRModal(){
@@ -738,12 +791,13 @@ function hideQRModal(){
   $('#qrModal').classList.remove('show');
   qrVisible = false;
 }
-$('#qrModal').addEventListener('click', (e) => {
-  if(e.target.id === 'qrModal') hideQRModal();
-});
+$('#qrModal').addEventListener('click', (e) => { if(e.target.id === 'qrModal') hideQRModal(); });
+$('#qrBtn').addEventListener('click', () => $('#qrBtnModal').classList.add('show'));
+$('#qrBtnModal').addEventListener('click', (e) => { if(e.target.id === 'qrBtnModal') $('#qrBtnModal').classList.remove('show'); });
+$('#qrBtnClose').addEventListener('click', () => $('#qrBtnModal').classList.remove('show'));
 
 /* ============================================================
-   4 · ENGLISH (grammar)
+   4 · ENGLISH grammar
    ============================================================ */
 const ENG = [
   {q:'By the time the bell rang, the students ______ their essays.',o:['had submitted','have submitted','submitted','were submitting'],a:0,w:'Past perfect ("had submitted") marks the earlier of two past events.'},
@@ -788,48 +842,34 @@ $('#engNext').addEventListener('click', () => { engIdx = (engIdx + 1) % ENG.leng
 renderEnglish();
 
 /* ============================================================
-   4.5 · SIMON SAYS
+   4.5 · SIMON SAYS — eyebrow raise removed
    ============================================================ */
 const SIMON_GESTURES = [
-  {type:'hand', emoji:'✊', label:'Make a fist', hint:'Close all your fingers',
-   detect: lm => isFist(lm)},
-  {type:'hand', emoji:'✋', label:'Open palm', hint:'Spread every finger wide',
-   detect: lm => isOpenPalm(lm)},
-  {type:'hand', emoji:'👍', label:'Thumbs up', hint:'Thumb out, other fingers closed',
-   detect: lm => handThumbsUp(lm)},
-  {type:'hand', emoji:'✌️', label:'Peace sign', hint:'Index and middle finger out',
-   detect: lm => handPeace(lm)},
-  {type:'hand', emoji:'☝️', label:'Point up', hint:'Only your index finger up',
-   detect: lm => handPointOnly(lm)},
-  {type:'face', emoji:'😊', label:'Smile', hint:'Give the camera a big smile',
-   detect: lm => faceSmile(lm)},
-  {type:'face', emoji:'😮', label:'Open your mouth', hint:'Open wide, like saying "oh"',
-   detect: lm => faceMouthOpen(lm)},
-  {type:'face', emoji:'🤨', label:'Raise your eyebrows', hint:'Surprise! Lift those brows',
-   detect: lm => faceBrowRaise(lm)},
+  {type:'hand', emoji:'✊', label:'Make a fist', hint:'Close all your fingers', detect: lm => isFist(lm)},
+  {type:'hand', emoji:'✋', label:'Open palm', hint:'Spread every finger wide', detect: lm => isOpenPalm(lm)},
+  {type:'hand', emoji:'👍', label:'Thumbs up', hint:'Thumb out, other fingers closed', detect: lm => handThumbsUp(lm)},
+  {type:'hand', emoji:'👎', label:'Thumbs down', hint:'Thumb down, other fingers closed', detect: lm => handThumbsDown(lm)},
+  {type:'hand', emoji:'✌️', label:'Peace sign', hint:'Index and middle finger out', detect: lm => handPeace(lm)},
+  {type:'hand', emoji:'☝️', label:'Point up', hint:'Only your index finger up', detect: lm => handPointOnly(lm)},
+  {type:'hand', emoji:'🤘', label:'Rock sign', hint:'Index and pinky out', detect: lm => handRock(lm)},
+  {type:'hand', emoji:'👌', label:'OK sign', hint:'Thumb and index form a circle', detect: lm => handOK(lm)},
+  {type:'hand', emoji:'🤙', label:'Call me', hint:'Thumb and pinky out', detect: lm => handCallMe(lm)},
+  {type:'hand', emoji:'3️⃣', label:'Three fingers up', hint:'Index, middle and ring', detect: lm => handThreeUp(lm)},
+  {type:'face', emoji:'😊', label:'Smile', hint:'Give the camera a big smile', detect: lm => faceSmile(lm)},
+  {type:'face', emoji:'🤏', label:'Touch your nose', hint:'Bring your index finger to your nose', detect: lm => faceTouchNose(lm)},
 ];
-
-const simon = {
-  running:false,
-  idx:0,
-  score:0,
-  streak:0,
-  best:0,
-  lastFireAt:0,
-  lockUntil:0,
-  detections:0, // consecutive frames of detection to be robust
-};
-
+const simon = {running:false, idx:-1, score:0, streak:0, best:0, lockUntil:0, detections:0, deck:[]};
 function simonPick(){
-  // Avoid the same gesture twice in a row
-  let next = simon.idx;
-  while(next === simon.idx && SIMON_GESTURES.length > 1){
-    next = Math.floor(Math.random() * SIMON_GESTURES.length);
+  if(simon.deck.length === 0){
+    simon.deck = SIMON_GESTURES.map((_,i) => i);
+    for(let i = simon.deck.length-1; i > 0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [simon.deck[i], simon.deck[j]] = [simon.deck[j], simon.deck[i]];
+    }
   }
-  simon.idx = next;
+  simon.idx = simon.deck.pop();
   simon.detections = 0;
 }
-
 function renderSimon(){
   const g = SIMON_GESTURES[simon.idx];
   $('#simonEmoji').textContent = g.emoji;
@@ -839,13 +879,11 @@ function renderSimon(){
   $('#simonStreak').textContent = simon.streak;
   $('#simonBest').textContent = simon.best;
 }
-
 function startSimon(){
   simon.running = true;
-  simon.score = 0;
-  simon.streak = 0;
+  simon.score = 0; simon.streak = 0;
   simon.lockUntil = performance.now() + 800;
-  simon.idx = -1;
+  simon.deck = [];
   simonPick();
   renderSimon();
   $('#simonStart').textContent = '⟲ Restart';
@@ -867,45 +905,32 @@ $('#simonStart').addEventListener('click', () => {
   else if(!arOn){ alert('Turn on AR Mode first — Simon needs the camera to see your gestures.'); }
   else startSimon();
 });
-
 function updateSimon(){
   if(!slideIs('simon')) return;
-  if(!arOn){
-    $('#simonHint').textContent = 'Turn on AR Mode to play';
-    return;
-  }
+  if(!arOn){ $('#simonHint').textContent = 'Turn on AR Mode to play'; return; }
   if(!simon.running) return;
-
   const now = performance.now();
   if(now < simon.lockUntil) return;
-
   const g = SIMON_GESTURES[simon.idx];
   let detected = false;
-
   if(g.type === 'hand'){
     for(const h of handData){
       if(!h.raw) continue;
       try { if(g.detect(h.raw)) { detected = true; break; } } catch(e){}
     }
   } else if(g.type === 'face'){
-    if(faceLandmarks){
-      try { if(g.detect(faceLandmarks)) detected = true; } catch(e){}
-    }
+    if(faceLandmarks){ try { if(g.detect(faceLandmarks)) detected = true; } catch(e){} }
   }
-
   if(detected){
     simon.detections++;
-    if(simon.detections >= 2){ // require 2 consecutive frames for stability
-      simon.score++;
-      simon.streak++;
+    if(simon.detections >= 2){
+      simon.score++; simon.streak++;
       if(simon.streak > simon.best) simon.best = simon.streak;
       renderSimon();
-
       $('#simonStage').classList.add('detected');
       $('#simonEmoji').textContent = '✅';
       $('#simonPrompt').textContent = 'Well done!';
       $('#simonHint').textContent = 'Simon is picking the next gesture…';
-
       simon.lockUntil = now + 1500;
       setTimeout(() => {
         $('#simonStage').classList.remove('detected');
@@ -914,89 +939,74 @@ function updateSimon(){
         renderSimon();
       }, 1400);
     }
-  } else {
-    simon.detections = 0;
-  }
+  } else simon.detections = 0;
 }
-
-/* ---------- hand gesture detectors ---------- */
 function handThumbsUp(lm){
   const thumbExt = dist3(lm[4], lm[0]) > dist3(lm[3], lm[0]) * 1.15;
-  const indexExt = isFingerExtended(lm, 8, 6, 0);
-  const middleExt = isFingerExtended(lm, 12, 10, 0);
-  const ringExt = isFingerExtended(lm, 16, 14, 0);
-  const pinkyExt = isFingerExtended(lm, 20, 18, 0);
-  return thumbExt && !indexExt && !middleExt && !ringExt && !pinkyExt;
+  const up = lm[4].y < lm[2].y - 0.05;
+  return thumbExt && up && !isFingerExtended(lm,8,6,0) && !isFingerExtended(lm,12,10,0) && !isFingerExtended(lm,16,14,0) && !isFingerExtended(lm,20,18,0);
 }
-function handPeace(lm){
-  return isFingerExtended(lm, 8, 6, 0) &&
-         isFingerExtended(lm, 12, 10, 0) &&
-         !isFingerExtended(lm, 16, 14, 0) &&
-         !isFingerExtended(lm, 20, 18, 0);
+function handThumbsDown(lm){
+  const thumbExt = dist3(lm[4], lm[0]) > dist3(lm[3], lm[0]) * 1.15;
+  const down = lm[4].y > lm[2].y + 0.05;
+  return thumbExt && down && !isFingerExtended(lm,8,6,0) && !isFingerExtended(lm,12,10,0) && !isFingerExtended(lm,16,14,0) && !isFingerExtended(lm,20,18,0);
 }
-function handPointOnly(lm){
-  return isFingerExtended(lm, 8, 6, 0) &&
-         !isFingerExtended(lm, 12, 10, 0) &&
-         !isFingerExtended(lm, 16, 14, 0) &&
-         !isFingerExtended(lm, 20, 18, 0);
+function handPeace(lm){ return isFingerExtended(lm,8,6,0) && isFingerExtended(lm,12,10,0) && !isFingerExtended(lm,16,14,0) && !isFingerExtended(lm,20,18,0); }
+function handPointOnly(lm){ return isFingerExtended(lm,8,6,0) && !isFingerExtended(lm,12,10,0) && !isFingerExtended(lm,16,14,0) && !isFingerExtended(lm,20,18,0); }
+function handRock(lm){ return isFingerExtended(lm,8,6,0) && !isFingerExtended(lm,12,10,0) && !isFingerExtended(lm,16,14,0) && isFingerExtended(lm,20,18,0); }
+function handOK(lm){
+  const size = dist3(lm[0], lm[9]) || 0.1;
+  const thumbIdx = dist3(lm[4], lm[8]);
+  return thumbIdx < size * 0.4 && isFingerExtended(lm,12,10,0) && isFingerExtended(lm,16,14,0) && isFingerExtended(lm,20,18,0);
 }
-
-/* ---------- face gesture detectors (FaceMesh 468 landmarks) ---------- */
-// Face height reference points: 10 (top of forehead), 152 (chin)
-function faceSize(lm){
-  return Math.hypot(lm[10].x - lm[152].x, lm[10].y - lm[152].y);
+function handCallMe(lm){
+  const thumbExt = dist3(lm[4], lm[0]) > dist3(lm[3], lm[0]) * 1.15;
+  return thumbExt && !isFingerExtended(lm,8,6,0) && !isFingerExtended(lm,12,10,0) && !isFingerExtended(lm,16,14,0) && isFingerExtended(lm,20,18,0);
 }
-// Smile: mouth corners (61, 291) curve up above the upper inner lip (13)
+function handThreeUp(lm){ return isFingerExtended(lm,8,6,0) && isFingerExtended(lm,12,10,0) && isFingerExtended(lm,16,14,0) && !isFingerExtended(lm,20,18,0); }
+function faceSize(lm){ return Math.hypot(lm[10].x - lm[152].x, lm[10].y - lm[152].y) || 0.001; }
 function faceSmile(lm){
   const h = faceSize(lm);
-  if(h < 1e-5) return false;
-  const cornerY = (lm[61].y + lm[291].y) / 2;
+  const cornerY = (lm[61].y + lm[291].y)/2;
   const upperLipY = lm[13].y;
-  // When smiling, corners rise toward / above the upper lip
-  const lift = (upperLipY - cornerY) / h;
-  return lift > 0.010;
+  return ((upperLipY - cornerY)/h) > 0.010;
 }
-// Mouth open: distance between upper inner lip (13) and lower inner lip (14)
-function faceMouthOpen(lm){
-  const h = faceSize(lm);
-  if(h < 1e-5) return false;
-  const mouthGap = Math.hypot(lm[13].x - lm[14].x, lm[13].y - lm[14].y);
-  return mouthGap / h > 0.045;
-}
-// Brow raise: eyebrow (70, 300) lifted above eye (159, 386), normalised by eye width
-function faceBrowRaise(lm){
-  const browL = Math.hypot(lm[70].x - lm[159].x, lm[70].y - lm[159].y);
-  const browR = Math.hypot(lm[300].x - lm[386].x, lm[300].y - lm[386].y);
-  const eyeL  = Math.hypot(lm[33].x - lm[133].x, lm[33].y - lm[133].y);
-  const eyeR  = Math.hypot(lm[362].x - lm[263].x, lm[362].y - lm[263].y);
-  const denom = eyeL + eyeR;
-  if(denom < 1e-5) return false;
-  return (browL + browR) / denom > 1.35;
+function faceTouchNose(lm){
+  if(!faceLandmarks || !handData.length) return false;
+  const nose = lm[4];
+  for(const h of handData){
+    if(!h.raw) continue;
+    const idxTip = h.raw[8];
+    const d = Math.hypot(idxTip.x - nose.x, idxTip.y - nose.y);
+    if(d < 0.07) return true;
+  }
+  return false;
 }
 
 /* ============================================================
-   5 · MATH
+   5 · MATH parabola with slider grab
    ============================================================ */
 const mc = $('#mathCanvas');
 const mctx = mc.getContext('2d');
-const M = {a:1, h:0, k:0, ta:1, th:0, tk:0};
 function resizeMath(){
   const r = mc.getBoundingClientRect();
-  if(r.width < 2) return;
+  if(r.width < 2 || r.height < 2) return;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  mc.width = Math.round(r.width*dpr);
-  mc.height = Math.round(r.height*dpr);
+  const newW = Math.round(r.width * dpr);
+  const newH = Math.round(r.height * dpr);
+  if(mc.width !== newW || mc.height !== newH){ mc.width = newW; mc.height = newH; }
 }
-window.addEventListener('resize', resizeMath);
-['slA','slH','slK'].forEach((id,i) => {
-  $('#'+id).addEventListener('input', function(){
-    const v = parseFloat(this.value);
-    if(i===0) M.ta = v; else if(i===1) M.th = v; else M.tk = v;
-  });
-});
+window.addEventListener('resize', () => { resizeMath(); drawMath(); });
 function drawMath(){
   const W = mc.width, H = mc.height;
-  if(W < 4) return;
+  if(W < 4 || H < 4) return;
+  const a = parseFloat($('#slA').value);
+  const h = parseFloat($('#slH').value);
+  const k = parseFloat($('#slK').value);
+  $('#lblA').textContent = a.toFixed(2);
+  $('#lblH').textContent = h.toFixed(1);
+  $('#lblK').textContent = k.toFixed(1);
+  $('#mathEq').textContent = 'y = ' + a.toFixed(2) + '(x − ' + h.toFixed(2) + ')² + ' + k.toFixed(2);
   const c = mctx;
   const pad = 26;
   const s = Math.min((W-pad*2)/11, (H-pad*2)/11);
@@ -1013,12 +1023,12 @@ function drawMath(){
   c.beginPath();
   let started = false;
   for(let x=-5.4;x<=5.4;x+=0.04){
-    const y = M.a*(x-M.h)*(x-M.h)+M.k;
+    const y = a*(x-h)*(x-h)+k;
     if(y<-6||y>6){ started=false; continue; }
     if(!started){ c.moveTo(X(x),Y(y)); started=true; } else c.lineTo(X(x),Y(y));
   }
   c.stroke();
-  const vx = X(M.h), vy = Y(M.k);
+  const vx = X(h), vy = Y(k);
   c.fillStyle = '#ffc857'; c.beginPath(); c.arc(vx,vy,Math.max(4,s*0.14),0,6.283); c.fill();
   c.strokeStyle = 'rgba(255,200,87,.35)'; c.lineWidth = 1.5;
   c.beginPath(); c.moveTo(vx,vy); c.lineTo(X(0),vy); c.stroke();
@@ -1026,54 +1036,440 @@ function drawMath(){
   const fs = Math.max(9,Math.min(13,s*0.34));
   c.font = '700 ' + fs + 'px "Space Mono", monospace';
   c.fillStyle = '#ffc857'; c.textAlign = 'left';
-  c.fillText('vertex (' + M.h.toFixed(1) + ', ' + M.k.toFixed(1) + ')', vx+10, vy-10);
-  c.fillStyle = 'rgba(180,200,255,.55)';
-  c.fillText('y = ' + M.a.toFixed(2) + '(x − ' + M.h.toFixed(2) + ')² + ' + M.k.toFixed(2), 12, 18);
+  c.fillText('vertex (' + h.toFixed(1) + ', ' + k.toFixed(1) + ')', vx+10, vy-10);
 }
-function updateMath(dt){
-  if(arOn && handData.length){
-    const ptr = handData.find(h => h.pointer) || handData[0];
-    const aux = handData.find(h => !h.pointer);
-    const r = mc.getBoundingClientRect();
-    if(r.width > 2){
-      M.th = clamp(((ptr.pts[8].x - r.left)/r.width - 0.5)*10, -4, 4);
-      if(aux) M.tk = clamp((0.5 - (aux.pts[8].y - r.top)/r.height)*9, -4, 4);
-      if(aux){
-        const d = Math.hypot(ptr.pts[8].x-aux.pts[8].x, ptr.pts[8].y-aux.pts[8].y);
-        M.ta = clamp(d / Math.max(220, r.width*0.55) * 2.4, 0.2, 3);
+let grabbedSlider = null;
+function releaseSlider(){
+  if(grabbedSlider){
+    const lab = grabbedSlider.closest('.sl');
+    if(lab) lab.classList.remove('grabbed');
+    grabbedSlider = null;
+  }
+}
+function updateMathGestures(){
+  if(!slideIs('math')){ releaseSlider(); return; }
+  if(!arOn){ releaseSlider(); return; }
+  const ptr = handData.find(h => h.pointer);
+  if(!ptr || !ptr.raw){ releaseSlider(); return; }
+  if(!isPointing(ptr.raw)){ releaseSlider(); return; }
+  const dpr = arCanvas.width / window.innerWidth;
+  const px = ptr.pts[8].x / dpr;
+  const py = ptr.pts[8].y / dpr;
+  if(!grabbedSlider){
+    const ids = ['slA','slH','slK'];
+    for(const id of ids){
+      const el = document.getElementById(id);
+      const r = el.getBoundingClientRect();
+      if(px >= r.left - 14 && px <= r.right + 14 && py >= r.top - 20 && py <= r.bottom + 20){
+        grabbedSlider = el;
+        const lab = el.closest('.sl');
+        if(lab) lab.classList.add('grabbed');
+        break;
       }
     }
   }
-  const sp = arOn ? 0.22 : 1;
-  M.a = lerp(M.a, M.ta, sp); M.h = lerp(M.h, M.th, sp); M.k = lerp(M.k, M.tk, sp);
-  $('#slA').value = M.ta.toFixed(2); $('#lblA').textContent = M.ta.toFixed(2);
-  $('#slH').value = M.th.toFixed(1); $('#lblH').textContent = M.th.toFixed(1);
-  $('#slK').value = M.tk.toFixed(1); $('#lblK').textContent = M.tk.toFixed(1);
-  $('#mathEq').textContent = 'y = ' + M.a.toFixed(2) + '(x − ' + M.h.toFixed(2) + ')² + ' + M.k.toFixed(2);
-  drawMath();
+  if(grabbedSlider){
+    const r = grabbedSlider.getBoundingClientRect();
+    if(px < r.left - 60 || px > r.right + 60 || py < r.top - 80 || py > r.bottom + 80){
+      releaseSlider();
+      return;
+    }
+    const min = parseFloat(grabbedSlider.min);
+    const max = parseFloat(grabbedSlider.max);
+    const step = parseFloat(grabbedSlider.step) || 0.1;
+    const rel = clamp((px - r.left) / r.width, 0, 1);
+    let v = min + rel * (max - min);
+    v = Math.round(v / step) * step;
+    v = clamp(v, min, max);
+    v = parseFloat(v.toFixed(4));
+    if(parseFloat(grabbedSlider.value) !== v){
+      grabbedSlider.value = v;
+      drawMath();
+    }
+  }
 }
+['slA','slH','slK'].forEach(id => document.getElementById(id).addEventListener('input', drawMath));
 
 /* ============================================================
-   6 · CHEMISTRY
+   6 · POLYHEDRONS — edge unfolding + fist = 10
+   ============================================================ */
+const polyCanvas = $('#polyCanvas');
+let polyReady = false, polyRenderer = null, polyScene = null, polyCam = null;
+let polyMesh = null, polyGeo = null, polyTriangles = null, polyTree = null;
+const polyState = {faces:0, name:'', unfolded:false, t:0, rotation:0, built:false};
+let lastLeftHandAngle = null;
+let polyPrevRightFist = null;
+
+const POLY_INFO = {
+  4:  {name:'Tetrahedron',  faces:'4 triangles', geo: () => new THREE.TetrahedronGeometry(1.7, 0)},
+  6:  {name:'Cube',         faces:'6 squares',   geo: () => new THREE.BoxGeometry(2.1, 2.1, 2.1)},
+  8:  {name:'Octahedron',   faces:'8 triangles', geo: () => new THREE.OctahedronGeometry(1.7, 0)},
+  12: {name:'Dodecahedron', faces:'12 pentagons',geo: () => new THREE.DodecahedronGeometry(1.6, 0)},
+  20: {name:'Icosahedron',  faces:'20 triangles',geo: () => new THREE.IcosahedronGeometry(1.7, 0)},
+};
+
+function initPoly(){
+  if(polyReady) return;
+  if(typeof THREE === 'undefined') return;
+  polyReady = true;
+  polyRenderer = new THREE.WebGLRenderer({canvas: polyCanvas, antialias:true, alpha:true});
+  polyRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  polyScene = new THREE.Scene();
+  polyCam = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  polyCam.position.set(0, 0, 8);
+  polyScene.add(new THREE.AmbientLight(0xffffff, 1.5));
+  const d1 = new THREE.DirectionalLight(0xffffff, 1.1); d1.position.set(4, 6, 6); polyScene.add(d1);
+  const d2 = new THREE.DirectionalLight(0x88aaff, 0.6); d2.position.set(-6, -4, -3); polyScene.add(d2);
+  resizePoly();
+  polyRenderer.render(polyScene, polyCam);
+}
+function resizePoly(){
+  if(!polyReady) return;
+  const r = polyCanvas.getBoundingClientRect();
+  if(r.width < 2 || r.height < 2) return;
+  polyRenderer.setSize(r.width, r.height, false);
+  polyCam.aspect = r.width / r.height;
+  polyCam.updateProjectionMatrix();
+}
+
+function vecKey(v){
+  return v.x.toFixed(4) + ',' + v.y.toFixed(4) + ',' + v.z.toFixed(4);
+}
+function edgeKey(a, b){
+  const ka = vecKey(a), kb = vecKey(b);
+  return ka < kb ? ka + '|' + kb : kb + '|' + ka;
+}
+function canonicalEdge(a, b){
+  return vecKey(a) <= vecKey(b) ? [a, b] : [b, a];
+}
+function buildUnfoldTree(triangles){
+  const n = triangles.length;
+  const edgeMap = new Map();
+  triangles.forEach((tri, ti) => {
+    const [a, b, c] = tri;
+    const edges = [[a,b],[b,c],[c,a]];
+    edges.forEach(([v1, v2]) => {
+      const k = edgeKey(v1, v2);
+      if(!edgeMap.has(k)) edgeMap.set(k, []);
+      edgeMap.get(k).push({ faceIdx: ti, v1, v2 });
+    });
+  });
+  const adj = Array.from({length:n}, () => []);
+  edgeMap.forEach(entries => {
+    if(entries.length === 2){
+      const [e1, e2] = entries;
+      adj[e1.faceIdx].push({ neighbor: e2.faceIdx, edge: canonicalEdge(e1.v1, e1.v2) });
+      adj[e2.faceIdx].push({ neighbor: e1.faceIdx, edge: canonicalEdge(e2.v1, e2.v2) });
+    }
+  });
+  const parentOf = new Array(n).fill(-1);
+  const sharedEdge = new Array(n).fill(null);
+  const angleOf = new Array(n).fill(0);
+  const visited = new Set([0]);
+  const queue = [0];
+  const bfsOrder = [0];
+  while(queue.length){
+    const i = queue.shift();
+    for(const {neighbor, edge} of adj[i]){
+      if(visited.has(neighbor)) continue;
+      visited.add(neighbor);
+      parentOf[neighbor] = i;
+      sharedEdge[neighbor] = edge;
+      bfsOrder.push(neighbor);
+      queue.push(neighbor);
+      const n_p = triangles[i].normal;
+      const n_c = triangles[neighbor].normal;
+      const axis = edge[1].clone().sub(edge[0]).normalize();
+      const cross = new THREE.Vector3().crossVectors(n_c, n_p);
+      const sinA = axis.dot(cross);
+      const cosA = Math.max(-1, Math.min(1, n_c.dot(n_p)));
+      angleOf[neighbor] = Math.atan2(sinA, cosA);
+    }
+  }
+  return {parentOf, sharedEdge, angleOf, bfsOrder, root:0};
+}
+function computeUnfoldedMatrices(triangles, tree, t){
+  const n = triangles.length;
+  const matrices = new Array(n);
+  for(const i of tree.bfsOrder){
+    if(i === tree.root){
+      matrices[i] = new THREE.Matrix4();
+    } else {
+      const parent = tree.parentOf[i];
+      const M_p = matrices[parent];
+      const edge = tree.sharedEdge[i];
+      const angle = tree.angleOf[i];
+      const pA = edge[0].clone().applyMatrix4(M_p);
+      const pB = edge[1].clone().applyMatrix4(M_p);
+      const axis = pB.clone().sub(pA).normalize();
+      const R = new THREE.Matrix4().makeRotationAxis(axis, t * angle);
+      const T1 = new THREE.Matrix4().makeTranslation(pA.x, pA.y, pA.z);
+      const T2 = new THREE.Matrix4().makeTranslation(-pA.x, -pA.y, -pA.z);
+      const M = new THREE.Matrix4();
+      M.multiply(T1).multiply(R).multiply(T2).multiply(M_p);
+      matrices[i] = M;
+    }
+  }
+  return matrices;
+}
+function buildPolyhedron(faces){
+  if(polyMesh){
+    polyScene.remove(polyMesh);
+    polyMesh.geometry.dispose();
+    polyMesh.material.dispose();
+    polyMesh = null;
+  }
+  polyGeo = null; polyTriangles = null; polyTree = null;
+  const geo = POLY_INFO[faces].geo();
+  const pos = geo.attributes.position;
+  const idx = geo.index;
+  const triangles = [];
+  function getV(i){ return new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)); }
+  if(idx){
+    for(let i = 0; i < idx.count; i += 3){
+      triangles.push([getV(idx.getX(i)), getV(idx.getX(i+1)), getV(idx.getX(i+2))]);
+    }
+  } else {
+    for(let i = 0; i < pos.count; i += 3){
+      triangles.push([getV(i), getV(i+1), getV(i+2)]);
+    }
+  }
+  triangles.forEach(tri => {
+    const [a, b, c] = tri;
+    const n = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a)).normalize();
+    const cent = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
+    if(n.dot(cent) < 0) n.negate();
+    tri.normal = n;
+  });
+  polyTree = buildUnfoldTree(triangles);
+  polyTriangles = triangles;
+  const positions = new Float32Array(triangles.length * 9);
+  triangles.forEach((tri, ti) => {
+    for(let i = 0; i < 3; i++){
+      positions[ti*9 + i*3 + 0] = tri[i].x;
+      positions[ti*9 + i*3 + 1] = tri[i].y;
+      positions[ti*9 + i*3 + 2] = tri[i].z;
+    }
+  });
+  polyGeo = new THREE.BufferGeometry();
+  polyGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  polyGeo.computeVertexNormals();
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x5bc8ff, roughness: 0.38, metalness: 0.3,
+    side: THREE.DoubleSide,
+    emissive: 0x5bc8ff, emissiveIntensity: 0.14,
+    flatShading: true,
+  });
+  polyMesh = new THREE.Mesh(polyGeo, mat);
+  polyScene.add(polyMesh);
+  polyState.t = 0;
+  polyState.unfolded = false;
+  polyState.rotation = 0;
+  polyState.built = true;
+  polyPrevRightFist = null;
+}
+function updatePolyhedron(){
+  if(!polyReady) return;
+  if(!polyState.built || !polyMesh || !polyTriangles || !polyTree){
+    polyRenderer.render(polyScene, polyCam);
+    return;
+  }
+  const target = polyState.unfolded ? 1 : 0;
+  polyState.t = lerp(polyState.t, target, 0.07);
+  const matrices = computeUnfoldedMatrices(polyTriangles, polyTree, polyState.t);
+  const posArr = polyGeo.attributes.position.array;
+  polyTriangles.forEach((tri, ti) => {
+    const M = matrices[ti];
+    for(let i = 0; i < 3; i++){
+      const v = tri[i].clone().applyMatrix4(M);
+      posArr[ti*9 + i*3 + 0] = v.x;
+      posArr[ti*9 + i*3 + 1] = v.y;
+      posArr[ti*9 + i*3 + 2] = v.z;
+    }
+  });
+  polyGeo.attributes.position.needsUpdate = true;
+  polyGeo.computeVertexNormals();
+  polyMesh.rotation.y = polyState.rotation;
+  polyRenderer.render(polyScene, polyCam);
+}
+function updatePolyRotation(){
+  if(!slideIs('poly')) return;
+  const leftHand = handData.find(h => !h.pointer);
+  if(!leftHand || !leftHand.raw){ lastLeftHandAngle = null; return; }
+  const iMCP = leftHand.pts[5];
+  const pMCP = leftHand.pts[17];
+  const angle = Math.atan2(pMCP.y - iMCP.y, pMCP.x - iMCP.x);
+  if(lastLeftHandAngle !== null){
+    let delta = angle - lastLeftHandAngle;
+    while(delta > Math.PI) delta -= 2*Math.PI;
+    while(delta < -Math.PI) delta += 2*Math.PI;
+    polyState.rotation += delta * 1.6;
+  }
+  lastLeftHandAngle = angle;
+}
+function updatePolyGestures(){
+  if(!slideIs('poly')){ polyPrevRightFist = null; return; }
+  if(!polyState.built) return;
+  const rightHand = handData.find(h => h.pointer);
+  if(!rightHand || !rightHand.raw) return;
+  const fist = isFist(rightHand.raw);
+  const open = isOpenPalm(rightHand.raw);
+  if(polyPrevRightFist === null){
+    polyPrevRightFist = fist ? 'fist' : (open ? 'open' : null);
+    return;
+  }
+  if(polyPrevRightFist === 'fist' && open){
+    if(!polyState.unfolded) polyState.unfolded = true;
+  } else if(polyPrevRightFist === 'open' && fist){
+    if(polyState.unfolded) polyState.unfolded = false;
+  }
+  if(fist) polyPrevRightFist = 'fist';
+  else if(open) polyPrevRightFist = 'open';
+}
+
+/* Finger counting: a fist counts as 10 so you can reach 20 with two hands */
+function countFingersOnHand(lm){
+  if(!lm) return 0;
+  // A closed fist (all five fingers curled) counts as 10
+  if(isFist(lm) && isThumbClosed(lm)) return 10;
+  let c = 0;
+  if(dist3(lm[4], lm[0]) > dist3(lm[3], lm[0]) * 1.15) c++;
+  if(isFingerExtended(lm, 8, 6, 0)) c++;
+  if(isFingerExtended(lm, 12, 10, 0)) c++;
+  if(isFingerExtended(lm, 16, 14, 0)) c++;
+  if(isFingerExtended(lm, 20, 18, 0)) c++;
+  return c;
+}
+function isThumbClosed(lm){
+  return dist3(lm[4], lm[0]) <= dist3(lm[3], lm[0]) * 1.15;
+}
+function currentFingerCount(){
+  let total = 0;
+  handData.forEach(h => { if(h.raw) total += countFingersOnHand(h.raw); });
+  return total;
+}
+function updatePolyDisplay(){
+  if(!slideIs('poly')) return;
+  const handsEl = $('#polyHands');
+  const numEl = $('#polyNum');
+  if(!arOn){
+    handsEl.innerHTML = '<span style="color:var(--red);">AR Mode is off</span> — turn it on to count fingers';
+    numEl.textContent = '—';
+    numEl.classList.remove('bad');
+    $('#polyMsg').textContent = 'Turn on AR Mode, then show your fingers.';
+    $('#polyName').textContent = '';
+    return;
+  }
+  const handsDetected = handData.length;
+  if(handsDetected === 0){
+    handsEl.innerHTML = 'No hand detected — show your hands to the camera';
+  } else {
+    handsEl.innerHTML = '<span class="live">' + handsDetected + ' hand' + (handsDetected > 1 ? 's' : '') + ' detected</span> · fist = 10';
+  }
+  const count = currentFingerCount();
+  if(numEl.textContent !== String(count)){
+    numEl.textContent = count;
+    numEl.classList.add('pulse');
+    setTimeout(() => numEl.classList.remove('pulse'), 160);
+  }
+  if(count > 0 && count < 4){
+    numEl.classList.add('bad');
+    $('#polyMsg').textContent = 'There are no polyhedrons with fewer than 4 faces.';
+    $('#polyName').textContent = '';
+  } else if(POLY_INFO[count]){
+    numEl.classList.remove('bad');
+    $('#polyMsg').textContent = 'Ready — press Confirm to reveal the ' + POLY_INFO[count].name + '.';
+    $('#polyName').textContent = '';
+  } else if(count >= 4){
+    numEl.classList.remove('bad');
+    $('#polyMsg').textContent = 'There is no regular polyhedron with exactly ' + count + ' faces. Try 4, 6, 8, 12 or 20.';
+    $('#polyName').textContent = '';
+  } else {
+    numEl.classList.remove('bad');
+    $('#polyMsg').textContent = 'Show the number of faces with your fingers, then press Confirm.';
+    $('#polyName').textContent = '';
+  }
+}
+$('#polyConfirm').addEventListener('click', () => {
+  if(!arOn){ alert('Turn on AR Mode first — the camera needs to see your fingers.'); return; }
+  const count = currentFingerCount();
+  if(count < 4){
+    $('#polyMsg').textContent = 'There are no polyhedrons with fewer than 4 faces.';
+    $('#polyName').textContent = '';
+    return;
+  }
+  if(!POLY_INFO[count]){
+    $('#polyMsg').textContent = 'There is no regular polyhedron with exactly ' + count + ' faces. Try 4, 6, 8, 12 or 20.';
+    $('#polyName').textContent = '';
+    return;
+  }
+  polyState.faces = count;
+  polyState.name = POLY_INFO[count].name;
+  if(!polyReady) initPoly();
+  buildPolyhedron(count);
+  $('#polyMsg').textContent = 'Right fist → open to unfold. Close to fold back. Left hand rotates.';
+  $('#polyName').textContent = polyState.name + ' — ' + POLY_INFO[count].faces;
+});
+$('#polyReset').addEventListener('click', () => {
+  if(polyMesh && polyScene){ polyScene.remove(polyMesh); polyMesh.geometry.dispose(); polyMesh.material.dispose(); polyMesh = null; }
+  polyGeo = null; polyTriangles = null; polyTree = null;
+  polyState.built = false;
+  polyState.faces = 0;
+  polyState.name = '';
+  polyState.unfolded = false;
+  polyState.rotation = 0;
+  polyPrevRightFist = null;
+  $('#polyNum').textContent = '0';
+  $('#polyMsg').textContent = 'Show the number of faces with your fingers, then press Confirm.';
+  $('#polyName').textContent = '';
+  if(polyReady){ polyRenderer.render(polyScene, polyCam); }
+});
+
+/* ============================================================
+   7 · CHEMISTRY
    ============================================================ */
 const chemCanvas = $('#chemCanvas');
 let chemReady = false, chemRenderer = null, chemScene = null, chemCam = null, molGroup = null;
 const molQuat = new THREE.Quaternion();
 let molScale = 1, molScaleTarget = 1;
-function buildMolecule(){
+let currentMolecule = 'water';
+const ATOM_STYLE = {
+  H:  {color: 0xf0f4ff, radius: 0.32, emissive: 0x111120},
+  C:  {color: 0x404a5c, radius: 0.55, emissive: 0x0a0f15},
+  O:  {color: 0xff5e72, radius: 0.55, emissive: 0x40101a},
+  N:  {color: 0x5bc8ff, radius: 0.55, emissive: 0x1a3d55},
+  S:  {color: 0xffc857, radius: 0.65, emissive: 0x403010},
+  Cl: {color: 0x4dffa0, radius: 0.60, emissive: 0x1a4030},
+};
+const MOLECULES = {
+  water: {name:'Water (H₂O)', atoms:[{el:'O',pos:[0,0,0]},{el:'H',pos:[0.76,-0.59,0]},{el:'H',pos:[-0.76,-0.59,0]}], bonds:[[0,1],[0,2]]},
+  methane: {name:'Methane (CH₄)', atoms:[{el:'C',pos:[0,0,0]},{el:'H',pos:[0.63,0.63,0.63]},{el:'H',pos:[-0.63,-0.63,0.63]},{el:'H',pos:[-0.63,0.63,-0.63]},{el:'H',pos:[0.63,-0.63,-0.63]}], bonds:[[0,1],[0,2],[0,3],[0,4]]},
+  ammonia: {name:'Ammonia (NH₃)', atoms:[{el:'N',pos:[0,0.35,0]},{el:'H',pos:[0.94,-0.35,0]},{el:'H',pos:[-0.47,-0.35,0.81]},{el:'H',pos:[-0.47,-0.35,-0.81]}], bonds:[[0,1],[0,2],[0,3]]},
+  co2: {name:'Carbon dioxide (CO₂)', atoms:[{el:'C',pos:[0,0,0]},{el:'O',pos:[1.16,0,0]},{el:'O',pos:[-1.16,0,0]}], bonds:[[0,1],[0,2]]},
+  ethanol: {name:'Ethanol (C₂H₅OH)', atoms:[{el:'C',pos:[-0.76,0,0]},{el:'C',pos:[0.76,0,0]},{el:'O',pos:[1.55,0.85,0]},{el:'H',pos:[-1.55,0.55,0]},{el:'H',pos:[-1.55,-0.55,0]},{el:'H',pos:[-0.76,-0.55,0.95]},{el:'H',pos:[0.76,0,-0.95]},{el:'H',pos:[0.76,0.55,0.55]},{el:'H',pos:[2.4,0.65,0]}], bonds:[[0,1],[1,2],[0,3],[0,4],[0,5],[1,6],[1,7],[2,8]]},
+  peroxide: {name:'Hydrogen peroxide (H₂O₂)', atoms:[{el:'O',pos:[-0.7,0,0]},{el:'O',pos:[0.7,0,0]},{el:'H',pos:[-1.1,0.75,0]},{el:'H',pos:[1.1,-0.75,0]}], bonds:[[0,1],[0,2],[1,3]]},
+};
+function buildMoleculeGroup(id){
+  const spec = MOLECULES[id];
   const g = new THREE.Group();
-  const matO = new THREE.MeshStandardMaterial({color:0xff5e72, roughness:.35, metalness:.25, emissive:0x40101a});
-  const matH = new THREE.MeshStandardMaterial({color:0xe9f0ff, roughness:.4, metalness:.2, emissive:0x1a2438});
-  const matB = new THREE.MeshStandardMaterial({color:0x7f92b3, roughness:.5, metalness:.3});
-  const o = new THREE.Mesh(new THREE.SphereGeometry(0.82,32,32), matO); g.add(o);
-  const half = (104.45/2)*Math.PI/180;
-  const L = 1.55;
-  [-1,1].forEach(side => {
-    const x = Math.sin(half)*L*side, y = -Math.cos(half)*L;
-    const h = new THREE.Mesh(new THREE.SphereGeometry(0.46,24,24), matH); h.position.set(x,y,0); g.add(h);
-    const mid = new THREE.Vector3().addVectors(o.position, h.position).multiplyScalar(0.5);
-    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,L,12), matB);
-    b.position.copy(mid); b.lookAt(h.position); b.rotateX(Math.PI/2); g.add(b);
+  spec.atoms.forEach(a => {
+    const style = ATOM_STYLE[a.el] || ATOM_STYLE.C;
+    const mat = new THREE.MeshStandardMaterial({color:style.color, roughness:0.38, metalness:0.22, emissive:style.emissive, emissiveIntensity:0.35});
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(style.radius, 26, 26), mat);
+    mesh.position.set(a.pos[0], a.pos[1], a.pos[2]);
+    g.add(mesh);
+  });
+  const bondMat = new THREE.MeshStandardMaterial({color:0xa8b8d8, roughness:0.5, metalness:0.3, emissive:0x1a2438});
+  spec.bonds.forEach(([i, j]) => {
+    const a = new THREE.Vector3(...spec.atoms[i].pos);
+    const b = new THREE.Vector3(...spec.atoms[j].pos);
+    const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+    const len = a.distanceTo(b);
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, len, 12), bondMat);
+    cyl.position.copy(mid);
+    cyl.lookAt(b);
+    cyl.rotateX(Math.PI / 2);
+    g.add(cyl);
   });
   return g;
 }
@@ -1085,44 +1481,69 @@ function initChem(){
   chemRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   chemScene = new THREE.Scene();
   chemCam = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  chemCam.position.set(0,0,6);
-  chemScene.add(new THREE.AmbientLight(0xffffff, 1.7));
-  const d1 = new THREE.DirectionalLight(0xffffff, 1.25); d1.position.set(4,6,6); chemScene.add(d1);
-  const d2 = new THREE.DirectionalLight(0x88aaff, .7);  d2.position.set(-6,-4,-3); chemScene.add(d2);
-  molGroup = buildMolecule(); molGroup.rotation.x = 0.25; chemScene.add(molGroup);
+  chemCam.position.set(0, 0, 6);
+  chemScene.add(new THREE.AmbientLight(0xffffff, 1.6));
+  const d1 = new THREE.DirectionalLight(0xffffff, 1.2); d1.position.set(4, 6, 6); chemScene.add(d1);
+  const d2 = new THREE.DirectionalLight(0x88aaff, 0.7); d2.position.set(-6, -4, -3); chemScene.add(d2);
+  loadMolecule(currentMolecule);
   resizeChem();
+}
+function loadMolecule(id){
+  if(!chemReady) return;
+  if(molGroup) chemScene.remove(molGroup);
+  molGroup = buildMoleculeGroup(id);
+  molGroup.rotation.x = 0.25;
+  chemScene.add(molGroup);
+  currentMolecule = id;
+  molScale = 1; molScaleTarget = 1;
 }
 function resizeChem(){
   if(!chemReady) return;
   const r = chemCanvas.getBoundingClientRect();
-  if(r.width < 2) return;
+  if(r.width < 2 || r.height < 2) return;
   chemRenderer.setSize(r.width, r.height, false);
   chemCam.aspect = r.width / r.height;
   chemCam.updateProjectionMatrix();
 }
 function lmVec(lm){ return new THREE.Vector3(-lm.x, -lm.y, -lm.z*2); }
 function renderChem(){
-  if(!chemReady) return;
+  if(!chemReady || !molGroup) return;
   const hand = handData.find(h => h.pointer) || handData[0];
   if(hand && hand.raw){
     const wv = lmVec(hand.raw[0]), mv = lmVec(hand.raw[9]);
     const iv = lmVec(hand.raw[5]), pv = lmVec(hand.raw[17]);
-    const yAx = new THREE.Vector3().subVectors(mv,wv).normalize();
-    const xAx = new THREE.Vector3().subVectors(iv,pv).normalize();
-    const zAx = new THREE.Vector3().crossVectors(xAx,yAx).normalize();
-    xAx.crossVectors(yAx,zAx).normalize();
-    const m4 = new THREE.Matrix4().makeBasis(xAx,yAx,zAx);
+    const yAx = new THREE.Vector3().subVectors(mv, wv).normalize();
+    const xAx = new THREE.Vector3().subVectors(iv, pv).normalize();
+    const zAx = new THREE.Vector3().crossVectors(xAx, yAx).normalize();
+    xAx.crossVectors(yAx, zAx).normalize();
+    const m4 = new THREE.Matrix4().makeBasis(xAx, yAx, zAx);
     molQuat.setFromRotationMatrix(m4);
     molGroup.quaternion.slerp(molQuat, 0.16);
     if(handData.length > 1){
-      const d = Math.hypot(handData[0].pts[8].x-handData[1].pts[8].x, handData[0].pts[8].y-handData[1].pts[8].y);
-      molScaleTarget = clamp(d/380, 0.55, 2.1);
+      const d = Math.hypot(handData[0].pts[8].x - handData[1].pts[8].x, handData[0].pts[8].y - handData[1].pts[8].y);
+      molScaleTarget = clamp(d / 380, 0.55, 2.1);
     } else molScaleTarget = 1;
   } else { molGroup.rotateY(0.006); molScaleTarget = 1; }
   molScale = lerp(molScale, molScaleTarget, 0.1);
   molGroup.scale.setScalar(molScale);
   chemRenderer.render(chemScene, chemCam);
 }
+(function buildChemSelector(){
+  const wrap = $('#chemSelector');
+  Object.entries(MOLECULES).forEach(([id, mol]) => {
+    const b = document.createElement('button');
+    b.className = 'chem-chip hot' + (id === 'water' ? ' on' : '');
+    b.dataset.mol = id;
+    b.textContent = mol.name;
+    b.addEventListener('click', () => {
+      $$('.chem-chip').forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      if(!chemReady) initChem();
+      loadMolecule(id);
+    });
+    wrap.appendChild(b);
+  });
+})();
 const CHEM = {a:0, w:'Oxygen pulls the shared electrons harder than hydrogen (it is more electronegative), so the bond is polar — and because the molecule is bent, that gives water its δ+ / δ− ends.'};
 const chemOpts = ['polar covalent','ionic','metallic','non-polar covalent'];
 let chemLocked = false;
@@ -1148,7 +1569,7 @@ $('#chemOpts').addEventListener('click', e => {
 });
 
 /* ============================================================
-   7 · FEEDBACK CARDS
+   8 · FEEDBACK CARDS
    ============================================================ */
 const FB = [
   {tag:'USABILITY',said:'The buttons are too small — I keep missing them with my hand.',fix:'Re-prompt: "Make every interactive target at least 120 px, add a 0.9 s dwell ring that fills visibly, and highlight the target on hover."'},
@@ -1169,7 +1590,7 @@ $('#fbGrid').addEventListener('click', e => {
 });
 
 /* ============================================================
-   8 · ARLABS LOADER
+   9 · ARLABS LOADER
    ============================================================ */
 const ARLABS_URL = 'https://darawa-io.github.io/ARLABS/index.html';
 async function loadArlabs(){
@@ -1181,12 +1602,15 @@ async function loadArlabs(){
     if(!/<base\s/i.test(html)){
       html = html.replace(/<head([^>]*)>/i, '<head$1><base href="' + ARLABS_URL.replace(/index\.html?$/i, '') + '">');
     }
+    if(!/ar-scroll-fix/.test(html)){
+      html = html.replace(/<\/head>/i, '<style id="ar-scroll-fix">html,body{overflow-y:auto !important;overflow-x:hidden !important;min-height:100% !important;}</style></head>');
+    }
     iframe.srcdoc = html;
     panel.srcdocMode = true;
     if(panel.hintEl){
       panel.hintEl.innerHTML =
         '<span class="ok">✅ ARLABS loaded (scrollable + clickable).</span> ' +
-        '<b>Left finger</b> moves/scroolls · <b>Left fist→open</b> toggles size · <b>Right finger</b> clicks.';
+        '<b>Left finger</b> over the page scrolls · <b>Left fist→open</b> toggles size · <b>Right finger</b> clicks.';
     }
   } catch(err){
     console.warn('[ARLABS] CORS fetch failed, using direct src:', err && err.message);
@@ -1194,38 +1618,33 @@ async function loadArlabs(){
     panel.srcdocMode = false;
     if(panel.hintEl){
       panel.hintEl.innerHTML =
-        '⚠ Cross-origin fallback: scrolling works, clicking inside the page is limited by the browser. ' +
-        '<b>Left finger</b> moves/scroolls · <b>Left fist→open</b> toggles size.';
+        '⚠ Cross-origin fallback: scrolling works, clicking inside the page is limited by the browser.';
     }
   }
 }
 
 /* ============================================================
-   9 · HAND + FACE TRACKING
+   10 · HAND + FACE TRACKING
    ============================================================ */
 const videoEl   = $('#cam');
 const arCanvas  = $('#arCanvas');
 const arCtx     = arCanvas.getContext('2d');
 const ptrCanvas = $('#pointerCanvas');
 const ptrCtx    = ptrCanvas.getContext('2d');
-
 let arOn = false;
 let hands = null, faceMesh = null, mpCam = null;
 let handData = [];
 let faceLandmarks = null;
 let swapHands = false;
-
 let hoverEl = null;
 let hoverFromIframe = false;
 let dwellT = 0, armed = true;
 const DWELL_MS = 900;
-
 const CONN = [
   [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
   [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
   [13,17],[17,18],[18,19],[19,20],[0,17]
 ];
-
 function resizeAR(){
   const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   [arCanvas, ptrCanvas].forEach(cv => {
@@ -1235,21 +1654,18 @@ function resizeAR(){
 }
 window.addEventListener('resize', resizeAR);
 resizeAR();
-
 function mapPoint(lm, W, H){
-  const vw = videoEl.videoWidth  || 640;
+  const vw = videoEl.videoWidth || 640;
   const vh = videoEl.videoHeight || 480;
-  const s  = Math.max(W/vw, H/vh);
+  const s = Math.max(W/vw, H/vh);
   const dw = vw*s, dh = vh*s;
   const ox = (W-dw)/2, oy = (H-dh)/2;
   return { x: ox + (1-lm.x)*dw, y: oy + lm.y*dh };
 }
-
 function roleOf(label){
   const isRight = label === 'Right';
   return (isRight !== swapHands) ? 'pointer' : 'aux';
 }
-
 function dist3(a,b){ return Math.hypot(a.x-b.x, a.y-b.y, (a.z||0)-(b.z||0)); }
 function isFingerExtended(lm, tip, pip, wrist){
   return dist3(lm[tip], lm[wrist]) > dist3(lm[pip], lm[wrist]) * 1.15;
@@ -1264,7 +1680,6 @@ function isOpenPalm(lm){
 }
 function isPointing(lm){ return isFingerExtended(lm, 8, 6, 0); }
 
-/* ---------- iframe access ---------- */
 function iframeDoc(){
   const iframe = $('#arlabsFrame');
   if(!iframe) return null;
@@ -1278,14 +1693,15 @@ function iframeRect(){
   const iframe = $('#arlabsFrame');
   return iframe ? iframe.getBoundingClientRect() : null;
 }
-function scrollIframeAt(x, y, deltaY){
-  const doc = iframeDoc(); const ir = iframeRect();
-  if(!doc || !ir) return false;
-  if(x < ir.left || x > ir.right || y < ir.top || y > ir.bottom) return false;
+function scrollIframeTo(relY){
+  const doc = iframeDoc();
+  if(!doc) return false;
   try {
     const scroller = doc.scrollingElement || doc.documentElement || doc.body;
     if(!scroller) return false;
-    scroller.scrollTop = Math.max(0, scroller.scrollTop + deltaY);
+    const max = scroller.scrollHeight - scroller.clientHeight;
+    if(max <= 0) return false;
+    scroller.scrollTop = clamp(relY, 0, 1) * max;
     return true;
   } catch(e){ return false; }
 }
@@ -1303,7 +1719,6 @@ function clickIframeAt(x, y){
   return false;
 }
 
-/* ---------- panel state ---------- */
 const panel = {
   el:null, headerEl:null, hintEl:null, dotEl:null,
   grabbed:false, locked:true, enlarged:false,
@@ -1311,7 +1726,6 @@ const panel = {
   grabOffsetX:0, grabOffsetY:0,
   grabDwell:0, stopDwell:0,
   lastPx:null, lastPy:null,
-  iframeScrollLastY:null,
   prevLeftState:null,
   leftHandSeenAt:0,
   leftHandFirstSeenAt:0,
@@ -1331,7 +1745,6 @@ function initPanel(){
   panel.leftHandSeenAt = 0;
   panel.leftHandFirstSeenAt = 0;
   panel.gestureCooldown = 0;
-  panel.iframeScrollLastY = null;
 }
 function resetPanel(){
   if(!panel.el) return;
@@ -1344,7 +1757,6 @@ function resetPanel(){
   panel.el.classList.remove('grabbed');
   panel.el.classList.add('locked');
   panel.grabDwell = 0; panel.stopDwell = 0;
-  panel.iframeScrollLastY = null;
   panel.prevLeftState = null;
   panel.leftHandSeenAt = 0;
   panel.leftHandFirstSeenAt = 0;
@@ -1356,15 +1768,9 @@ function setPanelEnlarged(on){
   panel.enlarged = on;
   panel.el.classList.toggle('enlarged', on);
 }
-
-/* ---------- Left hand gesture, runs on EVERY slide ----------
-   1. If the QR modal is up, a fresh fist close hides it (top priority).
-   2. On the intro slide, fist→open enlarges the panel, open→fist shrinks it.
----------------------------------------------------------------- */
 function updateLeftHandGestures(){
   const now = performance.now();
   const leftHand = handData.find(h => !h.pointer);
-
   if(!leftHand || !leftHand.raw){
     if(now - panel.leftHandSeenAt > 500){
       panel.prevLeftState = null;
@@ -1389,15 +1795,14 @@ function updateLeftHandGestures(){
   const visibleFor = panel.leftHandFirstSeenAt ? (now - panel.leftHandFirstSeenAt) : 0;
   const sinceLast  = now - panel.gestureCooldown;
 
-  // ---- Top priority: a fresh fist close hides the QR ----
-  if(state === 'fist' && prev !== 'fist' && qrVisible){
-    hideQRModal();
+  /* A fresh left-fist close closes ANY open modal (QR codes, etc.) */
+  if(state === 'fist' && prev !== 'fist' && anyModalOpen()){
+    closeAnyModal();
     panel.prevLeftState = state;
     panel.gestureCooldown = now;
     return;
   }
 
-  // ---- Panel size toggle: only on the intro slide, with debounce ----
   if(slideIs('intro') && prev !== null && prev !== state && visibleFor > 400 && sinceLast > 1200){
     if(prev === 'fist' && state === 'open' && !panel.enlarged){
       setPanelEnlarged(true);
@@ -1409,31 +1814,20 @@ function updateLeftHandGestures(){
   }
   panel.prevLeftState = state;
 }
-
-/* ---------- Left hand also drives the panel (drag + scroll) ---------- */
 function updatePanelGestures(dt){
   if(!panel.el) return;
   if(!slideIs('intro')) return;
-
   const leftHand = handData.find(h => !h.pointer);
-  if(!leftHand || !leftHand.raw){
-    panel.grabDwell = 0;
-    panel.stopDwell = 0;
-    panel.iframeScrollLastY = null;
-    return;
-  }
-
+  if(!leftHand || !leftHand.raw){ panel.grabDwell = 0; panel.stopDwell = 0; return; }
   const tip = leftHand.pts[8];
   const px = tip.x, py = tip.y;
   const pr = panel.el.getBoundingClientRect();
   const now = performance.now();
-
   if(panel.grabbed){
     panel.x = px - panel.grabOffsetX;
     panel.y = py - panel.grabOffsetY;
     panel.el.style.left = panel.x + 'px';
     panel.el.style.top  = panel.y + 'px';
-
     const moved = Math.hypot(px - (panel.lastPx ?? px), py - (panel.lastPy ?? py));
     if(moved < 1.4){
       panel.stopDwell += dt * 1000;
@@ -1448,10 +1842,8 @@ function updatePanelGestures(dt){
       }
     } else panel.stopDwell = 0;
     panel.lastPx = px; panel.lastPy = py;
-    panel.iframeScrollLastY = null;
     return;
   }
-
   const recentGesture = (now - panel.gestureCooldown) < 600;
   const hr = panel.headerEl.getBoundingClientRect();
   const inHeader = px >= hr.left && px <= hr.right && py >= hr.top && py <= hr.bottom;
@@ -1468,23 +1860,14 @@ function updatePanelGestures(dt){
       panel.el.classList.remove('locked');
     }
   } else panel.grabDwell = 0;
-
   if(!panel.grabbed){
     const ir = iframeRect();
-    const inIframe = ir && px >= ir.left && px <= ir.right && py >= ir.top && py <= ir.bottom;
-    if(inIframe){
-      if(panel.iframeScrollLastY !== null){
-        const deltaY = py - panel.iframeScrollLastY;
-        scrollIframeAt(px, py, deltaY);
-      }
-      panel.iframeScrollLastY = py;
-    } else {
-      panel.iframeScrollLastY = null;
+    if(ir && px >= ir.left && px <= ir.right && py >= ir.top && py <= ir.bottom){
+      const rel = clamp((py - ir.top) / ir.height, 0, 1);
+      scrollIframeTo(rel);
     }
   }
 }
-
-/* ---------- Hot elements ---------- */
 function getHotEls(){
   const out = [];
   const W = window.innerWidth, H = window.innerHeight;
@@ -1499,11 +1882,13 @@ function getHotEls(){
   });
   return out;
 }
-
-/* ---------- RIGHT pointer (the ONLY hand that clicks) ---------- */
 function updatePointer(dt){
-  // While the QR modal is up, ignore pointer firing
-  if(qrVisible){
+  if(anyModalOpen()){
+    if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
+    hoverEl = null; hoverFromIframe = false; dwellT = 0;
+    return;
+  }
+  if(slideIs('math') && grabbedSlider){
     if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
     hoverEl = null; hoverFromIframe = false; dwellT = 0;
     return;
@@ -1514,26 +1899,20 @@ function updatePointer(dt){
     return;
   }
   const ptr = handData.find(h => h.pointer);
-  if(!ptr || !ptr.raw){
-    hoverEl = null; hoverFromIframe = false;
-    return;
-  }
+  if(!ptr || !ptr.raw){ hoverEl = null; hoverFromIframe = false; return; }
   if(!isPointing(ptr.raw)){
     if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
     hoverEl = null; hoverFromIframe = false;
     dwellT = 0; armed = true;
     return;
   }
-
   const dpr = arCanvas.width / window.innerWidth;
   const px = ptr.pts[8].x / dpr;
   const py = ptr.pts[8].y / dpr;
-
   const ir = iframeRect();
   const overIframe = ir && px >= ir.left && px <= ir.right && py >= ir.top && py <= ir.bottom;
-
   let target = null, fromIframe = false;
-  if(overIframe){
+  if(overIframe && slideIs('intro')){
     target = $('#arlabsFrame');
     fromIframe = true;
   } else {
@@ -1544,7 +1923,6 @@ function updatePointer(dt){
       }
     }
   }
-
   if(target !== hoverEl){
     if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
     hoverEl = target;
@@ -1552,7 +1930,6 @@ function updatePointer(dt){
     if(hoverEl && !fromIframe && hoverEl.classList) hoverEl.classList.add('hot-on');
     dwellT = 0; armed = true;
   }
-
   if(ptr.pinch && hoverEl && armed){ doFire(px, py); armed = false; dwellT = 0; return; }
   if(hoverEl && armed){
     dwellT += dt * 1000;
@@ -1580,8 +1957,6 @@ function doFire(px, py){
     try { hoverEl.click(); } catch(e){}
   }
 }
-
-/* ---------- KPI prompt gestures ---------- */
 function updatePromptGestures(){
   if(!slideIs('kpi')) return;
   const pre = $('#promptOut');
@@ -1590,7 +1965,6 @@ function updatePromptGestures(){
   const rightHand = handData.find(h => h.pointer);
   const leftHand  = handData.find(h => !h.pointer);
   const dpr = arCanvas.width / window.innerWidth;
-
   if(rightHand && rightHand.raw){
     const r = pre.getBoundingClientRect();
     const y = rightHand.pts[8].y / dpr;
@@ -1606,8 +1980,6 @@ function updatePromptGestures(){
     hl.style.height = '18px';
   } else hl.style.display = 'none';
 }
-
-/* ---------- Draw skeletons ---------- */
 function drawAR(){
   const c = arCtx;
   const W = arCanvas.width, H = arCanvas.height;
@@ -1615,16 +1987,12 @@ function drawAR(){
   c.setTransform(1,0,0,1,0,0);
   c.clearRect(0,0,W,H);
   if(!arOn) return;
-
   handData.forEach(h => {
     const col = h.pointer ? '255,200,87' : '91,200,255';
     c.strokeStyle = 'rgba(' + col + ',.5)';
     c.lineWidth = 2.2 * k;
     c.beginPath();
-    CONN.forEach(([i,j]) => {
-      c.moveTo(h.pts[i].x, h.pts[i].y);
-      c.lineTo(h.pts[j].x, h.pts[j].y);
-    });
+    CONN.forEach(([i,j]) => { c.moveTo(h.pts[i].x, h.pts[i].y); c.lineTo(h.pts[j].x, h.pts[j].y); });
     c.stroke();
     c.fillStyle = 'rgba(' + col + ',.85)';
     h.pts.forEach(p => { c.beginPath(); c.arc(p.x, p.y, 2.2*k, 0, 6.283); c.fill(); });
@@ -1633,7 +2001,6 @@ function drawAR(){
     c.textAlign = 'left';
     c.fillText(h.pointer ? 'POINTER' : 'AUX', h.pts[0].x + 12*k, h.pts[0].y + 4*k);
   });
-
   if(!handData.length){
     c.font = '700 ' + (12*k) + 'px "Space Mono", monospace';
     c.fillStyle = 'rgba(255,255,255,.5)';
@@ -1641,8 +2008,6 @@ function drawAR(){
     c.fillText('show a hand to the camera · point with your index finger', W/2, H - 60*k);
   }
 }
-
-/* ---------- Tip pointers + dwell ring for BOTH hands ---------- */
 function drawPointers(){
   const c = ptrCtx;
   const W = ptrCanvas.width, H = ptrCanvas.height;
@@ -1650,26 +2015,21 @@ function drawPointers(){
   c.setTransform(1,0,0,1,0,0);
   c.clearRect(0,0,W,H);
   if(!arOn || !handData.length) return;
-
   handData.forEach(h => {
     const tip = h.pts[8];
     const col = h.pointer ? '255,200,87' : '91,200,255';
     const label = h.pointer ? 'RIGHT · CLICK' : 'LEFT · MOVE';
     const pointing = h.raw && isPointing(h.raw);
-
     c.strokeStyle = 'rgba(' + col + ',' + (pointing ? '.28' : '.14') + ')';
     c.lineWidth = 8*k;
     c.beginPath(); c.arc(tip.x, tip.y, 26*k, 0, 6.283); c.stroke();
-
     c.strokeStyle = 'rgb(' + col + ')';
     c.globalAlpha = pointing ? 1 : 0.55;
     c.lineWidth = 2.5*k;
     c.beginPath(); c.arc(tip.x, tip.y, 22*k, 0, 6.283); c.stroke();
     c.globalAlpha = 1;
-
     c.fillStyle = 'rgb(' + col + ')';
     c.beginPath(); c.arc(tip.x, tip.y, 5*k, 0, 6.283); c.fill();
-
     if(h.pointer && hoverEl && dwellT > 0 && armed){
       const prog = clamp(dwellT / DWELL_MS, 0, 1);
       c.strokeStyle = '#ffc857';
@@ -1680,48 +2040,31 @@ function drawPointers(){
       c.fillStyle = 'rgba(255,200,87,' + (0.08 + prog * 0.14) + ')';
       c.beginPath(); c.arc(tip.x, tip.y, 20*k, 0, 6.283); c.fill();
     }
-
     c.font = '700 ' + (10*k) + 'px "Space Mono", monospace';
     c.fillStyle = 'rgba(' + col + ',.9)';
     c.textAlign = 'center';
     c.fillText(label, tip.x, tip.y + 44*k);
   });
 }
-
-/* ---------- Hand results ---------- */
 function onHandsResults(res){
   const W = arCanvas.width, H = arCanvas.height;
   handData = [];
   if(res.multiHandLandmarks){
     res.multiHandLandmarks.forEach((lm, i) => {
-      const mpLabel = (res.multiHandedness && res.multiHandedness[i])
-        ? res.multiHandedness[i].label : 'Right';
-      // MediaPipe assumes mirrored selfie; swap to match the user's real hands
+      const mpLabel = (res.multiHandedness && res.multiHandedness[i]) ? res.multiHandedness[i].label : 'Right';
       const label = (mpLabel === 'Right') ? 'Left' : 'Right';
       const pts = lm.map(p => mapPoint(p, W, H));
       const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
-      handData.push({
-        label,
-        pts,
-        raw: lm,
-        pointer: roleOf(label) === 'pointer',
-        pinch: pinchDist < 0.055
-      });
+      handData.push({ label, pts, raw: lm, pointer: roleOf(label) === 'pointer', pinch: pinchDist < 0.055 });
     });
   }
   handData.sort((a,b) => (b.pointer ? 1 : 0) - (a.pointer ? 1 : 0));
 }
-
-/* ---------- Face results ---------- */
 function onFaceResults(res){
   if(res.multiFaceLandmarks && res.multiFaceLandmarks.length){
     faceLandmarks = res.multiFaceLandmarks[0];
-  } else {
-    faceLandmarks = null;
-  }
+  } else faceLandmarks = null;
 }
-
-/* ---------- Start / stop AR ---------- */
 function ensureHands(){
   if(hands) return true;
   if(typeof Hands === 'undefined' || typeof Camera === 'undefined') return false;
@@ -1738,14 +2081,13 @@ function ensureFaceMesh(){
   faceMesh.onResults(onFaceResults);
   return true;
 }
-
 async function startAR(){
   if(arOn) return;
   if(!ensureHands()){
     alert('Hand-tracking library could not load. AR mode needs an internet connection for the MediaPipe CDN.');
     return;
   }
-  ensureFaceMesh(); // best-effort; Simon says falls back to hand-only if it fails
+  ensureFaceMesh();
   try{
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { width:{ideal:640}, height:{ideal:480}, facingMode:'user' },
@@ -1753,15 +2095,12 @@ async function startAR(){
     });
     videoEl.srcObject = stream;
     await videoEl.play();
-
     document.body.classList.add('ar');
     arOn = true;
     setArButtons(true);
-
     mpCam = new Camera(videoEl, {
       onFrame: async () => {
         try{ await hands.send({image: videoEl}); }catch(e){}
-        // Only run FaceMesh when needed, to save CPU
         if(faceMesh && slideIs('simon')){
           try{ await faceMesh.send({image: videoEl}); }catch(e){}
         }
@@ -1791,6 +2130,7 @@ function stopAR(){
   if(hoverEl && hoverEl.classList) hoverEl.classList.remove('hot-on');
   hoverEl = null; hoverFromIframe = false;
   stopSimon();
+  releaseSlider();
   drawAR();
   drawPointers();
 }
@@ -1802,56 +2142,60 @@ function setArButtons(on){
   });
 }
 
-/* ============================================================
-   10 · WIRE UP BUTTONS
-   ============================================================ */
 function toggleAR(){ arOn ? stopAR() : startAR(); }
 $('#arBtn').addEventListener('click', toggleAR);
 $('#arBtn2').addEventListener('click', toggleAR);
 $('#arBtn3').addEventListener('click', toggleAR);
-
 $('#swapBtn').addEventListener('click', () => {
   swapHands = !swapHands;
   $('#swapBtn').textContent = swapHands ? '⇄ Hands Swapped' : '⇄ Swap Hands';
   $('#swapBtn').classList.toggle('on', swapHands);
 });
 
-/* ============================================================
-   11 · MAIN LOOP
-   ============================================================ */
 let last = performance.now();
-let chemAccum = 0;
-
+let chemAccum = 0, polyAccum = 0;
 function loop(now){
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-
   updatePointer(dt);
-  updateLeftHandGestures(); // runs on every slide
-  updatePanelGestures(dt);  // drag/scroll only on intro
+  updateLeftHandGestures();
+  updatePanelGestures(dt);
   updatePromptGestures();
+  updateMathGestures();
   updateSimon();
   drawAR();
   drawPointers();
-
-  if(slideIs('math')) updateMath(dt);
+  if(slideIs('poly')){
+    if(!polyReady) initPoly();
+    updatePolyGestures();
+    updatePolyRotation();
+    updatePolyDisplay();
+    polyAccum += dt;
+    if(polyAccum > 0.033){ polyAccum = 0; updatePolyhedron(); }
+  }
   if(slideIs('chem')){
     if(!chemReady) initChem();
     chemAccum += dt;
     if(chemAccum > 0.033){ chemAccum = 0; renderChem(); }
   }
 }
-
-/* ============================================================
-   12 · BOOT
-   ============================================================ */
 goTo(0);
 hardResetPanels();
 initPanel();
-resizeMath();
 loadArlabs();
-setTimeout(() => { initChem(); resizeChem(); resizeMath(); initPanel(); }, 400);
+requestAnimationFrame(() => {
+  resizeMath(); drawMath();
+  initChem(); resizeChem();
+  initPoly(); resizePoly();
+  initPanel();
+});
+setTimeout(() => {
+  resizeMath(); drawMath();
+  resizeChem();
+  resizePoly();
+  initPanel();
+}, 400);
 requestAnimationFrame(loop);
 </script>
 </body>
