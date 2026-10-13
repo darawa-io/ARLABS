@@ -427,7 +427,7 @@ function present(plain, latex, confidence){
 }
 
 /* ============================================================
-   iink-ts v4 recognition (corrected API)
+   iink-ts v4 recognition
    ============================================================ */
 let iinkCanvas = null;
 let iinkReady = false;
@@ -481,7 +481,7 @@ async function initIink(){
   }
 }
 
-// Replay strokes into iink via importPointEvents(), then export LaTeX.
+// Replay strokes into iink, wait for the server to finish, then export LaTeX.
 async function convert(){
   clearIdle();
   if (!strokes.length){ setMsg('Write something first.'); return; }
@@ -496,13 +496,20 @@ async function convert(){
     try { await iinkCanvas.clear(); } catch(_){}
 
     // Build the pointer-event stream iink-ts expects.
+    // Points must be in the coordinate space of the hidden iink host
+    // (which is 800x600). Scale our canvas strokes to fit.
+    const hostRect = iinkHost.getBoundingClientRect();
+    const padRect  = canvas.getBoundingClientRect();
+    const sx = padRect.width  ? (hostRect.width  / padRect.width)  : 1;
+    const sy = padRect.height ? (hostRect.height / padRect.height) : 1;
+
     const baseTime = Date.now();
     const pointerEvents = strokes.map((s, idx) => ({
       pointerType: 'PEN',
       pointerId: idx,
       pointers: s.pts.map((p, i) => ({
-        x: p[0],
-        y: p[1],
+        x: p[0] * sx,
+        y: p[1] * sy,
         t: baseTime + i,
         p: 0.5
       }))
@@ -511,38 +518,34 @@ async function convert(){
     // Send everything at once
     await iinkCanvas.importPointEvents(pointerEvents);
 
-    // Give the server a moment, then ask for LaTeX.
-    setTimeout(async () => {
-      try {
-        let exported = null;
-        if (typeof iinkCanvas.export === 'function'){
-          exported = await iinkCanvas.export({ 'application/x-latex': true });
-        } else if (typeof iinkCanvas.export_ === 'function'){
-          exported = await iinkCanvas.export_({ 'application/x-latex': true });
-        }
+    // Wait for the server to finish recognizing the strokes.
+    // This replaces the fixed 600 ms timeout and is the key fix.
+    if (typeof iinkCanvas.waitForIdle === 'function'){
+      await iinkCanvas.waitForIdle();
+    }
 
-        const latex = (exported && exported['application/x-latex']) || '';
+    // Now request the LaTeX export.
+    let exported = null;
+    if (typeof iinkCanvas.export === 'function'){
+      exported = await iinkCanvas.export({ 'application/x-latex': true });
+    } else if (typeof iinkCanvas.export_ === 'function'){
+      exported = await iinkCanvas.export_({ 'application/x-latex': true });
+    }
 
-        if (latex){
-          const plain = latexToPlain(latex);
-          present(plain, latex, 0.9);
-        } else {
-          setPill('Nothing legible','idle');
-          setMsg("Couldn't read any math. Try writing larger and more clearly.", true);
-        }
-      } catch (err){
-        console.error('iink export failed:', err);
-        setPill('Could not read','error');
-        setMsg('Recognition failed. Try again. (' + (err && err.message ? err.message : err) + ')', true);
-      } finally {
-        busy = false;
-      }
-    }, 600);
+    const latex = (exported && exported['application/x-latex']) || '';
 
+    if (latex){
+      const plain = latexToPlain(latex);
+      present(plain, latex, 0.9);
+    } else {
+      setPill('Nothing legible','idle');
+      setMsg("Couldn't read any math. Try writing larger and more clearly.", true);
+    }
   } catch (e){
     console.error('convert failed:', e);
     setPill('Could not read','error');
     setMsg('Recognition failed. (' + (e && e.message ? e.message : e) + ')', true);
+  } finally {
     busy = false;
   }
 }
