@@ -2,616 +2,889 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Handwriting Calculator</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700&display=swap" rel="stylesheet">
-<!-- iink-ts v4.1.0 — loaded from jsDelivr with correct MIME types -->
-<script src="https://cdn.jsdelivr.net/npm/iink-ts@4.1.0/dist/iink.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MathInk">
+<title>MathInk — Handwriting Calculator</title>
 <style>
 :root{
-  --bg:#E8EEF3; --paper:#F4F8FB; --grid:#D6E1E9; --grid-strong:#C2D3DF;
-  --ink:#16263D; --muted:#566779; --panel:#FFFFFF; --line:#D5DFE7;
-  --accent:#2757E8; --accent-ink:#FFFFFF; --accent-soft:#E3EAFD; --danger:#B4411A;
-  --font:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --bg:#ffffff; --fg:#14181f; --muted:#7b8493; --line:#e4e7ed; --panel:#f2f4f8; --accent:#1a8cff; --accent-fg:#ffffff;
+  --err:#d6453d; --ink:#14181f; --hi:#ff3b30; --shadow:rgba(0,0,0,.18);
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme:dark){
+@media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0D1218; --paper:#131A22; --grid:#1E2934; --grid-strong:#2A3948;
-    --ink:#E6EEF5; --muted:#8FA1B3; --panel:#17202A; --line:#263240;
-    --accent:#7AA2FF; --accent-ink:#0D1218; --accent-soft:#1E2B45; --danger:#F08A5D;
+    --bg:#0f1115; --fg:#eef1f6; --muted:#8c95a5; --line:#262b34; --panel:#1b2029; --accent:#4aa3ff; --accent-fg:#06121f;
+    --err:#ff6b62; --ink:#eef1f6; --hi:#ff5a50; --shadow:rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0D1218; --paper:#131A22; --grid:#1E2934; --grid-strong:#2A3948;
-  --ink:#E6EEF5; --muted:#8FA1B3; --panel:#17202A; --line:#263240;
-  --accent:#7AA2FF; --accent-ink:#0D1218; --accent-soft:#1E2B45; --danger:#F08A5D;
+  --bg:#0f1115; --fg:#eef1f6; --muted:#8c95a5; --line:#262b34; --panel:#1b2029; --accent:#4aa3ff; --accent-fg:#06121f;
+  --err:#ff6b62; --ink:#eef1f6; --hi:#ff5a50; --shadow:rgba(0,0,0,.6);
 }
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
-.app{max-width:1200px;margin:0 auto;padding:16px}
-h1{font-size:1.5rem;font-weight:700;letter-spacing:-.01em;margin:4px 0 2px}
-.sub{margin:0 0 14px;color:var(--muted);max-width:60ch}
-.layout{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
-@media (min-width:920px){.layout{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}}
-button,input{font:inherit;color:inherit}
-button{cursor:pointer}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
-.seg button{border:0;background:transparent;padding:0 16px;min-height:44px}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:500}
-.btn{min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
-.btn:hover{border-color:var(--grid-strong)}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:500}
-.btn[disabled]{opacity:.5;cursor:default}
-.auto{display:inline-flex;align-items:center;gap:8px;margin-left:auto;color:var(--muted);min-height:44px}
-.auto input{width:20px;height:20px;accent-color:var(--accent)}
-.padwrap{
-  position:relative;height:clamp(320px,62vh,640px);border-radius:14px;overflow:hidden;
-  border:1px solid var(--line);background-color:var(--paper);
-  background-image:
-    linear-gradient(var(--grid) 1px,transparent 1px),
-    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:28px 28px;
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg);overscroll-behavior:none}
+body{
+  margin:0;height:100%;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;
+  overscroll-behavior:none;
 }
-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
-.hint{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--muted);pointer-events:none;padding:24px;font-size:1.15rem}
-.hint small{display:block;margin-top:6px;font-size:.85rem;opacity:.85}
-.pill{
-  position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:10px;
-  padding:6px 14px 6px 8px;border-radius:999px;background:var(--panel);border:1px solid var(--line);
-  font-size:.9rem;pointer-events:none;
+header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);flex:none}
+.brand{font-weight:650;letter-spacing:-.01em;color:var(--accent);font-size:18px;margin-right:auto}
+.btn{
+  appearance:none;-webkit-appearance:none;border:0;background:var(--panel);color:var(--fg);
+  height:40px;min-width:40px;padding:0 12px;border-radius:11px;font:inherit;font-size:15px;font-weight:500;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;
 }
-.ring{width:30px;height:30px;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:4}
-.ring .bg{stroke:var(--line)}
-.ring .fg{stroke:var(--accent);stroke-linecap:round;stroke-dasharray:87.96;stroke-dashoffset:87.96}
-.pill[data-mode="busy"] .ring{animation:spin 1s linear infinite}
-.pill[data-mode="busy"] .ring .fg{stroke-dashoffset:60}
-.pill[data-mode="error"] .ring .fg{stroke:var(--danger);stroke-dashoffset:0}
-.pill[data-mode="done"] .ring .fg{stroke-dashoffset:0}
-@keyframes spin{to{transform:rotate(270deg)}}
-@media (prefers-reduced-motion:reduce){.pill[data-mode="busy"] .ring{animation:none}}
-.result{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
-.result h2{font-size:1rem;font-weight:700;margin:0 0 8px}
-.typed{min-height:64px;display:flex;align-items:center;overflow-x:auto;padding:4px 0 8px;border-bottom:1px solid var(--line)}
-.typed .empty{color:var(--muted)}
-.answers{margin:12px 0;display:grid;gap:6px;overflow-x:auto}
-.ans{display:grid;grid-template-columns:minmax(78px,auto) 1fr;gap:12px;align-items:center;padding:6px 10px;border-radius:8px}
-.ans .lab{color:var(--muted);font-size:.9rem}
-.ans.final{background:var(--accent-soft);border-left:4px solid var(--accent)}
-.ans.final .math{font-weight:500}
-.ans.sub .math{opacity:.85}
-.math{overflow-x:auto}
-math{font-family:"STIX Two Math","Cambria Math","Latin Modern Math","Noto Sans Math",math,serif;font-size:1.4em}
-.typed math{font-size:1.7em}
-.note{color:var(--muted);font-size:.9rem;margin:2px 0 0}
-.msg{margin:8px 0;min-height:1.4em;color:var(--muted)}
-.msg.err{color:var(--danger)}
-.edit{display:flex;gap:8px;margin-top:6px}
-.edit label{position:absolute;left:-9999px}
-.edit input{flex:1;min-width:0;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95rem}
-.steps{margin:6px 0 0 1.2em;padding:0;color:var(--muted);font-size:.9rem}
-#history{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-#history li{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;overflow-x:auto}
-#history math{font-size:1.15em}
-.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.history-wrap{margin-top:16px}
-.history-wrap:empty{display:none}
+.btn:active{filter:brightness(.9)}
+.btn[disabled]{opacity:.32;pointer-events:none}
+.btn.primary{background:var(--accent);color:var(--accent-fg);padding:0 16px}
+.btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+#stage{position:relative;flex:1;min-height:0;overflow:hidden}
+#ink{position:absolute;inset:0;width:100%;height:100%;touch-action:none;transition:opacity .22s ease;cursor:crosshair}
+#stage.typed #ink{opacity:0}
+#typed{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .22s ease;overflow:hidden;
+}
+#stage.typed #typed{opacity:1}
+#hint{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  color:var(--muted);pointer-events:none;text-align:center;padding:24px;transition:opacity .2s;
+}
+#hint b{font-size:clamp(20px,3.4vmin,30px);font-weight:500;color:var(--fg);opacity:.55}
+#hint span{font-size:clamp(14px,2.2vmin,18px)}
+#stage.has #hint{opacity:0}
+
+#tray{
+  flex:none;border-top:1px solid var(--line);padding:8px 12px;min-height:60px;
+  display:flex;align-items:center;gap:12px;
+}
+#chips{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;-webkit-overflow-scrolling:touch;padding:2px 0;scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+#chips .empty{color:var(--muted);font-size:14px;white-space:nowrap}
+.chip{
+  flex:none;min-width:40px;height:40px;padding:0 8px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel);color:var(--fg);font:inherit;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.chip.bad{border-color:var(--err);color:var(--err)}
+.chip:active{filter:brightness(.9)}
+#readout{flex:none;max-width:48%;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+#readout.err{color:var(--err)}
+
+/* typeset formula */
+.fm{
+  display:flex;align-items:center;justify-content:center;white-space:nowrap;transform-origin:center center;
+  font-size:clamp(44px,9vmin,96px);font-weight:300;line-height:1.2;color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+.fm .op{margin:0 .22em}
+.fm .eqs{margin:0 .22em;color:var(--accent)}
+.fm .res{color:var(--accent)}
+.fm .bad{color:var(--err)}
+.fm .row{display:flex;align-items:center}
+.frac{display:inline-flex;flex-direction:column;align-items:stretch;margin:0 .08em}
+.frac>.fn,.frac>.fd{display:flex;align-items:center;justify-content:center;padding:0 .14em}
+.frac>.fn{border-bottom:.05em solid currentColor;padding-bottom:.04em}
+.frac>.fd{padding-top:.04em}
+.sqrt{display:inline-flex;align-items:stretch;margin:0 .05em}
+.rs{
+  width:.62em;flex:none;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M2 56 L18 49 L40 95 L100 3' fill='none' stroke='black' stroke-width='5' stroke-linejoin='miter'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M2 56 L18 49 L40 95 L100 3' fill='none' stroke='black' stroke-width='5' stroke-linejoin='miter'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat;
+}
+.rc{display:flex;align-items:center;border-top:.05em solid currentColor;padding:.06em .08em 0 .04em;margin-left:-.02em}
+.pl,.pr{width:.3em;align-self:stretch;flex:none;border:0 solid currentColor;margin:.05em 0}
+.pl{border-left-width:.045em;border-radius:100% 0 0 100%/50% 0 0 50%}
+.pr{border-right-width:.045em;border-radius:0 100% 100% 0/0 50% 50% 0}
+.sup{align-self:flex-start;font-size:.58em;margin:-.02em 0 0 .05em;display:flex;align-items:center}
+
+/* teach bar */
+#teachbar{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:8px;
+  background:var(--panel);border:1px solid var(--line);padding:6px 8px 6px 16px;border-radius:999px;font-size:15px;white-space:nowrap;
+  box-shadow:0 4px 18px var(--shadow);max-width:calc(100% - 24px);
+}
+#teachbar.on{display:flex}
+#teachbar .btn{height:34px;font-size:14px;padding:0 12px}
+#teachbar em{font-style:normal;color:var(--accent);font-weight:650;font-size:20px}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.scrim.on{display:flex}
+.sheet{
+  background:var(--bg);color:var(--fg);width:min(580px,100%);border-radius:20px 20px 0 0;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px var(--shadow);
+  max-height:88%;overflow:auto;
+}
+.sheet h2{margin:0 0 4px;font-size:18px;font-weight:650}
+.sheet p{margin:6px 0 12px;color:var(--muted);font-size:14px;line-height:1.45}
+.sheet h3{margin:18px 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.grid.five{grid-template-columns:repeat(5,1fr)}
+.key{
+  appearance:none;-webkit-appearance:none;border:0;background:var(--panel);color:var(--fg);border-radius:12px;height:54px;
+  font:inherit;font-size:22px;cursor:pointer;position:relative;
+}
+.key:active{filter:brightness(.88)}
+.key small{position:absolute;right:6px;top:4px;font-size:11px;color:var(--accent);font-weight:600}
+.key.wide{grid-column:span 2;font-size:16px}
+.row2{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
+.row2 span{font-size:16px}
+.sw{
+  appearance:none;-webkit-appearance:none;width:52px;height:32px;border-radius:999px;border:0;background:var(--line);position:relative;cursor:pointer;flex:none;
+}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+.sw.on{background:var(--accent)}
+.sw.on::after{transform:translateX(20px)}
+.link{appearance:none;border:0;background:none;color:var(--err);font:inherit;font-size:15px;padding:8px 0;cursor:pointer}
+.close{width:100%;margin-top:14px}
+@media (max-width:520px){ #readout{display:none} }
 </style>
 </head>
 <body>
-<main class="app">
-  <h1>Handwriting Calculator</h1>
-  <p class="sub">Write an equation with a pen, finger or mouse. When you stop for 2 seconds it is typed out and solved.</p>
 
-  <div class="layout">
-    <section aria-label="Writing pad">
-      <div class="toolbar">
-        <div class="seg" role="group" aria-label="Tool">
-          <button id="penBtn" aria-pressed="true">Pen</button>
-          <button id="eraseBtn" aria-pressed="false">Eraser</button>
-        </div>
-        <button class="btn" id="undoBtn">Undo</button>
-        <button class="btn" id="clearBtn">Clear</button>
-        <button class="btn primary" id="convertBtn">Convert now</button>
-        <label class="auto"><input type="checkbox" id="auto" checked> Convert after 2 s</label>
-      </div>
-      <div class="padwrap" id="padwrap">
-        <canvas id="pad" aria-label="Drawing area for handwritten math"></canvas>
-        <div class="hint" id="hint">Write an equation here<small>For example 2x + 5 = 11, √18 + 1/3, or 3.2 × 10⁵ ÷ 4 × 10²</small></div>
-        <div class="pill" id="pill" data-mode="idle" aria-hidden="true">
-          <svg class="ring" viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" id="ringFg" cx="18" cy="18" r="14"/></svg>
-          <span id="pillText">Starting up…</span>
-        </div>
-      </div>
-      <div class="sr" id="live" role="status" aria-live="polite"></div>
-    </section>
+<header>
+  <div class="brand">MathInk</div>
+  <button class="btn" id="bUndo" aria-label="Undo" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+  <button class="btn" id="bRedo" aria-label="Redo" disabled><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+  <button class="btn" id="bClear" aria-label="Clear" disabled><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+  <button class="btn primary" id="bSolve">Solve</button>
+  <button class="btn" id="bSet" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</header>
 
-    <section class="result" aria-label="Result">
-      <h2>Typed equation</h2>
-      <div class="typed" id="typed"><span class="empty">Your handwriting appears here, typed.</span></div>
-      <div class="answers" id="answers"></div>
-      <p class="msg" id="msg"></p>
-      <form class="edit" id="editForm">
-        <label for="plain">Equation as text</label>
-        <input id="plain" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Fix a misread, or type: 2*x+5=11">
-        <button class="btn" type="submit">Solve</button>
-      </form>
-      <div class="history-wrap" id="historyWrap"></div>
-    </section>
+<div id="stage">
+  <canvas id="ink"></canvas>
+  <div id="typed"><div class="fm" id="fm"></div></div>
+  <div id="hint"><b>Write a calculation</b><span>with your finger or Apple Pencil &nbsp;·&nbsp; try 3 × (4 + 5) or a fraction</span></div>
+  <div id="teachbar"><span>Teaching <em id="tbSym">7</em> · <span id="tbCount">0</span> saved</span><button class="btn primary" id="tbSave">Save</button><button class="btn" id="tbClear">Redo</button><button class="btn" id="tbDone">Done</button></div>
+</div>
+
+<div id="tray">
+  <div id="chips"><span class="empty">Recognized symbols appear here — tap one to correct it</span></div>
+  <div id="readout"></div>
+</div>
+
+<!-- symbol picker -->
+<div class="scrim" id="pickScrim">
+  <div class="sheet">
+    <h2>What did you write?</h2>
+    <p>Pick the right symbol. MathInk also learns from your correction.</p>
+    <div class="grid" id="pickGrid"></div>
+    <button class="btn close" id="pickClose">Cancel</button>
   </div>
-</main>
+</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/nerdamer.core.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Algebra.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Calculus.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Solve.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<!-- settings -->
+<div class="scrim" id="setScrim">
+  <div class="sheet">
+    <h2>Settings</h2>
+    <div class="row2"><span>Auto‑convert handwriting after a pause</span><button class="sw on" id="swAuto" aria-label="Auto convert"></button></div>
+    <h3>Teach it your handwriting</h3>
+    <p>If a digit keeps being misread, pick it here and write it a few times. Samples are stored only on this device.</p>
+    <div class="grid five" id="teachGrid"></div>
+    <button class="link" id="resetSamples">Forget all my samples</button>
+    <h3>Tips</h3>
+    <p>Fractions: draw a flat bar with the top and bottom written above and below it. Roots: draw the √ with its roof over the numbers. Powers: write the exponent small and raised. Division can also be ÷ (bar with two dots). Tap any symbol in the bottom strip to fix a misread.</p>
+    <button class="btn close" id="setClose">Done</button>
+  </div>
+</div>
+
 <script>
-(function(){
-"use strict";
+//<<CORE
+/* ============================================================
+   Recognition core — pure functions, no DOM
+   ============================================================ */
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function mkBox(x0,y0,x1,y1){return{x0,y0,x1,y1,w:x1-x0,h:y1-y0,cx:(x0+x1)/2,cy:(y0+y1)/2};}
+function bboxOf(pts){let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;for(const p of pts){if(p.x<x0)x0=p.x;if(p.x>x1)x1=p.x;if(p.y<y0)y0=p.y;if(p.y>y1)y1=p.y;}return mkBox(x0,y0,x1,y1);}
+function unionBox(a,b){return mkBox(Math.min(a.x0,b.x0),Math.min(a.y0,b.y0),Math.max(a.x1,b.x1),Math.max(a.y1,b.y1));}
+function pathLen(pts){let l=0;for(let i=1;i<pts.length;i++)l+=dist(pts[i-1],pts[i]);return l;}
+
+/* ---- $P point-cloud recognizer (multi-stroke, order/direction independent) ---- */
+function pathLenId(pts){let l=0;for(let i=1;i<pts.length;i++)if(pts[i].id===pts[i-1].id)l+=dist(pts[i-1],pts[i]);return l;}
+function resampleId(points,n){
+  const P=points.map(p=>({x:p.x,y:p.y,id:p.id}));
+  const I=pathLenId(P)/(n-1);let D=0;const out=[{x:P[0].x,y:P[0].y,id:P[0].id}];
+  for(let i=1;i<P.length;i++){
+    if(P[i].id===P[i-1].id){
+      const d=dist(P[i-1],P[i]);
+      if(d>0&&D+d>=I){
+        const t=(I-D)/d;
+        const q={x:P[i-1].x+t*(P[i].x-P[i-1].x),y:P[i-1].y+t*(P[i].y-P[i-1].y),id:P[i].id};
+        out.push(q);P.splice(i,0,q);D=0;
+      }else D+=d;
+    }
+  }
+  while(out.length<n){const l=P[P.length-1];out.push({x:l.x,y:l.y,id:l.id});}
+  return out.slice(0,n);
+}
+function resampleLine(pts,n){
+  const total=pathLen(pts);
+  if(total===0)return Array.from({length:n},()=>({x:pts[0].x,y:pts[0].y}));
+  const I=total/(n-1);let D=0;const P=pts.map(p=>({x:p.x,y:p.y}));const out=[{x:P[0].x,y:P[0].y}];
+  for(let i=1;i<P.length;i++){
+    const d=dist(P[i-1],P[i]);
+    if(d>0&&D+d>=I){
+      const t=(I-D)/d;const q={x:P[i-1].x+t*(P[i].x-P[i-1].x),y:P[i-1].y+t*(P[i].y-P[i-1].y)};
+      out.push(q);P.splice(i,0,q);D=0;
+    }else D+=d;
+  }
+  while(out.length<n){const l=P[P.length-1];out.push({x:l.x,y:l.y});}
+  return out.slice(0,n);
+}
+function toCloud(strokes,n=32){
+  let pts=[];
+  strokes.forEach((s,i)=>{let last=null;for(const p of s){if(last&&p.x===last.x&&p.y===last.y)continue;pts.push({x:p.x,y:p.y,id:i});last=p;}});
+  if(pts.length<2||pathLenId(pts)===0)return null;
+  pts=resampleId(pts,n);
+  const b=bboxOf(pts);const s=Math.max(b.w,b.h)||1;
+  pts=pts.map(p=>({x:(p.x-b.x0)/s,y:(p.y-b.y0)/s,id:p.id}));
+  let cx=0,cy=0;pts.forEach(p=>{cx+=p.x;cy+=p.y;});cx/=pts.length;cy/=pts.length;
+  return pts.map(p=>({x:p.x-cx,y:p.y-cy,id:p.id}));
+}
+function cloudDistance(a,b,start){
+  const n=a.length;const matched=new Array(n).fill(false);let sum=0,i=start;
+  do{
+    let idx=-1,min=Infinity;
+    for(let j=0;j<n;j++)if(!matched[j]){const d=dist(a[i],b[j]);if(d<min){min=d;idx=j;}}
+    matched[idx]=true;const w=1-((i-start+n)%n)/n;sum+=w*min;i=(i+1)%n;
+  }while(i!==start);
+  return sum;
+}
+function greedyMatch(a,b){
+  const step=Math.floor(Math.pow(a.length,0.5));let min=Infinity;
+  for(let i=0;i<a.length;i+=step){min=Math.min(min,cloudDistance(a,b,i),cloudDistance(b,a,i));}
+  return min;
+}
+
+/* ---- built-in templates (shapes only: direction and stroke order don't matter) ---- */
+const A=(cx,cy,rx,ry,a0,a1,n=24)=>{const o=[];for(let i=0;i<=n;i++){const a=(a0+(a1-a0)*i/n)*Math.PI/180;o.push({x:cx+rx*Math.cos(a),y:cy+ry*Math.sin(a)});}return o;};
+const L=(...c)=>{const o=[];for(let i=0;i<c.length;i+=2)o.push({x:c[i],y:c[i+1]});return o;};
+const CV=(x0,amp,dir,n=20)=>{const o=[];for(let i=0;i<=n;i++){const t=i/n;o.push({x:x0+dir*amp*Math.sin(Math.PI*t),y:100*t});}return o;};
+const DEFAULTS={
+  '0':[[A(30,50,24,48,0,360,36)],[A(30,50,18,48,0,360,36)],[A(32,50,26,46,0,360,36)]],
+  '1':[[L(34,0,34,100)],[L(10,24,34,0,34,100)],[L(10,24,34,0,34,100),L(12,100,56,100)],[L(30,0,36,50,34,100)]],
+  '2':[[[...A(30,28,24,26,180,400,16),...L(6,100,58,100)]],[[...A(30,30,25,24,170,390,16),...L(8,96,56,100)]],[[...A(30,28,24,26,180,400,16),...L(6,100,58,100)].slice(0,-0)]],
+  '3':[[[...A(26,24,22,22,200,450,16),...A(26,72,26,26,270,520,18)]],[[...L(6,0,52,0,24,42),...A(26,70,27,28,260,520,18)]],[[...A(26,25,22,24,210,450,16)],[...A(26,73,26,26,270,510,18)]]],
+  '4':[[L(40,0,4,66,58,66),L(42,22,42,100)],[L(6,0,6,60,50,60),L(44,10,44,100)],[L(4,0,4,62,56,62),L(44,0,44,100)]],
+  '5':[[L(52,0,12,0,8,44),A(28,70,26,28,235,500,20)],[L(52,0,12,0,8,44,...[]),A(28,68,26,28,240,500,20)]],
+  '6':[[[...L(48,2,24,22,8,50,4,68),...A(28,68,24,30,180,540,28)]],[[...L(44,0,6,66),...A(28,68,24,30,180,540,28)]]],
+  '7':[[L(4,0,56,0,20,100)],[L(4,0,56,0,20,100),L(16,52,42,52)],[L(4,4,56,0,22,100)]],
+  '8':[[A(30,25,20,23,90,450,24),A(30,73,26,26,270,630,28)],[[...A(30,25,20,23,90,450,24),...A(30,73,26,26,270,630,28)]]],
+  '9':[[[...A(30,30,24,28,0,360,28),...L(54,30,53,60,42,88,22,100)]],[[...A(30,30,24,28,0,360,28),...L(54,30,54,100)]]],
+  '+':[[L(0,40,80,40),L(40,0,40,80)],[L(0,40,70,40),L(36,4,36,76)]],
+  '×':[[L(0,0,70,70),L(70,0,0,70)],[L(0,4,66,72),L(70,0,4,70)]],
+  '(':[[CV(30,22,-1)],[CV(30,12,-1)],[CV(34,30,-1)]],
+  ')':[[CV(10,22,1)],[CV(10,12,1)],[CV(6,30,1)]],
+  '-':[[L(0,0,80,0)],[L(0,10,80,0)],[L(0,0,80,12)],[L(0,0,80,-12)]],
+};
+let USER={};   // user samples: label -> [ [ [ [x,y],... ] , ... ] ]
+let TEMPLATES=[];
+function rebuildTemplates(){
+  TEMPLATES=[];
+  for(const [label,vars] of Object.entries(DEFAULTS))for(const strokes of vars){
+    const c=toCloud(strokes);if(c)TEMPLATES.push({label,cloud:c,user:false});
+  }
+  for(const [label,samples] of Object.entries(USER))for(const smp of samples){
+    const c=toCloud(smp.map(st=>st.map(p=>({x:p[0],y:p[1]}))));if(c)TEMPLATES.push({label,cloud:c,user:true});
+  }
+}
+function normalizeSample(strokes){
+  const b=bboxOf(strokes.flat());const s=100/(Math.max(b.w,b.h)||1);
+  return strokes.map(st=>st.map(p=>[+((p.x-b.x0)*s).toFixed(1),+((p.y-b.y0)*s).toFixed(1)]));
+}
+function matchTemplates(strokes){
+  const c=toCloud(strokes);
+  if(!c)return{label:'?',alts:[],d:Infinity};
+  const best={};
+  for(const t of TEMPLATES){
+    let d=greedyMatch(c,t.cloud);if(t.user)d*=0.8;
+    if(!(t.label in best)||d<best[t.label])best[t.label]=d;
+  }
+  const arr=Object.entries(best).sort((a,b)=>a[1]-b[1]);
+  return{label:arr[0][0],d:arr[0][1],alts:arr.slice(0,3)};
+}
+rebuildTemplates();
+
+/* ---- geometry helpers ---- */
+function computeH(infos){
+  const nf=infos.filter(i=>i.b.h>=0.35*i.b.w);
+  if(nf.length){
+    const mh=Math.max(...nf.map(i=>i.b.h));
+    const hs=nf.filter(i=>i.b.h>=0.3*mh).map(i=>i.b.h).sort((a,b)=>a-b);
+    if(hs.length)return Math.max(12,hs[Math.floor(hs.length/2)]);
+  }
+  const md=Math.max(...infos.map(i=>Math.max(i.b.w,i.b.h)));
+  return Math.max(24,md*0.8);
+}
+function radicalInfo(pts,H){
+  const N=48;if(pts.length<4)return null;
+  const r=resampleLine(pts,N);const b=bboxOf(r);const h=b.h,w=b.w;
+  if(h<0.45*H||w<0.3*h)return null;
+  let bi=0;for(let i=1;i<N;i++)if(r[i].y>r[bi].y)bi=i;
+  if(bi<4||bi>34)return null;
+  const sy=r[0].y,by=r[bi].y;
+  if(by-sy<0.22*h)return null;
+  if(sy<b.y0+0.1*h)return null;
+  let minAfter=Infinity;for(let i=bi;i<N;i++)minAfter=Math.min(minAfter,r[i].y);
+  if(minAfter>b.y0+0.12*h)return null;
+  if(r[bi].x<r[0].x-0.08*h)return null;
+  if(r[N-1].x<r[bi].x+0.15*h)return null;
+  const k=4;
+  const a={x:r[bi-k].x-r[bi].x,y:r[bi-k].y-r[bi].y};
+  const q=r[Math.min(N-1,bi+k)];const c={x:q.x-r[bi].x,y:q.y-r[bi].y};
+  const cos=(a.x*c.x+a.y*c.y)/((Math.hypot(a.x,a.y)*Math.hypot(c.x,c.y))||1);
+  if(cos<0.3)return null;
+  if(dist(r[0],r[N-1])<0.45*Math.max(w,h))return null;
+  let k2=bi;while(k2<N&&r[k2].y>b.y0+0.2*h)k2++;
+  const over=(b.x1-(r[k2]?r[k2].x:b.x1))>=0.45*H;
+  return{tickX:r[bi].x,over};
+}
+function kindOf(info,H){
+  const b=info.b,len=info.len;
+  if(info.rad)return'rad';
+  const dim=Math.max(b.w,b.h);
+  if(dim<0.2*H||len<0.25*H)return'dot';
+  if(b.w>=0.3*H&&b.h<=0.32*b.w&&len<=1.5*b.w)return'flat';
+  return'stroke';
+}
+function effRange(b,H){const w=Math.max(b.w,0.3*H);return[b.cx-w/2,b.cx+w/2];}
+function xOverlap(a,b,H){
+  const ra=effRange(a,H),rb=effRange(b,H);
+  const o=Math.min(ra[1],rb[1])-Math.max(ra[0],rb[0]);
+  return o/Math.min(ra[1]-ra[0],rb[1]-rb[0]);
+}
+function yGap(a,b){return Math.max(0,Math.max(a.y0,b.y0)-Math.min(a.y1,b.y1));}
+function canMerge(g,st,H){
+  if(st.kind==='dot'||st.kind==='rad')return false;
+  if(g.items.some(i=>i.kind==='dot'||i.kind==='rad'))return false;
+  const gb=g.box,sb=st.b;
+  const gFlat=g.items.length===1&&g.items[0].kind==='flat';
+  const sFlat=st.kind==='flat';
+  const ov=xOverlap(gb,sb,H),gap=yGap(gb,sb);
+  if(gFlat&&sFlat){const r=sb.w/gb.w;return ov>=0.6&&r>=0.5&&r<=2&&gap<=0.7*H;}
+  if(gFlat||sFlat){
+    const flat=gFlat?gb:sb,other=gFlat?sb:gb;
+    const oe=Math.max(other.w,0.7*other.h);
+    return ov>=0.5&&gap<=0.06*H&&flat.w<=1.5*oe;
+  }
+  const hr=sb.h/Math.max(gb.h,1e-6);
+  return ov>=0.5&&gap<=0.08*H&&hr>=0.4&&hr<=2.5;
+}
+
+/* ---- symbols ---- */
+function recognizeGroup(g,H){
+  const strokes=g.items.map(i=>i.s.pts);
+  if(g.items.length===1){
+    const it=g.items[0];
+    if(it.kind==='dot')return{label:'.',geo:'dot'};
+    if(it.kind==='flat')return{label:'-',geo:'flat'};
+    if(it.kind==='rad')return{label:'√',geo:'rad',rad:it.rad};
+  }
+  if(g.items.length===2&&g.items.every(i=>i.kind==='flat'))return{label:'=',geo:'eq'};
+  const m=matchTemplates(strokes);
+  return{label:m.label,alts:m.alts,d:m.d};
+}
+function makeSymbol(g,H,overrides){
+  const ids=g.items.map(i=>i.s.id);
+  const key=ids.join(',');
+  const r=recognizeGroup(g,H);
+  const sym={kind:'sym',ids:key,strokeIds:ids,strokes:g.items.map(i=>i.s.pts),box:g.box,label:r.label,geo:r.geo,rad:r.rad,alts:r.alts,d:r.d};
+  const ov=overrides&&overrides.get(key);
+  if(ov){
+    sym.label=ov;sym.geo=undefined;sym.rad=undefined;
+    if(ov==='-')sym.geo='flat';
+    else if(ov==='.')sym.geo='dot';
+    else if(ov==='=')sym.geo='eq';
+    else if(ov==='√'){sym.geo='rad';sym.rad={tickX:g.box.x0+0.35*Math.min(g.box.w,g.box.h),over:g.box.w>1.2*g.box.h};}
+  }
+  return sym;
+}
+function mergeSyms(list,label){
+  let box=list[0].box;for(const s of list.slice(1))box=unionBox(box,s.box);
+  const strokeIds=[].concat(...list.map(s=>s.strokeIds));
+  return{kind:'sym',label,geo:undefined,box,strokeIds,strokes:[].concat(...list.map(s=>s.strokes)),ids:strokeIds.slice().sort((a,b)=>a-b).join(',')};
+}
+function mergeDivide(syms,H){
+  const out=[];const used=new Set();
+  for(const s of syms){
+    if(used.has(s))continue;
+    if(s.geo==='flat'&&s.box.w<=1.8*H){
+      const near=syms.filter(d=>d!==s&&!used.has(d)&&d.geo==='dot'&&Math.abs(d.box.cx-s.box.cx)<=0.22*s.box.w+0.1*H);
+      const up=near.filter(d=>d.box.cy<s.box.cy&&s.box.cy-d.box.cy<=0.8*H).sort((a,b)=>b.box.cy-a.box.cy)[0];
+      const dn=near.filter(d=>d.box.cy>s.box.cy&&d.box.cy-s.box.cy<=0.8*H).sort((a,b)=>a.box.cy-b.box.cy)[0];
+      if(up&&dn){
+        const others=syms.filter(o=>o!==s&&o!==up&&o!==dn&&o.geo!=='dot'&&o.box.cx>=s.box.x0-0.1*H&&o.box.cx<=s.box.x1+0.1*H&&Math.abs(o.box.cy-s.box.cy)<=1.5*H);
+        if(!others.length){used.add(up);used.add(dn);out.push(mergeSyms([s,up,dn],'÷'));continue;}
+      }
+    }
+    out.push(s);
+  }
+  return out.filter(s=>!used.has(s));
+}
+function absorbOverline(syms,H){
+  for(const r of syms){
+    if(r.geo!=='rad'||r.rad.over)continue;
+    const c=syms.find(f=>f!==r&&f.geo==='flat'&&f.label==='-'&&f.box.w>=0.7*H&&f.box.x0>=r.box.x1-0.5*H&&f.box.x0<=r.box.x1+0.9*H&&f.box.cy>=r.box.y0-0.5*H&&f.box.cy<=r.box.y0+0.45*H);
+    if(c){
+      r.rad={...r.rad,over:true};r.box=unionBox(r.box,c.box);
+      r.strokeIds=r.strokeIds.concat(c.strokeIds);r.strokes=r.strokes.concat(c.strokes);c.label='absorbed';
+    }
+  }
+  return syms.filter(s=>s.label!=='absorbed');
+}
+
+/* ---- 2D layout: radicals, fractions, exponents -> token tree ---- */
+const isDigit=l=>/^[0-9]$/.test(l||'');
+function radicand(r,items,H){
+  const rb=r.box;
+  if(r.rad.over){
+    return items.filter(i=>i!==r&&i.box.cx>=r.rad.tickX&&i.box.cx<=rb.x1+0.25*H&&i.box.cy>=rb.y0-0.1*H&&i.box.cy<=rb.y1+0.1*H);
+  }
+  const cand=items.filter(i=>i!==r&&i.box.x0>=rb.x1-0.3*H&&Math.abs(i.box.cy-rb.cy)<=Math.max(0.9*rb.h,0.6*H)).sort((a,b)=>a.box.x0-b.box.x0);
+  const res=[];let last=rb.x1,depth=0;
+  for(const it of cand){
+    if(it.box.x0-last>1.1*H)break;
+    const l=it.label;
+    if(depth>0){res.push(it);last=it.box.x1;if(l==='(')depth++;else if(l===')'){depth--;if(depth===0)break;}continue;}
+    if(it.kind==='node'||isDigit(l)||l==='.'){res.push(it);last=it.box.x1;}
+    else if(l==='('){res.push(it);last=it.box.x1;depth=1;}
+    else break;
+  }
+  return res;
+}
+function tokOf(it){
+  if(it.kind==='node')return[it.tok];
+  const l=it.label;
+  if(isDigit(l)||l==='.')return[{k:'d',v:l}];
+  if(l==='+'||l==='-')return[{k:'op',v:l}];
+  if(l==='×')return[{k:'op',v:'*'}];
+  if(l==='÷')return[{k:'op',v:'/'}];
+  if(l==='('||l===')')return[{k:'p',v:l}];
+  if(l==='=')return[{k:'eq'}];
+  if(l==='√')return[{k:'err',m:'Incomplete √'}];
+  return[{k:'err',m:'Unrecognized symbol'}];
+}
+function tokensFromLine(items,H){
+  items=items.slice().sort((a,b)=>a.box.x0-b.box.x0);
+  const out=[];let base=null,sup=null,lastSup=null;
+  const isAtom=i=>i.kind==='node'||/^[0-9)]$/.test(i.label||'');
+  for(const it of items){
+    if(base&&isAtom(base)){
+      const bb=base.box;let isSup=false;
+      if(!sup)isSup=it.box.cy<bb.cy-0.28*bb.h&&it.box.y1<bb.cy+0.2*bb.h&&it.box.x0-bb.x1<1.2*H;
+      else isSup=it.box.cy<bb.cy-0.1*bb.h&&it.box.x0-lastSup.box.x1<1.0*H;
+      if(isSup){(sup||(sup=[])).push(it);lastSup=it;continue;}
+    }
+    if(sup){out.push({k:'sup',c:tokensFromLine(sup,H)});sup=null;lastSup=null;}
+    out.push(...tokOf(it));base=it;
+  }
+  if(sup)out.push({k:'sup',c:tokensFromLine(sup,H)});
+  return out;
+}
+function layout(items,H){
+  items=items.slice();
+  const rads=items.filter(i=>i.geo==='rad').sort((a,b)=>b.box.w-a.box.w);
+  for(const r of rads){
+    if(!items.includes(r))continue;
+    const inside=radicand(r,items,H);
+    const rest=items.filter(i=>i!==r&&!inside.includes(i));
+    const child=layout(inside,H);
+    const box=inside.reduce((b,i)=>unionBox(b,i.box),r.box);
+    rest.push({kind:'node',tok:{k:'sqrt',c:child},box,label:'node'});
+    items=rest;
+  }
+  for(let guard=0;guard<40;guard++){
+    let best=null;
+    for(const b of items.filter(i=>i.geo==='flat'&&i.kind!=='node')){
+      const inX=i=>i!==b&&i.box.cx>=b.box.x0-0.15*H&&i.box.cx<=b.box.x1+0.15*H;
+      const above=items.filter(i=>inX(i)&&i.box.cy<b.box.cy&&i.box.y1<=b.box.cy+0.3*H&&b.box.cy-i.box.y1<=1.6*H);
+      const below=items.filter(i=>inX(i)&&i.box.cy>b.box.cy&&i.box.y0>=b.box.cy-0.3*H&&i.box.y0-b.box.cy<=1.6*H);
+      if(above.length&&below.length&&(!best||b.box.w>best.b.box.w))best={b,above,below};
+    }
+    if(!best)break;
+    const{b,above,below}=best;
+    const box=[...above,...below].reduce((x,i)=>unionBox(x,i.box),b.box);
+    const node={kind:'node',tok:{k:'frac',n:layout(above,H),d:layout(below,H)},box,label:'node'};
+    items=items.filter(i=>i!==b&&!above.includes(i)&&!below.includes(i));
+    items.push(node);
+  }
+  return tokensFromLine(items,H);
+}
+
+/* ---- evaluation (own parser, no eval) ---- */
+function evalTokens(ts){
+  let i=0;
+  const peek=()=>ts[i];
+  const isAtomStart=t=>t&&(t.k==='d'||t.k==='frac'||t.k==='sqrt'||(t.k==='p'&&t.v==='('));
+  function expr(){
+    let v=term();
+    while(peek()&&peek().k==='op'&&(peek().v==='+'||peek().v==='-')){
+      const op=ts[i++].v;const r=term();v=op==='+'?v+r:v-r;
+    }
+    return v;
+  }
+  function term(){
+    let v=unary();
+    for(;;){
+      const p=peek();if(!p)break;
+      if(p.k==='op'&&(p.v==='*'||p.v==='/')){
+        i++;const r=unary();
+        if(p.v==='/'){if(r===0)throw new Error('Division by zero');v/=r;}else v*=r;
+      }else if(isAtomStart(p)){v*=unary();}
+      else break;
+    }
+    return v;
+  }
+  function unary(){
+    const p=peek();
+    if(p&&p.k==='op'&&(p.v==='-'||p.v==='+')){i++;const v=unary();return p.v==='-'?-v:v;}
+    return power();
+  }
+  function power(){
+    let a=atom();
+    while(peek()&&peek().k==='sup'){const s=ts[i++];a=Math.pow(a,evalTokens(s.c));}
+    return a;
+  }
+  function atom(){
+    const p=peek();
+    if(!p)throw new Error('Missing value');
+    if(p.k==='err')throw new Error(p.m);
+    if(p.k==='d'){
+      let s='';while(peek()&&peek().k==='d')s+=ts[i++].v;
+      if(!/^(\d+\.?\d*|\.\d+)$/.test(s))throw new Error('Check the decimal point');
+      return parseFloat(s);
+    }
+    if(p.k==='p'&&p.v==='('){
+      i++;const v=expr();
+      if(peek()&&peek().k==='p'&&peek().v===')')i++;
+      return v;
+    }
+    if(p.k==='frac'){i++;const n=evalTokens(p.n),d=evalTokens(p.d);if(d===0)throw new Error('Division by zero');return n/d;}
+    if(p.k==='sqrt'){i++;const x=evalTokens(p.c);if(x<0)throw new Error('Square root of a negative number');return Math.sqrt(x);}
+    throw new Error('Unexpected symbol');
+  }
+  if(!ts.length)throw new Error('Missing value');
+  const v=expr();
+  if(i<ts.length)throw new Error('Unexpected symbol');
+  return v;
+}
+function evaluate(tokens){
+  const eq=tokens.findIndex(t=>t.k==='eq');
+  const ex=eq>=0?tokens.slice(0,eq):tokens;
+  if(!ex.length)return{empty:true,expr:ex};
+  try{const v=evalTokens(ex);if(!isFinite(v))return{error:'Undefined',expr:ex};return{value:v,expr:ex};}
+  catch(e){return{error:e.message,expr:ex};}
+}
+function fmt(v){
+  if(v===0)return'0';
+  if(Number.isInteger(v)&&Math.abs(v)<1e15)return String(v);
+  const a=Math.abs(v);
+  if(a>=1e15||a<1e-6)return v.toExponential(6).replace(/\.?0+e/,'e').replace('e+','e');
+  return String(Number(v.toPrecision(10)));
+}
+function toText(ts){
+  return ts.map(t=>{
+    switch(t.k){
+      case'd':return t.v;
+      case'op':return t.v==='*'?'×':t.v==='/'?'÷':t.v==='-'?'−':'+';
+      case'p':return t.v;
+      case'eq':return'=';
+      case'frac':return'(('+toText(t.n)+')÷('+toText(t.d)+'))';
+      case'sqrt':return'√('+toText(t.c)+')';
+      case'sup':return'^('+toText(t.c)+')';
+      default:return'?';
+    }
+  }).join('');
+}
+function renderTokens(ts){
+  let h='',run='';
+  const flush=()=>{if(run){h+='<span class="num">'+run+'</span>';run='';}};
+  for(const t of ts){
+    if(t.k==='d'){run+=t.v;continue;}
+    flush();
+    switch(t.k){
+      case'op':h+='<span class="op">'+(t.v==='*'?'×':t.v==='/'?'÷':t.v==='-'?'−':'+')+'</span>';break;
+      case'p':h+='<span class="'+(t.v==='('?'pl':'pr')+'"></span>';break;
+      case'eq':h+='<span class="op">=</span>';break;
+      case'frac':h+='<span class="frac"><span class="fn row">'+renderTokens(t.n)+'</span><span class="fd row">'+renderTokens(t.d)+'</span></span>';break;
+      case'sqrt':h+='<span class="sqrt"><span class="rs"></span><span class="rc">'+renderTokens(t.c)+'</span></span>';break;
+      case'sup':h+='<span class="sup">'+renderTokens(t.c)+'</span>';break;
+      default:h+='<span class="op bad">?</span>';
+    }
+  }
+  flush();return h;
+}
+
+/* ---- main entry ---- */
+function analyze(strokes,overrides){
+  if(!strokes.length)return null;
+  const infos=strokes.map(s=>({s,b:bboxOf(s.pts),len:pathLen(s.pts)}));
+  const H=computeH(infos);
+  for(const i of infos){
+    const flatish=i.b.w>=0.3*H&&i.b.h<=0.32*i.b.w&&i.len<=1.5*i.b.w;
+    i.rad=flatish?null:radicalInfo(i.s.pts,H);
+    i.kind=kindOf(i,H);
+  }
+  const groups=[];
+  for(const st of infos){
+    const g=groups[groups.length-1];
+    if(g&&canMerge(g,st,H)){g.items.push(st);g.box=unionBox(g.box,st.b);}
+    else groups.push({items:[st],box:st.b});
+  }
+  let symbols=groups.map(g=>makeSymbol(g,H,overrides));
+  symbols=mergeDivide(symbols,H);
+  symbols=absorbOverline(symbols,H);
+  symbols=symbols.filter(s=>s.label!=='ignore');
+  const tokens=layout(symbols,H);
+  const ev=evaluate(tokens);
+  const sorted=symbols.slice().sort((a,b)=>a.box.x0-b.box.x0);
+  return{H,symbols:sorted,tokens,ev};
+}
+//>>CORE
 
 /* ============================================================
-   MyScript Cloud credentials
+   UI
    ============================================================ */
-const MYSCRIPT_APPLICATION_KEY = "fa90cca4-b6b3-4811-a4de-d4a3a2614c97";
-const MYSCRIPT_HMAC_KEY        = "d1da2670-1d83-48d0-85b8-79b043676aa2";
-/* ============================================================ */
+const $=s=>document.querySelector(s);
+const stage=$('#stage'),cv=$('#ink'),ctx=cv.getContext('2d');
+const fmEl=$('#fm'),typedEl=$('#typed');
+const state={strokes:[],undo:[],redo:[],overrides:new Map(),nextId:1,teach:null,auto:true,last:null,highlight:null};
+let dpr=1,drawing=null,activeId=null,penSeen=false,tRec=0,tTyp=0,wasTyped=false;
 
-const $ = s => document.querySelector(s);
-const canvas = $('#pad'), ctx = canvas.getContext('2d');
-const IDLE = 2000;
-
-let strokes = [], cur = null, tool = 'pen';
-let idleTimer = null, raf = 0, busy = false, lastPlain = '';
-let history = [];
-
-/* ---------- canvas drawing ---------- */
-function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-function sizeCanvas(){
-  const dpr = window.devicePixelRatio || 1, r = canvas.getBoundingClientRect();
-  canvas.width = Math.max(1, Math.round(r.width * dpr));
-  canvas.height = Math.max(1, Math.round(r.height * dpr));
-  redraw();
+/* ---- storage (guarded) ---- */
+const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1';
+try{USER=JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){USER={};}
+try{const a=localStorage.getItem(AKEY);if(a!==null)state.auto=a==='1';}catch(e){}
+rebuildTemplates();
+function persistUser(){try{localStorage.setItem(SKEY,JSON.stringify(USER));}catch(e){}}
+function addSample(label,strokes){
+  const arr=(USER[label]=USER[label]||[]);
+  arr.push(normalizeSample(strokes));
+  if(arr.length>10)arr.shift();
+  persistUser();rebuildTemplates();
 }
-function strokePath(c, pts){
-  c.beginPath();
-  c.moveTo(pts[0][0], pts[0][1]);
-  if (pts.length === 1){ c.lineTo(pts[0][0] + .1, pts[0][1]); }
-  else {
-    for (let i = 1; i < pts.length - 1; i++){
-      const mx = (pts[i][0] + pts[i+1][0]) / 2, my = (pts[i][1] + pts[i+1][1]) / 2;
-      c.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
-    }
-    const l = pts[pts.length - 1]; c.lineTo(l[0], l[1]);
-  }
-  c.stroke();
+
+/* ---- canvas ---- */
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function resize(){
+  const r=stage.getBoundingClientRect();dpr=window.devicePixelRatio||1;
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  redraw();fit();
 }
 function redraw(){
-  const dpr = window.devicePixelRatio || 1;
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle = cssVar('--ink') || '#16263D';
-  ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  strokes.forEach(s => strokePath(ctx, s.pts));
-  $('#hint').style.display = strokes.length ? 'none' : 'grid';
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=3.4;
+  const ink=cssv('--ink'),hi=cssv('--hi');
+  for(const s of state.strokes){
+    ctx.strokeStyle=(state.highlight&&state.highlight.has(s.id))?hi:ink;
+    ctx.beginPath();ctx.moveTo(s.pts[0].x,s.pts[0].y);
+    for(let i=1;i<s.pts.length;i++)ctx.lineTo(s.pts[i].x,s.pts[i].y);
+    if(s.pts.length===2&&s.pts[0].x===s.pts[1].x&&s.pts[0].y===s.pts[1].y)ctx.lineTo(s.pts[0].x+0.01,s.pts[0].y);
+    ctx.stroke();
+  }
 }
-function pos(e){ const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
-function eraseAt(p){
-  const R = 16, before = strokes.length;
-  strokes = strokes.filter(s => !s.pts.some(q => Math.hypot(q[0]-p[0], q[1]-p[1]) < R));
-  if (strokes.length !== before) redraw();
+function seg(a,b){
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=3.4;ctx.strokeStyle=cssv('--ink');
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
 }
-canvas.addEventListener('pointerdown', e => {
-  if (e.pointerType === 'mouse' && e.button !== 0) return;
+new ResizeObserver(resize).observe(stage);
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>redraw());}catch(e){}
+
+/* ---- pointer input ---- */
+const ptFrom=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top,t:e.timeStamp};};
+cv.addEventListener('pointerdown',e=>{
+  if(drawing)return;
+  if(e.pointerType==='pen')penSeen=true;
+  else if(e.pointerType==='touch'&&penSeen)return;      // palm rejection once a Pencil is in use
+  if(e.pointerType==='mouse'&&e.button!==0)return;
   e.preventDefault();
-  canvas.setPointerCapture(e.pointerId);
-  clearIdle();
-  const p = pos(e);
-  if (tool === 'pen'){ cur = { pts: [p] }; strokes.push(cur); redraw(); }
-  else { cur = { erasing: true }; eraseAt(p); }
+  try{cv.setPointerCapture(e.pointerId);}catch(_){}
+  clearTimeout(tRec);clearTimeout(tTyp);
+  wasTyped=stage.classList.contains('typed');
+  stage.classList.remove('typed');
+  if(state.highlight){state.highlight=null;redraw();}
+  activeId=e.pointerId;drawing={id:state.nextId++,pts:[ptFrom(e)]};
 });
-canvas.addEventListener('pointermove', e => {
-  if (!cur) return;
+cv.addEventListener('pointermove',e=>{
+  if(!drawing||e.pointerId!==activeId)return;
   e.preventDefault();
-  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-  (evs.length ? evs : [e]).forEach(ev => {
-    const p = pos(ev);
-    if (cur.erasing) eraseAt(p);
-    else {
-      const l = cur.pts[cur.pts.length-1];
-      if (Math.hypot(p[0]-l[0], p[1]-l[1]) < 1.2) return;
-      cur.pts.push(p);
-    }
-  });
-  if (!cur.erasing) redraw();
+  const evs=(e.getCoalescedEvents&&e.getCoalescedEvents())||[];
+  for(const ev of(evs.length?evs:[e])){
+    const p=ptFrom(ev),last=drawing.pts[drawing.pts.length-1];
+    if(Math.hypot(p.x-last.x,p.y-last.y)<0.7)continue;
+    drawing.pts.push(p);seg(last,p);
+  }
 });
-function endStroke(){ if (!cur) return; cur = null; startIdle(); }
-canvas.addEventListener('pointerup', endStroke);
-canvas.addEventListener('pointercancel', endStroke);
+function endStroke(e){
+  if(!drawing||e.pointerId!==activeId)return;
+  const s=drawing;drawing=null;activeId=null;
+  const tap=pathLen(s.pts)<3;
+  if(tap&&wasTyped){schedule(false);redraw();return;}   // tap only brings the ink back
+  if(s.pts.length===1)s.pts.push({x:s.pts[0].x+0.01,y:s.pts[0].y,t:s.pts[0].t});
+  state.strokes.push(s);state.undo.push({t:'add',s});state.redo.length=0;
+  redraw();updateButtons();schedule(true);
+}
+cv.addEventListener('pointerup',endStroke);
+cv.addEventListener('pointercancel',endStroke);
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+['gesturestart','gesturechange','gestureend'].forEach(n=>document.addEventListener(n,e=>e.preventDefault()));
 
-/* ---------- idle timer + status ---------- */
-const pill = $('#pill'), pillText = $('#pillText'), ringFg = $('#ringFg'), live = $('#live');
-function setPill(text, mode, announce){
-  pill.dataset.mode = mode; pillText.textContent = text;
-  if (mode !== 'wait') ringFg.style.strokeDashoffset = '';
-  if (announce) live.textContent = announce;
+/* ---- recognition scheduling ---- */
+function schedule(typeset){
+  clearTimeout(tRec);clearTimeout(tTyp);
+  if(state.teach){updateButtons();return;}
+  tRec=setTimeout(runRecognition,320);
+  if(typeset)tTyp=setTimeout(()=>showTyped(false),1100);
 }
-function clearIdle(){ clearTimeout(idleTimer); cancelAnimationFrame(raf); }
-function startIdle(){
-  clearIdle();
-  if (!strokes.length){ setPill('Ready','idle'); return; }
-  if (!$('#auto').checked){ setPill('Press Convert now','idle'); return; }
-  const t0 = performance.now();
-  idleTimer = setTimeout(() => { cancelAnimationFrame(raf); convert(); }, IDLE);
-  const loop = () => {
-    const el = performance.now() - t0, p = Math.min(1, el / IDLE);
-    pill.dataset.mode = 'wait';
-    ringFg.style.strokeDashoffset = String(87.96 * (1 - p));
-    pillText.textContent = 'Converting in ' + (Math.max(0, IDLE - el) / 1000).toFixed(1) + ' s';
-    if (p < 1) raf = requestAnimationFrame(loop);
-  };
-  loop();
+function runRecognition(){
+  let a=null;
+  try{a=analyze(state.strokes,state.overrides);}catch(err){console.error(err);}
+  state.last=a;renderTray(a);return a;
 }
-
-/* ---------- math helpers ---------- */
-const hasNer = () => typeof nerdamer !== 'undefined' && nerdamer.solve;
-function clean(s){
-  return String(s)
-    .replace(/[×·⋅]/g,'*').replace(/÷/g,'/').replace(/[−–]/g,'-').replace(/π/g,'pi')
-    .replace(/√\s*\(([^)]*)\)/g,'sqrt($1)').replace(/√\s*([\w.]+)/g,'sqrt($1)')
-    .replace(/\s+/g,' ').trim()
-    .replace(/(\d)\s*([a-df-zA-Z(])/g,'$1*$2')
-    .replace(/\)\s*([\w(])/g,')*$1');
-}
-function splitTop(s){
-  const out = []; let d = 0, c = '';
-  for (const ch of s){
-    if ('([{'.includes(ch)) d++; else if (')]}'.includes(ch)) d--;
-    if (ch === ',' && d === 0){ out.push(c); c = ''; } else c += ch;
+function renderTray(a){
+  const chips=$('#chips'),ro=$('#readout');
+  chips.innerHTML='';ro.className='';ro.textContent='';
+  stage.classList.toggle('has',state.strokes.length>0||!!state.teach);
+  if(!a){chips.innerHTML='<span class="empty">Recognized symbols appear here — tap one to correct it</span>';return;}
+  for(const sym of a.symbols){
+    const b=document.createElement('button');
+    b.className='chip'+(sym.label==='?'?' bad':'');
+    b.textContent=sym.label==='-'?'−':sym.label==='.'?'·':sym.label;
+    b.setAttribute('aria-label','Symbol '+sym.label);
+    b.addEventListener('click',()=>openPicker(sym));
+    chips.appendChild(b);
   }
-  if (c.trim()) out.push(c);
-  return out.map(x => x.trim()).filter(Boolean);
+  const ev=a.ev;
+  if(ev.value!==undefined)ro.textContent=toText(ev.expr)+' = '+fmt(ev.value);
+  else if(ev.error){ro.textContent=ev.error;ro.className='err';}
 }
-function listFrom(sol){
-  let s = String(sol).trim();
-  if (s.startsWith('[') && s.endsWith(']')) s = s.slice(1,-1);
-  return splitTop(s);
+function showTyped(force){
+  if(!force&&!state.auto)return;
+  if(state.teach)return;
+  const a=state.last||runRecognition();
+  if(!a||a.ev.value===undefined)return;
+  fmEl.innerHTML=renderTokens(a.ev.expr)+'<span class="eqs">=</span><span class="res">'+fmt(a.ev.value)+'</span>';
+  stage.classList.add('typed');fit();
 }
-function texOf(e){ try { return nerdamer(e).toTeX(); } catch(_) { return e; } }
-function num(e){
-  try {
-    const v = (typeof math !== 'undefined') ? math.evaluate(e) : Number(nerdamer(e).evaluate().text('decimals'));
-    return (typeof v === 'number' && isFinite(v)) ? v : null;
-  } catch(_) { return null; }
-}
-function fmt(n){ return n === 0 ? '0' : String(parseFloat(n.toPrecision(10))); }
-function sci(n){
-  const [m,e] = n.toExponential(6).split('e');
-  return parseFloat(m) + '\\times 10^{' + parseInt(e,10) + '}';
-}
-function texFromPlain(raw){
-  return clean(raw).split(';').map(p => p.split('=').map(x => texOf(x.trim())).join(' = ')).join(' \\;;\\; ');
-}
-function solveEquation(eq){
-  const parts = eq.split('=');
-  if (parts.length !== 2) throw new Error('Use exactly one = sign per equation.');
-  const [l, r] = parts;
-  const vars = [...new Set([...nerdamer(l).variables(), ...nerdamer(r).variables()])].sort();
-  const rows = [];
-  if (!vars.length){
-    const a = num(l), b = num(r);
-    const ok = a !== null && b !== null && Math.abs(a-b) <= 1e-9 * Math.max(1, Math.abs(a));
-    rows.push({label:'Check', tex: ok ? '\\text{true}' : '\\text{false}', final:true});
-    return rows;
-  }
-  vars.slice(0,3).forEach(v => {
-    const sol = listFrom(nerdamer.solve(eq, v));
-    const label = vars.length > 1 ? 'Solve for ' + v : 'Solution';
-    if (!sol.length){ rows.push({label, tex:'\\text{no solution found}'}); return; }
-    sol.forEach((s,i) => {
-      rows.push({label: i ? '' : label, tex: v + ' = ' + texOf(s), final: vars.length === 1});
-      const n = num(s);
-      if (n !== null && !Number.isInteger(n)) rows.push({label:'', tex: v + ' \\approx ' + fmt(n), sub:true});
-    });
-  });
-  return rows;
-}
-function solveSystem(eqs){
-  const sol = nerdamer.solveEquations(eqs);
-  if (!Array.isArray(sol) || !sol.length) throw new Error('No unique solution found for this system.');
-  const rows = [];
-  sol.forEach(pair => {
-    const name = pair[0], val = String(pair[1]);
-    rows.push({label:'', tex: name + ' = ' + texOf(val), final:true});
-    const n = num(val);
-    if (n !== null && !Number.isInteger(n)) rows.push({label:'', tex: name + ' \\approx ' + fmt(n), sub:true});
-  });
-  rows[0].label = 'Solution';
-  return rows;
-}
-function evalExpression(p){
-  const vars = nerdamer(p).variables();
-  const rows = [], seen = new Set();
-  const add = (label, tex, extra) => { if (tex && !seen.has(tex)){ seen.add(tex); rows.push(Object.assign({label, tex}, extra)); } };
-  if (vars.length){
-    add('Simplified', nerdamer(p).toTeX(), {final:true});
-    try { add('Expanded', nerdamer('expand(' + p + ')').toTeX()); } catch(_){}
-    try { add('Factored', nerdamer('factor(' + p + ')').toTeX()); } catch(_){}
-    return rows;
-  }
-  const n = num(p);
-  const exact = nerdamer(p).toTeX();
-  const abs = n === null ? 0 : Math.abs(n);
-  const decimalOk = n !== null && (abs === 0 || (abs >= 1e-6 && abs < 1e15));
-  const showExact = n === null || !decimalOk || exact !== fmt(n);
-  if (showExact) add('Exact', exact, {final:true});
-  if (decimalOk) add('Decimal', fmt(n), {final: !showExact});
-  if (n !== null && n !== 0 && (abs >= 1e5 || abs < 1e-3 || /10\s*\^|\de[+-]?\d/i.test(p))) add('Scientific', sci(n));
-  if (!rows.length) rows.push({label:'Result', tex: exact, final:true});
-  return rows;
-}
-function solveAll(raw){
-  if (!hasNer()) throw new Error('The math engine did not load. Check your connection and reload.');
-  const pieces = clean(raw).split(';').map(s => s.replace(/=\s*\??\s*$/,'').trim()).filter(Boolean);
-  if (!pieces.length) throw new Error('Nothing to solve.');
-  const eqs = pieces.filter(p => p.includes('='));
-  if (eqs.length === 0) return pieces.flatMap(evalExpression);
-  if (eqs.length !== pieces.length) throw new Error('Mixed equations and expressions are not supported. Separate them.');
-  return eqs.length === 1 ? solveEquation(eqs[0]) : solveSystem(eqs);
+function fit(){
+  fmEl.style.transform='none';
+  const cw=typedEl.clientWidth-40,ch=typedEl.clientHeight-40;
+  const w=fmEl.offsetWidth||1,h=fmEl.offsetHeight||1;
+  const s=Math.min(1,cw/w,ch/h);
+  fmEl.style.transform='scale('+s+')';
 }
 
-/* ---------- rendering ---------- */
-function setTex(el, tex){
-  if (typeof katex !== 'undefined'){
-    try { el.innerHTML = katex.renderToString(tex, {output:'mathml', throwOnError:false}); return; } catch(_){}
-  }
-  el.textContent = tex;
+/* ---- buttons ---- */
+function updateButtons(){
+  $('#bUndo').disabled=!state.undo.length;
+  $('#bRedo').disabled=!state.redo.length;
+  $('#bClear').disabled=!state.strokes.length;
+  stage.classList.toggle('has',state.strokes.length>0||!!state.teach);
 }
-function rowEl(r){
-  const d = document.createElement('div');
-  d.className = 'ans' + (r.final ? ' final' : '') + (r.sub ? ' sub' : '');
-  const l = document.createElement('span'); l.className = 'lab'; l.textContent = r.label || '';
-  const m = document.createElement('span'); m.className = 'math'; setTex(m, r.tex);
-  d.append(l, m);
-  return d;
+function afterEdit(){
+  stage.classList.remove('typed');redraw();updateButtons();
+  if(!state.strokes.length){state.last=null;renderTray(null);clearTimeout(tRec);clearTimeout(tTyp);}
+  else schedule(true);
 }
-function showTyped(tex){
-  const t = $('#typed'); t.textContent = '';
-  const s = document.createElement('span'); setTex(s, tex); t.append(s);
-}
-function showRows(rows){
-  const a = $('#answers'); a.textContent = '';
-  rows.forEach(r => a.append(rowEl(r)));
-}
-function setMsg(text, err){ const m = $('#msg'); m.textContent = text || ''; m.className = 'msg' + (err ? ' err' : ''); }
-function addHistory(typedTex, rows){
-  const f = rows.find(r => r.final) || rows[0]; if (!f) return;
-  history.unshift({typedTex, ansTex: f.tex});
-  history = history.slice(0, 8);
-  const wrap = $('#historyWrap'); wrap.textContent = '';
-  const h = document.createElement('h2'); h.textContent = 'Earlier in this session'; wrap.append(h);
-  const ol = document.createElement('ul'); ol.id = 'history';
-  history.forEach(it => {
-    const li = document.createElement('li');
-    const a = document.createElement('span'), b = document.createElement('span');
-    setTex(a, it.typedTex); setTex(b, it.ansTex); li.append(a, b); ol.append(li);
-  });
-  wrap.append(ol);
-}
-function present(plain, latex, confidence){
-  lastPlain = plain;
-  $('#plain').value = plain;
-  let typedTex = latex;
-  try { if (!typedTex) typedTex = texFromPlain(plain); } catch(_){ typedTex = plain; }
-  showTyped(typedTex);
-  try {
-    const rows = solveAll(plain);
-    showRows(rows);
-    addHistory(typedTex, rows);
-    setMsg(confidence !== undefined && confidence < 0.5 ? 'Low confidence reading. Check the text below and edit it if needed.' : '');
-    setPill('Solved','done','Solved. ' + (rows[0] ? rows[0].label : ''));
-  } catch (err){
-    showRows([]);
-    setMsg("Couldn't solve this: " + (err && err.message ? err.message : 'unknown error') + ' You can fix the text below.', true);
-    setPill('Could not solve','error');
-  }
-}
-
-/* ============================================================
-   iink-ts v4 recognition
-   ============================================================ */
-let iinkCanvas = null;
-let iinkReady = false;
-
-// Hidden host element that iink-ts attaches its canvas to.
-const iinkHost = document.createElement('div');
-iinkHost.id = 'iink-editor';
-iinkHost.style.position = 'absolute';
-iinkHost.style.left = '-99999px';
-iinkHost.style.top = '0';
-iinkHost.style.width = '800px';
-iinkHost.style.height = '600px';
-document.body.appendChild(iinkHost);
-
-async function initIink(){
-  if (!window.iink || !window.iink.Canvas){
-    setPill('Library missing','error');
-    setMsg('The MyScript iink-ts library did not load. Check your internet connection and reload.', true);
-    return;
-  }
-
-  try {
-    // iink-ts v4: use iink.Canvas.load() and type "INTERACTIVE_INK"
-    iinkCanvas = await window.iink.Canvas.load(iinkHost, 'INTERACTIVE_INK', {
-      configuration: {
-        server: {
-          scheme: 'https',
-          host:   'cloud.myscript.com',
-          applicationKey: MYSCRIPT_APPLICATION_KEY,
-          hmacKey:        MYSCRIPT_HMAC_KEY
-        },
-        recognition: {
-          type: 'MATH',
-          math: { solver: { enable: false } }
-        }
-      }
-    });
-
-    // Wait until the canvas reports it is idle (WebSocket ready).
-    if (typeof iinkCanvas.waitForIdle === 'function'){
-      try { await iinkCanvas.waitForIdle(); } catch(_){}
-    }
-
-    iinkReady = true;
-    setPill('Ready','idle');
-    setMsg('Ready — write an equation.');
-  } catch (e) {
-    console.error('iink init failed:', e);
-    setPill('Connection failed','error');
-    setMsg('Could not connect to the handwriting service. Check your MyScript keys and try again. (' + (e && e.message ? e.message : e) + ')', true);
-  }
-}
-
-// Replay strokes into iink, wait for the server to finish, then export LaTeX.
-async function convert(){
-  clearIdle();
-  if (!strokes.length){ setMsg('Write something first.'); return; }
-  if (!iinkReady){ setMsg('Recognition is not ready yet. Wait a moment and try again.', true); return; }
-
-  setPill('Reading handwriting…','busy','Reading handwriting');
-  setMsg('');
-  busy = true;
-
-  try {
-    // Clear previous content
-    try { await iinkCanvas.clear(); } catch(_){}
-
-    // Build the pointer-event stream iink-ts expects.
-    // Points must be in the coordinate space of the hidden iink host
-    // (which is 800x600). Scale our canvas strokes to fit.
-    const hostRect = iinkHost.getBoundingClientRect();
-    const padRect  = canvas.getBoundingClientRect();
-    const sx = padRect.width  ? (hostRect.width  / padRect.width)  : 1;
-    const sy = padRect.height ? (hostRect.height / padRect.height) : 1;
-
-    const baseTime = Date.now();
-    const pointerEvents = strokes.map((s, idx) => ({
-      pointerType: 'PEN',
-      pointerId: idx,
-      pointers: s.pts.map((p, i) => ({
-        x: p[0] * sx,
-        y: p[1] * sy,
-        t: baseTime + i,
-        p: 0.5
-      }))
-    }));
-
-    // Send everything at once
-    await iinkCanvas.importPointEvents(pointerEvents);
-
-    // Wait for the server to finish recognizing the strokes.
-    // This replaces the fixed 600 ms timeout and is the key fix.
-    if (typeof iinkCanvas.waitForIdle === 'function'){
-      await iinkCanvas.waitForIdle();
-    }
-
-    // Now request the LaTeX export.
-    let exported = null;
-    if (typeof iinkCanvas.export === 'function'){
-      exported = await iinkCanvas.export({ 'application/x-latex': true });
-    } else if (typeof iinkCanvas.export_ === 'function'){
-      exported = await iinkCanvas.export_({ 'application/x-latex': true });
-    }
-
-    const latex = (exported && exported['application/x-latex']) || '';
-
-    if (latex){
-      const plain = latexToPlain(latex);
-      present(plain, latex, 0.9);
-    } else {
-      setPill('Nothing legible','idle');
-      setMsg("Couldn't read any math. Try writing larger and more clearly.", true);
-    }
-  } catch (e){
-    console.error('convert failed:', e);
-    setPill('Could not read','error');
-    setMsg('Recognition failed. (' + (e && e.message ? e.message : e) + ')', true);
-  } finally {
-    busy = false;
-  }
-}
-
-// Minimal LaTeX -> plaintext converter for the solver.
-function latexToPlain(latex){
-  if (!latex) return '';
-  let s = String(latex);
-  s = s.replace(/^\\\(|\\\)$/g, '').replace(/^\\\[|\\\]$/g, '').replace(/^\$+|\$+$/g, '');
-  s = s.replace(/\\left|\\right|\\!|\\,|\\;|\\:/g, '');
-  s = s.replace(/\\quad|\\qquad/g, ' ');
-  let prev;
-  do { prev = s; s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '(($1)/($2))'); } while (s !== prev);
-  do { prev = s; s = s.replace(/\\dfrac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '(($1)/($2))'); } while (s !== prev);
-  do { prev = s; s = s.replace(/\\sqrt\s*\[([^\]]+)\]\s*\{([^{}]*)\}/g, '($2)^(1/($1))'); } while (s !== prev);
-  do { prev = s; s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, 'sqrt($1)'); } while (s !== prev);
-  s = s.replace(/\\times|\\cdot|\\ast/g, '*');
-  s = s.replace(/\\div/g, '/');
-  s = s.replace(/\\pm/g, '+-');
-  s = s.replace(/\\pi/g, 'pi');
-  s = s.replace(/\\sin|\\cos|\\tan|\\log|\\ln|\\exp/g, m => m.slice(1));
-  s = s.replace(/\\[a-zA-Z]+/g, '');
-  s = s.replace(/[{}]/g, '');
-  s = s.replace(/\s+/g, ' ').trim();
-  return s;
-}
-
-/* ---------- controls ---------- */
-function setTool(t){
-  tool = t;
-  $('#penBtn').setAttribute('aria-pressed', t === 'pen');
-  $('#eraseBtn').setAttribute('aria-pressed', t === 'eraser');
-  canvas.style.cursor = t === 'pen' ? 'crosshair' : 'cell';
-}
-$('#penBtn').onclick = () => setTool('pen');
-$('#eraseBtn').onclick = () => setTool('eraser');
-$('#undoBtn').onclick = () => { strokes.pop(); redraw(); startIdle(); };
-$('#clearBtn').onclick = () => { clearIdle(); strokes = []; redraw(); setPill('Ready','idle'); };
-$('#convertBtn').onclick = convert;
-$('#auto').onchange = () => { if ($('#auto').checked) startIdle(); else { clearIdle(); setPill(strokes.length ? 'Press Convert now' : 'Ready','idle'); } };
-$('#editForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const v = $('#plain').value.trim();
-  if (v) present(v, '');
+$('#bUndo').addEventListener('click',()=>{
+  const a=state.undo.pop();if(!a)return;
+  if(a.t==='add'){const i=state.strokes.findIndex(x=>x.id===a.s.id);if(i>=0)state.strokes.splice(i,1);}
+  else state.strokes=a.strokes.slice();
+  state.redo.push(a);afterEdit();
+});
+$('#bRedo').addEventListener('click',()=>{
+  const a=state.redo.pop();if(!a)return;
+  if(a.t==='add')state.strokes.push(a.s);else state.strokes=[];
+  state.undo.push(a);afterEdit();
+});
+$('#bClear').addEventListener('click',()=>{
+  if(!state.strokes.length)return;
+  state.undo.push({t:'clear',strokes:state.strokes.slice()});state.redo.length=0;
+  state.strokes=[];state.overrides=new Map();afterEdit();
+});
+$('#bSolve').addEventListener('click',()=>{
+  clearTimeout(tRec);clearTimeout(tTyp);
+  const a=runRecognition();
+  if(a&&a.ev.value!==undefined)showTyped(true);
 });
 
-new ResizeObserver(sizeCanvas).observe(canvas);
-window.addEventListener('resize', sizeCanvas);
-if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
-sizeCanvas();
-
-/* ---------- boot: wait for iink-ts Canvas API, then initialize ---------- */
-(function waitForIink(){
-  let tries = 0;
-  (function poll(){
-    if (window.iink && window.iink.Canvas){ initIink(); return; }
-    if (++tries > 75){
-      setPill('Library missing','error');
-      setMsg('The MyScript iink-ts library failed to load. Check your internet connection and reload the page.', true);
-      return;
-    }
-    setTimeout(poll, 200);
-  })();
+/* ---- symbol picker (corrections) ---- */
+const PICK=['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','=','+','(',')','√','ignore'];
+const TEACHABLE=new Set(['0','1','2','3','4','5','6','7','8','9','+','×','(',')']);
+let pickSym=null;
+(function(){
+  const g=$('#pickGrid');
+  for(const k of PICK){
+    const b=document.createElement('button');b.className='key'+(k==='ignore'?' wide':'');
+    b.textContent=k==='-'?'−':k==='ignore'?'Ignore stroke':k;
+    b.addEventListener('click',()=>applyLabel(k));g.appendChild(b);
+  }
 })();
+function openPicker(sym){
+  pickSym=sym;state.highlight=new Set(sym.strokeIds);
+  stage.classList.remove('typed');redraw();
+  $('#pickScrim').classList.add('on');
+}
+function closePicker(){$('#pickScrim').classList.remove('on');state.highlight=null;redraw();pickSym=null;}
+function applyLabel(L){
+  const sym=pickSym;if(!sym)return;
+  state.overrides.set(sym.ids,L);
+  if(TEACHABLE.has(L))addSample(L,sym.strokes);
+  closePicker();runRecognition();schedule(true);
+}
+$('#pickClose').addEventListener('click',closePicker);
+$('#pickScrim').addEventListener('click',e=>{if(e.target.id==='pickScrim')closePicker();});
 
-})();
+/* ---- settings & teaching ---- */
+function setSwitch(){$('#swAuto').classList.toggle('on',state.auto);}
+setSwitch();
+$('#swAuto').addEventListener('click',()=>{
+  state.auto=!state.auto;setSwitch();
+  try{localStorage.setItem(AKEY,state.auto?'1':'0');}catch(e){}
+});
+function buildTeachGrid(){
+  const g=$('#teachGrid');g.innerHTML='';
+  for(const k of['0','1','2','3','4','5','6','7','8','9','+','×','(',')']){
+    const b=document.createElement('button');b.className='key';b.textContent=k;
+    const n=(USER[k]||[]).length;if(n){const s=document.createElement('small');s.textContent=n;b.appendChild(s);}
+    b.addEventListener('click',()=>startTeach(k));g.appendChild(b);
+  }
+}
+$('#bSet').addEventListener('click',()=>{buildTeachGrid();$('#setScrim').classList.add('on');});
+$('#setClose').addEventListener('click',()=>$('#setScrim').classList.remove('on'));
+$('#setScrim').addEventListener('click',e=>{if(e.target.id==='setScrim')$('#setScrim').classList.remove('on');});
+$('#resetSamples').addEventListener('click',()=>{USER={};persistUser();rebuildTemplates();buildTeachGrid();});
+
+function startTeach(label){
+  $('#setScrim').classList.remove('on');
+  state.teach={label};state.strokes=[];state.undo=[];state.redo=[];state.overrides=new Map();state.last=null;
+  stage.classList.remove('typed');renderTray(null);
+  $('#tbSym').textContent=label;$('#tbCount').textContent=(USER[label]||[]).length;
+  $('#teachbar').classList.add('on');redraw();updateButtons();
+}
+function endTeach(){
+  state.teach=null;$('#teachbar').classList.remove('on');
+  state.strokes=[];state.undo=[];state.redo=[];redraw();updateButtons();renderTray(null);
+}
+$('#tbSave').addEventListener('click',()=>{
+  if(!state.teach||!state.strokes.length)return;
+  addSample(state.teach.label,state.strokes.map(s=>s.pts));
+  $('#tbCount').textContent=(USER[state.teach.label]||[]).length;
+  state.strokes=[];state.undo=[];state.redo=[];redraw();updateButtons();
+});
+$('#tbClear').addEventListener('click',()=>{state.strokes=[];state.undo=[];state.redo=[];redraw();updateButtons();});
+$('#tbDone').addEventListener('click',endTeach);
+
+updateButtons();
+resize();
 </script>
 </body>
 </html>
