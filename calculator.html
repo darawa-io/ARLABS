@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700&display=swap" rel="stylesheet">
-<!-- iink-ts (the current MyScript web library) -->
+<!-- iink-ts (MyScript web library) -->
 <script src="https://cdn.jsdelivr.net/npm/iink-ts@latest/dist/iink.min.js"></script>
 <style>
 :root{
@@ -160,11 +160,10 @@ math{font-family:"STIX Two Math","Cambria Math","Latin Modern Math","Noto Sans M
 "use strict";
 
 /* ============================================================
-   >>> PASTE YOUR MYSCRIPT KEYS HERE <<<
-   Get them free at https://developer.myscript.com/getting-started/web
+   MyScript Cloud credentials
    ============================================================ */
-const MYSCRIPT_APPLICATION_KEY = "PASTE_YOUR_APPLICATION_KEY_HERE";
-const MYSCRIPT_HMAC_KEY        = "PASTE_YOUR_HMAC_KEY_HERE";
+const MYSCRIPT_APPLICATION_KEY = "fa90cca4-b6b3-4811-a4de-d4a3a2614c97";
+const MYSCRIPT_HMAC_KEY        = "d1da2670-1d83-48d0-85b8-79b043676aa2";
 /* ============================================================ */
 
 const $ = s => document.querySelector(s);
@@ -213,15 +212,16 @@ function eraseAt(p){
 }
 canvas.addEventListener('pointerdown', e => {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
+  e.preventDefault();
   canvas.setPointerCapture(e.pointerId);
   clearIdle();
   const p = pos(e);
   if (tool === 'pen'){ cur = { pts: [p] }; strokes.push(cur); redraw(); }
   else { cur = { erasing: true }; eraseAt(p); }
-  e.preventDefault();
 });
 canvas.addEventListener('pointermove', e => {
   if (!cur) return;
+  e.preventDefault();
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   (evs.length ? evs : [e]).forEach(ev => {
     const p = pos(ev);
@@ -427,12 +427,12 @@ function present(plain, latex, confidence){
 }
 
 /* ============================================================
-   iink-ts recognition (corrected API)
+   iink-ts recognition
    ============================================================ */
 let iinkEditor = null;
 let iinkReady = false;
 
-// Hidden container that iink-ts attaches its own canvas/SVG to.
+// Hidden host element that iink-ts attaches its canvas to.
 const iinkHost = document.createElement('div');
 iinkHost.id = 'iink-editor';
 iinkHost.style.position = 'absolute';
@@ -443,11 +443,6 @@ iinkHost.style.height = '600px';
 document.body.appendChild(iinkHost);
 
 async function initIink(){
-  if (MYSCRIPT_APPLICATION_KEY === 'PASTE_YOUR_APPLICATION_KEY_HERE'){
-    setPill('Keys missing','error');
-    setMsg('Open the HTML file and paste your MyScript Application Key and HMAC Key near the top of the script.', true);
-    return;
-  }
   if (!window.iink || !window.iink.Editor){
     setPill('Library missing','error');
     setMsg('The MyScript iink-ts library did not load. Check your internet connection and reload.', true);
@@ -455,8 +450,8 @@ async function initIink(){
   }
 
   try {
-    // iink-ts: construct with new, then call initialize()
-    iinkEditor = new window.iink.Editor(iinkHost, {
+    // Correct iink-ts API: static load() method with editor type "INTERACTIVEINK"
+    iinkEditor = await window.iink.Editor.load(iinkHost, 'INTERACTIVEINK', {
       configuration: {
         server: {
           scheme: 'https',
@@ -471,7 +466,10 @@ async function initIink(){
       }
     });
 
-    await iinkEditor.initialize();
+    // Extra safety: wait until the editor reports it is idle.
+    if (typeof iinkEditor.waitForIdle === 'function'){
+      try { await iinkEditor.waitForIdle(); } catch(_){}
+    }
 
     iinkReady = true;
     setPill('Ready','idle');
@@ -483,8 +481,7 @@ async function initIink(){
   }
 }
 
-// Replay our recorded strokes into iink-ts via importPointEvents(),
-// then export LaTeX.
+// Replay strokes into iink-ts via importPointEvents(), then export LaTeX.
 async function convert(){
   clearIdle();
   if (!strokes.length){ setMsg('Write something first.'); return; }
@@ -495,27 +492,26 @@ async function convert(){
   busy = true;
 
   try {
-    // Clear any previous content
+    // Clear previous content
     try { await iinkEditor.clear(); } catch(_){}
 
-    // Build the array of strokes in the format iink-ts expects:
-    // [ { pointerType, pointerId, pointers: [ {x, y, t, p}, ... ] }, ... ]
-    const now = Date.now();
+    // Build the pointer-event stream iink-ts expects.
+    const baseTime = Date.now();
     const pointerEvents = strokes.map((s, idx) => ({
       pointerType: 'PEN',
       pointerId: idx,
       pointers: s.pts.map((p, i) => ({
         x: p[0],
         y: p[1],
-        t: now + i,          // ms timestamp
-        p: 0.5               // pressure (not used by the server, any value works)
+        t: baseTime + i,
+        p: 0.5
       }))
     }));
 
-    // Send all strokes at once
+    // Send everything at once
     await iinkEditor.importPointEvents(pointerEvents);
 
-    // Give the server a moment to process, then request LaTeX.
+    // Give the server a moment, then ask for LaTeX.
     setTimeout(async () => {
       try {
         let exported = null;
