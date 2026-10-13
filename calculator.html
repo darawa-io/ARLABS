@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Handwriting Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700&display=swap" rel="stylesheet">
+<!-- iink-ts (the current MyScript web library) -->
+<script src="https://cdn.jsdelivr.net/npm/iink-ts@latest/dist/iink.min.js"></script>
+<style>
+:root{
+  --bg:#E8EEF3; --paper:#F4F8FB; --grid:#D6E1E9; --grid-strong:#C2D3DF;
+  --ink:#16263D; --muted:#566779; --panel:#FFFFFF; --line:#D5DFE7;
+  --accent:#2757E8; --accent-ink:#FFFFFF; --accent-soft:#E3EAFD; --danger:#B4411A;
+  --font:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1218; --paper:#131A22; --grid:#1E2934; --grid-strong:#2A3948;
+    --ink:#E6EEF5; --muted:#8FA1B3; --panel:#17202A; --line:#263240;
+    --accent:#7AA2FF; --accent-ink:#0D1218; --accent-soft:#1E2B45; --danger:#F08A5D;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1218; --paper:#131A22; --grid:#1E2934; --grid-strong:#2A3948;
+  --ink:#E6EEF5; --muted:#8FA1B3; --panel:#17202A; --line:#263240;
+  --accent:#7AA2FF; --accent-ink:#0D1218; --accent-soft:#1E2B45; --danger:#F08A5D;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+.app{max-width:1200px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;font-weight:700;letter-spacing:-.01em;margin:4px 0 2px}
+.sub{margin:0 0 14px;color:var(--muted);max-width:60ch}
+.layout{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:920px){.layout{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;padding:0 16px;min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn{min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.btn:hover{border-color:var(--grid-strong)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:500}
+.btn[disabled]{opacity:.5;cursor:default}
+.auto{display:inline-flex;align-items:center;gap:8px;margin-left:auto;color:var(--muted);min-height:44px}
+.auto input{width:20px;height:20px;accent-color:var(--accent)}
+.padwrap{
+  position:relative;height:clamp(320px,62vh,640px);border-radius:14px;overflow:hidden;
+  border:1px solid var(--line);background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+.hint{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--muted);pointer-events:none;padding:24px;font-size:1.15rem}
+.hint small{display:block;margin-top:6px;font-size:.85rem;opacity:.85}
+.pill{
+  position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 8px;border-radius:999px;background:var(--panel);border:1px solid var(--line);
+  font-size:.9rem;pointer-events:none;
+}
+.ring{width:30px;height:30px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4}
+.ring .bg{stroke:var(--line)}
+.ring .fg{stroke:var(--accent);stroke-linecap:round;stroke-dasharray:87.96;stroke-dashoffset:87.96}
+.pill[data-mode="busy"] .ring{animation:spin 1s linear infinite}
+.pill[data-mode="busy"] .ring .fg{stroke-dashoffset:60}
+.pill[data-mode="error"] .ring .fg{stroke:var(--danger);stroke-dashoffset:0}
+.pill[data-mode="done"] .ring .fg{stroke-dashoffset:0}
+@keyframes spin{to{transform:rotate(270deg)}}
+@media (prefers-reduced-motion:reduce){.pill[data-mode="busy"] .ring{animation:none}}
+.result{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.result h2{font-size:1rem;font-weight:700;margin:0 0 8px}
+.typed{min-height:64px;display:flex;align-items:center;overflow-x:auto;padding:4px 0 8px;border-bottom:1px solid var(--line)}
+.typed .empty{color:var(--muted)}
+.answers{margin:12px 0;display:grid;gap:6px;overflow-x:auto}
+.ans{display:grid;grid-template-columns:minmax(78px,auto) 1fr;gap:12px;align-items:center;padding:6px 10px;border-radius:8px}
+.ans .lab{color:var(--muted);font-size:.9rem}
+.ans.final{background:var(--accent-soft);border-left:4px solid var(--accent)}
+.ans.final .math{font-weight:500}
+.ans.sub .math{opacity:.85}
+.math{overflow-x:auto}
+math{font-family:"STIX Two Math","Cambria Math","Latin Modern Math","Noto Sans Math",math,serif;font-size:1.4em}
+.typed math{font-size:1.7em}
+.note{color:var(--muted);font-size:.9rem;margin:2px 0 0}
+.msg{margin:8px 0;min-height:1.4em;color:var(--muted)}
+.msg.err{color:var(--danger)}
+.edit{display:flex;gap:8px;margin-top:6px}
+.edit label{position:absolute;left:-9999px}
+.edit input{flex:1;min-width:0;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95rem}
+.steps{margin:6px 0 0 1.2em;padding:0;color:var(--muted);font-size:.9rem}
+#history{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+#history li{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+#history math{font-size:1.15em}
+.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.history-wrap{margin-top:16px}
+.history-wrap:empty{display:none}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Handwriting Calculator</h1>
+  <p class="sub">Write an equation with a pen, finger or mouse. When you stop for 2 seconds it is typed out and solved.</p>
+
+  <div class="layout">
+    <section aria-label="Writing pad">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Tool">
+          <button id="penBtn" aria-pressed="true">Pen</button>
+          <button id="eraseBtn" aria-pressed="false">Eraser</button>
+        </div>
+        <button class="btn" id="undoBtn">Undo</button>
+        <button class="btn" id="clearBtn">Clear</button>
+        <button class="btn primary" id="convertBtn">Convert now</button>
+        <label class="auto"><input type="checkbox" id="auto" checked> Convert after 2 s</label>
+      </div>
+      <div class="padwrap" id="padwrap">
+        <canvas id="pad" aria-label="Drawing area for handwritten math"></canvas>
+        <div class="hint" id="hint">Write an equation here<small>For example 2x + 5 = 11, √18 + 1/3, or 3.2 × 10⁵ ÷ 4 × 10²</small></div>
+        <div class="pill" id="pill" data-mode="idle" aria-hidden="true">
+          <svg class="ring" viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" id="ringFg" cx="18" cy="18" r="14"/></svg>
+          <span id="pillText">Starting up…</span>
+        </div>
+      </div>
+      <div class="sr" id="live" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="result" aria-label="Result">
+      <h2>Typed equation</h2>
+      <div class="typed" id="typed"><span class="empty">Your handwriting appears here, typed.</span></div>
+      <div class="answers" id="answers"></div>
+      <p class="msg" id="msg"></p>
+      <form class="edit" id="editForm">
+        <label for="plain">Equation as text</label>
+        <input id="plain" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Fix a misread, or type: 2*x+5=11">
+        <button class="btn" type="submit">Solve</button>
+      </form>
+      <div class="history-wrap" id="historyWrap"></div>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/nerdamer.core.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Algebra.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Calculus.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Solve.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   >>> PASTE YOUR MYSCRIPT KEYS HERE <<<
+   Get them free at https://developer.myscript.com/getting-started/web
+   ============================================================ */
+const MYSCRIPT_APPLICATION_KEY = "PASTE_YOUR_APPLICATION_KEY_HERE";
+const MYSCRIPT_HMAC_KEY        = "PASTE_YOUR_HMAC_KEY_HERE";
+/* ============================================================ */
+
+const $ = s => document.querySelector(s);
+const canvas = $('#pad'), ctx = canvas.getContext('2d');
+const IDLE = 2000;
+
+let strokes = [], cur = null, tool = 'pen';
+let idleTimer = null, raf = 0, busy = false, lastPlain = '';
+let history = [];
+
+/* ---------- canvas drawing ---------- */
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function sizeCanvas(){
+  const dpr = window.devicePixelRatio || 1, r = canvas.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.round(r.width * dpr));
+  canvas.height = Math.max(1, Math.round(r.height * dpr));
+  redraw();
+}
+function strokePath(c, pts){
+  c.beginPath();
+  c.moveTo(pts[0][0], pts[0][1]);
+  if (pts.length === 1){ c.lineTo(pts[0][0] + .1, pts[0][1]); }
+  else {
+    for (let i = 1; i < pts.length - 1; i++){
+      const mx = (pts[i][0] + pts[i+1][0]) / 2, my = (pts[i][1] + pts[i+1][1]) / 2;
+      c.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+    const l = pts[pts.length - 1]; c.lineTo(l[0], l[1]);
+  }
+  c.stroke();
+}
+function redraw(){
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = cssVar('--ink') || '#16263D';
+  ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  strokes.forEach(s => strokePath(ctx, s.pts));
+  $('#hint').style.display = strokes.length ? 'none' : 'grid';
+}
+function pos(e){ const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+function eraseAt(p){
+  const R = 16, before = strokes.length;
+  strokes = strokes.filter(s => !s.pts.some(q => Math.hypot(q[0]-p[0], q[1]-p[1]) < R));
+  if (strokes.length !== before) redraw();
+}
+canvas.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  canvas.setPointerCapture(e.pointerId);
+  clearIdle();
+  const p = pos(e);
+  if (tool === 'pen'){ cur = { pts: [p] }; strokes.push(cur); redraw(); }
+  else { cur = { erasing: true }; eraseAt(p); }
+  e.preventDefault();
+});
+canvas.addEventListener('pointermove', e => {
+  if (!cur) return;
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  (evs.length ? evs : [e]).forEach(ev => {
+    const p = pos(ev);
+    if (cur.erasing) eraseAt(p);
+    else {
+      const l = cur.pts[cur.pts.length-1];
+      if (Math.hypot(p[0]-l[0], p[1]-l[1]) < 1.2) return;
+      cur.pts.push(p);
+    }
+  });
+  if (!cur.erasing) redraw();
+});
+function endStroke(){ if (!cur) return; cur = null; startIdle(); }
+canvas.addEventListener('pointerup', endStroke);
+canvas.addEventListener('pointercancel', endStroke);
+
+/* ---------- idle timer + status ---------- */
+const pill = $('#pill'), pillText = $('#pillText'), ringFg = $('#ringFg'), live = $('#live');
+function setPill(text, mode, announce){
+  pill.dataset.mode = mode; pillText.textContent = text;
+  if (mode !== 'wait') ringFg.style.strokeDashoffset = '';
+  if (announce) live.textContent = announce;
+}
+function clearIdle(){ clearTimeout(idleTimer); cancelAnimationFrame(raf); }
+function startIdle(){
+  clearIdle();
+  if (!strokes.length){ setPill('Ready','idle'); return; }
+  if (!$('#auto').checked){ setPill('Press Convert now','idle'); return; }
+  const t0 = performance.now();
+  idleTimer = setTimeout(() => { cancelAnimationFrame(raf); convert(); }, IDLE);
+  const loop = () => {
+    const el = performance.now() - t0, p = Math.min(1, el / IDLE);
+    pill.dataset.mode = 'wait';
+    ringFg.style.strokeDashoffset = String(87.96 * (1 - p));
+    pillText.textContent = 'Converting in ' + (Math.max(0, IDLE - el) / 1000).toFixed(1) + ' s';
+    if (p < 1) raf = requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+/* ---------- math helpers ---------- */
+const hasNer = () => typeof nerdamer !== 'undefined' && nerdamer.solve;
+function clean(s){
+  return String(s)
+    .replace(/[×·⋅]/g,'*').replace(/÷/g,'/').replace(/[−–]/g,'-').replace(/π/g,'pi')
+    .replace(/√\s*\(([^)]*)\)/g,'sqrt($1)').replace(/√\s*([\w.]+)/g,'sqrt($1)')
+    .replace(/\s+/g,' ').trim()
+    .replace(/(\d)\s*([a-df-zA-Z(])/g,'$1*$2')
+    .replace(/\)\s*([\w(])/g,')*$1');
+}
+function splitTop(s){
+  const out = []; let d = 0, c = '';
+  for (const ch of s){
+    if ('([{'.includes(ch)) d++; else if (')]}'.includes(ch)) d--;
+    if (ch === ',' && d === 0){ out.push(c); c = ''; } else c += ch;
+  }
+  if (c.trim()) out.push(c);
+  return out.map(x => x.trim()).filter(Boolean);
+}
+function listFrom(sol){
+  let s = String(sol).trim();
+  if (s.startsWith('[') && s.endsWith(']')) s = s.slice(1,-1);
+  return splitTop(s);
+}
+function texOf(e){ try { return nerdamer(e).toTeX(); } catch(_) { return e; } }
+function num(e){
+  try {
+    const v = (typeof math !== 'undefined') ? math.evaluate(e) : Number(nerdamer(e).evaluate().text('decimals'));
+    return (typeof v === 'number' && isFinite(v)) ? v : null;
+  } catch(_) { return null; }
+}
+function fmt(n){ return n === 0 ? '0' : String(parseFloat(n.toPrecision(10))); }
+function sci(n){
+  const [m,e] = n.toExponential(6).split('e');
+  return parseFloat(m) + '\\times 10^{' + parseInt(e,10) + '}';
+}
+function texFromPlain(raw){
+  return clean(raw).split(';').map(p => p.split('=').map(x => texOf(x.trim())).join(' = ')).join(' \\;;\\; ');
+}
+function solveEquation(eq){
+  const parts = eq.split('=');
+  if (parts.length !== 2) throw new Error('Use exactly one = sign per equation.');
+  const [l, r] = parts;
+  const vars = [...new Set([...nerdamer(l).variables(), ...nerdamer(r).variables()])].sort();
+  const rows = [];
+  if (!vars.length){
+    const a = num(l), b = num(r);
+    const ok = a !== null && b !== null && Math.abs(a-b) <= 1e-9 * Math.max(1, Math.abs(a));
+    rows.push({label:'Check', tex: ok ? '\\text{true}' : '\\text{false}', final:true});
+    return rows;
+  }
+  vars.slice(0,3).forEach(v => {
+    const sol = listFrom(nerdamer.solve(eq, v));
+    const label = vars.length > 1 ? 'Solve for ' + v : 'Solution';
+    if (!sol.length){ rows.push({label, tex:'\\text{no solution found}'}); return; }
+    sol.forEach((s,i) => {
+      rows.push({label: i ? '' : label, tex: v + ' = ' + texOf(s), final: vars.length === 1});
+      const n = num(s);
+      if (n !== null && !Number.isInteger(n)) rows.push({label:'', tex: v + ' \\approx ' + fmt(n), sub:true});
+    });
+  });
+  return rows;
+}
+function solveSystem(eqs){
+  const sol = nerdamer.solveEquations(eqs);
+  if (!Array.isArray(sol) || !sol.length) throw new Error('No unique solution found for this system.');
+  const rows = [];
+  sol.forEach(pair => {
+    const name = pair[0], val = String(pair[1]);
+    rows.push({label:'', tex: name + ' = ' + texOf(val), final:true});
+    const n = num(val);
+    if (n !== null && !Number.isInteger(n)) rows.push({label:'', tex: name + ' \\approx ' + fmt(n), sub:true});
+  });
+  rows[0].label = 'Solution';
+  return rows;
+}
+function evalExpression(p){
+  const vars = nerdamer(p).variables();
+  const rows = [], seen = new Set();
+  const add = (label, tex, extra) => { if (tex && !seen.has(tex)){ seen.add(tex); rows.push(Object.assign({label, tex}, extra)); } };
+  if (vars.length){
+    add('Simplified', nerdamer(p).toTeX(), {final:true});
+    try { add('Expanded', nerdamer('expand(' + p + ')').toTeX()); } catch(_){}
+    try { add('Factored', nerdamer('factor(' + p + ')').toTeX()); } catch(_){}
+    return rows;
+  }
+  const n = num(p);
+  const exact = nerdamer(p).toTeX();
+  const abs = n === null ? 0 : Math.abs(n);
+  const decimalOk = n !== null && (abs === 0 || (abs >= 1e-6 && abs < 1e15));
+  const showExact = n === null || !decimalOk || exact !== fmt(n);
+  if (showExact) add('Exact', exact, {final:true});
+  if (decimalOk) add('Decimal', fmt(n), {final: !showExact});
+  if (n !== null && n !== 0 && (abs >= 1e5 || abs < 1e-3 || /10\s*\^|\de[+-]?\d/i.test(p))) add('Scientific', sci(n));
+  if (!rows.length) rows.push({label:'Result', tex: exact, final:true});
+  return rows;
+}
+function solveAll(raw){
+  if (!hasNer()) throw new Error('The math engine did not load. Check your connection and reload.');
+  const pieces = clean(raw).split(';').map(s => s.replace(/=\s*\??\s*$/,'').trim()).filter(Boolean);
+  if (!pieces.length) throw new Error('Nothing to solve.');
+  const eqs = pieces.filter(p => p.includes('='));
+  if (eqs.length === 0) return pieces.flatMap(evalExpression);
+  if (eqs.length !== pieces.length) throw new Error('Mixed equations and expressions are not supported. Separate them.');
+  return eqs.length === 1 ? solveEquation(eqs[0]) : solveSystem(eqs);
+}
+
+/* ---------- rendering ---------- */
+function setTex(el, tex){
+  if (typeof katex !== 'undefined'){
+    try { el.innerHTML = katex.renderToString(tex, {output:'mathml', throwOnError:false}); return; } catch(_){}
+  }
+  el.textContent = tex;
+}
+function rowEl(r){
+  const d = document.createElement('div');
+  d.className = 'ans' + (r.final ? ' final' : '') + (r.sub ? ' sub' : '');
+  const l = document.createElement('span'); l.className = 'lab'; l.textContent = r.label || '';
+  const m = document.createElement('span'); m.className = 'math'; setTex(m, r.tex);
+  d.append(l, m);
+  return d;
+}
+function showTyped(tex){
+  const t = $('#typed'); t.textContent = '';
+  const s = document.createElement('span'); setTex(s, tex); t.append(s);
+}
+function showRows(rows){
+  const a = $('#answers'); a.textContent = '';
+  rows.forEach(r => a.append(rowEl(r)));
+}
+function setMsg(text, err){ const m = $('#msg'); m.textContent = text || ''; m.className = 'msg' + (err ? ' err' : ''); }
+function addHistory(typedTex, rows){
+  const f = rows.find(r => r.final) || rows[0]; if (!f) return;
+  history.unshift({typedTex, ansTex: f.tex});
+  history = history.slice(0, 8);
+  const wrap = $('#historyWrap'); wrap.textContent = '';
+  const h = document.createElement('h2'); h.textContent = 'Earlier in this session'; wrap.append(h);
+  const ol = document.createElement('ul'); ol.id = 'history';
+  history.forEach(it => {
+    const li = document.createElement('li');
+    const a = document.createElement('span'), b = document.createElement('span');
+    setTex(a, it.typedTex); setTex(b, it.ansTex); li.append(a, b); ol.append(li);
+  });
+  wrap.append(ol);
+}
+function present(plain, latex, confidence){
+  lastPlain = plain;
+  $('#plain').value = plain;
+  let typedTex = latex;
+  try { if (!typedTex) typedTex = texFromPlain(plain); } catch(_){ typedTex = plain; }
+  showTyped(typedTex);
+  try {
+    const rows = solveAll(plain);
+    showRows(rows);
+    addHistory(typedTex, rows);
+    setMsg(confidence !== undefined && confidence < 0.5 ? 'Low confidence reading. Check the text below and edit it if needed.' : '');
+    setPill('Solved','done','Solved. ' + (rows[0] ? rows[0].label : ''));
+  } catch (err){
+    showRows([]);
+    setMsg("Couldn't solve this: " + (err && err.message ? err.message : 'unknown error') + ' You can fix the text below.', true);
+    setPill('Could not solve','error');
+  }
+}
+
+/* ============================================================
+   iink-ts recognition (corrected API)
+   ============================================================ */
+let iinkEditor = null;
+let iinkReady = false;
+
+// Hidden container that iink-ts attaches its own canvas/SVG to.
+const iinkHost = document.createElement('div');
+iinkHost.id = 'iink-editor';
+iinkHost.style.position = 'absolute';
+iinkHost.style.left = '-99999px';
+iinkHost.style.top = '0';
+iinkHost.style.width = '800px';
+iinkHost.style.height = '600px';
+document.body.appendChild(iinkHost);
+
+async function initIink(){
+  if (MYSCRIPT_APPLICATION_KEY === 'PASTE_YOUR_APPLICATION_KEY_HERE'){
+    setPill('Keys missing','error');
+    setMsg('Open the HTML file and paste your MyScript Application Key and HMAC Key near the top of the script.', true);
+    return;
+  }
+  if (!window.iink || !window.iink.Editor){
+    setPill('Library missing','error');
+    setMsg('The MyScript iink-ts library did not load. Check your internet connection and reload.', true);
+    return;
+  }
+
+  try {
+    // iink-ts: construct with new, then call initialize()
+    iinkEditor = new window.iink.Editor(iinkHost, {
+      configuration: {
+        server: {
+          scheme: 'https',
+          host:   'cloud.myscript.com',
+          applicationKey: MYSCRIPT_APPLICATION_KEY,
+          hmacKey:        MYSCRIPT_HMAC_KEY
+        },
+        recognition: {
+          type: 'MATH',
+          math: { solver: { enable: false } }
+        }
+      }
+    });
+
+    await iinkEditor.initialize();
+
+    iinkReady = true;
+    setPill('Ready','idle');
+    setMsg('Ready — write an equation.');
+  } catch (e) {
+    console.error('iink init failed:', e);
+    setPill('Connection failed','error');
+    setMsg('Could not connect to the handwriting service. Check your MyScript keys and try again. (' + (e && e.message ? e.message : e) + ')', true);
+  }
+}
+
+// Replay our recorded strokes into iink-ts via importPointEvents(),
+// then export LaTeX.
+async function convert(){
+  clearIdle();
+  if (!strokes.length){ setMsg('Write something first.'); return; }
+  if (!iinkReady){ setMsg('Recognition is not ready yet. Wait a moment and try again.', true); return; }
+
+  setPill('Reading handwriting…','busy','Reading handwriting');
+  setMsg('');
+  busy = true;
+
+  try {
+    // Clear any previous content
+    try { await iinkEditor.clear(); } catch(_){}
+
+    // Build the array of strokes in the format iink-ts expects:
+    // [ { pointerType, pointerId, pointers: [ {x, y, t, p}, ... ] }, ... ]
+    const now = Date.now();
+    const pointerEvents = strokes.map((s, idx) => ({
+      pointerType: 'PEN',
+      pointerId: idx,
+      pointers: s.pts.map((p, i) => ({
+        x: p[0],
+        y: p[1],
+        t: now + i,          // ms timestamp
+        p: 0.5               // pressure (not used by the server, any value works)
+      }))
+    }));
+
+    // Send all strokes at once
+    await iinkEditor.importPointEvents(pointerEvents);
+
+    // Give the server a moment to process, then request LaTeX.
+    setTimeout(async () => {
+      try {
+        let exported = null;
+        if (typeof iinkEditor.export === 'function'){
+          exported = await iinkEditor.export({ 'application/x-latex': true });
+        } else if (typeof iinkEditor.export_ === 'function'){
+          exported = await iinkEditor.export_({ 'application/x-latex': true });
+        }
+
+        const latex = (exported && exported['application/x-latex']) || '';
+
+        if (latex){
+          const plain = latexToPlain(latex);
+          present(plain, latex, 0.9);
+        } else {
+          setPill('Nothing legible','idle');
+          setMsg("Couldn't read any math. Try writing larger and more clearly.", true);
+        }
+      } catch (err){
+        console.error('iink export failed:', err);
+        setPill('Could not read','error');
+        setMsg('Recognition failed. Try again. (' + (err && err.message ? err.message : err) + ')', true);
+      } finally {
+        busy = false;
+      }
+    }, 600);
+
+  } catch (e){
+    console.error('convert failed:', e);
+    setPill('Could not read','error');
+    setMsg('Recognition failed. (' + (e && e.message ? e.message : e) + ')', true);
+    busy = false;
+  }
+}
+
+// Minimal LaTeX -> plaintext converter for the solver.
+function latexToPlain(latex){
+  if (!latex) return '';
+  let s = String(latex);
+  s = s.replace(/^\\\(|\\\)$/g, '').replace(/^\\\[|\\\]$/g, '').replace(/^\$+|\$+$/g, '');
+  s = s.replace(/\\left|\\right|\\!|\\,|\\;|\\:/g, '');
+  s = s.replace(/\\quad|\\qquad/g, ' ');
+  let prev;
+  do { prev = s; s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '(($1)/($2))'); } while (s !== prev);
+  do { prev = s; s = s.replace(/\\dfrac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '(($1)/($2))'); } while (s !== prev);
+  do { prev = s; s = s.replace(/\\sqrt\s*\[([^\]]+)\]\s*\{([^{}]*)\}/g, '($2)^(1/($1))'); } while (s !== prev);
+  do { prev = s; s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, 'sqrt($1)'); } while (s !== prev);
+  s = s.replace(/\\times|\\cdot|\\ast/g, '*');
+  s = s.replace(/\\div/g, '/');
+  s = s.replace(/\\pm/g, '+-');
+  s = s.replace(/\\pi/g, 'pi');
+  s = s.replace(/\\sin|\\cos|\\tan|\\log|\\ln|\\exp/g, m => m.slice(1));
+  s = s.replace(/\\[a-zA-Z]+/g, '');
+  s = s.replace(/[{}]/g, '');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+/* ---------- controls ---------- */
+function setTool(t){
+  tool = t;
+  $('#penBtn').setAttribute('aria-pressed', t === 'pen');
+  $('#eraseBtn').setAttribute('aria-pressed', t === 'eraser');
+  canvas.style.cursor = t === 'pen' ? 'crosshair' : 'cell';
+}
+$('#penBtn').onclick = () => setTool('pen');
+$('#eraseBtn').onclick = () => setTool('eraser');
+$('#undoBtn').onclick = () => { strokes.pop(); redraw(); startIdle(); };
+$('#clearBtn').onclick = () => { clearIdle(); strokes = []; redraw(); setPill('Ready','idle'); };
+$('#convertBtn').onclick = convert;
+$('#auto').onchange = () => { if ($('#auto').checked) startIdle(); else { clearIdle(); setPill(strokes.length ? 'Press Convert now' : 'Ready','idle'); } };
+$('#editForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('#plain').value.trim();
+  if (v) present(v, '');
+});
+
+new ResizeObserver(sizeCanvas).observe(canvas);
+window.addEventListener('resize', sizeCanvas);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
+sizeCanvas();
+
+/* ---------- boot: wait for iink-ts to appear, then initialize ---------- */
+(function waitForIink(){
+  let tries = 0;
+  (function poll(){
+    if (window.iink && window.iink.Editor){ initIink(); return; }
+    if (++tries > 75){
+      setPill('Library missing','error');
+      setMsg('The MyScript iink-ts library failed to load. Check your internet connection and reload the page.', true);
+      return;
+    }
+    setTimeout(poll, 200);
+  })();
+})();
+
+})();
+</script>
+</body>
+</html>
