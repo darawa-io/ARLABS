@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700&display=swap" rel="stylesheet">
-<!-- iink-ts (MyScript web library) -->
-<script src="https://cdn.jsdelivr.net/npm/iink-ts@latest/dist/iink.min.js"></script>
+<!-- iink-ts v4.1.0 (pinned version, current API) -->
+<script src="https://cdn.jsdelivr.net/npm/iink-ts@4.1.0/dist/iink.min.js"></script>
 <style>
 :root{
   --bg:#E8EEF3; --paper:#F4F8FB; --grid:#D6E1E9; --grid-strong:#C2D3DF;
@@ -427,9 +427,9 @@ function present(plain, latex, confidence){
 }
 
 /* ============================================================
-   iink-ts recognition
+   iink-ts v4 recognition (corrected API)
    ============================================================ */
-let iinkEditor = null;
+let iinkCanvas = null;
 let iinkReady = false;
 
 // Hidden host element that iink-ts attaches its canvas to.
@@ -443,15 +443,15 @@ iinkHost.style.height = '600px';
 document.body.appendChild(iinkHost);
 
 async function initIink(){
-  if (!window.iink || !window.iink.Editor){
+  if (!window.iink || !window.iink.Canvas){
     setPill('Library missing','error');
     setMsg('The MyScript iink-ts library did not load. Check your internet connection and reload.', true);
     return;
   }
 
   try {
-    // Correct iink-ts API: static load() method with editor type "INTERACTIVEINK"
-    iinkEditor = await window.iink.Editor.load(iinkHost, 'INTERACTIVEINK', {
+    // iink-ts v4: use iink.Canvas.load() and type "INTERACTIVE_INK"
+    iinkCanvas = await window.iink.Canvas.load(iinkHost, 'INTERACTIVE_INK', {
       configuration: {
         server: {
           scheme: 'https',
@@ -466,9 +466,9 @@ async function initIink(){
       }
     });
 
-    // Extra safety: wait until the editor reports it is idle.
-    if (typeof iinkEditor.waitForIdle === 'function'){
-      try { await iinkEditor.waitForIdle(); } catch(_){}
+    // Wait until the canvas reports it is idle (WebSocket ready).
+    if (typeof iinkCanvas.waitForIdle === 'function'){
+      try { await iinkCanvas.waitForIdle(); } catch(_){}
     }
 
     iinkReady = true;
@@ -481,7 +481,7 @@ async function initIink(){
   }
 }
 
-// Replay strokes into iink-ts via importPointEvents(), then export LaTeX.
+// Replay strokes into iink via importPointEvents(), then export LaTeX.
 async function convert(){
   clearIdle();
   if (!strokes.length){ setMsg('Write something first.'); return; }
@@ -493,7 +493,7 @@ async function convert(){
 
   try {
     // Clear previous content
-    try { await iinkEditor.clear(); } catch(_){}
+    try { await iinkCanvas.clear(); } catch(_){}
 
     // Build the pointer-event stream iink-ts expects.
     const baseTime = Date.now();
@@ -509,16 +509,16 @@ async function convert(){
     }));
 
     // Send everything at once
-    await iinkEditor.importPointEvents(pointerEvents);
+    await iinkCanvas.importPointEvents(pointerEvents);
 
     // Give the server a moment, then ask for LaTeX.
     setTimeout(async () => {
       try {
         let exported = null;
-        if (typeof iinkEditor.export === 'function'){
-          exported = await iinkEditor.export({ 'application/x-latex': true });
-        } else if (typeof iinkEditor.export_ === 'function'){
-          exported = await iinkEditor.export_({ 'application/x-latex': true });
+        if (typeof iinkCanvas.export === 'function'){
+          exported = await iinkCanvas.export({ 'application/x-latex': true });
+        } else if (typeof iinkCanvas.export_ === 'function'){
+          exported = await iinkCanvas.export_({ 'application/x-latex': true });
         }
 
         const latex = (exported && exported['application/x-latex']) || '';
@@ -594,11 +594,11 @@ window.addEventListener('resize', sizeCanvas);
 if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
 sizeCanvas();
 
-/* ---------- boot: wait for iink-ts to appear, then initialize ---------- */
+/* ---------- boot: wait for iink-ts Canvas API, then initialize ---------- */
 (function waitForIink(){
   let tries = 0;
   (function poll(){
-    if (window.iink && window.iink.Editor){ initIink(); return; }
+    if (window.iink && window.iink.Canvas){ initIink(); return; }
     if (++tries > 75){
       setPill('Library missing','error');
       setMsg('The MyScript iink-ts library failed to load. Check your internet connection and reload the page.', true);
