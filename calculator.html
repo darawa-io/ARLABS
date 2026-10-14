@@ -105,6 +105,7 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
 .pl,.pr{width:.3em;align-self:stretch;flex:none;border:0 solid currentColor;margin:.05em 0}
 .pl{border-left-width:.045em;border-radius:100% 0 0 100%/50% 0 0 50%}
 .pr{border-right-width:.045em;border-radius:0 100% 100% 0/0 50% 50% 0}
+.fnm{font-style:normal;margin-right:.14em;letter-spacing:.01em}
 .sup{align-self:flex-start;font-size:.58em;margin:-.02em 0 0 .05em;display:flex;align-items:center}
 
 /* teach bar */
@@ -143,6 +144,7 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
 .key:active{filter:brightness(.88)}
 .key small{position:absolute;right:6px;top:4px;font-size:11px;color:var(--accent);font-weight:600}
 .key.wide{grid-column:span 2;font-size:16px}
+.key.fnkey{font-size:17px}
 .row2{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
 .row2 span{font-size:16px}
 .sw{
@@ -163,6 +165,7 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
   <button class="btn" id="bUndo" aria-label="Undo" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
   <button class="btn" id="bRedo" aria-label="Redo" disabled><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
   <button class="btn" id="bClear" aria-label="Clear" disabled><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+  <button class="btn" id="bAngle" aria-label="Angle unit for sin, cos, tan" title="Angle unit for sin, cos, tan">DEG</button>
   <button class="btn primary" id="bSolve">Solve</button>
   <button class="btn" id="bSet" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </header>
@@ -196,11 +199,13 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
     <h2>Settings</h2>
     <div class="row2"><span>Auto‑convert handwriting after a pause</span><button class="sw on" id="swAuto" aria-label="Auto convert"></button></div>
     <h3>Teach it your handwriting</h3>
-    <p>If a digit keeps being misread, pick it here and write it a few times. Samples are stored only on this device.</p>
+    <p>If a digit or letter keeps being misread, pick it here and write it a few times (for letters, write the whole letter — an i with its dot, a t with its bar). Samples are stored only on this device.</p>
     <div class="grid five" id="teachGrid"></div>
     <button class="link" id="resetSamples">Forget all my samples</button>
     <h3>Tips</h3>
+    <p>Functions: write <b>sin</b>, <b>cos</b>, <b>tan</b>, <b>log</b> or <b>ln</b> in small letters (dot the i, cross the t), then the angle, e.g. sin 30 or cos(60). The DEG / RAD button in the top bar picks degrees or radians. If a word isn't recognised, teach the letters below, or tap its first letter and pick the function.</p>
     <p>Fractions: draw a flat bar with the top and bottom written above and below it. Roots: draw the √ with its roof over the numbers. Powers: write the exponent small and raised. Division can also be ÷ (bar with two dots). Tap any symbol in the bottom strip to fix a misread.</p>
+    <p id="verLine" style="margin-top:14px;font-size:12px">MathInk</p>
     <button class="btn close" id="setClose">Done</button>
   </div>
 </div>
@@ -296,38 +301,56 @@ const DEFAULTS={
 };
 /* Extra shapes taken from real handwriting on an iPad (loopy 2, tailed 3, open 4, big-bar 5, 6 with a loop) */
 const OWN={
-  '2':[[L(41,27,24,8,34,0,45,4,59,21,63,32,63,45,59,55,50,65,40,71,23,78,7,75,0,78,1,80,6,80,23,82,40,99,50,100,84,77)],[L(2,24,0,14,9,3,18,0,28,1,33,6,38,19,36,56,30,69,24,71,17,76,13,89,19,92,27,86,51,90,64,96,79,95,100,84)]],
-  '3':[[L(3,23,0,8,12,0,23,2,43,22,46,41,59,48,66,67,63,80,48,93,12,100)],[L(6,11,0,8,1,5,15,0,22,0,34,4,38,8,40,14,39,25,22,45,29,46,34,49,36,54,35,64,6,100)]],
-  '4':[[L(6,0,2,0,0,5,0,55,7,54,17,60,25,61,35,57),L(36,45,39,46,40,49,40,56,37,60,44,100)],[L(25,0,0,62,25,59,48,49,49,91,54,99,59,100)]],
-  '5':[[L(74,0,54,5,28,24,26,26,26,32),L(16,33,11,37,9,43,13,45,33,49,35,53,35,61,30,73,12,95,4,100,1,99,0,95)]],
-  '6':[[L(63,0,43,7,22,24,8,45,2,63,0,73,2,86,7,94,14,99,17,99,22,92,42,78,47,76,48,80,47,85,35,98,24,100)]],
+  '2':[[L(41,27,24,8,34,0,45,4,59,21,63,32,63,45,59,55,50,65,40,71,23,78,7,75,0,78,1,80,6,80,23,82,40,99,50,100,84,77)],[L(2,24,0,14,9,3,18,0,28,1,33,6,38,19,36,56,30,69,24,71,17,76,13,89,19,92,27,86,51,90,64,96,79,95,100,84)],[L(0,19,0,14,5,8,24,0,39,1,43,10,42,29,29,64,13,93,14,99,26,100,92,83)]],
+  '3':[[L(3,23,0,8,12,0,23,2,43,22,46,41,59,48,66,67,63,80,48,93,12,100)],[L(6,11,0,8,1,5,15,0,22,0,34,4,38,8,40,14,39,25,22,45,29,46,34,49,36,54,35,64,6,100)],[L(0,22,1,17,19,6,45,0,58,3,66,11,66,23,60,35,83,37,98,46,100,58,90,67,59,78,41,80)],[L(0,97,1,100,8,100,37,92,58,71,58,64,53,58,32,55,49,27,49,13,43,2,26,0,6,14,1,24,8,30)]],
+  '4':[[L(6,0,2,0,0,5,0,55,7,54,17,60,25,61,35,57),L(36,45,39,46,40,49,40,56,37,60,44,100)],[L(25,0,0,62,25,59,48,49,49,91,54,99,59,100)],[L(50,100,38,80,33,52,8,55,1,47,0,0)]],
+  '5':[[L(74,0,54,5,28,24,26,26,26,32),L(16,33,11,37,9,43,13,45,33,49,35,53,35,61,30,73,12,95,4,100,1,99,0,95)],[L(52,15,30,2,10,0,0,6,2,23),L(33,97,58,100,63,89,44,64,10,31)]],
+  '6':[[L(63,0,43,7,22,24,8,45,2,63,0,73,2,86,7,94,14,99,17,99,22,92,42,78,47,76,48,80,47,85,35,98,24,100)],[L(54,13,47,0,36,5,12,32,0,55,1,75,8,90,10,91,21,76,32,67,46,67,50,77,49,82,40,95,33,99,25,100,12,97)]],
 };
 for(const k in OWN)DEFAULTS[k].push(...OWN[k]);
+/* Lowercase letters for function names (sin, cos, tan, log, ln). Kept apart from the digit templates. */
+const LETTERS={
+  's':[[L(52,14,40,3,24,0,10,6,6,20,14,32,30,42,46,54,50,70,40,86,22,92,6,84)],[L(48,10,30,0,10,8,12,28,38,44,52,64,36,88,14,92,2,80)],[L(50,6,26,0,6,14,22,34,44,50,52,72,28,92,2,84)]],
+  'i':[[L(30,40,30,100),L(30,8,30,12)],[L(30,40,28,100),L(32,6,32,10)],[L(26,42,30,98,38,100),L(30,10,30,14)]],
+  'n':[[L(6,100,6,36),L(6,52,18,38,34,34,46,44,48,100)],[L(6,100,6,36,6,56,20,38,36,34,48,46,48,100)],[L(8,36,8,100),L(8,56,24,34,44,38,48,60,48,100)]],
+  'c':[[A(44,52,34,48,-40,-320,22)],[A(40,52,30,46,-30,-330,22)],[L(48,18,30,2,10,16,4,52,12,86,32,100,50,86)]],
+  'o':[[A(34,52,30,48,0,360,32)],[A(34,52,30,48,-90,270,32)],[A(34,52,26,48,-60,300,32)]],
+  't':[[L(28,0,28,90,36,100,50,98),L(6,32,52,32)],[L(28,4,28,100),L(8,34,50,34)],[L(30,0,26,70,34,96,52,96),L(8,30,50,32)]],
+  'a':[[A(32,60,26,36,0,360,28),L(58,24,58,100)],[A(30,60,24,34,-30,330,28),L(54,26,54,100,64,98)],[A(32,60,26,36,-20,340,28),L(58,26,58,98)]],
+  'l':[[L(20,0,20,100)],[L(24,0,18,50,20,96,34,100)],[L(14,0,22,100)]],
+  'g':[[A(30,38,24,34,0,360,28),L(54,10,54,92,40,112,12,108)],[A(30,38,24,34,0,360,28),L(54,12,52,96,36,112,10,104)]],
+};
+const LETTER_SET=new Set(Object.keys(LETTERS));
+const FN_WORDS=['sin','cos','tan','log','ln'];
+const FNS=new Set(FN_WORDS);
+let LETTER_TEMPLATES=[];
 let USER={};   // user samples: label -> [ [ [ [x,y],... ] , ... ] ]
 let TEMPLATES=[];
 const SLANT=[-0.25,0.25];                 // digits are also stored leaning each way: people slant their writing
 const AUGMENT=new Set(['0','2','3','4','5','6','7','8','9']);   // not '1': a leaning 1 is too close to ( and )
 const COARSE=12,FINE=32,SHORTLIST=14;
-let CACHE=new Map();                      // recognition results by stroke geometry (cleared whenever templates change)
-function addTemplate(label,strokes,user,aug){
-  const c=toCloud(strokes,FINE);if(!c)return;
-  TEMPLATES.push({label,cloud:c,coarse:toCloud(strokes,COARSE),user,aug});
-}
+let CACHE=new Map(),LCACHE=new Map();                      // recognition results by stroke geometry (cleared whenever templates change)
 function rebuildTemplates(){
-  TEMPLATES=[];CACHE=new Map();
+  TEMPLATES=[];LETTER_TEMPLATES=[];CACHE=new Map();LCACHE=new Map();
+  const put=(label,strokes,user,aug)=>{
+    const c=toCloud(strokes,FINE);if(!c)return;
+    if(LETTER_SET.has(label))LETTER_TEMPLATES.push({label,cloud:c,user,aug});
+    else TEMPLATES.push({label,cloud:c,user,aug,coarse:toCloud(strokes,COARSE)});
+  };
   const add=(label,strokes,user)=>{
     if(!strokes.length||!strokes[0]||!strokes[0].length)return;
-    addTemplate(label,strokes,user,false);
-    if(AUGMENT.has(label))for(const sh of SLANT)addTemplate(label,strokes.map(st=>st.map(p=>({x:p.x+sh*p.y,y:p.y}))),user,true);
+    put(label,strokes,user,false);
+    if(AUGMENT.has(label)||LETTER_SET.has(label))for(const sh of SLANT)put(label,strokes.map(st=>st.map(p=>({x:p.x+sh*p.y,y:p.y}))),user,true);
   };
   for(const [label,vars] of Object.entries(DEFAULTS))for(const strokes of vars)add(label,strokes,false);
+  for(const [label,vars] of Object.entries(LETTERS))for(const strokes of vars)add(label,strokes,false);
   for(const [label,samples] of Object.entries(USER))for(const smp of samples)add(label,smp.map(st=>st.map(p=>({x:p[0],y:p[1]}))),true);
 }
 function normalizeSample(strokes){
   const b=bboxOf(strokes.flat());const s=100/(Math.max(b.w,b.h)||1);
   return strokes.map(st=>st.map(p=>[+((p.x-b.x0)*s).toFixed(1),+((p.y-b.y0)*s).toFixed(1)]));
 }
-const tScore=(d,t)=>d*(t.user?0.8:1)*(t.aug?1.03:1);
+const tScore=(d,t)=>d*(t.user?0.9:1)*(t.aug?1.03:1);
 /* Two passes keep this fast on an old iPad: rank every template with a coarse 12-point cloud,
    then score only the closest few with the full 32-point cloud. */
 function matchTemplates(strokes){
@@ -345,6 +368,18 @@ function matchTemplates(strokes){
   const res={label:arr[0][0],d:arr[0][1],alts:arr.slice(0,3)};
   if(CACHE.size>400)CACHE=new Map();
   CACHE.set(key,res);return res;
+}
+function strokeKey(strokes){return strokes.map(st=>st.length+':'+st.map(p=>Math.round(p.x)+','+Math.round(p.y)).join(';')).join('|');}
+/* distance from a glyph to the best template of every letter */
+function letterScores(strokes){
+  const key=strokeKey(strokes);const hit=LCACHE.get(key);if(hit)return hit;
+  const c=toCloud(strokes,FINE);const out={};
+  if(c)for(const t of LETTER_TEMPLATES){
+    const d=tScore(greedyMatch(c,t.cloud),t);
+    if(!(t.label in out)||d<out[t.label])out[t.label]=d;
+  }
+  if(LCACHE.size>400)LCACHE=new Map();
+  LCACHE.set(key,out);return out;
 }
 rebuildTemplates();
 
@@ -386,8 +421,8 @@ function kindOf(info,H){
   const b=info.b,len=info.len;
   if(info.rad)return'rad';
   const dim=Math.max(b.w,b.h);
+  if(b.w>=0.2*H&&b.h<=0.32*b.w&&len<=1.5*b.w)return'flat';   // short dashes count too: the lower bar of an "=" or the bar of a "+"
   if(dim<0.2*H||len<0.25*H)return'dot';
-  if(b.w>=0.3*H&&b.h<=0.32*b.w&&len<=1.5*b.w)return'flat';
   return'stroke';
 }
 function effRange(b,H){const w=Math.max(b.w,0.3*H);return[b.cx-w/2,b.cx+w/2];}
@@ -404,14 +439,18 @@ function canMerge(g,st,H){
   const gFlat=g.items.length===1&&g.items[0].kind==='flat';
   const sFlat=st.kind==='flat';
   const ov=xOverlap(gb,sb,H),gap=yGap(gb,sb);
-  if(gFlat&&sFlat){const r=sb.w/gb.w;return ov>=0.6&&r>=0.5&&r<=2&&gap<=0.7*H;}
+  if(gFlat&&sFlat){const r=sb.w/gb.w;return ov>=0.6&&r>=0.3&&r<=3.3&&gap<=0.7*H;}
   if(gFlat||sFlat){
     const flat=gFlat?gb:sb,other=gFlat?sb:gb;
     const oe=Math.max(other.w,0.7*other.h);
     return ov>=0.5&&gap<=0.06*H&&flat.w<=1.5*oe;
   }
   const hr=sb.h/Math.max(gb.h,1e-6);
-  if(!(gap<=0.08*H&&hr>=0.4&&hr<=2.5))return false;
+  if(gap>0.08*H)return false;
+  if(!(hr>=0.4&&hr<=2.5)){
+    // very different heights only belong together when the strokes really touch (the little top hook of a 5 and its body)
+    return hr>=0.2&&hr<=5&&ov>=0.5&&g.items.some(it=>strokeGap(it.s.pts,st.s.pts)<=0.15*H);
+  }
   if(ov>=0.5)return true;
   /* strokes that physically touch but sit off-centre (a 5 whose top bar sweeps far to
      the right, a 7 with a long overhang) still belong to one digit */
@@ -479,6 +518,7 @@ function makeSymbol(g,H,overrides){
   const ov=overrides&&overrides.get(key);
   if(ov){
     sym.label=ov;sym.geo=undefined;sym.rad=undefined;
+    if(FNS.has(ov)){sym.geo='fn';sym.forcedFn=true;}
     if(ov==='-')sym.geo='flat';
     else if(ov==='.')sym.geo='dot';
     else if(ov==='=')sym.geo='eq';
@@ -508,6 +548,79 @@ function mergeDivide(syms,H){
   }
   return out.filter(s=>!used.has(s));
 }
+/* ---- function names: sin cos tan log ln ----
+   Glyphs are grouped into letter-sized units (the dot of an "i" is paired with its stem), then every
+   known word is tried against consecutive units, scoring each unit against the letter templates. */
+function makeUnits(syms,H){
+  const sorted=syms.slice().sort((a,b)=>a.box.x0-b.box.x0);
+  const used=new Set(),units=[];
+  for(const d of sorted){
+    if(d.geo!=='dot'||used.has(d))continue;
+    const stem=sorted.filter(t=>t!==d&&!used.has(t)&&t.geo!=='dot'&&t.box.y0>=d.box.cy-0.1*H&&t.box.y0-d.box.cy<=0.6*H&&
+      Math.abs(t.box.cx-d.box.cx)<=0.3*H&&t.box.h>=0.25*H&&t.box.w<=0.6*H).sort((a,b)=>Math.abs(a.box.cx-d.box.cx)-Math.abs(b.box.cx-d.box.cx))[0];
+    if(stem){used.add(d);used.add(stem);units.push({syms:[d,stem],dot:true});}
+  }
+  for(const t of sorted)if(!used.has(t))units.push({syms:[t],dot:false});
+  for(const u of units){u.box=u.syms.map(t=>t.box).reduce(unionBox);u.strokes=[].concat(...u.syms.map(t=>t.strokes));}
+  return units.sort((a,b)=>a.box.x0-b.box.x0);
+}
+function wordScore(sl,w,H){
+  let total=0;
+  for(let k=0;k<sl.length;k++){
+    const u=sl[k],c=w[k];
+    if(k>0){
+      const p=sl[k-1];
+      if(u.box.x0-p.box.x1>0.9*H||Math.abs(u.box.cy-p.box.cy)>0.8*H)return null;
+    }
+    if(u.box.h>1.7*H||u.box.w>1.3*H)return null;
+    if(u.dot!==(c==='i'))return null;                      // only an "i" carries a dot
+    if(u.syms.some(t=>t.geo==='rad'||t.geo==='eq'))return null;
+    const sc=letterScores(u.strokes);
+    const mine=sc[c];if(mine===undefined)return null;
+    const ranked=Object.values(sc).sort((a,b)=>a-b);
+    if(mine>ranked[1]+1e-9||mine>1.6)return null;          // must be one of the two closest letters, and close
+    if(!u.dot){const dg=matchTemplates(u.strokes).d;if(mine>1.35*dg+0.1)return null;}   // clearly a digit instead
+    total+=mine;
+  }
+  return total/sl.length;
+}
+function mergeFunctions(syms,H,overrides){
+  if(syms.length<2||!LETTER_TEMPLATES.length)return syms;
+  const units=makeUnits(syms,H);
+  const out=[];let k=0;
+  const take=(n,label)=>{
+    const part=units.slice(k,k+n);
+    const m=mergeSyms([].concat(...part.map(u=>u.syms)),label);m.geo='fn';
+    const ov=overrides&&overrides.get(m.ids);            // the person re-labelled this whole word
+    if(ov==='ignore')m.label='ignore';else if(FNS.has(ov))m.label=ov;
+    out.push(m);k+=n;
+  };
+  while(k<units.length){
+    const first=units[k].syms[0];
+    if(first.forcedFn&&FNS.has(first.label)){take(Math.min(first.label.length,units.length-k),first.label);continue;}
+    let best=null;
+    for(const w of FN_WORDS){
+      if(k+w.length>units.length)continue;
+      const sc=wordScore(units.slice(k,k+w.length),w,H);
+      if(sc!==null&&sc<=1.15&&(!best||sc<best.sc-0.02||(Math.abs(sc-best.sc)<=0.02&&w.length>best.w.length)))best={w,sc};
+    }
+    if(best)take(best.w.length,best.w);
+    else{out.push(...units[k].syms);k++;}
+  }
+  return out;
+}
+/* a decimal point sits on the baseline right next to a digit; a lone speck far from everything is a stray touch */
+function dropStrayDots(syms,H){
+  for(const d of syms){
+    if(d.geo!=='dot'||d.label==='ignore')continue;
+    const ok=syms.some(o=>{
+      if(o===d||o.geo==='dot')return false;
+      const gap=Math.max(0,Math.max(d.box.x0,o.box.x0)-Math.min(d.box.x1,o.box.x1));
+      return gap<=0.8*H&&d.box.cy>=o.box.y0+0.35*o.box.h&&d.box.cy<=o.box.y1+0.4*H;
+    });
+    if(!ok)d.label='ignore';
+  }
+}
 function absorbOverline(syms,H){
   for(const r of syms){
     if(r.geo!=='rad'||r.rad.over)continue;
@@ -533,7 +646,7 @@ function radicand(r,items,H){
     if(it.box.x0-last>1.1*H)break;
     const l=it.label;
     if(depth>0){res.push(it);last=it.box.x1;if(l==='(')depth++;else if(l===')'){depth--;if(depth===0)break;}continue;}
-    if(it.kind==='node'||isDigit(l)||l==='.'){res.push(it);last=it.box.x1;}
+    if(it.kind==='node'||isDigit(l)||l==='.'||FNS.has(l)){res.push(it);last=it.box.x1;}
     else if(l==='('){res.push(it);last=it.box.x1;depth=1;}
     else break;
   }
@@ -548,6 +661,7 @@ function tokOf(it){
   if(l==='÷')return[{k:'op',v:'/'}];
   if(l==='('||l===')')return[{k:'p',v:l}];
   if(l==='=')return[{k:'eq'}];
+  if(FNS.has(l))return[{k:'fn',v:l}];
   if(l==='√')return[{k:'err',m:'Incomplete √'}];
   return[{k:'err',m:'Unrecognized symbol'}];
 }
@@ -602,7 +716,7 @@ function layout(items,H){
 function evalTokens(ts){
   let i=0;
   const peek=()=>ts[i];
-  const isAtomStart=t=>t&&(t.k==='d'||t.k==='frac'||t.k==='sqrt'||(t.k==='p'&&t.v==='('));
+  const isAtomStart=t=>t&&(t.k==='d'||t.k==='frac'||t.k==='sqrt'||t.k==='fn'||(t.k==='p'&&t.v==='('));
   function expr(){
     let v=term();
     while(peek()&&peek().k==='op'&&(peek().v==='+'||peek().v==='-')){
@@ -646,6 +760,12 @@ function evalTokens(ts){
       if(peek()&&peek().k==='p'&&peek().v===')')i++;
       return v;
     }
+    if(p.k==='fn'){
+      i++;const q=peek();
+      if(!q)throw new Error('Missing value after '+p.v);
+      const x=(q.k==='op'&&(q.v==='-'||q.v==='+'))?unary():atom();
+      return applyFn(p.v,x);
+    }
     if(p.k==='frac'){i++;const n=evalTokens(p.n),d=evalTokens(p.d);if(d===0)throw new Error('Division by zero');return n/d;}
     if(p.k==='sqrt'){i++;const x=evalTokens(p.c);if(x<0)throw new Error('Square root of a negative number');return Math.sqrt(x);}
     throw new Error('Unexpected symbol');
@@ -654,6 +774,18 @@ function evalTokens(ts){
   const v=expr();
   if(i<ts.length)throw new Error('Unexpected symbol');
   return v;
+}
+let DEG=true;                                  // trig functions work in degrees unless switched to radians
+function setDegrees(v){DEG=!!v;}
+function applyFn(name,x){
+  if(name==='log'||name==='ln'){
+    if(x<=0)throw new Error('Undefined (log of '+(x===0?'zero':'a negative number')+')');
+    return name==='ln'?Math.log(x):Math.log10(x);
+  }
+  if(name==='tan'&&(DEG?((x-90)%180+180)%180===0:Math.abs(Math.cos(x))<1e-12))throw new Error('Undefined (tan at '+(DEG?'90°':'π/2')+')');
+  let v=Math[name](DEG?x*Math.PI/180:x);
+  if(Math.abs(v)<1e-12)v=0;                    // cos 90° is 0, not 6e-17
+  return +v.toPrecision(12);
 }
 function evaluate(tokens){
   const eq=tokens.findIndex(t=>t.k==='eq');
@@ -679,6 +811,7 @@ function toText(ts){
       case'frac':return'(('+toText(t.n)+')÷('+toText(t.d)+'))';
       case'sqrt':return'√('+toText(t.c)+')';
       case'sup':return'^('+toText(t.c)+')';
+      case'fn':return t.v;
       default:return'?';
     }
   }).join('');
@@ -696,6 +829,7 @@ function renderTokens(ts){
       case'frac':h+='<span class="frac"><span class="fn row">'+renderTokens(t.n)+'</span><span class="fd row">'+renderTokens(t.d)+'</span></span>';break;
       case'sqrt':h+='<span class="sqrt"><span class="rs"></span><span class="rc">'+renderTokens(t.c)+'</span></span>';break;
       case'sup':h+='<span class="sup">'+renderTokens(t.c)+'</span>';break;
+      case'fn':h+='<span class="fnm">'+t.v+'</span>';break;
       default:h+='<span class="op bad">?</span>';
     }
   }
@@ -708,7 +842,7 @@ function analyze(strokes,overrides){
   const infos=strokes.map(s=>({s,b:bboxOf(s.pts),len:pathLen(s.pts)}));
   let H=computeH(infos);
   const findRad=h=>{for(const i of infos){
-    const flatish=i.b.w>=0.3*h&&i.b.h<=0.32*i.b.w&&i.len<=1.5*i.b.w;
+    const flatish=i.b.w>=0.2*h&&i.b.h<=0.32*i.b.w&&i.len<=1.5*i.b.w;
     i.rad=flatish?null:radicalInfo(i.s.pts,h);
   }};
   findRad(H);
@@ -730,6 +864,8 @@ function analyze(strokes,overrides){
   let symbols=groups.map(g=>makeSymbol(g,H,overrides));
   symbols=mergeDivide(symbols,H);
   symbols=absorbOverline(symbols,H);
+  symbols=mergeFunctions(symbols,H,overrides);
+  dropStrayDots(symbols,H);
   symbols=symbols.filter(s=>s.label!=='ignore');
   const tokens=layout(symbols,H);
   const ev=evaluate(tokens);
@@ -748,9 +884,11 @@ const state={strokes:[],undo:[],redo:[],overrides:new Map(),nextId:1,teach:null,
 let dpr=1,drawing=null,activeId=null,tRec=0,tTyp=0,wasTyped=false;
 
 /* ---- storage (guarded) ---- */
-const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1';
+const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',DKEY='mathink.deg.v1',VERSION='2.0';
 try{USER=JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){USER={};}
 try{const a=localStorage.getItem(AKEY);if(a!==null)state.auto=a==='1';}catch(e){}
+let deg=true;try{const a=localStorage.getItem(DKEY);if(a!==null)deg=a==='1';}catch(e){}
+setDegrees(deg);
 rebuildTemplates();
 function persistUser(){try{localStorage.setItem(SKEY,JSON.stringify(USER));}catch(e){}}
 function addSample(label,strokes){
@@ -806,7 +944,8 @@ function toast(msg){
    - the ink layer was still fading in when the new stroke began
    - iPadOS cancelling the touch (pointercancel) left a stub that was then read as a symbol */
 const ptFrom=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top,t:e.timeStamp};};
-let lastPenT=-1e9;
+const PALM_MS=1200;                      // fingers are ignored only while a Pencil is actually in use
+let lastPenT=-1e9,lastPtrTouchDown=-1e9;
 function commitStroke(s){
   const tap=pathLen(s.pts)<3;
   if(tap&&wasTyped){schedule(false);redraw();return;}   // tap only brings the ink back
@@ -815,60 +954,95 @@ function commitStroke(s){
   redraw();updateButtons();schedule(true);
 }
 function dropStroke(){drawing=null;activeId=null;stage.classList.remove('inking');redraw();if(state.strokes.length)schedule(true);}
-cv.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='mouse'&&e.button!==0)return;
+/* start a stroke for pointer `id` (a pointer id or "touch:<n>"); false if another stroke owns the canvas */
+function beginStroke(p,type,id,src){
   const now=performance.now();
-  if(e.pointerType==='pen')lastPenT=now;
-  else if(e.pointerType==='touch'&&now-lastPenT<8000)return;          // palm rejection while a Pencil is being used
   if(drawing){
-    const stale=now-drawing.lastT>350||e.pointerId===activeId;         // earlier stroke never got its pointerup
-    if(e.pointerType==='pen'&&drawing.type!=='pen'){drawing=null;activeId=null;redraw();}   // a Pencil beats a palm/finger that got there first
+    const stale=now-drawing.lastT>350||id===activeId;                  // earlier stroke never got its end event
+    if(type==='pen'&&drawing.type!=='pen'){drawing=null;activeId=null;redraw();}   // a Pencil beats a palm/finger that got there first
     else if(stale){const s=drawing;drawing=null;activeId=null;if(s.pts.length>3)commitStroke(s);}
-    else return;                                                        // extra finger while writing: ignore it
+    else return false;                                                  // extra finger while writing: ignore it
   }
-  e.preventDefault();
-  try{cv.setPointerCapture(e.pointerId);}catch(_){}
   clearTimeout(tRec);clearTimeout(tTyp);
   wasTyped=stage.classList.contains('typed');
   stage.classList.add('inking');          // show the ink at once, no fade-in
   stage.classList.remove('typed');
   if(state.highlight){state.highlight=null;redraw();}
-  activeId=e.pointerId;
-  const p=ptFrom(e);
-  drawing={id:state.nextId++,pts:[p],type:e.pointerType,lastT:now};
-});
-cv.addEventListener('pointermove',e=>{
-  if(!drawing||e.pointerId!==activeId)return;
-  e.preventDefault();
+  activeId=id;
+  drawing={id:state.nextId++,pts:[p],type,lastT:now,src};
+  return true;
+}
+function addPoint(p){
+  if(!drawing||!isFinite(p.x)||!isFinite(p.y))return;
   drawing.lastT=performance.now();
-  let evs=[];
-  try{evs=(e.getCoalescedEvents&&e.getCoalescedEvents())||[];}catch(_){}
-  for(const ev of(evs.length?evs:[e])){
-    if(!isFinite(ev.clientX)||!isFinite(ev.clientY))continue;
-    const p=ptFrom(ev),last=drawing.pts[drawing.pts.length-1];
-    if(Math.hypot(p.x-last.x,p.y-last.y)<0.7)continue;
-    drawing.pts.push(p);seg(last,p);
-  }
-});
-function endStroke(e){
-  if(!drawing||e.pointerId!==activeId)return;
+  const last=drawing.pts[drawing.pts.length-1];
+  if(Math.hypot(p.x-last.x,p.y-last.y)<0.7)return;
+  drawing.pts.push(p);seg(last,p);
+}
+function finishStroke(id){
+  if(!drawing||id!==activeId)return;
   const s=drawing;drawing=null;activeId=null;stage.classList.remove('inking');
   commitStroke(s);
 }
-function cancelStroke(e){
-  if(!drawing||e.pointerId!==activeId)return;
+function abortStroke(id){
+  if(!drawing||id!==activeId)return;
   const n=drawing.pts.length;
   dropStroke();                                          // half a stroke is worse than none: it would be read as a symbol
   if(n>=4)toast('iPadOS interrupted that stroke – please write it again');
 }
-cv.addEventListener('pointerup',endStroke);
-cv.addEventListener('pointercancel',cancelStroke);
-cv.addEventListener('lostpointercapture',e=>{if(drawing&&e.pointerId===activeId)endStroke(e);});
+/* Pointer events: Pencil, finger and mouse */
+cv.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  const now=performance.now();
+  if(e.pointerType==='pen')lastPenT=now;
+  else if(e.pointerType==='touch'){
+    lastPtrTouchDown=now;
+    if(now-lastPenT<PALM_MS)return;                     // palm rejection while a Pencil is being used
+  }
+  e.preventDefault();
+  if(!beginStroke(ptFrom(e),e.pointerType,e.pointerId,'ptr'))return;
+  try{cv.setPointerCapture(e.pointerId);}catch(_){}
+});
+cv.addEventListener('pointermove',e=>{
+  if(!drawing||e.pointerId!==activeId)return;
+  e.preventDefault();
+  if(e.pointerType==='pen')lastPenT=performance.now();
+  let evs=[];
+  try{evs=(e.getCoalescedEvents&&e.getCoalescedEvents())||[];}catch(_){}
+  for(const ev of(evs.length?evs:[e]))addPoint(ptFrom(ev));
+});
+cv.addEventListener('pointerup',e=>finishStroke(e.pointerId));
+cv.addEventListener('pointercancel',e=>abortStroke(e.pointerId));
+cv.addEventListener('lostpointercapture',e=>finishStroke(e.pointerId));
+/* Touch events: the same strokes again, used only when the browser does not deliver pointer events for a finger
+   (some iPad Safari versions). Whichever path starts a stroke owns it; the other one is ignored. */
+const touchPt=t=>{const r=cv.getBoundingClientRect();return{x:t.clientX-r.left,y:t.clientY-r.top,t:performance.now()};};
+const tid=t=>'touch:'+t.identifier;
+cv.addEventListener('touchstart',e=>{
+  if(e.cancelable)e.preventDefault();                  // also stops scrolling / selection / edge gestures
+  const now=performance.now();
+  if(now-lastPtrTouchDown<500)return;                   // pointer events are working for this touch
+  const t=e.changedTouches[0];if(!t)return;
+  const type=t.touchType==='stylus'?'pen':'touch';
+  if(type==='pen')lastPenT=now;else if(now-lastPenT<PALM_MS)return;
+  beginStroke(touchPt(t),type,tid(t),'touch');
+},{passive:false});
+cv.addEventListener('touchmove',e=>{
+  if(e.cancelable)e.preventDefault();
+  if(!drawing||drawing.src!=='touch')return;
+  for(const t of e.changedTouches)if(tid(t)===activeId)addPoint(touchPt(t));
+},{passive:false});
+cv.addEventListener('touchend',e=>{
+  if(e.cancelable)e.preventDefault();
+  if(!drawing||drawing.src!=='touch')return;
+  for(const t of e.changedTouches)if(tid(t)===activeId){addPoint(touchPt(t));finishStroke(tid(t));}
+},{passive:false});
+cv.addEventListener('touchcancel',e=>{
+  if(!drawing||drawing.src!=='touch')return;
+  for(const t of e.changedTouches)abortStroke(tid(t));
+},{passive:false});
 window.addEventListener('blur',()=>{if(drawing){const s=drawing;drawing=null;activeId=null;stage.classList.remove('inking');if(s.pts.length>3)commitStroke(s);else redraw();}});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
-/* iOS Safari starts scrolling / selection / edge gestures unless the page cancels the raw touches too; that is what
-   makes it send pointercancel in the middle of a stroke. */
-['touchstart','touchmove'].forEach(n=>cv.addEventListener(n,e=>{if(e.cancelable)e.preventDefault();},{passive:false}));
 ['gesturestart','gesturechange','gestureend'].forEach(n=>document.addEventListener(n,e=>e.preventDefault()));
 
 /* ---- recognition scheduling ---- */
@@ -952,13 +1126,14 @@ $('#bSolve').addEventListener('click',()=>{
 });
 
 /* ---- symbol picker (corrections) ---- */
-const PICK=['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','=','+','(',')','√','ignore'];
+const PICK=['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','=','+','(',')','√','sin','cos','tan','log','ln','ignore'];
 const TEACHABLE=new Set(['0','1','2','3','4','5','6','7','8','9','+','×','(',')']);
+const TEACH_KEYS=['0','1','2','3','4','5','6','7','8','9','+','×','(',')','s','i','n','c','o','t','a','l','g'];
 let pickSym=null;
 (function(){
   const g=$('#pickGrid');
   for(const k of PICK){
-    const b=document.createElement('button');b.className='key'+(k==='ignore'?' wide':'');
+    const b=document.createElement('button');b.className='key'+(k==='ignore'?' wide':'')+(FNS.has(k)?' fnkey':'');
     b.textContent=k==='-'?'−':k==='ignore'?'Ignore stroke':k;
     b.addEventListener('click',()=>applyLabel(k));g.appendChild(b);
   }
@@ -971,12 +1146,23 @@ function openPicker(sym){
 function closePicker(){$('#pickScrim').classList.remove('on');state.highlight=null;redraw();pickSym=null;}
 function applyLabel(L){
   const sym=pickSym;if(!sym)return;
+  if(sym.geo==='fn'&&!FNS.has(L)&&L!=='ignore'){toast('That chip is a function name – pick sin, cos, tan, log, ln or Ignore');return;}
   state.overrides.set(sym.ids,L);
   if(TEACHABLE.has(L))addSample(L,sym.strokes);
   closePicker();runRecognition();schedule(true);
 }
 $('#pickClose').addEventListener('click',closePicker);
 $('#pickScrim').addEventListener('click',e=>{if(e.target.id==='pickScrim')closePicker();});
+
+/* ---- angle unit ---- */
+function showAngle(){$('#bAngle').textContent=deg?'DEG':'RAD';}
+showAngle();
+$('#bAngle').addEventListener('click',()=>{
+  deg=!deg;setDegrees(deg);showAngle();
+  try{localStorage.setItem(DKEY,deg?'1':'0');}catch(e){}
+  if(state.strokes.length){runRecognition();if(stage.classList.contains('typed')||state.auto)showTyped(true);}
+  toast(deg?'sin, cos, tan use degrees':'sin, cos, tan use radians');
+});
 
 /* ---- settings & teaching ---- */
 function setSwitch(){$('#swAuto').classList.toggle('on',state.auto);}
@@ -987,13 +1173,13 @@ $('#swAuto').addEventListener('click',()=>{
 });
 function buildTeachGrid(){
   const g=$('#teachGrid');g.innerHTML='';
-  for(const k of['0','1','2','3','4','5','6','7','8','9','+','×','(',')']){
+  for(const k of TEACH_KEYS){
     const b=document.createElement('button');b.className='key';b.textContent=k;
     const n=(USER[k]||[]).length;if(n){const s=document.createElement('small');s.textContent=n;b.appendChild(s);}
     b.addEventListener('click',()=>startTeach(k));g.appendChild(b);
   }
 }
-$('#bSet').addEventListener('click',()=>{buildTeachGrid();$('#setScrim').classList.add('on');});
+$('#bSet').addEventListener('click',()=>{$('#verLine').textContent='MathInk version '+VERSION;buildTeachGrid();$('#setScrim').classList.add('on');});
 $('#setClose').addEventListener('click',()=>$('#setScrim').classList.remove('on'));
 $('#setScrim').addEventListener('click',e=>{if(e.target.id==='setScrim')$('#setScrim').classList.remove('on');});
 $('#resetSamples').addEventListener('click',()=>{USER={};persistUser();rebuildTemplates();buildTeachGrid();});
