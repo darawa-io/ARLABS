@@ -106,6 +106,9 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
 .pl{border-left-width:.045em;border-radius:100% 0 0 100%/50% 0 0 50%}
 .pr{border-right-width:.045em;border-radius:0 100% 100% 0/0 50% 50% 0}
 .fnm{font-style:normal;margin-right:.14em;letter-spacing:.01em}
+.var{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-weight:400;margin:0 .04em 0 .02em}
+.eqcol{display:flex;flex-direction:column;align-items:center;gap:.28em}
+.eqcol .sols{display:flex;flex-wrap:wrap;justify-content:center;gap:.2em .9em;font-size:.62em;color:var(--accent)}
 .sup{align-self:flex-start;font-size:.58em;margin:-.02em 0 0 .05em;display:flex;align-items:center}
 
 /* teach bar */
@@ -203,6 +206,7 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
     <div class="grid five" id="teachGrid"></div>
     <button class="link" id="resetSamples">Forget all my samples</button>
     <h3>Tips</h3>
+    <p>Equations: write the letter <b>x</b> as two crossing strokes. It is read as the variable x when it has a small raised number after it (x²), or nothing to multiply on one side (3x = 5, x + 2 = 7); between two numbers (3 × 4) it stays a multiplication sign. Add <b>=</b> and MathInk solves for x, e.g. 3x² − 7 = 0. If it guesses wrong, tap that symbol and pick × or x.</p>
     <p>Functions: write <b>sin</b>, <b>cos</b>, <b>tan</b>, <b>log</b> or <b>ln</b> in small letters (dot the i, cross the t), then the angle, e.g. sin 30 or cos(60). The DEG / RAD button in the top bar picks degrees or radians. If a word isn't recognised, teach the letters below, or tap its first letter and pick the function.</p>
     <p>Fractions: draw a flat bar with the top and bottom written above and below it. Roots: draw the √ with its roof over the numbers. Powers: write the exponent small and raised. Division can also be ÷ (bar with two dots). Tap any symbol in the bottom strip to fix a misread.</p>
     <p id="verLine" style="margin-top:14px;font-size:12px">MathInk</p>
@@ -308,6 +312,12 @@ const OWN={
   '6':[[L(63,0,43,7,22,24,8,45,2,63,0,73,2,86,7,94,14,99,17,99,22,92,42,78,47,76,48,80,47,85,35,98,24,100)],[L(54,13,47,0,36,5,12,32,0,55,1,75,8,90,10,91,21,76,32,67,46,67,50,77,49,82,40,95,33,99,25,100,12,97)]],
 };
 for(const k in OWN)DEFAULTS[k].push(...OWN[k]);
+/* a narrow, leaning 0 with a little overlap at the top (read as a 3 before) */
+DEFAULTS['0'].push([L(78,30,105,10,140,5,162,10,165,60,148,130,120,180,95,205,65,205,63,155,80,105,105,50,140,6)],
+                   [L(40,40,28,12,50,2,76,6,84,40,70,110,50,160,28,184,10,176,2,130,12,70,40,10)]);
+/* a 9 whose stem leaves the loop at the top right and leans slightly left */
+DEFAULTS['9'].push([L(1000,185,970,172,925,185,880,215,865,250,870,282,910,290,945,278,975,235,990,200,995,250,975,330,960,478)],
+                   [L(1003,178,970,172,925,185,880,215,865,250,870,282,910,290,945,278,975,235,990,200,1003,178,985,250,970,330,960,478)]);
 /* Lowercase letters for function names (sin, cos, tan, log, ln). Kept apart from the digit templates. */
 const LETTERS={
   's':[[L(52,14,40,3,24,0,10,6,6,20,14,32,30,42,46,54,50,70,40,86,22,92,6,84)],[L(48,10,30,0,10,8,12,28,38,44,52,64,36,88,14,92,2,80)],[L(50,6,26,0,6,14,22,34,44,50,52,72,28,92,2,84)]],
@@ -320,6 +330,11 @@ const LETTERS={
   'l':[[L(20,0,20,100)],[L(24,0,18,50,20,96,34,100)],[L(14,0,22,100)]],
   'g':[[A(30,38,24,34,0,360,28),L(54,10,54,92,40,112,12,108)],[A(30,38,24,34,0,360,28),L(54,12,52,96,36,112,10,104)]],
 };
+/* shapes taken from real handwriting on an iPad: an S that looks like a 5, an i with a hooked tail, an n with a long left stem */
+LETTERS.s.push([L(240,293,170,289,120,318,90,355,97,370,150,376,215,393,250,420,270,465,272,515,240,537,190,555,145,568,75,570,57,565,60,545)]);
+LETTERS.i.push([L(373,335,365,365,365,420,380,462,398,490,425,504),L(343,251,343,256)]);
+LETTERS.n.push([L(503,318,512,360,512,426),L(512,410,525,370,555,330,585,318,615,325,635,355,645,410,645,493)],
+               [L(503,318,512,360,512,426,514,400,525,370,555,330,585,318,615,325,635,355,645,410,645,493)]);
 const LETTER_SET=new Set(Object.keys(LETTERS));
 const FN_WORDS=['sin','cos','tan','log','ln'];
 const FNS=new Set(FN_WORDS);
@@ -443,7 +458,9 @@ function canMerge(g,st,H){
   if(gFlat||sFlat){
     const flat=gFlat?gb:sb,other=gFlat?sb:gb;
     const oe=Math.max(other.w,0.7*other.h);
-    return ov>=0.5&&gap<=0.06*H&&flat.w<=1.5*oe;
+    /* a bar that crosses the middle of the other stroke (the arm of a +, the bar of a 4 or 7) may be as long as that stroke */
+    const crossing=flat.cy>other.y0+0.15*other.h&&flat.cy<other.y1-0.15*other.h;
+    return ov>=0.5&&gap<=0.06*H&&flat.w<=(crossing?1.6*Math.max(other.h,other.w):1.5*oe);
   }
   const hr=sb.h/Math.max(gb.h,1e-6);
   if(gap>0.08*H)return false;
@@ -451,7 +468,13 @@ function canMerge(g,st,H){
     // very different heights only belong together when the strokes really touch (the little top hook of a 5 and its body)
     return hr>=0.2&&hr<=5&&ov>=0.5&&g.items.some(it=>strokeGap(it.s.pts,st.s.pts)<=0.15*H);
   }
-  if(ov>=0.5)return true;
+  if(ov>=0.5){
+    /* a tall thin stroke ( or ) that is much taller than its neighbour is a bracket around it, not part of it,
+       unless the two really touch */
+    const tall=(a,b)=>a.h>=1.8*a.w&&a.h>=1.3*b.h;
+    if((tall(gb,sb)||tall(sb,gb))&&!g.items.some(it=>strokeGap(it.s.pts,st.s.pts)<=0.08*H))return false;
+    return true;
+  }
   /* strokes that physically touch but sit off-centre (a 5 whose top bar sweeps far to
      the right, a 7 with a long overhang) still belong to one digit */
   const u=unionBox(gb,sb);
@@ -517,7 +540,7 @@ function makeSymbol(g,H,overrides){
   const sym={kind:'sym',ids:key,strokeIds:ids,strokes:g.items.map(i=>i.s.pts),box:g.box,label:r.label,geo:r.geo,rad:r.rad,alts:r.alts,d:r.d};
   const ov=overrides&&overrides.get(key);
   if(ov){
-    sym.label=ov;sym.geo=undefined;sym.rad=undefined;
+    sym.forced=true;sym.label=ov;sym.geo=undefined;sym.rad=undefined;
     if(FNS.has(ov)){sym.geo='fn';sym.forcedFn=true;}
     if(ov==='-')sym.geo='flat';
     else if(ov==='.')sym.geo='dot';
@@ -549,65 +572,103 @@ function mergeDivide(syms,H){
   return out.filter(s=>!used.has(s));
 }
 /* ---- function names: sin cos tan log ln ----
-   Glyphs are grouped into letter-sized units (the dot of an "i" is paired with its stem), then every
-   known word is tried against consecutive units, scoring each unit against the letter templates. */
+   Strokes (not the digit-oriented symbols) are clustered into letter-sized units, so a letter drawn with
+   several strokes (an n with a long left stem, a dotted i, a crossed t) always stays together. Every known
+   word is then tried against consecutive units, scoring each unit against the letter templates. */
+function unitGap(a,b){let m=Infinity;for(const p of a.strokes)for(const q of b.strokes){const g=strokeGap(p,q);if(g<m)m=g;}return m;}
 function makeUnits(syms,H){
-  const sorted=syms.slice().sort((a,b)=>a.box.x0-b.box.x0);
-  const used=new Set(),units=[];
-  for(const d of sorted){
-    if(d.geo!=='dot'||used.has(d))continue;
-    const stem=sorted.filter(t=>t!==d&&!used.has(t)&&t.geo!=='dot'&&t.box.y0>=d.box.cy-0.1*H&&t.box.y0-d.box.cy<=0.6*H&&
-      Math.abs(t.box.cx-d.box.cx)<=0.3*H&&t.box.h>=0.25*H&&t.box.w<=0.6*H).sort((a,b)=>Math.abs(a.box.cx-d.box.cx)-Math.abs(b.box.cx-d.box.cx))[0];
-    if(stem){used.add(d);used.add(stem);units.push({syms:[d,stem],dot:true});}
+  const prims=[];
+  for(const s of syms){
+    const whole=s.geo==='rad'||s.geo==='eq'||s.geo==='fn'||s.label==='÷'||s.label==='ignore'||s.strokes.length===1;
+    if(whole){prims.push({sym:s,box:s.box,strokes:s.strokes.slice(),dot:s.geo==='dot'||Math.max(s.box.w,s.box.h)<0.22*H});continue;}
+    for(const pts of s.strokes){const bx=bboxOf(pts);prims.push({sym:s,box:bx,strokes:[pts],dot:Math.max(bx.w,bx.h)<0.22*H});}
   }
-  for(const t of sorted)if(!used.has(t))units.push({syms:[t],dot:false});
-  for(const u of units){u.box=u.syms.map(t=>t.box).reduce(unionBox);u.strokes=[].concat(...u.syms.map(t=>t.strokes));}
+  let units=prims.map(p=>({prims:[p],box:p.box,strokes:p.strokes.slice(),dot:p.dot}));
+  const merge=(a,b)=>({prims:a.prims.concat(b.prims),box:unionBox(a.box,b.box),strokes:a.strokes.concat(b.strokes),dot:a.dot||b.dot});
+  /* 1. strokes that touch or overlap form one letter */
+  for(let again=true;again;){
+    again=false;
+    outer:for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){
+      const a=units[i],b=units[j];
+      if(a.dot||b.dot)continue;
+      const u=unionBox(a.box,b.box);
+      if(u.w>1.0*H||u.h>1.7*H)continue;
+      const ov=Math.min(a.box.x1,b.box.x1)-Math.max(a.box.x0,b.box.x0);
+      const xo=ov/Math.max(1e-6,Math.min(Math.max(a.box.w,0.1*H),Math.max(b.box.w,0.1*H)));
+      const yg=Math.max(0,Math.max(a.box.y0,b.box.y0)-Math.min(a.box.y1,b.box.y1));
+      const xg=Math.max(0,Math.max(a.box.x0,b.box.x0)-Math.min(a.box.x1,b.box.x1));
+      if((Math.hypot(xg,yg)<=0.1*H&&unitGap(a,b)<=0.1*H)||(xo>=0.4&&yg<=0.25*H)){
+        units[i]=merge(a,b);units.splice(j,1);again=true;break outer;
+      }
+    }
+  }
+  /* 2. each dot joins the nearest letter below it (the dot of an i) */
+  const dots=units.filter(u=>u.dot&&u.prims.length===1&&u.prims[0].sym.strokes.length<=1);
+  for(const d of dots){
+    if(!units.includes(d))continue;
+    const cands=units.filter(t=>t!==d&&!t.dot&&t.box.h>=0.25*H&&t.box.w<=0.6*H&&
+      d.box.cy<=t.box.y0+0.1*H&&t.box.y0-d.box.cy<=0.8*H&&d.box.cx>=t.box.x0-0.3*H&&d.box.cx<=t.box.x1+0.3*H)
+      .sort((p,q)=>Math.abs(p.box.cx-d.box.cx)-Math.abs(q.box.cx-d.box.cx));
+    if(cands[0]){const t=cands[0];const m=merge(t,d);m.dot=true;units[units.indexOf(t)]=m;units.splice(units.indexOf(d),1);}
+  }
   return units.sort((a,b)=>a.box.x0-b.box.x0);
 }
-function wordScore(sl,w,H){
-  let total=0;
-  for(let k=0;k<sl.length;k++){
-    const u=sl[k],c=w[k];
-    if(k>0){
-      const p=sl[k-1];
-      if(u.box.x0-p.box.x1>0.9*H||Math.abs(u.box.cy-p.box.cy)>0.8*H)return null;
+function letterCost(u,c,prev,H){
+  if(prev&&(u.box.x0-prev.box.x1>0.9*H||Math.abs(u.box.cy-prev.box.cy)>0.8*H))return null;
+  if(u.box.h>1.7*H||u.box.w>1.3*H)return null;
+  if(u.prims.some(p=>p.sym.geo==='rad'||p.sym.geo==='eq'))return null;
+  if(u.dot!==(c==='i'))return null;                        // only an "i" carries a dot
+  const sc=letterScores(u.strokes);
+  const mine=sc[c];if(mine===undefined)return null;
+  const ranked=Object.values(sc).sort((a,b)=>a-b);
+  if(mine>ranked[1]+1e-9||mine>1.7)return null;           // must be one of the two closest letters, and close
+  if(!u.dot){const dg=matchTemplates(u.strokes).d;if(mine>1.35*dg+0.1)return null;}   // clearly a digit instead
+  return mine;
+}
+function joinUnits(a,b){return{prims:a.prims.concat(b.prims),box:unionBox(a.box,b.box),strokes:a.strokes.concat(b.strokes),dot:a.dot||b.dot};}
+/* best way to read units[k..] as the word w; a letter may also be two neighbouring units */
+function wordAt(units,k,w,H){
+  const rec=(pos,idx,prev)=>{
+    if(pos===w.length)return{total:0,n:0};
+    let best=null;
+    for(let take=1;take<=2&&idx+take<=units.length;take++){
+      const u=take===1?units[idx]:joinUnits(units[idx],units[idx+1]);
+      const c=letterCost(u,w[pos],prev,H);if(c===null)continue;
+      const r=rec(pos+1,idx+take,u);if(!r)continue;
+      const tot=c+r.total;if(!best||tot<best.total)best={total:tot,n:take+r.n};
     }
-    if(u.box.h>1.7*H||u.box.w>1.3*H)return null;
-    if(u.dot!==(c==='i'))return null;                      // only an "i" carries a dot
-    if(u.syms.some(t=>t.geo==='rad'||t.geo==='eq'))return null;
-    const sc=letterScores(u.strokes);
-    const mine=sc[c];if(mine===undefined)return null;
-    const ranked=Object.values(sc).sort((a,b)=>a-b);
-    if(mine>ranked[1]+1e-9||mine>1.6)return null;          // must be one of the two closest letters, and close
-    if(!u.dot){const dg=matchTemplates(u.strokes).d;if(mine>1.35*dg+0.1)return null;}   // clearly a digit instead
-    total+=mine;
-  }
-  return total/sl.length;
+    return best;
+  };
+  const r=rec(0,k,null);
+  return r?{w,n:r.n,sc:r.total/w.length}:null;
 }
 function mergeFunctions(syms,H,overrides){
   if(syms.length<2||!LETTER_TEMPLATES.length)return syms;
   const units=makeUnits(syms,H);
-  const out=[];let k=0;
-  const take=(n,label)=>{
-    const part=units.slice(k,k+n);
-    const m=mergeSyms([].concat(...part.map(u=>u.syms)),label);m.geo='fn';
-    const ov=overrides&&overrides.get(m.ids);            // the person re-labelled this whole word
-    if(ov==='ignore')m.label='ignore';else if(FNS.has(ov))m.label=ov;
-    out.push(m);k+=n;
-  };
+  const consumed=new Set(),made=[];
+  let k=0;
   while(k<units.length){
-    const first=units[k].syms[0];
-    if(first.forcedFn&&FNS.has(first.label)){take(Math.min(first.label.length,units.length-k),first.label);continue;}
-    let best=null;
-    for(const w of FN_WORDS){
-      if(k+w.length>units.length)continue;
-      const sc=wordScore(units.slice(k,k+w.length),w,H);
-      if(sc!==null&&sc<=1.15&&(!best||sc<best.sc-0.02||(Math.abs(sc-best.sc)<=0.02&&w.length>best.w.length)))best={w,sc};
+    const forced=units[k].prims.map(p=>p.sym).find(t=>t.forcedFn&&FNS.has(t.label));
+    let pick=null;
+    if(forced)pick={w:forced.label,n:Math.min(forced.label.length,units.length-k),sc:0};
+    else for(const w of FN_WORDS){
+      const r=wordAt(units,k,w,H);
+      if(r&&r.sc<=1.2&&(!pick||r.sc<pick.sc-0.02||(Math.abs(r.sc-pick.sc)<=0.02&&w.length>pick.w.length)))pick=r;
     }
-    if(best)take(best.w.length,best.w);
-    else{out.push(...units[k].syms);k++;}
+    if(!pick){k++;continue;}
+    const part=units.slice(k,k+pick.n);
+    const parents=[...new Set([].concat(...part.map(u=>u.prims.map(p=>p.sym))))];
+    const inPart=new Set([].concat(...part.map(u=>u.prims)));
+    /* every stroke of the symbols involved must belong to the word, or something else would be swallowed with it */
+    const complete=parents.every(t=>units.every(u=>u.prims.every(p=>p.sym!==t||inPart.has(p))));
+    if(!complete&&!forced){k++;continue;}
+    const m=mergeSyms(parents,pick.w);m.geo='fn';
+    const ov=overrides&&overrides.get(m.ids);              // the person re-labelled this whole word
+    if(ov==='ignore')m.label='ignore';else if(FNS.has(ov))m.label=ov;
+    parents.forEach(t=>consumed.add(t));made.push(m);
+    k+=pick.n;
   }
-  return out;
+  return syms.filter(t=>!consumed.has(t)).concat(made);
 }
 /* a decimal point sits on the baseline right next to a digit; a lone speck far from everything is a stray touch */
 function dropStrayDots(syms,H){
@@ -646,7 +707,7 @@ function radicand(r,items,H){
     if(it.box.x0-last>1.1*H)break;
     const l=it.label;
     if(depth>0){res.push(it);last=it.box.x1;if(l==='(')depth++;else if(l===')'){depth--;if(depth===0)break;}continue;}
-    if(it.kind==='node'||isDigit(l)||l==='.'||FNS.has(l)){res.push(it);last=it.box.x1;}
+    if(it.kind==='node'||isDigit(l)||l==='x'||l==='.'||FNS.has(l)){res.push(it);last=it.box.x1;}
     else if(l==='('){res.push(it);last=it.box.x1;depth=1;}
     else break;
   }
@@ -662,13 +723,14 @@ function tokOf(it){
   if(l==='('||l===')')return[{k:'p',v:l}];
   if(l==='=')return[{k:'eq'}];
   if(FNS.has(l))return[{k:'fn',v:l}];
+  if(l==='x')return[{k:'v'}];
   if(l==='√')return[{k:'err',m:'Incomplete √'}];
   return[{k:'err',m:'Unrecognized symbol'}];
 }
 function tokensFromLine(items,H){
   items=items.slice().sort((a,b)=>a.box.x0-b.box.x0);
   const out=[];let base=null,sup=null,lastSup=null;
-  const isAtom=i=>i.kind==='node'||/^[0-9)]$/.test(i.label||'');
+  const isAtom=i=>i.kind==='node'||/^[0-9)x]$/.test(i.label||'');
   for(const it of items){
     if(base&&isAtom(base)){
       const bb=base.box;let isSup=false;
@@ -681,6 +743,24 @@ function tokensFromLine(items,H){
   }
   if(sup)out.push({k:'sup',c:tokensFromLine(sup,H)});
   return out;
+}
+/* A crossing of two strokes is either the multiplication sign or the letter x. Decide from what surrounds it:
+   - a small raised number after it (x²) or nothing to its right (3x = 5, 2x + 1)  -> the variable x
+   - nothing to its left that it could multiply (x + 3 ... , x(x+1))                  -> the variable x
+   - a value on both sides (3 × 4)                                                     -> multiplication */
+function resolveVariables(syms,H){
+  const sorted=syms.filter(t=>t.label!=='ignore').slice().sort((a,b)=>a.box.x0-b.box.x0);
+  const operandStart=t=>!!t&&(isDigit(t.label)||t.label==='.'||t.label==='('||t.label==='x'||FNS.has(t.label)||t.geo==='rad');
+  const operandEnd=t=>!!t&&(isDigit(t.label)||t.label===')'||t.label==='x'||t.label==='.');
+  for(const c of sorted){
+    if(c.label!=='×'||c.forced)continue;
+    const cb=c.box;
+    const raised=sorted.some(t=>t!==c&&t.box.x0>=cb.x0&&t.box.x0-cb.x1<1.2*H&&t.box.cy<cb.cy-0.28*cb.h&&t.box.y1<cb.cy+0.2*cb.h&&t.box.h<=1.1*cb.h);
+    const row=sorted.filter(t=>t!==c&&Math.abs(t.box.cy-cb.cy)<=0.7*H&&!(t.box.cy<cb.cy-0.28*cb.h&&t.box.y1<cb.cy+0.2*cb.h));
+    const next=row.filter(t=>t.box.x0>=cb.x1-0.25*H).sort((a,b)=>a.box.x0-b.box.x0)[0];
+    const prev=row.filter(t=>t.box.x1<=cb.x0+0.25*H).sort((a,b)=>b.box.x1-a.box.x1)[0];
+    if(raised||!operandStart(next)||!operandEnd(prev))c.label='x';
+  }
 }
 function layout(items,H){
   items=items.slice();
@@ -713,10 +793,11 @@ function layout(items,H){
 }
 
 /* ---- evaluation (own parser, no eval) ---- */
+let XV=NaN;                                   // the value of x while an equation is being solved
 function evalTokens(ts){
   let i=0;
   const peek=()=>ts[i];
-  const isAtomStart=t=>t&&(t.k==='d'||t.k==='frac'||t.k==='sqrt'||t.k==='fn'||(t.k==='p'&&t.v==='('));
+  const isAtomStart=t=>t&&(t.k==='d'||t.k==='v'||t.k==='frac'||t.k==='sqrt'||t.k==='fn'||(t.k==='p'&&t.v==='('));
   function expr(){
     let v=term();
     while(peek()&&peek().k==='op'&&(peek().v==='+'||peek().v==='-')){
@@ -755,6 +836,7 @@ function evalTokens(ts){
       if(!/^(\d+\.?\d*|\.\d+)$/.test(s))throw new Error('Check the decimal point');
       return parseFloat(s);
     }
+    if(p.k==='v'){i++;if(!isFinite(XV))throw new Error('x has no value yet');return XV;}
     if(p.k==='p'&&p.v==='('){
       i++;const v=expr();
       if(peek()&&peek().k==='p'&&peek().v===')')i++;
@@ -787,8 +869,89 @@ function applyFn(name,x){
   if(Math.abs(v)<1e-12)v=0;                    // cos 90° is 0, not 6e-17
   return +v.toPrecision(12);
 }
+function hasVar(ts){
+  return ts.some(t=>t.k==='v'||(t.k==='frac'&&(hasVar(t.n)||hasVar(t.d)))||((t.k==='sqrt'||t.k==='sup')&&hasVar(t.c)));
+}
+function evalAt(L,R,x){
+  XV=x;
+  try{const v=evalTokens(L)-evalTokens(R);return isFinite(v)?v:NaN;}
+  catch(e){return NaN;}
+  finally{XV=NaN;}
+}
+const num8=v=>{if(Math.abs(v)<1e-12)return'0';return fmt(Number(v.toPrecision(8)));};
+const minus=t=>t.replace('-','−');
+/* Solve L = R for x. Polynomials up to degree 2 exactly, everything else by scanning for sign changes. */
+function solveEquation(L,R){
+  const f=x=>evalAt(L,R,x);
+  const probe=[-3,-2,-1,0,0.5,1,2,3].map(x=>[x,f(x)]);
+  if(probe.every(([x,y])=>isFinite(y))){
+    const c=f(0),a=(f(1)+f(-1))/2-c,b=(f(1)-f(-1))/2;
+    const scale=Math.max(1,Math.abs(a),Math.abs(b),Math.abs(c));
+    if(probe.every(([x,y])=>Math.abs(y-(a*x*x+b*x+c))<=1e-8*scale*(1+x*x))){
+      const tiny=1e-10*scale;
+      if(Math.abs(a)<=tiny&&Math.abs(b)<=tiny)return Math.abs(c)<=tiny?['Every x works']:['No solution'];
+      if(Math.abs(a)<=tiny)return['x = '+minus(num8(-c/b))];
+      let d=b*b-4*a*c;if(Math.abs(d)<=1e-12*scale*scale)d=0;
+      if(d>0){
+        const q=Math.sqrt(d),r1=(-b-q)/(2*a),r2=(-b+q)/(2*a);
+        if(Math.abs(b)<=tiny)return['x = ±'+num8(Math.abs(r1))];
+        return[r1,r2].sort((m,n)=>m-n).map(r=>'x = '+minus(num8(r)));
+      }
+      if(d===0)return['x = '+minus(num8(-b/(2*a)))];
+      const re=-b/(2*a),im=Math.sqrt(-d)/(2*Math.abs(a));
+      return['No real solution',Math.abs(re)<1e-12?'x = ±'+num8(im)+'i':'x = '+minus(num8(re))+' ± '+num8(im)+'i'];
+    }
+  }
+  /* general case: look for sign changes on a fine grid, then bisect */
+  const N=8000,lo=-200,hi=200,step=(hi-lo)/N,roots=[];
+  let px=lo,py=f(lo),flatCount=0,finiteCount=0;
+  const add=r=>{if(!roots.some(q=>Math.abs(q-r)<1e-6))roots.push(r);};
+  const ys=[py];
+  for(let i=1;i<=N;i++){
+    const x=lo+i*step,y=f(x);ys.push(y);
+    if(isFinite(y)){finiteCount++;if(Math.abs(y)<1e-12)flatCount++;}
+    if(isFinite(py)&&isFinite(y)){
+      if(y===0)add(x);
+      else if(py*y<0){
+        let a=px,b=x,fa=py;
+        for(let k=0;k<70;k++){const m=(a+b)/2,fm=f(m);if(!isFinite(fm))break;if(fa*fm<=0)b=m;else{a=m;fa=fm;}}
+        const r=(a+b)/2,fr=f(r);
+        if(Math.abs(fr)<1e-6)add(r);   // a pole (1/x) flips sign too, but is not a root
+      }
+    }
+    px=x;py=y;
+  }
+  /* touching roots (x² = 0) do not change sign: look at local minima of |f| */
+  for(let i=1;i<N;i++){
+    const m=Math.abs(ys[i]);
+    if(isFinite(ys[i-1])&&isFinite(ys[i+1])&&m<0.05&&m<=Math.abs(ys[i-1])&&m<=Math.abs(ys[i+1])){
+      let a=lo+(i-1)*step,b=lo+(i+1)*step;
+      for(let k=0;k<80;k++){const m1=a+(b-a)/3,m2=b-(b-a)/3;if(Math.abs(f(m1))<Math.abs(f(m2)))b=m2;else a=m1;}
+      const r=(a+b)/2;if(Math.abs(f(r))<1e-9)add(r);
+    }
+  }
+  if(finiteCount>0&&flatCount===finiteCount)return['Every x works'];
+  if(!roots.length)return['No real solution found (looked between −200 and 200)'];
+  roots.sort((a,b)=>Math.abs(a)-Math.abs(b));
+  const shown=roots.slice(0,8).sort((a,b)=>a-b).map(r=>'x = '+minus(num8(r)));
+  if(roots.length>8)shown.push('…');
+  return shown;
+}
 function evaluate(tokens){
   const eq=tokens.findIndex(t=>t.k==='eq');
+  if(hasVar(tokens)){
+    if(eq<0)return{error:'Add “= …” to solve for x',expr:tokens};
+    const L=tokens.slice(0,eq);
+    let R=tokens.slice(eq+1);const eq2=R.findIndex(t=>t.k==='eq');if(eq2>=0)R=R.slice(0,eq2);
+    if(!L.length)return{error:'Missing left side',expr:tokens};
+    const R2=R.length?R:[{k:'d',v:'0'}];                    // "3x − 7 =" means "= 0"
+    const probe=evalAt(L,R2,1)+evalAt(L,R2,2)+evalAt(L,R2,0.5);
+    if(isNaN(probe)&&[1,2,0.5,-1,3].every(x=>!isFinite(evalAt(L,R2,x)))){
+      // either an incomplete expression or one that has no value anywhere: report the parser's complaint
+      try{XV=1;evalTokens(L);evalTokens(R2);}catch(e){XV=NaN;return{error:e.message,expr:tokens};}finally{XV=NaN;}
+    }
+    return{sol:solveEquation(L,R2),expr:tokens};
+  }
   const ex=eq>=0?tokens.slice(0,eq):tokens;
   if(!ex.length)return{empty:true,expr:ex};
   try{const v=evalTokens(ex);if(!isFinite(v))return{error:'Undefined',expr:ex};return{value:v,expr:ex};}
@@ -812,6 +975,7 @@ function toText(ts){
       case'sqrt':return'√('+toText(t.c)+')';
       case'sup':return'^('+toText(t.c)+')';
       case'fn':return t.v;
+      case'v':return'x';
       default:return'?';
     }
   }).join('');
@@ -830,6 +994,7 @@ function renderTokens(ts){
       case'sqrt':h+='<span class="sqrt"><span class="rs"></span><span class="rc">'+renderTokens(t.c)+'</span></span>';break;
       case'sup':h+='<span class="sup">'+renderTokens(t.c)+'</span>';break;
       case'fn':h+='<span class="fnm">'+t.v+'</span>';break;
+      case'v':h+='<span class="var">x</span>';break;
       default:h+='<span class="op bad">?</span>';
     }
   }
@@ -865,6 +1030,7 @@ function analyze(strokes,overrides){
   symbols=mergeDivide(symbols,H);
   symbols=absorbOverline(symbols,H);
   symbols=mergeFunctions(symbols,H,overrides);
+  resolveVariables(symbols,H);
   dropStrayDots(symbols,H);
   symbols=symbols.filter(s=>s.label!=='ignore');
   const tokens=layout(symbols,H);
@@ -884,7 +1050,7 @@ const state={strokes:[],undo:[],redo:[],overrides:new Map(),nextId:1,teach:null,
 let dpr=1,drawing=null,activeId=null,tRec=0,tTyp=0,wasTyped=false;
 
 /* ---- storage (guarded) ---- */
-const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',DKEY='mathink.deg.v1',VERSION='2.0';
+const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',DKEY='mathink.deg.v1',VERSION='2.1';
 try{USER=JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){USER={};}
 try{const a=localStorage.getItem(AKEY);if(a!==null)state.auto=a==='1';}catch(e){}
 let deg=true;try{const a=localStorage.getItem(DKEY);if(a!==null)deg=a==='1';}catch(e){}
@@ -1073,14 +1239,16 @@ function renderTray(a){
   }
   const ev=a.ev;
   if(ev.value!==undefined)ro.textContent=toText(ev.expr)+' = '+fmt(ev.value);
+  else if(ev.sol)ro.textContent=ev.sol.join('  ·  ');
   else if(ev.error){ro.textContent=ev.error;ro.className='err';}
 }
 function showTyped(force){
   if(!force&&!state.auto)return;
   if(state.teach||drawing)return;
   const a=state.last||runRecognition();
-  if(!a||a.ev.value===undefined)return;
-  fmEl.innerHTML=renderTokens(a.ev.expr)+'<span class="eqs">=</span><span class="res">'+fmt(a.ev.value)+'</span>';
+  if(!a||(a.ev.value===undefined&&!a.ev.sol))return;
+  if(a.ev.sol)fmEl.innerHTML='<div class="eqcol"><div class="row">'+renderTokens(a.ev.expr)+'</div><div class="sols">'+a.ev.sol.map(t=>'<span>'+t.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>').join('')+'</div></div>';
+  else fmEl.innerHTML=renderTokens(a.ev.expr)+'<span class="eqs">=</span><span class="res">'+fmt(a.ev.value)+'</span>';
   stage.classList.add('typed');fit();
 }
 function fit(){
@@ -1122,11 +1290,11 @@ $('#bClear').addEventListener('click',()=>{
 $('#bSolve').addEventListener('click',()=>{
   clearTimeout(tRec);clearTimeout(tTyp);
   const a=runRecognition();
-  if(a&&a.ev.value!==undefined)showTyped(true);
+  if(a&&(a.ev.value!==undefined||a.ev.sol))showTyped(true);
 });
 
 /* ---- symbol picker (corrections) ---- */
-const PICK=['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','=','+','(',')','√','sin','cos','tan','log','ln','ignore'];
+const PICK=['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','=','+','(',')','√','x','sin','cos','tan','log','ln','ignore'];
 const TEACHABLE=new Set(['0','1','2','3','4','5','6','7','8','9','+','×','(',')']);
 const TEACH_KEYS=['0','1','2','3','4','5','6','7','8','9','+','×','(',')','s','i','n','c','o','t','a','l','g'];
 let pickSym=null;
