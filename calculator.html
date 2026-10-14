@@ -315,6 +315,8 @@ for(const k in OWN)DEFAULTS[k].push(...OWN[k]);
 /* a narrow, leaning 0 with a little overlap at the top (read as a 3 before) */
 DEFAULTS['0'].push([L(78,30,105,10,140,5,162,10,165,60,148,130,120,180,95,205,65,205,63,155,80,105,105,50,140,6)],
                    [L(40,40,28,12,50,2,76,6,84,40,70,110,50,160,28,184,10,176,2,130,12,70,40,10)]);
+/* a roundish 0 whose end overshoots its start */
+DEFAULTS['0'].push([L(270,225,300,175,325,140,440,140,520,160,570,195,570,360,520,420,460,450,320,462,260,445,200,390,185,340,190,290,208,200,240,160,272,125)]);
 /* a 9 whose stem leaves the loop at the top right and leans slightly left */
 DEFAULTS['9'].push([L(1000,185,970,172,925,185,880,215,865,250,870,282,910,290,945,278,975,235,990,200,995,250,975,330,960,478)],
                    [L(1003,178,970,172,925,185,880,215,865,250,870,282,910,290,945,278,975,235,990,200,1003,178,985,250,970,330,960,478)]);
@@ -368,7 +370,31 @@ function normalizeSample(strokes){
 const tScore=(d,t)=>d*(t.user?0.9:1)*(t.aug?1.03:1);
 /* Two passes keep this fast on an old iPad: rank every template with a coarse 12-point cloud,
    then score only the closest few with the full 32-point cloud. */
+/* One stroke that turns the same way all the way round and ends near where it began is a loop: a 0.
+   (Written 0s often overshoot their start, which shape matching handles badly.) A 6, 9 or 8 never does this:
+   their ends are far apart, or the stroke turns both ways. */
+function isLoop(pts){
+  if(pts.length<8)return false;
+  const r=resampleLine(pts,48),b=bboxOf(r),dim=Math.max(b.w,b.h);
+  if(dim<=0||b.w<0.4*b.h||b.w>1.8*b.h)return false;
+  if(dist(r[0],r[47])>0.35*dim)return false;
+  let signed=0,abs=0;
+  for(let i=1;i<47;i++){
+    const a1=Math.atan2(r[i].y-r[i-1].y,r[i].x-r[i-1].x),a2=Math.atan2(r[i+1].y-r[i].y,r[i+1].x-r[i].x);
+    let d=a2-a1;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
+    signed+=d;abs+=Math.abs(d);
+  }
+  return Math.abs(signed)>=Math.PI*1.55&&Math.abs(signed)>=0.8*abs;
+}
 function matchTemplates(strokes){
+  const res=matchTemplatesRaw(strokes);
+  if(strokes.length===1&&res.label!=='0'&&isLoop(strokes[0])){
+    const d0=(res.alts.find(a=>a[0]==='0')||[])[1];
+    return{label:'0',d:d0===undefined?res.d:d0,alts:[['0',d0===undefined?res.d:d0]].concat(res.alts.filter(a=>a[0]!=='0'))};
+  }
+  return res;
+}
+function matchTemplatesRaw(strokes){
   const key=strokes.map(st=>st.length+':'+st.map(p=>Math.round(p.x)+','+Math.round(p.y)).join(';')).join('|');
   const hit=CACHE.get(key);if(hit)return hit;
   const c=toCloud(strokes,FINE),cc=toCloud(strokes,COARSE);
@@ -735,7 +761,12 @@ function tokensFromLine(items,H){
     if(base&&isAtom(base)){
       const bb=base.box;let isSup=false;
       if(!sup)isSup=it.box.cy<bb.cy-0.28*bb.h&&it.box.y1<bb.cy+0.2*bb.h&&it.box.x0-bb.x1<1.2*H;
-      else isSup=it.box.cy<bb.cy-0.1*bb.h&&it.box.x0-lastSup.box.x1<1.0*H;
+      else{
+        /* keep reading the exponent only while symbols sit up at the raised level: a symbol that is nearer to the
+           baseline than to the first exponent symbol belongs to the line again (2x² − x + 1) */
+        const supLevel=sup[0].box.cy;
+        isSup=it.box.cy<bb.cy-0.1*bb.h&&it.box.x0-lastSup.box.x1<1.0*H&&Math.abs(it.box.cy-supLevel)<Math.abs(it.box.cy-bb.cy);
+      }
       if(isSup){(sup||(sup=[])).push(it);lastSup=it;continue;}
     }
     if(sup){out.push({k:'sup',c:tokensFromLine(sup,H)});sup=null;lastSup=null;}
@@ -911,8 +942,7 @@ function solveEquation(L,R){
     const x=lo+i*step,y=f(x);ys.push(y);
     if(isFinite(y)){finiteCount++;if(Math.abs(y)<1e-12)flatCount++;}
     if(isFinite(py)&&isFinite(y)){
-      if(y===0)add(x);
-      else if(py*y<0){
+      if(py*y<0){
         let a=px,b=x,fa=py;
         for(let k=0;k<70;k++){const m=(a+b)/2,fm=f(m);if(!isFinite(fm))break;if(fa*fm<=0)b=m;else{a=m;fa=fm;}}
         const r=(a+b)/2,fr=f(r);
@@ -921,6 +951,8 @@ function solveEquation(L,R){
     }
     px=x;py=y;
   }
+  /* a value that is exactly 0 between two non-zero values is a root; a long run of zeros is just underflow */
+  for(let i=1;i<N;i++)if(ys[i]===0&&isFinite(ys[i-1])&&isFinite(ys[i+1])&&ys[i-1]!==0&&ys[i+1]!==0)add(lo+i*step);
   /* touching roots (x² = 0) do not change sign: look at local minima of |f| */
   for(let i=1;i<N;i++){
     const m=Math.abs(ys[i]);
@@ -1050,7 +1082,7 @@ const state={strokes:[],undo:[],redo:[],overrides:new Map(),nextId:1,teach:null,
 let dpr=1,drawing=null,activeId=null,tRec=0,tTyp=0,wasTyped=false;
 
 /* ---- storage (guarded) ---- */
-const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',DKEY='mathink.deg.v1',VERSION='2.1';
+const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',DKEY='mathink.deg.v1',VERSION='2.2';
 try{USER=JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){USER={};}
 try{const a=localStorage.getItem(AKEY);if(a!==null)state.auto=a==='1';}catch(e){}
 let deg=true;try{const a=localStorage.getItem(DKEY);if(a!==null)deg=a==='1';}catch(e){}
