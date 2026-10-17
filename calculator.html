@@ -528,11 +528,29 @@ function letterScores(strokes){
 rebuildTemplates();
 
 /* ---- geometry helpers ---- */
+/* The typical symbol height H (everything else is measured against it). Brackets and radicals are structural and can be
+   several times taller than the digits, so they are left out; otherwise every digit would look like a dot. */
+function bowOf(pts,b){                       // how far the stroke bows away from the straight line between its ends
+  const a=pts[0],z=pts[pts.length-1],L=Math.hypot(z.x-a.x,z.y-a.y)||1;let m=0;
+  for(const p of pts){const d=Math.abs((z.x-a.x)*(a.y-p.y)-(a.x-p.x)*(z.y-a.y))/L;if(d>m)m=d;}
+  return m/Math.max(b.h,1e-6);
+}
 function computeH(infos){
   const nf=infos.filter(i=>i.b.h>=0.35*i.b.w);
-  if(nf.length){
-    const mh=Math.max(...nf.map(i=>i.b.h));
-    const hs=nf.filter(i=>i.b.h>=0.3*mh).map(i=>i.b.h).sort((a,b)=>a-b);
+  const smooth=pts=>{                       // no sharp corner anywhere (a 7 or a flagged 1 has one, a bracket does not)
+    const r=resampleLine(pts,16);let worst=0;
+    for(let k=1;k<15;k++){
+      const a1=Math.atan2(r[k].y-r[k-1].y,r[k].x-r[k-1].x),a2=Math.atan2(r[k+1].y-r[k].y,r[k+1].x-r[k].x);
+      let d=Math.abs(a2-a1);if(d>Math.PI)d=2*Math.PI-d;if(d>worst)worst=d;
+    }
+    return worst<0.8;
+  };
+  const bracketLike=i=>i.b.h>=1.8*i.b.w&&bowOf(i.s.pts,i.b)>=0.12&&smooth(i.s.pts);
+  let pool=nf.filter(i=>i.b.w<=1.2*i.b.h&&!bracketLike(i));      // not a radical (wide) and not a ( or )
+  if(!pool.length)pool=nf;
+  if(pool.length){
+    const mh=Math.max(...pool.map(i=>i.b.h));
+    const hs=pool.filter(i=>i.b.h>=0.3*mh).map(i=>i.b.h).sort((x,y)=>x-y);
     if(hs.length)return Math.max(12,hs[Math.floor(hs.length/2)]);
   }
   const md=Math.max(...infos.map(i=>Math.max(i.b.w,i.b.h)));
@@ -879,7 +897,7 @@ function tokensFromLine(items,H){
   for(const it of items){
     if(base&&isAtom(base)){
       const bb=base.box;let isSup=false;
-      if(!sup)isSup=it.box.cy<bb.cy-0.28*bb.h&&it.box.y1<bb.cy+0.2*bb.h&&it.box.x0-bb.x1<1.2*H;
+      if(!sup)isSup=it.box.cy<bb.cy-0.28*bb.h&&it.box.y1<bb.cy+0.2*bb.h&&it.box.x0-bb.x1<Math.max(1.2*H,0.35*bb.h);
       else{
         /* keep reading the exponent only while symbols sit up at the raised level: a symbol that is nearer to the
            baseline than to the first exponent symbol belongs to the line again (2x² − x + 1) */
@@ -1420,7 +1438,7 @@ const state={strokes:[],undo:[],redo:[],overrides:new Map(),nextId:1,teach:null,
 let dpr=1,drawing=null,activeId=null,tRec=0,tTyp=0,wasTyped=false;
 
 /* ---- storage (guarded) ---- */
-const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',NKEY='mathink.nn.v1',DKEY='mathink.deg.v1',VERSION='3.1';
+const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',NKEY='mathink.nn.v1',DKEY='mathink.deg.v1',VERSION='3.2';
 try{USER=JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){USER={};}
 try{const a=localStorage.getItem(AKEY);if(a!==null)state.auto=a==='1';}catch(e){}
 try{const n=localStorage.getItem(NKEY);if(n!==null)NN_ON=n==='1';}catch(e){}
