@@ -137,6 +137,16 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
 }
 .sheet h2{margin:0 0 4px;font-size:18px;font-weight:650}
 .sheet p{margin:6px 0 12px;color:var(--muted);font-size:14px;line-height:1.45}
+.sheet.wide{width:min(760px,100%)}
+.st{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.st:first-child{border-top:0}
+.st .no{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:650;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.st .sb{min-width:0;flex:1}
+.st .cap{font-size:15px;line-height:1.45;color:var(--fg);margin:0 0 6px}
+.st.fin .no{background:var(--ok,#22a35a)}
+.st.fin .ln{color:var(--accent);font-weight:600}
+.fm.sm{font-size:30px;justify-content:flex-start;transform:none;margin:4px 0;overflow-x:auto;max-width:100%;padding:2px 0}
+.st .ln{font-family:"Times New Roman",Georgia,serif;font-size:19px;color:var(--fg);margin:4px 0;white-space:pre-wrap;word-break:break-word}
 .sheet h3{margin:18px 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .grid.five{grid-template-columns:repeat(5,1fr)}
@@ -169,6 +179,7 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
   <button class="btn" id="bRedo" aria-label="Redo" disabled><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
   <button class="btn" id="bClear" aria-label="Clear" disabled><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
   <button class="btn" id="bAngle" aria-label="Angle unit for sin, cos, tan" title="Angle unit for sin, cos, tan">DEG</button>
+  <button class="btn" id="bSteps" style="display:none">Steps</button>
   <button class="btn primary" id="bSolve">Solve</button>
   <button class="btn" id="bSet" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </header>
@@ -196,6 +207,15 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
   </div>
 </div>
 
+<!-- steps -->
+<div class="scrim" id="stepsScrim">
+  <div class="sheet wide">
+    <h2>How to solve it</h2>
+    <div id="stepsBody"></div>
+    <button class="btn close" id="stepsClose">Done</button>
+  </div>
+</div>
+
 <!-- settings -->
 <div class="scrim" id="setScrim">
   <div class="sheet">
@@ -207,7 +227,7 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1p
     <div class="grid five" id="teachGrid"></div>
     <button class="link" id="resetSamples">Forget all my samples</button>
     <h3>Tips</h3>
-    <p>Equations: write the letter <b>x</b> as two crossing strokes. It is read as the variable x when it has a small raised number after it (x²), or nothing to multiply on one side (3x = 5, x + 2 = 7); between two numbers (3 × 4) it stays a multiplication sign. Add <b>=</b> and MathInk solves for x, e.g. 3x² − 7 = 0. If it guesses wrong, tap that symbol and pick × or x.</p>
+    <p>Equations: write the letter <b>x</b> as two crossing strokes. It is read as the variable x when it has a small raised number after it (x²), or nothing to multiply on one side (3x = 5, x + 2 = 7); between two numbers (3 × 4) it stays a multiplication sign. Add <b>=</b> and MathInk solves for x, e.g. 3x² − 7 = 0. Tap <b>Steps</b> to see how it is solved, step by step. If it guesses wrong, tap that symbol and pick × or x.</p>
     <p>Functions: write <b>sin</b>, <b>cos</b>, <b>tan</b>, <b>log</b> or <b>ln</b> in small letters (dot the i, cross the t), then the angle, e.g. sin 30 or cos(60). The DEG / RAD button in the top bar picks degrees or radians. If a word isn't recognised, teach the letters below, or tap its first letter and pick the function.</p>
     <p>Fractions: draw a flat bar with the top and bottom written above and below it. Roots: draw the √ with its roof over the numbers. Powers: write the exponent small and raised. Division can also be ÷ (bar with two dots). Tap any symbol in the bottom strip to fix a misread.</p>
     <p id="verLine" style="margin-top:14px;font-size:12px">MathInk</p>
@@ -1103,6 +1123,209 @@ function evaluate(tokens){
   try{const v=evalTokens(ex);if(!isFinite(v))return{error:'Undefined',expr:ex};return{value:v,expr:ex};}
   catch(e){return{error:e.message,expr:ex};}
 }
+/* ---- step-by-step solutions: exact polynomial algebra with fractions ---- */
+const gcdI=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;};
+function Q(n,d){
+  if(d===undefined)d=1;
+  if(d<0){n=-n;d=-d;}
+  const g=gcdI(n,d);n/=g;d/=g;
+  if(Math.abs(n)>1e12||d>1e12)throw new Error('big');
+  return{n,d};
+}
+const Q0=Q(0),Q1=Q(1);
+const qAdd=(a,b)=>Q(a.n*b.d+b.n*a.d,a.d*b.d),qSub=(a,b)=>Q(a.n*b.d-b.n*a.d,a.d*b.d),qMul=(a,b)=>Q(a.n*b.n,a.d*b.d);
+const qDiv=(a,b)=>{if(b.n===0)throw new Error('div0');return Q(a.n*b.d,a.d*b.n);};
+const qNeg=a=>Q(-a.n,a.d),qZero=a=>a.n===0,qNum=a=>a.n/a.d;
+function qSqrt(a){if(a.n<0)return null;const sn=Math.round(Math.sqrt(a.n)),sd=Math.round(Math.sqrt(a.d));return sn*sn===a.n&&sd*sd===a.d?Q(sn,sd):null;}
+const qStr=a=>(a.n<0?'−':'')+Math.abs(a.n)+(a.d===1?'':'/'+a.d);
+function qFromStr(s){const parts=s.split('.');const f=parts[1]||'';if(f.length>9)throw new Error('big');return Q(parseInt((parts[0]||'0')+f,10),Math.pow(10,f.length));}
+const ptrim=p=>{while(p.length>1&&qZero(p[p.length-1]))p.pop();return p;};
+function padd(a,b,sub){const n=Math.max(a.length,b.length),o=[];for(let i=0;i<n;i++){const x=a[i]||Q0,y=b[i]||Q0;o.push(sub?qSub(x,y):qAdd(x,y));}return ptrim(o);}
+function pmul(a,b){const o=Array.from({length:a.length+b.length-1},()=>Q0);for(let i=0;i<a.length;i++)for(let j=0;j<b.length;j++)o[i+j]=qAdd(o[i+j],qMul(a[i],b[j]));return ptrim(o);}
+function ppow(a,k){
+  if(k<0){if(a.length!==1||qZero(a[0]))throw new Error('notpoly');let r=Q1;for(let i=0;i<-k;i++)r=qDiv(r,a[0]);return[r];}
+  if(k>12)throw new Error('notpoly');
+  let r=[Q1];for(let i=0;i<k;i++)r=pmul(r,a);return r;
+}
+/* tokens -> polynomial in x with exact rational coefficients (throws if the expression is not one) */
+function polyOf(ts){
+  let i=0;const peek=()=>ts[i];
+  const starts=t=>t&&(t.k==='d'||t.k==='v'||t.k==='frac'||t.k==='sqrt'||(t.k==='p'&&t.v==='('));
+  const expr=()=>{let v=term();while(peek()&&peek().k==='op'&&(peek().v==='+'||peek().v==='-')){const op=ts[i++].v;v=padd(v,term(),op==='-');}return v;};
+  const divConst=(a,b)=>{if(b.length!==1||qZero(b[0]))throw new Error('notpoly');return ptrim(a.map(c=>qDiv(c,b[0])));};
+  const term=()=>{
+    let v=unary();
+    for(;;){
+      const p=peek();if(!p)break;
+      if(p.k==='op'&&p.v==='*'){i++;v=pmul(v,unary());}
+      else if(p.k==='op'&&p.v==='/'){i++;v=divConst(v,unary());}
+      else if(starts(p))v=pmul(v,unary());
+      else break;
+    }
+    return v;
+  };
+  const unary=()=>{const p=peek();if(p&&p.k==='op'&&(p.v==='-'||p.v==='+')){i++;const v=unary();return p.v==='-'?v.map(qNeg):v;}return power();};
+  const power=()=>{
+    let a=atom();
+    while(peek()&&peek().k==='sup'){
+      const e=polyOf(ts[i++].c);
+      if(e.length!==1||e[0].d!==1)throw new Error('notpoly');
+      a=ppow(a,e[0].n);
+    }
+    return a;
+  };
+  const atom=()=>{
+    const p=peek();if(!p)throw new Error('notpoly');
+    if(p.k==='d'){let s='';while(peek()&&peek().k==='d')s+=ts[i++].v;if(!/^(\d+\.?\d*|\.\d+)$/.test(s))throw new Error('notpoly');return[qFromStr(s)];}
+    if(p.k==='v'){i++;return[Q0,Q1];}
+    if(p.k==='p'&&p.v==='('){i++;const v=expr();if(peek()&&peek().k==='p'&&peek().v===')')i++;return v;}
+    if(p.k==='frac'){i++;return divConst(polyOf(p.n),polyOf(p.d));}
+    if(p.k==='sqrt'){i++;const c=polyOf(p.c);if(c.length!==1)throw new Error('notpoly');const r=qSqrt(c[0]);if(!r)throw new Error('notpoly');return[r];}
+    throw new Error('notpoly');
+  };
+  const v=expr();if(i<ts.length)throw new Error('notpoly');return v;
+}
+/* ---- building typeset tokens ---- */
+const VARTOK={k:'v'};
+const digitsTok=s=>String(s).split('').map(v=>({k:'d',v}));
+const tq=q=>q.d===1?digitsTok(q.n):[{k:'frac',n:digitsTok(q.n),d:digitsTok(q.d)}];          // non-negative rational
+const tqSigned=q=>q.n<0?[{k:'op',v:'-'}].concat(tq(qNeg(q))):tq(q);                          // -3/4
+const tqParen=q=>q.n<0?[{k:'p',v:'('}].concat(tqSigned(q),[{k:'p',v:')'}]):tq(q);            // (-3)
+const tDec=v=>(v<0?[{k:'op',v:'-'}]:[]).concat(digitsTok(num8(Math.abs(v))));
+function termTok(c,pw){
+  if(pw===0)return tq(c);
+  const o=[];if(!(c.n===1&&c.d===1))o.push(...tq(c));
+  o.push(VARTOK);if(pw>1)o.push({k:'sup',c:digitsTok(pw)});return o;
+}
+function polyTok(p){
+  const o=[];let first=true;
+  for(let pw=p.length-1;pw>=0;pw--){
+    const c=p[pw];if(qZero(c))continue;
+    const neg=c.n<0,ac=neg?qNeg(c):c;
+    if(first){if(neg)o.push({k:'op',v:'-'});}else o.push({k:'op',v:neg?'-':'+'});
+    o.push(...termTok(ac,pw));first=false;
+  }
+  return o.length?o:[{k:'d',v:'0'}];
+}
+const EQ={k:'eq'},ZERO=[{k:'d',v:'0'}];
+const sideEq=(l,r)=>[].concat(l,[EQ],r);
+/* roots as numbers, read back from the solver's text ("x = ±1.5", "x = −2") */
+function rootsFromSol(sol){
+  const r=[];
+  for(const t of sol){
+    const m=/^x = (±)?(−)?([0-9.e+\-]+)$/.exec(t);if(!m)continue;
+    const v=parseFloat(m[3]);if(!isFinite(v))continue;
+    if(m[1]){r.push(v);r.push(-v);}else r.push(m[2]?-v:v);
+  }
+  return r;
+}
+function sideAt(ts,x){XV=x;try{return evalTokens(ts);}catch(e){return NaN;}finally{XV=NaN;}}
+const moveWord=b=>b.n<0?'Add '+qStr(qNeg(b)):'Subtract '+qStr(b);
+function explainEquation(tokens){
+  const eq=tokens.findIndex(t=>t.k==='eq');if(eq<0)return null;
+  const L=tokens.slice(0,eq);let R=tokens.slice(eq+1);const e2=R.findIndex(t=>t.k==='eq');if(e2>=0)R=R.slice(0,e2);
+  if(!L.length)return null;if(!R.length)R=ZERO;
+  const sol=solveEquation(L,R);
+  const steps=[];
+  const add=(cap,m,line)=>steps.push({cap,m:m||[],line:line||''});
+  add('Start with the equation you wrote.',[sideEq(L,R)]);
+  let pl=null,pr=null,f=null;
+  try{pl=polyOf(L);pr=polyOf(R);f=padd(pl,pr,true);}catch(e){pl=pr=f=null;}
+  const finish=()=>{
+    const roots=rootsFromSol(sol);
+    if(roots.length&&roots.length<=6){
+      const lines=roots.map(x=>{
+        const l=sideAt(L,x),r=sideAt(R,x);
+        const good=Math.abs(l-r)<=1e-6*(1+Math.abs(l)+Math.abs(r));
+        const show=v=>Math.abs(v)<1e-4?'0':minus(num8(v));
+        return 'x = '+minus(num8(x))+':  left side = '+show(l)+',  right side = '+show(r)+(good?'  ✓':'  ≈');
+      });
+      add('Check: put each solution back into the original equation.'+(roots.some(x=>!Number.isInteger(x))?' (Decimal answers are rounded, so a tiny difference is expected.)':''),[],lines.join('\n'));
+    }
+    add('Solution',[],sol.join('\n'));
+    return{steps,sol};
+  };
+  /* not a polynomial in x (1/x, √x, sin x, x in an exponent, ...) */
+  if(!f){
+    add('Move everything to the left side: f(x) = (left side) − (right side) = 0.',[[].concat(L,[{k:'op',v:'-'},{k:'p',v:'('}],R,[{k:'p',v:')'},EQ],ZERO)]);
+    add('This is not a polynomial of degree 1 or 2, so there is no short algebraic recipe. MathInk scans x from −200 to 200 for places where f(x) changes sign and narrows each one down by repeatedly halving the interval (bisection).');
+    return finish();
+  }
+  const deg=f.length-1;
+  const std=sideEq(polyTok(pl),polyTok(pr));
+  if(toText(std)!==toText(sideEq(L,R)))add('Tidy up each side: expand brackets, combine like terms, write decimals as fractions.',[std]);
+  const prZero=pr.length===1&&qZero(pr[0]);
+  if(!prZero&&deg!==1)add('Move every term to the left side (subtract the right side from both sides).',[sideEq(polyTok(f),ZERO)]);
+  if(deg===0){
+    if(qZero(f[0]))add('Everything cancels and 0 = 0 is always true, so every value of x is a solution.');
+    else add('The x terms cancel and what is left is false, so no value of x works.',[],qStr(f[0])+' = 0 is false');
+    return finish();
+  }
+  if(deg===1){
+    const pl1=pl[1]||Q0,pl0=pl[0]||Q0,pr1=pr[1]||Q0,pr0=pr[0]||Q0;
+    let l1=pl1,l0=pl0,r0=pr0,did=false;
+    if(!qZero(pr1)){
+      l1=qSub(pl1,pr1);did=true;
+      add(moveWord(pr1).replace(/ (-?\d+(\/\d+)?)$/,'')+' '+(Math.abs(pr1.n)===1&&pr1.d===1?'':qStr(pr1.n<0?qNeg(pr1):pr1))+'x on both sides, so all the x terms are on the left.',[sideEq(polyTok([l0,l1]),polyTok([r0]))]);
+    }
+    if(!qZero(l0)){
+      did=true;
+      add(moveWord(l0)+' on both sides, so only the x term is left on the left.',[sideEq(polyTok([Q0,l1]),polyTok([qSub(r0,l0)]))]);
+      r0=qSub(r0,l0);
+    }
+    const r=qDiv(r0,l1);
+    if(!(l1.n===1&&l1.d===1))add('Divide both sides by '+qStr(l1)+'.',[sideEq([VARTOK],tqSigned(r))]);
+    else if(!did)add('x is already on its own.',[sideEq([VARTOK],tqSigned(r))]);
+    return finish();
+  }
+  if(deg===2){
+    const a=f[2],b=f[1],c=f[0];
+    if(qZero(b)){
+      if(qZero(c)){add('Only x² is left, and x² = 0 only when x = 0.',[sideEq(polyTok([Q0,Q0,Q1]),ZERO)]);return finish();}
+      add('There is no x term, so get x² by itself. '+moveWord(c)+' on both sides.',[sideEq(polyTok([Q0,Q0,a]),polyTok([qNeg(c)]))]);
+      const k=qDiv(qNeg(c),a);
+      if(!(a.n===1&&a.d===1))add('Divide both sides by '+qStr(a)+'.',[sideEq(polyTok([Q0,Q0,Q1]),tqSigned(k))]);
+      if(k.n<0){add('A real number squared is never negative, so there is no real solution.',[],'x = ±i√'+qStr(qNeg(k)));return finish();}
+      const r=qSqrt(k);
+      if(r)add('Take the square root of both sides. Both the positive and the negative root work (±).',[sideEq([VARTOK],tq(r))],'x = ±'+qStr(r));
+      else add('Take the square root of both sides. Both the positive and the negative root work (±).',[sideEq([VARTOK],[{k:'sqrt',c:tq(k)}])],'x = ±√('+qStr(k)+') ≈ ±'+num8(Math.sqrt(qNum(k))));
+      return finish();
+    }
+    if(qZero(c)){
+      add('Every term contains x, so factor x out.',[sideEq([VARTOK,{k:'p',v:'('}].concat(polyTok([b,a]),[{k:'p',v:')'}]),ZERO)]);
+      const r=qDiv(qNeg(b),a);
+      add('A product is zero when one of its factors is zero: either x = 0, or the bracket is 0.',[sideEq(polyTok([b,a]),ZERO)]);
+      add('Solve the bracket for x.',[sideEq([VARTOK],tqSigned(r))],'so x = 0  or  x = '+qStr(r));
+      return finish();
+    }
+    add('This is a quadratic equation a·x² + b·x + c = 0 with a = '+qStr(a)+', b = '+qStr(b)+', c = '+qStr(c)+'. Use the quadratic formula.',[],'x = ( −b ± √(b² − 4ac) ) / ( 2a )');
+    const D=qSub(qMul(b,b),qMul(Q(4),qMul(a,c)));
+    add('First the discriminant Δ = b² − 4ac, which tells how many real solutions there are.',[],'Δ = ('+qStr(b)+')² − 4·('+qStr(a)+')·('+qStr(c)+') = '+qStr(D));
+    const twoA=qMul(Q(2),a),mb=qNeg(b);
+    if(D.n<0){
+      const re=qNum(qDiv(mb,twoA)),im=Math.sqrt(-qNum(D))/Math.abs(qNum(twoA));
+      add('Δ is negative and you cannot take the square root of a negative number among the real numbers, so there is no real solution. (The two complex solutions are below.)',[],'x = '+minus(num8(re))+' ± '+num8(im)+'i');
+      return finish();
+    }
+    if(D.n===0){
+      const r=qDiv(mb,twoA);
+      add('Δ = 0, so the two solutions coincide: x = −b / 2a.',[sideEq([VARTOK],[{k:'frac',n:tqSigned(mb),d:tqSigned(twoA)}]),sideEq([VARTOK],tqSigned(r))]);
+      return finish();
+    }
+    const sq=qSqrt(D);
+    const frac=sign=>({k:'frac',n:tqSigned(mb).concat([{k:'op',v:sign}],[{k:'sqrt',c:tq(D)}]),d:tqSigned(twoA)});
+    add('Δ is positive, so there are two real solutions. Put the numbers into the formula, once with + and once with −.',[sideEq([VARTOK],[frac('+')]),sideEq([VARTOK],[frac('-')])]);
+    const vals=[1,-1].map(sg=>(qNum(mb)+sg*Math.sqrt(qNum(D)))/qNum(twoA)).sort((p,q)=>p-q);
+    if(sq){
+      const rs=[qDiv(qAdd(mb,sq),twoA),qDiv(qSub(mb,sq),twoA)].sort((p,q)=>qNum(p)-qNum(q));
+      add('√'+qStr(D)+' = '+qStr(sq)+', so both solutions come out as exact fractions or whole numbers.',rs.map(r=>sideEq([VARTOK],tqSigned(r))));
+    }else add('Work out the square root and the fractions.',vals.map(v=>sideEq([VARTOK],tDec(v))));
+    return finish();
+  }
+  add('This is a polynomial of degree '+deg+'. There is no short step-by-step recipe, so MathInk finds the solutions numerically (it scans x from −200 to 200 for places where the value changes sign).');
+  return finish();
+}
+
 function fmt(v){
   if(v===0)return'0';
   if(Number.isInteger(v)&&Math.abs(v)<1e15)return String(v);
@@ -1197,7 +1420,7 @@ const state={strokes:[],undo:[],redo:[],overrides:new Map(),nextId:1,teach:null,
 let dpr=1,drawing=null,activeId=null,tRec=0,tTyp=0,wasTyped=false;
 
 /* ---- storage (guarded) ---- */
-const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',NKEY='mathink.nn.v1',DKEY='mathink.deg.v1',VERSION='3.0';
+const SKEY='mathink.samples.v1',AKEY='mathink.auto.v1',NKEY='mathink.nn.v1',DKEY='mathink.deg.v1',VERSION='3.1';
 try{USER=JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){USER={};}
 try{const a=localStorage.getItem(AKEY);if(a!==null)state.auto=a==='1';}catch(e){}
 try{const n=localStorage.getItem(NKEY);if(n!==null)NN_ON=n==='1';}catch(e){}
@@ -1372,7 +1595,31 @@ function runRecognition(){
   try{a=analyze(state.strokes,state.overrides);}catch(err){console.error(err);}
   state.last=a;renderTray(a);return a;
 }
+function updateStepsBtn(a){
+  const b=$('#bSteps');if(b)b.style.display=(a&&a.ev&&a.ev.sol)?'':'none';
+}
+const escH=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function showSteps(){
+  const a=state.last;if(!a||!a.ev||!a.ev.sol)return;
+  let r=null;
+  try{r=explainEquation(a.ev.expr);}catch(e){console.error(e);}
+  const body=$('#stepsBody');body.innerHTML='';
+  if(!r){body.innerHTML='<p>Sorry, I could not work out the steps for this equation.</p>';}
+  else r.steps.forEach((st,i)=>{
+    const last=i===r.steps.length-1;
+    const d=document.createElement('div');d.className='st'+(last?' fin':'');
+    d.innerHTML='<div class="no">'+(last?'✓':i+1)+'</div><div class="sb"><p class="cap">'+escH(st.cap)+'</p>'
+      +st.m.map(m=>'<div class="fm sm">'+renderTokens(m)+'</div>').join('')
+      +(st.line?'<div class="ln">'+escH(st.line)+'</div>':'')+'</div>';
+    body.appendChild(d);
+  });
+  $('#stepsScrim').classList.add('on');
+}
+$('#bSteps').addEventListener('click',showSteps);
+$('#stepsClose').addEventListener('click',()=>$('#stepsScrim').classList.remove('on'));
+$('#stepsScrim').addEventListener('click',e=>{if(e.target.id==='stepsScrim')$('#stepsScrim').classList.remove('on');});
 function renderTray(a){
+  updateStepsBtn(a);
   const chips=$('#chips'),ro=$('#readout');
   chips.innerHTML='';ro.className='';ro.textContent='';
   stage.classList.toggle('has',state.strokes.length>0||!!state.teach);
