@@ -152,6 +152,50 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 #back-to-chapters.show{display:block;}
 #lab-ui{display:none;}
 #lab-ui.show{display:contents;}
+/* Calculator button + panel */
+#calc-btn{position:fixed;bottom:68px;right:20px;width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,200,87,.3);background:rgba(6,8,20,.92);backdrop-filter:blur(14px);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;transition:all .2s;color:rgba(255,200,87,.7)}
+#calc-btn:hover,#calc-btn.on{border-color:rgba(255,200,87,.7);background:rgba(255,200,87,.14);color:var(--amber)}
+#calc-btn svg{width:20px;height:20px}
+#calc-panel{position:fixed;z-index:1100;right:16px;bottom:116px;width:min(380px,calc(100vw - 20px));height:min(620px,calc(100vh - 140px));display:none;flex-direction:column;background:rgba(10,14,28,.97);border:1px solid rgba(255,200,87,.35);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.6);overflow:hidden}
+#calc-panel.show{display:flex}
+#calc-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:grab;touch-action:none;user-select:none;border-bottom:1px solid var(--border);background:rgba(255,200,87,.06)}
+#calc-head:active{cursor:grabbing}
+#calc-head h2{font:700 10px 'Space Mono';letter-spacing:1.5px;color:var(--amber)}
+#calc-close{border:1px solid var(--border);background:rgba(180,200,255,.08);color:var(--muted);font-size:13px;width:26px;height:26px;border-radius:7px;cursor:pointer}
+#calc-close:hover{color:#fff;background:rgba(180,200,255,.18)}
+#calc-frame{flex:1;width:100%;border:0;background:#07090f;min-height:0}
+#calc-panel.drag #calc-frame{pointer-events:none}
+@media(max-width:1040px){#calc-btn{right:10px;bottom:calc(62px + env(safe-area-inset-bottom,0px))}}
+@media(max-width:600px){#calc-panel{left:10px;right:10px;width:auto;bottom:calc(110px + env(safe-area-inset-bottom,0px));height:min(600px,calc(100vh - 150px))}}
+
+/* Quiz levels */
+#quiz-level{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1px solid;border-radius:8px;padding:2px 7px;margin:0 6px 10px 0;}
+#quiz-breakdown{display:flex;flex-direction:column;gap:8px;margin:0 auto 18px;max-width:300px;text-align:left;}
+.qb-row{display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:11px;}
+.qb-name{width:66px;}
+.qb-bar{flex:1;height:6px;border-radius:3px;background:rgba(180,200,255,.12);overflow:hidden;}
+.qb-bar i{display:block;height:100%;border-radius:3px;}
+.qb-val{width:30px;text-align:right;color:var(--text);}
+/* Matching activity */
+#match-overlay{display:none;position:fixed;inset:0;z-index:150;background:rgba(7,9,15,.985);overflow:auto;padding:84px 16px 40px;touch-action:pan-y;}
+#match-overlay.show{display:block;}
+.mo-inner{max-width:900px;margin:auto;}
+.mo-k{font:700 10px 'Space Mono',monospace;letter-spacing:1px;color:var(--amber);}
+.mo-inner h1{font:800 30px Syne,sans-serif;color:#fff;margin:6px 0 10px;}
+.mo-lead{color:#c9dcf5;line-height:1.55;font-size:14.5px;margin-bottom:16px;font-weight:400;}
+#mo-concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;}
+.mo-concept{border:1px solid color-mix(in srgb,var(--mc) 55%,transparent);border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--mc) 8%,transparent);min-height:96px;transition:border-color .2s,background .2s;}
+.mo-concept.over{background:color-mix(in srgb,var(--mc) 20%,transparent);}
+.mo-concept.ok{border-color:var(--green);background:rgba(77,255,160,.1);}
+.mo-concept.bad{border-color:var(--red);background:rgba(255,94,114,.1);}
+.mo-term{font:700 13px Syne,sans-serif;color:var(--mc);text-align:center;margin-bottom:8px;}
+.mo-label{margin:18px 0 6px;font:400 11px 'Space Mono',monospace;letter-spacing:.08em;color:#9fb4d4;}
+#mo-defs{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--border);border-radius:12px;min-height:60px;}
+.mo-def{cursor:grab;border:1px solid var(--border);border-radius:9px;padding:9px 12px;background:rgba(180,200,255,.05);font-size:13px;line-height:1.45;color:#ddeeff;font-weight:400;text-align:left;user-select:none;}
+.mo-def.placed{border-color:rgba(91,200,255,.6);background:rgba(91,200,255,.1);}
+.mo-def.sel{outline:2px solid var(--blue);}
+.mo-row{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+#mo-sum{font:400 12px 'Space Mono',monospace;color:#c9dcf5;}
 </style>
 </head>
 <body>
@@ -197,7 +241,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div id="challenge-wrap"><div id="challenge-bar"><div id="chal-head"><span id="chal-title-txt">🎯 Challenge</span><div style="display:flex;align-items:center;gap:8px;"><span id="chal-score">Score: 0/0</span><button class="btn-fold" id="btn-chal-fold" title="Fold challenge panel">▼</button></div></div><div id="chal-prompt">Press "New Challenge" to begin!</div><div id="chal-body"></div><div id="chal-actions"><button class="btn green" id="btn-chal-check">✓ Check Answer</button><button class="btn amber" id="btn-chal-new">🔄 New Challenge</button><button class="btn" id="btn-chal-exit">🚪 Exit Challenge</button></div><div id="chal-result"></div></div></div>
 <div id="controls"><div id="scene-controls"></div><div class="sep"></div><button class="btn amber" id="btn-challenge-toggle">🎯 Challenge Mode</button><button class="btn" id="btn-reset-scene">↺ Reset</button></div>
 <div id="hint">🖐️ drag to rotate · ✌️ pinch / scroll to zoom</div>
-<div id="quiz-section"><div id="quiz-live"><h3>Self Assessment</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-kpi">KPI 3.1.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div>
+<div id="quiz-section"><div id="quiz-live"><h3>Self Assessment</h3><div id="quiz-progress">Question 1/15</div><span id="quiz-level"></span><span id="quiz-kpi">KPI 3.1.1</span><div id="quiz-question">Question text</div><div id="quiz-options"></div><div id="quiz-explain"></div><button class="btn green" id="quiz-next">Next →</button></div><div id="quiz-final"><h2 id="quiz-final-score">0/15</h2><p id="quiz-final-msg">Nice work!</p><div id="quiz-breakdown"></div><button class="btn green" id="quiz-restart">🔄 Try Again</button></div></div>
 </div><!-- /#lab-ui -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1352,26 +1396,45 @@ function c12_exitChallenge(){
 }
 
 /* QUIZ DATA — Chapter 1 (KPI 6.1–6.18) */
-const QUIZ1=[
-  {kpi:'6.1/6.2', q:'Electric current is related to the flow of...', opts:['Charge','Energy alone','Resistance','Temperature'], correct:0, exp:'Current is the flow of electric charge through a conductor.'},
-  {kpi:'6.2', q:'The equation defining electric current is...', opts:['I = Q/t','I = Qt','I = t/Q','I = Q + t'], correct:0, exp:'Current is the charge passing a point per unit time: I = Q/t.'},
-  {kpi:'6.3', q:'An ammeter must always be connected...', opts:['In series with the component','In parallel with the component','Across the cell only','It does not matter'], correct:0, exp:'An ammeter carries the same current as the component, so it is wired in series.'},
-  {kpi:'6.4', q:'Electrical conduction in metals happens because of the movement of...', opts:['Free (delocalised) electrons','Protons','Whole atoms','Neutrons'], correct:0, exp:'Metals conduct because they contain free electrons that can drift through the fixed lattice of positive ions.'},
-  {kpi:'6.5', q:'Conventional current flows from the battery\'s...', opts:['Positive terminal, through the circuit, to the negative terminal','Negative terminal to the positive terminal','Positive terminal back to itself','Neither terminal'], correct:0, exp:'Conventional current is defined as flowing from + to − through the external circuit; the actual electrons flow the opposite way.'},
-  {kpi:'6.6', q:'Mains electricity is normally supplied as...', opts:['Alternating current (a.c.)','Direct current (d.c.)','Neither','Static charge'], correct:0, exp:'Mains supply reverses direction periodically — it is a.c. A battery supplies d.c.'},
-  {kpi:'6.7/6.8', q:'E.m.f. is defined as the electrical work done by a source in moving a unit charge...', opts:['Around a complete circuit','Through just one resistor','Nowhere, it stays at the source','Through the ammeter only'], correct:0, exp:'Emf = W/Q, where W is the work done moving charge Q around the whole circuit.'},
-  {kpi:'6.9', q:'E.m.f. is measured in...', opts:['Volts (V)','Amperes (A)','Coulombs (C)','Watts (W)'], correct:0, exp:'Like potential difference, e.m.f. is measured in volts.'},
-  {kpi:'6.10/6.11', q:'Potential difference (p.d.) is the work done by a unit charge...', opts:['Passing through a component','Stored inside a battery','Flowing through an ammeter','Lost as sound'], correct:0, exp:'V = W/Q: the p.d. across a component equals the work done per unit charge passing through it.'},
-  {kpi:'6.12', q:'The p.d. between two points in a circuit is measured in...', opts:['Volts (V)','Ohms (Ω)','Amperes (A)','Joules (J)'], correct:0, exp:'p.d., like e.m.f., is measured in volts.'},
-  {kpi:'6.13', q:'A voltmeter must always be connected...', opts:['In parallel with the component','In series with the component','Inside the battery','It does not matter'], correct:0, exp:'A voltmeter measures the p.d. across a component, so it is connected in parallel across it.'},
-  {kpi:'6.14', q:'The equation for resistance is...', opts:['R = V/I','R = VI','R = I/V','R = V + I'], correct:0, exp:'Resistance is defined as R = V/I.'},
-  {kpi:'6.15', q:'Which current–voltage graph is a straight line through the origin?', opts:['A fixed resistor at constant temperature','A filament lamp','A diode (either direction)','None of these'], correct:0, exp:'A resistor at constant temperature gives I directly proportional to V — a straight line through the origin.'},
-  {kpi:'6.15', q:'A diode in reverse bias...', opts:['Blocks current, so I ≈ 0','Conducts freely','Behaves exactly like a resistor','Produces negative resistance'], correct:0, exp:'Diodes only conduct significant current in forward bias; in reverse bias the current is essentially zero.'},
-  {kpi:'6.16', q:'In an experiment to determine resistance with a voltmeter and ammeter, R is calculated using...', opts:['R = V/I from simultaneous voltmeter and ammeter readings','R = V × I','R = I/V','R cannot be found this way'], correct:0, exp:'Reading V (voltmeter, parallel) and I (ammeter, series) at the same time allows R = V/I to be calculated.'},
-  {kpi:'6.17', q:'A longer wire (same material and thickness) has...', opts:['More resistance','Less resistance','The same resistance','No resistance at all'], correct:0, exp:'Resistance increases with length — charge carriers have a longer path and more collisions.'},
-  {kpi:'6.18', q:'If the cross-sectional area of a wire is doubled (same length, same material), its resistance...', opts:['Is reduced','Is doubled','Stays the same','Becomes infinite'], correct:0, exp:'Resistance is inversely proportional to cross-sectional area — a thicker wire has less resistance.'},
-  {kpi:'6.18', q:'Doubling the length of a wire, while keeping its cross-sectional area the same, makes its resistance...', opts:['Twice as large','Half as large','Four times as large','Unchanged'], correct:0, exp:'R ∝ l, so doubling l doubles R (with A and material unchanged).'}
-];
+const QUIZ1={
+  easy:[
+    {kpi:'6.1/6.2', q:'Electric current is related to the flow of...', opts:['Charge','Energy alone','Resistance','Temperature'], correct:0, exp:'Current is the flow of electric charge through a conductor.'},
+    {kpi:'6.2', q:'The equation defining electric current is...', opts:['I = Q/t','I = Qt','I = t/Q','I = Q + t'], correct:0, exp:'Current is the charge passing a point per unit time: I = Q/t.'},
+    {kpi:'6.3', q:'An ammeter must always be connected...', opts:['In series with the component','In parallel with the component','Across the cell only','It does not matter'], correct:0, exp:'An ammeter carries the same current as the component, so it is wired in series.'},
+    {kpi:'6.4', q:'Electrical conduction in metals happens because of the movement of...', opts:['Free (delocalised) electrons','Protons','Whole atoms','Neutrons'], correct:0, exp:'Metals conduct because they contain free electrons that can drift through the fixed lattice of positive ions.'},
+    {kpi:'6.6', q:'Mains electricity is normally supplied as...', opts:['Alternating current (a.c.)','Direct current (d.c.)','Neither','Static charge'], correct:0, exp:'Mains supply reverses direction periodically — it is a.c. A battery supplies d.c.'},
+    {kpi:'6.9', q:'E.m.f. is measured in...', opts:['Volts (V)','Amperes (A)','Coulombs (C)','Watts (W)'], correct:0, exp:'Like potential difference, e.m.f. is measured in volts.'},
+    {kpi:'6.12', q:'The p.d. between two points in a circuit is measured in...', opts:['Volts (V)','Ohms (Ω)','Amperes (A)','Joules (J)'], correct:0, exp:'p.d., like e.m.f., is measured in volts.'},
+    {kpi:'6.13', q:'A voltmeter must always be connected...', opts:['In parallel with the component','In series with the component','Inside the battery','It does not matter'], correct:0, exp:'A voltmeter measures the p.d. across a component, so it is connected in parallel across it.'},
+    {kpi:'6.14', q:'The equation for resistance is...', opts:['R = V/I','R = VI','R = I/V','R = V + I'], correct:0, exp:'Resistance is defined as R = V/I.'}
+  ],
+  medium:[
+    {kpi:'6.5', q:'Conventional current flows from the battery\'s...', opts:['Positive terminal, through the circuit, to the negative terminal','Negative terminal to the positive terminal','Positive terminal back to itself','Neither terminal'], correct:0, exp:'Conventional current is defined as flowing from + to − through the external circuit; the actual electrons flow the opposite way.'},
+    {kpi:'6.7/6.8', q:'E.m.f. is defined as the electrical work done by a source in moving a unit charge...', opts:['Around a complete circuit','Through just one resistor','Nowhere, it stays at the source','Through the ammeter only'], correct:0, exp:'Emf = W/Q, where W is the work done moving charge Q around the whole circuit.'},
+    {kpi:'6.10/6.11', q:'Potential difference (p.d.) is the work done by a unit charge...', opts:['Passing through a component','Stored inside a battery','Flowing through an ammeter','Lost as sound'], correct:0, exp:'V = W/Q: the p.d. across a component equals the work done per unit charge passing through it.'},
+    {kpi:'6.15', q:'Which current–voltage graph is a straight line through the origin?', opts:['A fixed resistor at constant temperature','A filament lamp','A diode (either direction)','None of these'], correct:0, exp:'A resistor at constant temperature gives I directly proportional to V — a straight line through the origin.'},
+    {kpi:'6.15', q:'A diode in reverse bias...', opts:['Blocks current, so I ≈ 0','Conducts freely','Behaves exactly like a resistor','Produces negative resistance'], correct:0, exp:'Diodes only conduct significant current in forward bias; in reverse bias the current is essentially zero.'},
+    {kpi:'6.16', q:'In an experiment to determine resistance with a voltmeter and ammeter, R is calculated using...', opts:['R = V/I from simultaneous voltmeter and ammeter readings','R = V × I','R = I/V','R cannot be found this way'], correct:0, exp:'Reading V (voltmeter, parallel) and I (ammeter, series) at the same time allows R = V/I to be calculated.'},
+    {kpi:'6.17', q:'A longer wire (same material and thickness) has...', opts:['More resistance','Less resistance','The same resistance','No resistance at all'], correct:0, exp:'Resistance increases with length — charge carriers have a longer path and more collisions.'},
+    {kpi:'6.18', q:'If the cross-sectional area of a wire is doubled (same length, same material), its resistance...', opts:['Is reduced','Is doubled','Stays the same','Becomes infinite'], correct:0, exp:'Resistance is inversely proportional to cross-sectional area — a thicker wire has less resistance.'},
+    {kpi:'6.18', q:'Doubling the length of a wire, while keeping its cross-sectional area the same, makes its resistance...', opts:['Twice as large','Half as large','Four times as large','Unchanged'], correct:0, exp:'R ∝ l, so doubling l doubles R (with A and material unchanged).'},
+    {kpi:'6.2', q:'A current of 2.0 A flows for 30 s. How much charge passes through the wire?', opts:['60 C','15 C','32 C','0.067 C'], correct:0, exp:'Q = It = 2.0 × 30 = 60 C.'},
+    {kpi:'6.14', q:'A resistor has a p.d. of 6.0 V across it and a current of 0.50 A through it. Its resistance is...', opts:['12 Ω','3.0 Ω','0.083 Ω','6.5 Ω'], correct:0, exp:'R = V/I = 6.0 ÷ 0.50 = 12 Ω.'},
+    {kpi:'6.15', q:'As the current through a filament lamp increases, its resistance...', opts:['Increases, because the filament gets hotter','Decreases, because more charge flows','Stays constant','Falls to zero'], correct:0, exp:'A larger current heats the filament. The hotter metal lattice vibrates more, so charge carriers collide more often and the resistance rises.'},
+    {kpi:'6.4/6.5', q:'In a metal wire carrying a current, the free electrons...', opts:['Drift in the opposite direction to the conventional current','Drift in the same direction as the conventional current','Are used up by the lamp','Do not move at all'], correct:0, exp:'Electrons are negative, so they drift from the negative terminal towards the positive one, opposite to conventional current. They are not used up; they carry energy around the circuit.'}
+  ],
+  advanced:[
+    {kpi:'6.2', q:'A steady current of 0.80 A flows in a wire. Taking e = 1.6 × 10⁻¹⁹ C, about how many electrons pass a point each second?', opts:['5.0 × 10¹⁸','1.3 × 10⁻¹⁹','2.0 × 10¹⁹','5.0 × 10⁻¹⁹'], correct:0, exp:'I = ne/t, so n/t = I/e = 0.80 ÷ (1.6 × 10⁻¹⁹) = 5.0 × 10¹⁸ electrons per second.'},
+    {kpi:'6.17/6.18', q:'A wire has resistance R. A second wire of the same material is twice as long and has twice the cross-sectional area. Its resistance is...', opts:['R (unchanged)','2R','4R','R/4'], correct:0, exp:'Resistance is proportional to length ÷ area. Doubling both leaves l/A, and so R, unchanged.'},
+    {kpi:'6.18', q:'A wire has a resistance of 8 Ω. A wire of the same material and length has double the diameter. Its resistance is...', opts:['2 Ω','4 Ω','16 Ω','32 Ω'], correct:0, exp:'Doubling the diameter makes the cross-sectional area four times larger (A ∝ d²). Resistance is inversely proportional to A, so R = 8 ÷ 4 = 2 Ω.'},
+    {kpi:'6.10/6.11', q:'A 12 V battery drives a current through a 4 Ω resistor and an 8 Ω resistor in series. What is the p.d. across the 8 Ω resistor?', opts:['8 V','4 V','6 V','12 V'], correct:0, exp:'Total resistance = 12 Ω, so I = 12 ÷ 12 = 1 A. The p.d. across the 8 Ω resistor is V = IR = 1 × 8 = 8 V. The two p.d.s (4 V and 8 V) add up to the 12 V e.m.f.'},
+    {kpi:'6.7/6.8', q:'A battery of e.m.f. 9.0 V drives 5.0 C of charge around a complete circuit. The work done by the battery is...', opts:['45 J','1.8 J','14 J','0.56 J'], correct:0, exp:'E.m.f. = W/Q, so W = e.m.f. × Q = 9.0 × 5.0 = 45 J.'},
+    {kpi:'6.14/6.15', q:'A graph of current (y-axis) against p.d. (x-axis) for a fixed resistor is a straight line with gradient 0.25 A/V. The resistance of the resistor is...', opts:['4.0 Ω','0.25 Ω','0.50 Ω','1.0 Ω'], correct:0, exp:'The gradient of an I–V graph is I/V = 1/R. So R = 1 ÷ 0.25 = 4.0 Ω.'},
+    {kpi:'6.15', q:'A filament lamp passes 1.0 A at 6.0 V and 1.5 A at 12 V. Which statement is correct?', opts:['Its resistance rises from 6.0 Ω to 8.0 Ω as the filament heats up','Its resistance stays constant at 6.0 Ω','Its resistance falls from 8.0 Ω to 6.0 Ω as the filament heats up','Its resistance is the same as a fixed resistor'], correct:0, exp:'R = V/I gives 6.0 Ω at 6.0 V and 8.0 Ω at 12 V. The filament is hotter at the higher current, so its resistance increases and the lamp is not ohmic.'},
+    {kpi:'6.2', q:'A charge of 150 C passes through a lamp in 2.5 minutes. The current is...', opts:['1.0 A','60 A','0.017 A','0.40 A'], correct:0, exp:'Convert the time first: 2.5 min = 150 s. I = Q/t = 150 ÷ 150 = 1.0 A.'},
+    {kpi:'6.13/6.16', q:'A student wrongly connects the voltmeter in series with the resistor and ammeter. What is most likely to be seen?', opts:['The ammeter reads almost zero, because the voltmeter has a very high resistance','The ammeter reads a very large current','The voltmeter reads zero p.d.','Nothing changes; the readings are still correct'], correct:0, exp:'A voltmeter has a very high resistance, so in series it allows only a tiny current. The ammeter reads almost zero and the voltmeter reads nearly the whole supply p.d.'}
+  ]
+};
 
 /* ===== SCENES CONFIG — CHAPTER 1 ===== */
 const CH1_SCENES=[
@@ -1383,8 +1446,9 @@ const CH1_SCENES=[
     build:c1_build, tick:c1_tick, hud:c1_hud,
     controlsHTML:`<div class="sw">Carriers/s=<input type="range" id="c1-rate" min="1" max="12" step="1" value="6"></div>
       <label class="chk"><input type="checkbox" id="c1-slow"> Slow Motion</label>
-      <button class="btn green" id="c1-start">▶ Start Timer</button>`,
-    wire(){ el('c1-start').onclick=c1_toggleRun; },
+      <button class="btn green" id="c1-start">▶ Start Timer</button>
+      <button class="btn" id="c1-match">🧩 Match concepts</button>`,
+    wire(){ el('c1-start').onclick=c1_toggleRun; el('c1-match').onclick=showMatch; },
     onLeave(){ c1.running=false; },
     chalInit:c1_initChallenge, chalCheck:c1_checkChallenge, chalExit:c1_exitChallenge},
 
@@ -1534,10 +1598,10 @@ const CH1_SCENES=[
 
   {key:'sa1', tab:'13 · Self Assessment', kpi:'Self Assessment', title:'Self Assessment — Chapter 1', isQuiz:true, hideHud:true,
     blurb:`<p><b>Self Assessment</b></p>
-      <p>Check your understanding of current, circuits and components with a ${QUIZ1.length}-question quiz covering KPI 6.1–6.18.</p>
+      <p>Check your understanding of current, circuits and components with a 15-question quiz covering KPI 6.1–6.18: 5 Easy, 5 Medium and 5 Advanced questions, drawn at random each time.</p>
       <p>Answer each question, review the explanation, then move to the next. Your score appears at the end.</p>`,
     build(){}, tick(){}, hud(){ return []; }, controlsHTML:'',
-    wire(){ openQuiz(QUIZ1); }}
+    wire(){ openQuiz(QUIZ1,'ch1'); }}
 ];
 /* ================= SCENE P1 — Energy Transfer in Circuits (KPI 6.19) ================= */
 const p1={x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,resistor:null,lattice:[],heatParticles:[],heatSpawnAcc:0,t:0};
@@ -1873,18 +1937,38 @@ function p4_exitChallenge(){
 }
 
 /* QUIZ DATA — Chapter 2 (KPI 6.19–6.22) */
-const QUIZ2=[
-  {kpi:'6.19', q:'Electric circuits transfer energy from a source of electrical energy to the circuit components and then...', opts:['Into the surroundings','Back to the source, unchanged','Nowhere — it vanishes','Only into the connecting wires'], correct:0, exp:'Energy flows from the source, through the components, and ultimately into the surroundings (as heat, light, sound, etc).'},
-  {kpi:'6.19', q:'A toaster\'s heating element warming up while current flows is an example of...', opts:['Electrical energy transforming into thermal energy','Thermal energy transforming into electrical energy','Energy being created from nothing','No energy transfer occurring'], correct:0, exp:'Resistive heating converts electrical energy delivered by the supply into heat.'},
-  {kpi:'6.20', q:'The equation for electrical power is...', opts:['P = IV','P = I/V','P = V/I','P = I + V'], correct:0, exp:'Electrical power is the product of current and voltage: P = IV.'},
-  {kpi:'6.20', q:'The SI unit of electrical power is the...', opts:['Watt (W)','Joule (J)','Coulomb (C)','Ohm (Ω)'], correct:0, exp:'Power is measured in watts; 1 W = 1 J of energy transferred per second.'},
-  {kpi:'6.20', q:'A component has V = 12 V across it and I = 2 A through it. Its power is...', opts:['24 W','6 W','14 W','2 W'], correct:0, exp:'P = IV = 2 × 12 = 24 W.'},
-  {kpi:'6.21', q:'The equation for electrical energy transferred is...', opts:['E = IVt','E = IV/t','E = I + V + t','E = IVt²'], correct:0, exp:'Electrical energy transformed, E = IVt, combines power (IV) with the time for which it acts.'},
-  {kpi:'6.21', q:'An appliance with I = 3 A and V = 10 V runs for 20 s. The energy transferred is...', opts:['600 J','30 J','13 J','200 J'], correct:0, exp:'E = IVt = 3 × 10 × 20 = 600 J.'},
-  {kpi:'6.22', q:'One kilowatt-hour (kWh) is the energy used by...', opts:['A 1 kW appliance running for 1 hour','A 1 W appliance running for 1 hour','Any appliance running for 1 second','A 1 kW appliance running for 1 minute'], correct:0, exp:'By definition, 1 kWh is the energy transferred by a 1 kW (1000 W) appliance in 1 hour.'},
-  {kpi:'6.22', q:'A 2000 W heater runs for 3 hours. The energy used, in kWh, is...', opts:['6 kWh','2 kWh','2000 kWh','0.6 kWh'], correct:0, exp:'Energy (kWh) = power (kW) × time (h) = 2 kW × 3 h = 6 kWh.'},
-  {kpi:'6.22', q:'If electricity costs $0.25 per kWh, the cost of using a 1.5 kWh of energy is...', opts:['$0.375','$0.25','$1.50','$6.00'], correct:0, exp:'Cost = Energy (kWh) × tariff = 1.5 × $0.25 = $0.375.'}
-];
+const QUIZ2={
+  easy:[
+    {kpi:'6.19', q:'Electric circuits transfer energy from a source of electrical energy to the circuit components and then...', opts:['Into the surroundings','Back to the source, unchanged','Nowhere — it vanishes','Only into the connecting wires'], correct:0, exp:'Energy flows from the source, through the components, and ultimately into the surroundings (as heat, light, sound, etc).'},
+    {kpi:'6.19', q:'A toaster\'s heating element warming up while current flows is an example of...', opts:['Electrical energy transforming into thermal energy','Thermal energy transforming into electrical energy','Energy being created from nothing','No energy transfer occurring'], correct:0, exp:'Resistive heating converts electrical energy delivered by the supply into heat.'},
+    {kpi:'6.20', q:'The equation for electrical power is...', opts:['P = IV','P = I/V','P = V/I','P = I + V'], correct:0, exp:'Electrical power is the product of current and voltage: P = IV.'},
+    {kpi:'6.20', q:'The SI unit of electrical power is the...', opts:['Watt (W)','Joule (J)','Coulomb (C)','Ohm (Ω)'], correct:0, exp:'Power is measured in watts; 1 W = 1 J of energy transferred per second.'},
+    {kpi:'6.21', q:'The equation for electrical energy transferred is...', opts:['E = IVt','E = IV/t','E = I + V + t','E = IVt²'], correct:0, exp:'Electrical energy transformed, E = IVt, combines power (IV) with the time for which it acts.'},
+    {kpi:'6.22', q:'One kilowatt-hour (kWh) is the energy used by...', opts:['A 1 kW appliance running for 1 hour','A 1 W appliance running for 1 hour','Any appliance running for 1 second','A 1 kW appliance running for 1 minute'], correct:0, exp:'By definition, 1 kWh is the energy transferred by a 1 kW (1000 W) appliance in 1 hour.'},
+    {kpi:'6.22', q:'One kilowatt (1 kW) is equal to...', opts:['1000 W','100 W','10 W','1 000 000 W'], correct:0, exp:'The prefix kilo means 1000, so 1 kW = 1000 W.'},
+    {kpi:'6.20', q:'An appliance with a higher power rating transfers energy...', opts:['Faster, because more energy is transferred each second','Slower, because it needs more energy','At the same rate as any other appliance','Only when it is switched off'], correct:0, exp:'Power is the rate of energy transfer: 1 W is 1 J per second. A higher power means more joules every second.'},
+    {kpi:'6.22', q:'Household electricity meters record the energy used in...', opts:['Kilowatt-hours (kWh)','Kilowatts (kW)','Volts (V)','Amperes (A)'], correct:0, exp:'Bills are based on energy, which meters record in kilowatt-hours.'}
+  ],
+  medium:[
+    {kpi:'6.20', q:'A component has V = 12 V across it and I = 2 A through it. Its power is...', opts:['24 W','6 W','14 W','2 W'], correct:0, exp:'P = IV = 2 × 12 = 24 W.'},
+    {kpi:'6.21', q:'An appliance with I = 3 A and V = 10 V runs for 20 s. The energy transferred is...', opts:['600 J','30 J','13 J','200 J'], correct:0, exp:'E = IVt = 3 × 10 × 20 = 600 J.'},
+    {kpi:'6.22', q:'A 2000 W heater runs for 3 hours. The energy used, in kWh, is...', opts:['6 kWh','2 kWh','2000 kWh','0.6 kWh'], correct:0, exp:'Energy (kWh) = power (kW) × time (h) = 2 kW × 3 h = 6 kWh.'},
+    {kpi:'6.22', q:'If electricity costs $0.25 per kWh, the cost of using 1.5 kWh of energy is...', opts:['$0.375','$0.25','$1.50','$6.00'], correct:0, exp:'Cost = Energy (kWh) × tariff = 1.5 × $0.25 = $0.375.'},
+    {kpi:'6.20', q:'A lamp is rated 60 W and is connected to a 230 V supply. The current it draws is about...', opts:['0.26 A','3.8 A','13 800 A','170 A'], correct:0, exp:'P = IV, so I = P/V = 60 ÷ 230 ≈ 0.26 A.'},
+    {kpi:'6.21', q:'A 100 W bulb is switched on for 1 minute. The energy it transfers is...', opts:['6000 J','100 J','1.7 J','600 J'], correct:0, exp:'E = Pt = 100 × 60 = 6000 J (the time must be in seconds).'},
+    {kpi:'6.22', q:'Electricity costs $0.30 per kWh. Running a 3 kW heater for 1 hour costs...', opts:['$0.90','$0.10','$3.00','$9.00'], correct:0, exp:'Energy = 3 kW × 1 h = 3 kWh. Cost = 3 × $0.30 = $0.90.'},
+    {kpi:'6.22', q:'How many joules are in 1 kWh?', opts:['3.6 × 10⁶ J','3.6 × 10³ J','1.0 × 10⁶ J','6.0 × 10⁴ J'], correct:0, exp:'1 kWh = 1000 W × 3600 s = 3 600 000 J = 3.6 × 10⁶ J.'}
+  ],
+  advanced:[
+    {kpi:'6.22', q:'A 3.0 kW heater is on for 20 minutes. Electricity costs $0.20 per kWh. The cost is...', opts:['$0.20','$0.60','$12','$0.067'], correct:0, exp:'20 min = 1/3 h, so energy = 3.0 × 1/3 = 1.0 kWh. Cost = 1.0 × $0.20 = $0.20.'},
+    {kpi:'6.20/6.22', q:'An appliance on a 230 V supply draws 5.0 A for 2.0 hours. The energy transferred, in kWh, is...', opts:['2.3 kWh','1.15 kWh','2300 kWh','0.23 kWh'], correct:0, exp:'P = IV = 5.0 × 230 = 1150 W = 1.15 kW. Energy = 1.15 kW × 2.0 h = 2.3 kWh.'},
+    {kpi:'6.21', q:'A 12 V supply drives a current of 4.0 A through a component for 5.0 minutes. The energy transferred is...', opts:['14 400 J','240 J','80 J','14.4 J'], correct:0, exp:'E = IVt = 4.0 × 12 × (5.0 × 60) = 14 400 J.'},
+    {kpi:'6.22', q:'Appliance A is rated 500 W and runs for 4 hours. Appliance B is rated 2000 W and runs for 1 hour. Which statement is correct?', opts:['They transfer the same amount of energy, 2 kWh','A transfers more energy','B transfers more energy','B transfers more energy because its power is higher'], correct:0, exp:'A: 0.5 kW × 4 h = 2 kWh. B: 2 kW × 1 h = 2 kWh. Energy depends on power and time together.'},
+    {kpi:'6.21', q:'A 40 W lamp is on for 1 hour. The energy transferred, in joules, is...', opts:['144 000 J','40 J','2400 J','1440 J'], correct:0, exp:'E = Pt = 40 × 3600 s = 144 000 J.'},
+    {kpi:'6.14/6.20', q:'A 10 Ω resistor carries a current of 3.0 A. The power transferred in it is...', opts:['90 W','30 W','3.3 W','13 W'], correct:0, exp:'First find the p.d.: V = IR = 3.0 × 10 = 30 V. Then P = IV = 3.0 × 30 = 90 W.'},
+    {kpi:'6.20/6.21', q:'A 12 V device transfers 7200 J of energy in 2.0 minutes. The current through it is...', opts:['5.0 A','50 A','10 A','0.60 A'], correct:0, exp:'Time = 120 s, so P = E/t = 7200 ÷ 120 = 60 W. Then I = P/V = 60 ÷ 12 = 5.0 A.'}
+  ]
+};
 
 /* ===== SCENES CONFIG — CHAPTER 2 ===== */
 const CH2_SCENES=[
@@ -1936,10 +2020,10 @@ const CH2_SCENES=[
 
   {key:'sa2', tab:'5 · Self Assessment', kpi:'Self Assessment', title:'Self Assessment — Chapter 2', isQuiz:true, hideHud:true,
     blurb:`<p><b>Self Assessment</b></p>
-      <p>Check your understanding of energy transfer, electrical power and the cost of electricity with a ${QUIZ2.length}-question quiz covering KPI 6.19–6.22.</p>
+      <p>Check your understanding of energy transfer, electrical power and the cost of electricity with a 15-question quiz covering KPI 6.19–6.22: 5 Easy, 5 Medium and 5 Advanced questions, drawn at random each time.</p>
       <p>Answer each question, review the explanation, then move to the next. Your score appears at the end.</p>`,
     build(){}, tick(){}, hud(){ return []; }, controlsHTML:'',
-    wire(){ openQuiz(QUIZ2); }}
+    wire(){ openQuiz(QUIZ2,'ch2'); }}
 ];
 /* ===== UI WIRING ===== */
 let scenes=CH1_SCENES;
@@ -1955,6 +2039,7 @@ function enterChapter(which){
     el('lab-ui').classList.add('show');
     currentIdx=0;
     loadScene(0);
+    if(which===1) showMatch();   // matching activity before the first section
   },320);
 }
 function backToChapters(){
@@ -2097,21 +2182,46 @@ function animate(ts){
 }
 animate();
 
-/* QUIZ ENGINE (data lives in QUIZ1 / QUIZ2, defined above with the scenes config) */
-let quizData=[], quizSource=[], quizIdx=0, quizScore=0, quizAnswered=false;
+/* QUIZ ENGINE — 3 levels (Easy / Medium / Advanced), 5 random questions per level each visit */
+const QUIZ_LEVELS=[
+  {key:'easy',label:'Easy',n:5,color:'#4dffa0'},
+  {key:'medium',label:'Medium',n:5,color:'#ffc857'},
+  {key:'advanced',label:'Advanced',n:5,color:'#ff5e72'}
+];
+let quizData=[], quizSource=null, quizName='', quizIdx=0, quizScore=0, quizAnswered=false, quizLevelScore={};
 function shuffleArr(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function openQuiz(data){
-  quizSource=data;
-  quizData=shuffleArr(data).map(item=>{
-    const order=shuffleArr(item.opts.map((_,i)=>i));
-    return {kpi:item.kpi, q:item.q, exp:item.exp, opts:order.map(i=>item.opts[i]), correct:order.indexOf(item.correct)};
+/* Prefer questions the student did not see on the previous visit, so each visit feels fresh */
+function quizPick(pool,n,storeKey){
+  let seen=[];
+  try{ seen=JSON.parse(localStorage.getItem(storeKey)||'[]'); }catch(e){}
+  const idx=pool.map((_,i)=>i);
+  const fresh=shuffleArr(idx.filter(i=>seen.indexOf(i)<0));
+  const old=shuffleArr(idx.filter(i=>seen.indexOf(i)>=0));
+  const chosen=fresh.concat(old).slice(0,n);
+  try{ localStorage.setItem(storeKey,JSON.stringify(chosen)); }catch(e){}
+  return shuffleArr(chosen).map(i=>pool[i]);
+}
+function openQuiz(bank,name){
+  quizSource=bank; quizName=name||quizName;
+  quizData=[]; quizLevelScore={};
+  QUIZ_LEVELS.forEach(lv=>{
+    quizLevelScore[lv.key]=0;
+    quizPick(bank[lv.key],lv.n,'phy51_quiz_seen_'+quizName+'_'+lv.key).forEach((item,k)=>{
+      const order=shuffleArr(item.opts.map((_,i)=>i));
+      quizData.push({level:lv, pos:k+1, of:lv.n, kpi:item.kpi, q:item.q, exp:item.exp, opts:order.map(i=>item.opts[i]), correct:order.indexOf(item.correct)});
+    });
   });
-  quizIdx=0; quizScore=0; el('quiz-section').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none'; showQuizQuestion();
+  quizIdx=0; quizScore=0;
+  el('quiz-section').classList.add('show'); el('quiz-live').style.display=''; el('quiz-final').style.display='none';
+  showQuizQuestion();
 }
 function showQuizQuestion(){
   quizAnswered=false;
   const item=quizData[quizIdx];
   el('quiz-progress').textContent='Question '+(quizIdx+1)+'/'+quizData.length;
+  const lv=el('quiz-level');
+  lv.textContent=item.level.label+' · '+item.pos+'/'+item.of;
+  lv.style.color=item.level.color; lv.style.borderColor=item.level.color;
   el('quiz-kpi').textContent='KPI '+item.kpi;
   el('quiz-question').textContent=item.q;
   el('quiz-explain').style.display='none';
@@ -2121,7 +2231,7 @@ function showQuizQuestion(){
     btn.onclick=()=>{
       if(quizAnswered) return; quizAnswered=true;
       const idx=parseInt(btn.dataset.idx);
-      if(idx===item.correct) quizScore++;
+      if(idx===item.correct){ quizScore++; quizLevelScore[item.level.key]++; }
       Array.from(el('quiz-options').children).forEach((b,i)=>{
         if(i===item.correct) b.classList.add('correct');
         else if(i===idx) b.classList.add('wrong');
@@ -2139,8 +2249,9 @@ function showQuizFinal(){
   el('quiz-final-score').textContent=quizScore+'/'+quizData.length;
   const pct=quizScore/quizData.length;
   el('quiz-final-msg').textContent=pct>=0.8?'Outstanding grasp! 🎉':(pct>=0.5?'Good job! Review the modules and try again.':'Keep practicing these concepts!');
+  el('quiz-breakdown').innerHTML=QUIZ_LEVELS.map(lv=>'<div class="qb-row"><span class="qb-name" style="color:'+lv.color+'">'+lv.label+'</span><span class="qb-bar"><i style="width:'+(quizLevelScore[lv.key]/lv.n*100)+'%;background:'+lv.color+'"></i></span><span class="qb-val">'+quizLevelScore[lv.key]+'/'+lv.n+'</span></div>').join('');
 }
-el('quiz-restart').onclick=()=>openQuiz(quizSource);
+el('quiz-restart').onclick=()=>openQuiz(quizSource,quizName);
 </script>
 
 <button id="qr-btn" title="Scan QR to open on another device" aria-label="Show QR code">
@@ -2169,6 +2280,127 @@ el('quiz-restart').onclick=()=>openQuiz(quizSource);
 document.getElementById('qr-btn').addEventListener('click',()=>document.getElementById('qr-modal').classList.add('show'));
 document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
 document.getElementById('qr-modal-close').addEventListener('click',()=>document.getElementById('qr-modal').classList.remove('show'));
+/* ===== MATCHING ACTIVITY — Chapter 1, first section (KPI 6.1/6.2) ===== */
+const MATCH_ITEMS=[
+  {id:'current', term:'ELECTRIC CURRENT', color:'#5bc8ff', def:'The rate of flow of electric charge past a point: the charge passing per unit time, I = Q/t.'},
+  {id:'charge', term:'ELECTRIC CHARGE (Q)', color:'#ffc857', def:'The quantity carried by the moving charge carriers; it is measured in coulombs (C).'},
+  {id:'e', term:'CHARGE OF ONE ELECTRON (e)', color:'#4dffa0', def:'About 1.6 × 10⁻¹⁹ C, so a current made of n electrons can be written I = ne/t.'},
+  {id:'ampere', term:'AMPERE (A)', color:'#b57aff', def:'The SI unit of current: 1 A means 1 coulomb of charge passes a point every second.'}
+];
+const matchOv=document.createElement('div');
+matchOv.id='match-overlay';
+matchOv.innerHTML=`<div class="mo-inner">
+  <div class="mo-k">BEFORE YOU START · KPI 6.1 / 6.2</div>
+  <h1>Match the concepts</h1>
+  <p class="mo-lead">The definitions are mixed up. Read each one and decide which concept it describes, then drag it onto that concept (or tap a definition, then tap the concept).</p>
+  <div id="mo-concepts"></div>
+  <div class="mo-label">DEFINITIONS · DRAG EACH ONE TO THE RIGHT CONCEPT</div>
+  <div id="mo-defs"></div>
+  <div class="mo-row"><button class="btn green" id="mo-check">✓ Check answers</button><button class="btn" id="mo-reset">🔄 Shuffle</button><span id="mo-sum"></span></div>
+  <div class="mo-row"><button class="btn green" id="mo-go">Start Module 1 →</button><button class="btn" id="mo-close">✕ Close</button></div>
+</div>`;
+document.body.appendChild(matchOv);
+const moConcepts=matchOv.querySelector('#mo-concepts'), moPool=matchOv.querySelector('#mo-defs'), moSum=matchOv.querySelector('#mo-sum');
+let moSelected=null;
+function moClearSel(){ if(moSelected){ moSelected.classList.remove('sel'); } moSelected=null; }
+function moToPool(d){ moPool.appendChild(d); d.classList.remove('placed','ok','bad'); }
+function moPlace(c,d){
+  const old=c.querySelector('.mo-def');
+  if(old && old!==d) moToPool(old);
+  c.appendChild(d); d.classList.add('placed'); d.classList.remove('ok','bad','sel');
+  c.classList.remove('ok','bad'); moSum.textContent=''; moClearSel();
+}
+function moFind(id){ return Array.from(matchOv.querySelectorAll('.mo-def')).find(x=>x.dataset.a===id); }
+function moBuild(){
+  /* random order for concepts AND definitions, and no definition lands in the same position as its concept */
+  const concepts=shuffleArr(MATCH_ITEMS);
+  let defs, tries=0;
+  do{ defs=shuffleArr(MATCH_ITEMS); }while(defs.some((d,i)=>d.id===concepts[i].id) && ++tries<50);
+  moConcepts.innerHTML='';
+  moPool.innerHTML='';
+  concepts.forEach(it=>{
+    const c=document.createElement('div');
+    c.className='mo-concept'; c.dataset.c=it.id;
+    c.style.setProperty('--mc',it.color);
+    c.innerHTML='<div class="mo-term">'+it.term+'</div>';
+    c.addEventListener('dragover',e=>{e.preventDefault();c.classList.add('over');});
+    c.addEventListener('dragleave',()=>c.classList.remove('over'));
+    c.addEventListener('drop',e=>{ e.preventDefault(); c.classList.remove('over'); const d=moFind(e.dataTransfer.getData('text/plain')); if(d) moPlace(c,d); });
+    c.addEventListener('click',()=>{ if(moSelected) moPlace(c,moSelected); });
+    moConcepts.appendChild(c);
+  });
+  defs.forEach(it=>{
+    const d=document.createElement('div');
+    d.className='mo-def'; d.draggable=true; d.dataset.a=it.id; d.textContent=it.def;
+    d.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain',d.dataset.a); });
+    d.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(moSelected===d){ moClearSel(); return; }
+      moClearSel(); moSelected=d; d.classList.add('sel');
+    });
+    moPool.appendChild(d);
+  });
+  moSum.textContent=''; moSum.style.color=''; moSelected=null;
+}
+moPool.addEventListener('dragover',e=>e.preventDefault());
+moPool.addEventListener('drop',e=>{ e.preventDefault(); const d=moFind(e.dataTransfer.getData('text/plain')); if(d) moToPool(d); });
+matchOv.querySelector('#mo-reset').onclick=moBuild;
+matchOv.querySelector('#mo-check').onclick=()=>{
+  if(moPool.querySelector('.mo-def')){ moSum.textContent='Place all '+MATCH_ITEMS.length+' definitions first.'; moSum.style.color='#ffc857'; return; }
+  let correct=0;
+  moConcepts.querySelectorAll('.mo-concept').forEach(c=>{
+    const d=c.querySelector('.mo-def'), ok=d && d.dataset.a===c.dataset.c;
+    if(ok) correct++;
+    c.classList.toggle('ok',!!ok); c.classList.toggle('bad',!ok);
+  });
+  moSum.textContent=correct===MATCH_ITEMS.length?'✅ '+correct+' / '+MATCH_ITEMS.length+' — perfect!':correct+' / '+MATCH_ITEMS.length+' correct — move the red ones and try again.';
+  moSum.style.color=correct===MATCH_ITEMS.length?'#4dffa0':'#ff5e72';
+};
+function showMatch(){ moBuild(); matchOv.scrollTop=0; matchOv.classList.add('show'); }
+function closeMatch(){ matchOv.classList.remove('show'); }
+matchOv.querySelector('#mo-close').onclick=closeMatch;
+matchOv.querySelector('#mo-go').onclick=closeMatch;
+matchOv.addEventListener('click',e=>{ if(e.target===matchOv) closeMatch(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape' && matchOv.classList.contains('show')) closeMatch(); });
+</script>
+<button id="calc-btn" title="Calculator" aria-label="Open calculator" aria-expanded="false">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/>
+    <path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>
+  </svg>
+</button>
+<div id="calc-panel" role="dialog" aria-label="Calculator">
+  <div id="calc-head"><h2>🧮 CALCULATOR</h2><button id="calc-close" aria-label="Close calculator">✕</button></div>
+  <iframe id="calc-frame" title="Calculator" data-src="https://darawa-io.github.io/ARLABS/calculator.html" allow="clipboard-write"></iframe>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('calc-btn'),panel=document.getElementById('calc-panel'),
+      frame=document.getElementById('calc-frame'),head=document.getElementById('calc-head');
+  function setOpen(o){
+    panel.classList.toggle('show',o);btn.classList.toggle('on',o);btn.setAttribute('aria-expanded',o);
+    if(o&&!frame.src)frame.src=frame.dataset.src; /* load once, keeps state when closed */
+  }
+  btn.addEventListener('click',function(){setOpen(!panel.classList.contains('show'));});
+  document.getElementById('calc-close').addEventListener('click',function(){setOpen(false);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&panel.classList.contains('show'))setOpen(false);});
+  /* drag by header */
+  var sx,sy,ox,oy,dragging=false;
+  head.addEventListener('pointerdown',function(e){
+    if(e.target.id==='calc-close')return;
+    var r=panel.getBoundingClientRect();
+    panel.style.left=r.left+'px';panel.style.top=r.top+'px';panel.style.right='auto';panel.style.bottom='auto';
+    sx=e.clientX;sy=e.clientY;ox=r.left;oy=r.top;dragging=true;panel.classList.add('drag');head.setPointerCapture(e.pointerId);
+  });
+  head.addEventListener('pointermove',function(e){
+    if(!dragging)return;
+    var x=ox+e.clientX-sx,y=oy+e.clientY-sy;
+    x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));y=Math.max(0,Math.min(innerHeight-60,y));
+    panel.style.left=x+'px';panel.style.top=y+'px';
+  });
+  function end(){dragging=false;panel.classList.remove('drag');}
+  head.addEventListener('pointerup',end);head.addEventListener('pointercancel',end);
+})();
 </script>
 </body>
 </html>
