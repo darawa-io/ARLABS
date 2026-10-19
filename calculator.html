@@ -1599,7 +1599,58 @@ function toast(msg){
 const ptFrom=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top,t:e.timeStamp};};
 const PALM_MS=1200;                      // fingers are ignored only while a Pencil is actually in use
 let lastPenT=-1e9,lastPtrTouchDown=-1e9;
+/* ---- scribble to erase: rubbing back and forth over ink removes it ----
+   A stroke counts as a scribble when it zigzags (several sharp reversals, a long path for its size) and lies over
+   existing ink. The strokes it covers are removed and the scribble itself is not kept. */
+function isScribble(pts){
+  if(pts.length<8)return false;
+  const rs=[pts[0]];                                     // resample every ~5px so jitter does not count as a turn
+  for(const q of pts){const l=rs[rs.length-1];if(Math.hypot(q.x-l.x,q.y-l.y)>=5)rs.push(q);}
+  if(rs.length<8)return false;
+  let turns=0,len=0,prev=null;
+  for(let i=1;i<rs.length;i++){
+    const dx=rs[i].x-rs[i-1].x,dy=rs[i].y-rs[i-1].y;len+=Math.hypot(dx,dy);
+    const a=Math.atan2(dy,dx);
+    if(prev!==null){let d=Math.abs(a-prev);if(d>Math.PI)d=2*Math.PI-d;if(d>2.0)turns++;}   // > ~115 degrees
+    prev=a;
+  }
+  const b=bboxOf(pts),diag=Math.hypot(b.w,b.h)||1;
+  return turns>=3&&len>=2.6*diag;
+}
+function scribbleVictims(sc,strokes,H){
+  const tol=Math.max(10,0.3*H),P=sc.pts;
+  const dSeg=(q,a,b)=>{
+    const vx=b.x-a.x,vy=b.y-a.y,l2=vx*vx+vy*vy;
+    let t=l2?((q.x-a.x)*vx+(q.y-a.y)*vy)/l2:0;t=Math.max(0,Math.min(1,t));
+    return Math.hypot(q.x-(a.x+t*vx),q.y-(a.y+t*vy));
+  };
+  const out=[];
+  for(const st of strokes){
+    const q=st.pts;let hit=0,n=0;
+    const step=Math.max(1,Math.floor(q.length/20));
+    for(let i=0;i<q.length;i+=step){
+      n++;let m=Infinity;
+      for(let j=1;j<P.length&&m>tol;j++)m=Math.min(m,dSeg(q[i],P[j-1],P[j]));
+      if(m<=tol)hit++;
+    }
+    if(n&&hit/n>=0.6)out.push(st);
+  }
+  return out;
+}
 function commitStroke(s){
+  if(state.strokes.length&&!state.teach&&isScribble(s.pts)){
+    const H=(state.last&&state.last.H)||60;
+    const victims=scribbleVictims(s,state.strokes,H);
+    if(victims.length){
+      const ids=new Set(victims.map(v=>v.id));
+      const removed=victims.map(v=>({s:v,i:state.strokes.indexOf(v)}));
+      state.strokes=state.strokes.filter(x=>!ids.has(x.id));
+      state.undo.push({t:'erase',removed});state.redo.length=0;
+      stage.classList.remove('typed');redraw();updateButtons();
+      if(state.strokes.length)schedule(true);else afterEdit();
+      return;
+    }
+  }
   const tap=pathLen(s.pts)<3;
   if(tap&&wasTyped){schedule(false);redraw();return;}   // tap only brings the ink back
   if(s.pts.length===1)s.pts.push({x:s.pts[0].x+0.01,y:s.pts[0].y,t:s.pts[0].t});
@@ -1785,12 +1836,15 @@ function afterEdit(){
 $('#bUndo').addEventListener('click',()=>{
   const a=state.undo.pop();if(!a)return;
   if(a.t==='add'){const i=state.strokes.findIndex(x=>x.id===a.s.id);if(i>=0)state.strokes.splice(i,1);}
+  else if(a.t==='erase'){for(const r of a.removed.slice().sort((p,q)=>p.i-q.i))state.strokes.splice(Math.min(r.i,state.strokes.length),0,r.s);}
   else state.strokes=a.strokes.slice();
   state.redo.push(a);afterEdit();
 });
 $('#bRedo').addEventListener('click',()=>{
   const a=state.redo.pop();if(!a)return;
-  if(a.t==='add')state.strokes.push(a.s);else state.strokes=[];
+  if(a.t==='add')state.strokes.push(a.s);
+  else if(a.t==='erase'){const ids=new Set(a.removed.map(r=>r.s.id));state.strokes=state.strokes.filter(x=>!ids.has(x.id));}
+  else state.strokes=[];
   state.undo.push(a);afterEdit();
 });
 $('#bClear').addEventListener('click',()=>{
