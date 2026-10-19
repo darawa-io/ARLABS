@@ -926,18 +926,49 @@ SEC.push({
 });
 
 /* ================= QUIZ ================= */
-const QZ=[
+const QZ={
+easy:[
 ['6.1','Mass is best described as:',['The gravitational force on an object','The quantity of matter in an object','The volume of an object','The weight divided by 10'],1,'Mass measures the quantity of matter; it does not depend on gravity.'],
+['6.1','What is the SI unit of mass?',['Newton (N)','Kilogram (kg)','Metre (m)','Newton per kilogram (N/kg)'],1,'Mass is measured in kilograms (kg).'],
+['6.2','What is the SI unit of weight?',['Kilogram (kg)','Newton (N)','Joule (J)','Metre per second (m/s)'],1,'Weight is a force, so it is measured in newtons (N).'],
 ['6.2','Weight is:',['The same as mass','A measure of volume','The gravitational force acting on a mass','Only present when an object moves'],2,'Weight is the force of gravity on an object that has mass.'],
-['6.3','A 2 kg object weighs 19.6 N on Earth. The gravitational field strength is:',['9.8 N/kg','19.6 N/kg','2 N/kg','0.1 N/kg'],0,'g = W/m = 19.6 ÷ 2 = 9.8 N/kg.'],
-['6.6','Near the Earth\'s surface the acceleration of free fall is about:',['1.6 m/s²','9.8 m/s²','24.8 m/s²','98 m/s²'],1,'g ≈ 9.8 m/s² near the Earth\'s surface.'],
 ['6.4','A beam balance is used to:',['Measure volume','Compare masses (and weights)','Measure time','Measure speed'],1,'A balance compares masses; on one planet it compares weights too.'],
+['6.4','Which instrument is used to measure weight directly?',['A beam balance','A ruler','A spring scale (newtonmeter)','A stopwatch'],2,'A spring scale (newtonmeter) measures the force of gravity in newtons.'],
+['6.3','Near the Earth\'s surface the gravitational field strength g is about:',['1.6 N/kg','3.7 N/kg','9.8 N/kg','24.8 N/kg'],2,'g ≈ 9.8 N/kg on Earth.'],
+['6.5','An astronaut travels from Earth to the Moon. Which quantity stays the same?',['Weight','Mass','Gravitational field strength','The force of gravity on her'],1,'Mass is the amount of matter, so it is the same everywhere.'],
+['6.6','Near the Earth\'s surface the acceleration of free fall is about:',['1.6 m/s²','9.8 m/s²','24.8 m/s²','98 m/s²'],1,'g ≈ 9.8 m/s² near the Earth\'s surface.'],
+['6.8','An object moves through water. The drag force acts:',['In the direction of motion','Opposite to the motion','Upwards only','Only when the object is at rest'],1,'Drag (friction in a fluid) opposes the motion.']
+],
+medium:[
+['6.3','A 2 kg object weighs 19.6 N on Earth. The gravitational field strength is:',['9.8 N/kg','19.6 N/kg','2 N/kg','0.1 N/kg'],0,'g = W/m = 19.6 ÷ 2 = 9.8 N/kg.'],
 ['6.5','On the Moon g = 1.6 N/kg. A 10 kg object has a weight of:',['10 N','16 N','98 N','1.6 N'],1,'W = m g = 10 × 1.6 = 16 N.'],
+['6.2','What is the weight of a 5 kg bag on Earth (g = 9.8 N/kg)?',['0.51 N','5 N','49 N','490 N'],2,'W = m g = 5 × 9.8 = 49 N.'],
+['6.3','An object weighs 98 N on Earth (g = 9.8 N/kg). Its mass is:',['0.1 kg','10 kg','98 kg','960 kg'],1,'m = W ÷ g = 98 ÷ 9.8 = 10 kg.'],
+['6.5','A 60 kg astronaut stands on the Moon (g = 1.6 N/kg). Her mass there is:',['60 kg','96 N','10 kg','588 kg'],0,'Mass does not change with location, so it is still 60 kg (her weight would be 96 N).'],
+['6.5','What is the weight of a 4 kg object on Mars (g = 3.7 N/kg)?',['1.1 N','14.8 N','39.2 N','4 N'],1,'W = m g = 4 × 3.7 = 14.8 N.'],
 ['6.6','A ball is dropped from rest. Its speed after 2 s (ignoring air resistance) is about:',['4.9 m/s','9.8 m/s','19.6 m/s','39.2 m/s'],2,'v = g t = 9.8 × 2 = 19.6 m/s.'],
+['6.6','A ball is dropped from rest. How far has it fallen after 2 s (ignoring air resistance)?',['9.8 m','19.6 m','39.2 m','4.9 m'],1,'h = ½ g t² = ½ × 9.8 × 2² = 19.6 m.'],
 ['6.7','A skydiver falls at terminal velocity. Which statement is correct?',['Air resistance is greater than weight','Weight is greater than air resistance','Air resistance equals weight and the acceleration is zero','There are no forces on the skydiver'],2,'At terminal velocity the resultant force is zero, so the acceleration is zero.'],
 ['6.7','As a skydiver falls before opening the parachute, the acceleration:',['Stays equal to g','Increases steadily','Decreases towards zero','Becomes negative'],2,'Drag increases with speed, so the resultant force and acceleration decrease towards zero.'],
-['6.8','An object moves through water. The drag force acts:',['In the direction of motion','Opposite to the motion','Upwards only','Only when the object is at rest'],1,'Drag (friction in a fluid) opposes the motion.'],
 ['6.9','Compared with air, the drag on the same object moving at the same speed through water is usually:',['Much smaller','Much greater','The same','Zero'],1,'Water is denser and more viscous, so the drag is much greater.']
+],
+advanced:[
+['6.6','A ball is dropped from a height of 20 m. Ignoring air resistance, how long does it take to reach the ground?',['1.0 s','2.0 s','4.1 s','9.8 s'],1,'t = √(2h ÷ g) = √(40 ÷ 9.8) ≈ 2.0 s.'],
+['6.6','In an experiment a ball falls 10 m in 1.43 s. The value of g calculated from g = 2h ÷ t² is about:',['7.0 m/s²','9.8 m/s²','14.0 m/s²','4.9 m/s²'],1,'g = 2 × 10 ÷ 1.43² ≈ 9.8 m/s².'],
+['6.6','Ignoring air resistance, a ball is dropped from rest and falls 20 m. Its speed on impact is about:',['9.9 m/s','14 m/s','19.8 m/s','39.2 m/s'],2,'v² = 2 g h = 2 × 9.8 × 20 = 392, so v ≈ 19.8 m/s.'],
+['6.6','The speed–time graph for a ball in free fall (no air resistance) is a straight line. Its gradient equals:',['The mass of the ball','The weight of the ball','The acceleration of free fall, 9.8 m/s²','The height of the drop'],2,'Gradient = Δv ÷ Δt = acceleration = g.'],
+['6.6','A 1 kg ball and a 5 kg ball are dropped together in a vacuum. Why do they land at the same time?',['Heavier objects fall slower but start higher','The weight and the mass both increase in the same proportion, so a = W/m = g for both','Gravity only acts on the lighter ball','Air resistance pushes the heavy ball down'],1,'Weight is proportional to mass, so a = W ÷ m = g for every object.'],
+['6.5','An object weighs 40 N on the Moon (g = 1.6 N/kg). What does it weigh on Earth (g = 9.8 N/kg)?',['6.5 N','25 N','40 N','245 N'],3,'m = 40 ÷ 1.6 = 25 kg, so W on Earth = 25 × 9.8 = 245 N.'],
+['6.5','An object weighs 98 N on Earth. On Jupiter (g = 24.8 N/kg) it would weigh:',['98 N','248 N','24.8 N','9.8 N'],1,'m = 98 ÷ 9.8 = 10 kg, so W on Jupiter = 10 × 24.8 = 248 N.'],
+['6.7','An 80 kg skydiver (weight ≈ 784 N) opens the parachute and the drag suddenly becomes 2000 N. The resultant force is:',['784 N downwards','1216 N upwards','2784 N upwards','Zero'],1,'Resultant = drag − weight = 2000 − 784 = 1216 N, upwards, so the skydiver slows down.'],
+['6.7','After a parachute opens, the skydiver slows down and eventually reaches a new, smaller terminal velocity. Why does this happen?',['Gravity gets weaker','The weight decreases','The drag falls as the speed falls, until it equals the weight again','The parachute removes all forces'],2,'Drag decreases as speed decreases, until drag = weight again and the resultant force is zero.'],
+['6.7','Two skydivers use identical parachutes. Skydiver A is heavier than skydiver B. At terminal velocity:',['A falls faster, because more drag is needed to balance the larger weight','B falls faster, because lighter objects always fall faster','Both fall at the same speed','A has no air resistance'],0,'Drag must equal weight, and drag grows with speed, so the heavier skydiver needs a higher speed to balance a larger weight.']
+]
+};
+const QCATS=[
+  {id:'easy',     n:'Easy',     c:'#4dffa0', d:'Recall: definitions, units and instruments'},
+  {id:'medium',   n:'Medium',   c:'#ffc857', d:'Apply: W = m g, g = W/m, v = g t, drag and speed'},
+  {id:'advanced', n:'Advanced', c:'#ff5e72', d:'Multi-step: h = ½ g t², resultant force, reasoning'}
 ];
 
 /* ================= UI ================= */
@@ -1067,17 +1098,18 @@ As a falling object speeds up, <b>air resistance (drag)</b> increases. When drag
 
 <div style="margin-top:20px;border:1px solid var(--bd);border-radius:14px;padding:16px 18px;background:rgba(180,200,255,.04)">
 <div class="k" style="color:#ffc857">SELF-ASSESSMENT · MATCH THE CONCEPTS</div>
-<p style="color:#c9dcf5;line-height:1.5;margin:6px 0 12px">Drag each definition to the correct concept.</p>
-<div id="match-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;align-items:start">
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <div class="mconcept" data-c="mass" style="border:1px solid rgba(91,200,255,.5);border-radius:10px;padding:10px 14px;background:rgba(91,200,255,.08);font:700 14px Syne;color:#5bc8ff;text-align:center">MASS</div>
-    <div class="mconcept" data-c="weight" style="border:1px solid rgba(255,200,87,.5);border-radius:10px;padding:10px 14px;background:rgba(255,200,87,.08);font:700 14px Syne;color:#ffc857;text-align:center">WEIGHT</div>
-    <div class="mconcept" data-c="g" style="border:1px solid rgba(77,255,160,.5);border-radius:10px;padding:10px 14px;background:rgba(77,255,160,.08);font:700 14px Syne;color:#4dffa0;text-align:center">GRAVITATIONAL FIELD STRENGTH g</div>
+<p style="color:#c9dcf5;line-height:1.5;margin:6px 0 12px">The definitions are mixed up. Read each one and decide which concept it describes, then drag it onto that concept (or tap a definition, then tap the concept).</p>
+<div id="match-wrap">
+  <div id="mconcepts" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px">
+    <div class="mconcept" data-c="mass" style="border:1px solid rgba(91,200,255,.5);border-radius:10px;padding:10px 14px;background:rgba(91,200,255,.08);font:700 14px Syne;color:#5bc8ff;text-align:center;min-height:62px">MASS</div>
+    <div class="mconcept" data-c="weight" style="border:1px solid rgba(255,200,87,.5);border-radius:10px;padding:10px 14px;background:rgba(255,200,87,.08);font:700 14px Syne;color:#ffc857;text-align:center;min-height:62px">WEIGHT</div>
+    <div class="mconcept" data-c="g" style="border:1px solid rgba(77,255,160,.5);border-radius:10px;padding:10px 14px;background:rgba(77,255,160,.08);font:700 14px Syne;color:#4dffa0;text-align:center;min-height:62px">GRAVITATIONAL FIELD STRENGTH g</div>
   </div>
-  <div id="mdefs" style="display:flex;flex-direction:column;gap:8px">
-    <div class="mdef" draggable="true" data-a="mass" style="cursor:grab;border:1px solid var(--bd);border-radius:9px;padding:9px 12px;background:rgba(180,200,255,.05);font-size:13px;color:#ddeeff">The quantity of matter in an object; it stays the same on any planet.</div>
-    <div class="mdef" draggable="true" data-a="weight" style="cursor:grab;border:1px solid var(--bd);border-radius:9px;padding:9px 12px;background:rgba(180,200,255,.05);font-size:13px;color:#ddeeff">The gravitational force on an object, measured in newtons; it changes with g.</div>
-    <div class="mdef" draggable="true" data-a="g" style="cursor:grab;border:1px solid var(--bd);border-radius:9px;padding:9px 12px;background:rgba(180,200,255,.05);font-size:13px;color:#ddeeff">The force per unit mass, equal to the acceleration of free fall; about 9.8 N/kg on Earth.</div>
+  <div style="margin:16px 0 6px;font:400 11px 'Space Mono';letter-spacing:.08em;color:#9fb4d4">DEFINITIONS — DRAG EACH ONE UP TO THE RIGHT CONCEPT</div>
+  <div id="mdefs" style="display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--bd);border-radius:12px;min-height:60px">
+    <div class="mdef" draggable="true" data-a="mass" style="cursor:grab;border:1px solid var(--bd);border-radius:9px;padding:9px 12px;background:rgba(180,200,255,.05);font-size:13px;color:#ddeeff;text-align:left;font-weight:400;font-family:inherit">The quantity of matter in an object; it stays the same on any planet.</div>
+    <div class="mdef" draggable="true" data-a="weight" style="cursor:grab;border:1px solid var(--bd);border-radius:9px;padding:9px 12px;background:rgba(180,200,255,.05);font-size:13px;color:#ddeeff;text-align:left;font-weight:400;font-family:inherit">The gravitational force on an object, measured in newtons; it changes with g.</div>
+    <div class="mdef" draggable="true" data-a="g" style="cursor:grab;border:1px solid var(--bd);border-radius:9px;padding:9px 12px;background:rgba(180,200,255,.05);font-size:13px;color:#ddeeff;text-align:left;font-weight:400;font-family:inherit">The force per unit mass, equal to the acceleration of free fall; about 9.8 N/kg on Earth.</div>
   </div>
 </div>
 <div style="margin-top:10px;display:flex;gap:10px;align-items:center">
@@ -1093,64 +1125,72 @@ As a falling object speeds up, <b>air resistance (drag)</b> increases. When drag
 </div>`;
 document.body.appendChild(notes);
 
-(function(){
-  const wrap=notes.querySelector('#mdefs');
-  if(!wrap) return;
-  const items=Array.from(wrap.children);
-  for(let i=items.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [items[i],items[j]]=[items[j],items[i]];
-  }
-  wrap.innerHTML='';
-  items.forEach(el=>wrap.appendChild(el));
-})();
+const MATCH_ORDER=['mass','weight','g'];
+function shuffleDefs(){
+  const pool=notes.querySelector('#mdefs'); if(!pool) return;
+  const items=Array.from(notes.querySelectorAll('.mdef'));
+  let tries=0, same;
+  do{
+    for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [items[i],items[j]]=[items[j],items[i]];}
+    same=items.every((el,i)=>el.dataset.a===MATCH_ORDER[i]);   // never the same order as the concepts
+  }while(same && ++tries<20);
+  items.forEach(el=>pool.appendChild(el));
+}
 
 (function(){
+  const pool=notes.querySelector('#mdefs');
   const defs=[...notes.querySelectorAll('.mdef')];
   const concepts=[...notes.querySelectorAll('.mconcept')];
   let selected=null;
-  function clearSel(){concepts.forEach(c=>c.style.outline='');}
+  const styleIdle=d=>{d.style.borderColor='var(--bd)';d.style.background='rgba(180,200,255,.05)';d.style.outline='';};
+  const stylePlaced=d=>{d.style.borderColor='rgba(91,200,255,.6)';d.style.background='rgba(91,200,255,.1)';d.style.outline='';};
+  function clearSel(){ if(selected){selected.style.outline='';} selected=null; }
+  function sendToPool(d){ pool.appendChild(d); styleIdle(d); }
+  function place(c,d){
+    const old=c.querySelector('.mdef');
+    if(old && old!==d) sendToPool(old);          // one definition per concept
+    c.appendChild(d); stylePlaced(d);
+    notes.querySelector('#msum').textContent='';
+    clearSel();
+  }
   concepts.forEach(c=>{
     c.addEventListener('dragover',e=>e.preventDefault());
     c.addEventListener('drop',e=>{
       e.preventDefault();
-      const id=e.dataTransfer.getData('text/plain');
-      const el=defs.find(d=>d.dataset.a===id);
-      if(el){
-        c.appendChild(el);
-        el.style.borderColor='rgba(77,255,160,.6)';
-        el.style.background='rgba(77,255,160,.1)';
-        el.draggable=false;
-        el.style.cursor='default';
-      }
+      const d=defs.find(x=>x.dataset.a===e.dataTransfer.getData('text/plain'));
+      if(d) place(c,d);
     });
-    c.addEventListener('click',()=>{
-      if(selected){ c.appendChild(selected); selected.style.borderColor='rgba(77,255,160,.6)'; selected.style.background='rgba(77,255,160,.1)'; selected.draggable=false; selected.style.cursor='default'; selected=null; clearSel(); }
-    });
+    c.addEventListener('click',()=>{ if(selected) place(c,selected); });
+  });
+  pool.addEventListener('dragover',e=>e.preventDefault());
+  pool.addEventListener('drop',e=>{
+    e.preventDefault();
+    const d=defs.find(x=>x.dataset.a===e.dataTransfer.getData('text/plain'));
+    if(d) sendToPool(d);
   });
   defs.forEach(d=>{
     d.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',d.dataset.a);});
-    d.addEventListener('click',()=>{
-      if(d.draggable===false)return;
+    d.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(selected===d){clearSel();return;}
       clearSel(); selected=d; d.style.outline='2px solid #5bc8ff';
     });
   });
   notes.querySelector('#mreset').onclick=()=>{
-    const wrap=notes.querySelector('#mdefs');
-    defs.forEach(d=>{wrap.appendChild(d);d.draggable=true;d.style.borderColor='var(--bd)';d.style.background='rgba(180,200,255,.05)';d.style.cursor='grab';d.style.outline='';});
+    defs.forEach(sendToPool);
+    shuffleDefs();
     notes.querySelector('#msum').textContent='';
-    selected=null; clearSel();
+    clearSel();
   };
   notes.querySelector('#mcheck').onclick=()=>{
-    let correct=0;
-    concepts.forEach(c=>{
-      const child=c.querySelector('.mdef');
-      if(child&&child.dataset.a===c.dataset.c)correct++;
-    });
     const sum=notes.querySelector('#msum');
+    if(pool.querySelector('.mdef')){ sum.textContent='Place all three definitions first.'; sum.style.color='#ffc857'; return; }
+    let correct=0;
+    concepts.forEach(c=>{ const d=c.querySelector('.mdef'); if(d&&d.dataset.a===c.dataset.c)correct++; });
     sum.textContent=correct===3?'✅ 3 / 3 — perfect!':`${correct} / 3 correct — try again.`;
     sum.style.color=correct===3?'#4dffa0':'#ff5e72';
   };
+  shuffleDefs();
 })();
 
 function showNotes(){
@@ -1159,6 +1199,7 @@ function showNotes(){
   $('quiz').classList.remove('show'); $('chal').classList.remove('show');
   notes.style.display='block';
   notes.scrollTop=0;
+  notes.querySelector('#mreset').click();   // fresh random order each visit
 }
 function closeNotes(){
   notes.style.display='none';
@@ -1411,32 +1452,55 @@ $('chk').onclick=()=>{
 };
 
 /* ================= QUIZ ================= */
-let qn=0,qs=0,qo=[];
-function startQuiz(){
+let qn=0,qs=0,qo=[],qcat=null;
+const QPICK=5, qbest={};
+function qShuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(){            // opens the category menu
+  $('quiz').classList.add('show');
+  const c=$('qi');
+  c.innerHTML=`<div class="k">SELF-ASSESSMENT</div>
+  <div class="q">Choose a difficulty level</div>
+  <div style="color:#c9dcf5;line-height:1.5;margin-bottom:14px">Each level gives you <b>${QPICK} questions</b> picked at random from a larger bank, so you get a different set every time.</div>
+  ${QCATS.map(k=>`<button class="o qcat" data-id="${k.id}" style="border-color:${k.c};padding:14px 16px">
+    <span style="font:700 16px Syne;color:${k.c}">${k.n}</span>
+    <span style="float:right;font:400 12px 'Space Mono';color:#c9dcf5">${qbest[k.id]!==undefined?'best '+qbest[k.id]+'/'+QPICK:QPICK+' questions'}</span><br>
+    <span style="color:#c9dcf5">${k.d}</span></button>`).join('')}`;
+  c.querySelectorAll('.qcat').forEach(b=>b.onclick=()=>startCat(b.dataset.id));
+}
+function startCat(id){
+  qcat=QCATS.find(k=>k.id===id);
   qn=0; qs=0;
-  qo=QZ.slice().sort(()=>Math.random()-.5);
+  qo=qShuffle(QZ[id]).slice(0,QPICK).map(q=>{
+    const idx=qShuffle(q[2].map((_,i)=>i));        // shuffle the answer options too
+    return {kpi:q[0],q:q[1],opts:idx.map(i=>q[2][i]),ans:idx.indexOf(q[3]),ex:q[4]};
+  });
   $('quiz').classList.add('show');
   showQ();
 }
 function showQ(){
   const q=qo[qn], c=$('qi');
   if(!q){
-    c.innerHTML=`<div class="q" style="font-size:34px">${qs}/${qo.length}</div>
-    <div id="ex">${qs>8?'Excellent — you have mastered gravity and free fall.':qs>5?'Good work. Revisit the labs for the ones you missed.':'Keep exploring the labs, then try again.'}</div>
-    <button class="btn green" id="qtry">🔄 Try again</button>`;
-    $('qtry').onclick=startQuiz;
+    if(qbest[qcat.id]===undefined||qs>qbest[qcat.id]) qbest[qcat.id]=qs;
+    const others=QCATS.filter(k=>k.id!==qcat.id);
+    c.innerHTML=`<div class="k" style="color:${qcat.c}">${qcat.n.toUpperCase()} · RESULT</div>
+    <div class="q" style="font-size:34px">${qs}/${qo.length}</div>
+    <div id="ex">${qs===qo.length?'Excellent — full marks at this level.':qs>=3?'Good work. Revisit the labs for the ones you missed.':'Keep exploring the labs, then try again.'}</div>
+    <button class="btn green" id="qtry">🔄 New ${qcat.n} questions</button>
+    <button class="btn" id="qmenu">☰ Choose level</button>`;
+    $('qtry').onclick=()=>startCat(qcat.id);
+    $('qmenu').onclick=startQuiz;
     return;
   }
-  c.innerHTML=`<div class="k">KPI ${q[0]} · Question ${qn+1}/${qo.length}</div>
-  <div class="q">${q[1]}</div>
-  ${q[2].map((o,i)=>`<button class="o" data-i="${i}">${o}</button>`).join('')}
+  c.innerHTML=`<div class="k" style="color:${qcat.c}">${qcat.n.toUpperCase()} · KPI ${q.kpi} · Question ${qn+1}/${qo.length}</div>
+  <div class="q">${q.q}</div>
+  ${q.opts.map((o,i)=>`<button class="o" data-i="${i}">${o}</button>`).join('')}
   <div id="ex"></div>
-  <button class="btn green" id="nx" style="display:none">Next</button>`;
+  <button class="btn green" id="nx" style="display:none">${qn+1===qo.length?'See result':'Next'}</button>`;
   c.querySelectorAll('.o').forEach(b=>b.onclick=()=>{
     const i=+b.dataset.i;
-    c.querySelectorAll('.o').forEach(x=>{x.disabled=true; if(+x.dataset.i==q[3])x.classList.add('ok');});
-    if(i!=q[3])b.classList.add('no'); else qs++;
-    $('ex').textContent=q[4];
+    c.querySelectorAll('.o').forEach(x=>{x.disabled=true; if(+x.dataset.i===q.ans)x.classList.add('ok');});
+    if(i!==q.ans)b.classList.add('no'); else qs++;
+    $('ex').textContent=q.ex;
     $('nx').style.display='';
     $('nx').onclick=()=>{qn++;showQ();};
   });
