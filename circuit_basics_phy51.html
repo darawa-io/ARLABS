@@ -422,21 +422,31 @@ function drawVIGraph(opts){
   const padL=44, padB=26, padT=10, padR=10;
   const plotW=w-padL-padR, plotH=h-padT-padB;
   const xMax=opts.xMax, yMax=opts.yMax;
-  function mapX(v){ return padL+clamp(v/xMax,0,1)*plotW; }
-  function mapY(i){ return padT+plotH-clamp(i/yMax,0,1)*plotH; }
+  const xMin=(opts.xMin!==undefined)?opts.xMin:0, yMin=(opts.yMin!==undefined)?opts.yMin:0;
+  function mapX(v){ return padL+clamp((v-xMin)/(xMax-xMin),0,1)*plotW; }
+  function mapY(i){ return padT+plotH-clamp((i-yMin)/(yMax-yMin),0,1)*plotH; }
   ctx.font="10px 'Space Mono', monospace";
   for(let k=0;k<=4;k++){
-    const gx=xMax*k/4, gy=yMax*k/4;
+    const gx=xMin+(xMax-xMin)*k/4, gy=yMin+(yMax-yMin)*k/4;
     const px=mapX(gx), py=mapY(gy);
     ctx.strokeStyle='rgba(180,200,255,0.08)';
     ctx.beginPath(); ctx.moveTo(px,padT); ctx.lineTo(px,padT+plotH); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(padL,py); ctx.lineTo(padL+plotW,py); ctx.stroke();
     ctx.fillStyle='rgba(180,200,255,0.45)';
-    ctx.fillText(gx.toFixed(gx<10?1:0), px-6, padT+plotH+14);
-    ctx.fillText(gy.toFixed(gy<10?1:0), 6, py+3);
+    ctx.fillText(Math.abs(gx)<10?gx.toFixed(1):gx.toFixed(0), px-(gx<0?10:6), padT+plotH+14);
+    ctx.fillText(Math.abs(gy)<10?gy.toFixed(1):gy.toFixed(0), gy<0?2:6, py+3);
   }
   ctx.strokeStyle='rgba(180,200,255,0.35)'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  if(xMin<0||yMin<0){
+    // axes cross at the origin so negative V and I are visible
+    const ox=mapX(0), oy=mapY(0);
+    ctx.strokeStyle='rgba(180,200,255,0.18)';
+    ctx.strokeRect(padL,padT,plotW,plotH);
+    ctx.strokeStyle='rgba(180,200,255,0.55)';
+    ctx.beginPath(); ctx.moveTo(ox,padT); ctx.lineTo(ox,padT+plotH); ctx.moveTo(padL,oy); ctx.lineTo(padL+plotW,oy); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  }
   ctx.fillStyle='rgba(200,215,255,0.65)';
   ctx.fillText(opts.xLabel||'V (Volts)', padL+plotW/2-22, h-2);
   ctx.save(); ctx.translate(12,padT+plotH/2+16); ctx.rotate(-Math.PI/2); ctx.fillText(opts.yLabel||'I (A)',0,0); ctx.restore();
@@ -1164,7 +1174,7 @@ function c9_exitChallenge(){
 }
 
 /* ================= SCENE C10 — I–V Graphs: Resistor, Lamp & Diode (KPI 6.15) ================= */
-const c10={type:'resistor',polarity:'forward',x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,comp:null};
+const c10={type:'resistor',x0:-2.6,x1:2.6,y0:-1.4,y1:1.4,parts:null,comp:null};
 function c10_build(){
   const {x0,x1,y0,y1}=c10;
   stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
@@ -1176,11 +1186,11 @@ function c10_build(){
   c10.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
 }
 function c10_V(){ return parseFloat(el('c10-V')?.value||6); }
-function c10_current(type,V,polarity){
+function c10_current(type,V){
   if(type==='resistor') return V/4;
-  if(type==='lamp') return V/(2+0.5*V);
-  // diode
-  if(polarity==='reverse') return 0.001;
+  if(type==='lamp') return V/(2+0.5*Math.abs(V));   // odd function: same shape for negative V
+  // diode: V<0 is reverse bias, so it blocks current
+  if(V<0) return -0.001;
   const Vth=0.6;
   if(V<Vth) return 0;
   const k=0.028;
@@ -1188,43 +1198,37 @@ function c10_current(type,V,polarity){
 }
 function c10_curve(){
   const pts=[];
-  for(let v=0;v<=12;v+=0.3) pts.push({v,i:c10_current(c10.type,v,c10.polarity)});
+  for(let v=-10;v<=10.0001;v+=0.2) pts.push({v:Math.round(v*10)/10,i:c10_current(c10.type,v)});
   return pts;
 }
 function c10_tick(dt){
-  const V=c10_V(), I=c10_current(c10.type,V,c10.polarity);
-  updateLoopParticles(c10.parts,dt,clamp(I*0.12,0.001,0.6),1,c10.x0,c10.x1,c10.y0,c10.y1);
+  const V=c10_V(), I=c10_current(c10.type,V);
+  updateLoopParticles(c10.parts,dt,clamp(Math.abs(I)*0.12,0.001,0.6),V<0?-1:1,c10.x0,c10.x1,c10.y0,c10.y1);
   if(c10.type==='lamp' && c10.comp && c10.comp.userData.glass){
-    const glow=clamp(I*0.7,0.05,3);
+    const glow=clamp(Math.abs(I)*0.7,0.05,3);
     c10.comp.userData.glass.material.emissiveIntensity=glow;
     c10.comp.userData.filament.material.emissiveIntensity=1+glow;
     c10.comp.rotation.y+=dt*0.4;
   }
   const col=c10.type==='resistor'?'#5bc8ff':(c10.type==='lamp'?'#ffc857':'#b57aff');
-  drawVIGraph({curves:[{points:c10_curve(),color:col}],liveMarkers:[{v:V,i:clamp(I,0,4),color:'#4dffa0'}],xMax:12,yMax:4,xLabel:'V (Volts)',yLabel:'I (A)'});
-  const labelMap={resistor:'Resistor: straight line through origin (I ∝ V)',lamp:'Filament lamp: curve bends as it heats up',diode:(c10.polarity==='forward'?'Diode (forward): ~0 until threshold, then rises steeply':'Diode (reverse): current ≈ 0 — it blocks current')};
+  drawVIGraph({curves:[{points:c10_curve(),color:col}],liveMarkers:[{v:V,i:clamp(I,-3,3),color:'#4dffa0'}],xMin:-10,xMax:10,yMin:-3,yMax:3,xLabel:'V (Volts)',yLabel:'I (A)'});
+  const labelMap={resistor:'Resistor: straight line through origin (I ∝ V), same for +V and −V',lamp:'Filament lamp: curve flattens as it heats up (symmetric for −V)',diode:'Diode: ~0 until +0.6 V threshold, then rises steeply; I ≈ 0 for negative V (blocks)'};
   setGraphLegend([{color:col,label:labelMap[c10.type]},{color:'#4dffa0',label:'Current operating point'}]);
 }
 function c10_hud(){
-  const V=c10_V(), I=c10_current(c10.type,V,c10.polarity);
-  const R = I>0.0015 ? (V/I) : Infinity;
+  const V=c10_V(), I=c10_current(c10.type,V);
+  const R = Math.abs(I)>0.0015 ? (V/I) : Infinity;
   const name=c10.type==='resistor'?'Fixed Resistor':(c10.type==='lamp'?'Filament Lamp':'Diode');
   const rows=[
     {l:'Component',v:name,c:'#ffc857'}
   ];
-  if(c10.type==='diode') rows.push({l:'Polarity',v:c10.polarity==='forward'?'Forward-biased':'Reverse-biased',c:c10.polarity==='forward'?'#4dffa0':'#ff5e72'});
+  if(c10.type==='diode') rows.push({l:'Bias',v:V<0?'Reverse-biased':'Forward-biased',c:V<0?'#ff5e72':'#4dffa0'});
   rows.push({l:'Voltage V',v:fmt(V,1)+' V',c:'#5bc8ff'});
-  rows.push({l:'Current I',v:(I<0.002?'≈ 0':fmt(I,3))+' A',c:'#4dffa0'});
+  rows.push({l:'Current I',v:(Math.abs(I)<0.002?'≈ 0':fmt(I,3))+' A',c:'#4dffa0'});
   rows.push({l:'Instantaneous R = V/I',v:isFinite(R)?fmt(R,2)+' Ω':'very large (≈ ∞)',c:'#b57aff'});
   return rows;
 }
 function c10_setType(type){ c10.type=type; clearStage(); c10_build(); }
-function c10_togglePolarity(){
-  c10.polarity = c10.polarity==='forward'?'reverse':'forward';
-  const b=el('c10-polarity');
-  b.textContent = c10.polarity==='forward'?'↔ Polarity: Forward':'↔ Polarity: Reverse';
-  b.classList.toggle('on', c10.polarity==='reverse');
-}
 const c10_pool=[
   {q:'Which component gives a straight-line current–voltage graph through the origin?', opts:['A fixed resistor at constant temperature','A filament lamp','A diode in forward bias','A diode in reverse bias'], correct:0},
   {q:'As a filament lamp heats up, its resistance...', opts:['Increases, so the I–V graph curves and flattens','Decreases to zero','Stays exactly constant','Becomes negative'], correct:0},
@@ -1549,23 +1553,21 @@ const CH1_SCENES=[
     blurb:`<p><b>Sketching and Explaining I–V Graphs</b></p>
       <p><b>Resistor</b> (constant resistance): current is directly proportional to voltage — a straight line through the origin.</p>
       <p><b>Filament lamp</b>: as current increases, the filament heats up and its resistance rises, so the graph curves and flattens compared to a resistor.</p>
-      <p><b>Diode</b>: in forward bias, almost no current flows until a small threshold voltage is reached, after which current rises steeply. In reverse bias, a diode blocks current almost completely (I ≈ 0).</p>
-      <p>Select a component below and watch the graph update live as you change the voltage.</p>`,
+      <p><b>Diode</b>: in forward bias, almost no current flows until a small threshold voltage is reached, after which current rises steeply. For negative voltage (reverse bias), a diode blocks current almost completely (I ≈ 0).</p>
+      <p>Select a component below and drag the voltage slider from −10 V to +10 V to watch the graph update live.</p>`,
     build:c10_build, tick:c10_tick, hud:c10_hud, showGraph:true,
     controlsHTML:`<div class="sw">Component=
       <button class="btn" id="c10-resistor">Resistor</button>
       <button class="btn" id="c10-lamp">Lamp</button>
       <button class="btn" id="c10-diode">Diode</button></div>
-      <div class="sw">V=<input type="range" id="c10-V" min="0" max="12" step="0.2" value="6"></div>
-      <button class="btn amber" id="c10-polarity" style="display:none;">↔ Polarity: Forward</button>`,
+      <div class="sw">V=<input type="range" id="c10-V" min="-10" max="10" step="0.2" value="6"></div>`,
     wire(){
       el('graph-title').textContent='I–V Graph';
       const btns={resistor:el('c10-resistor'),lamp:el('c10-lamp'),diode:el('c10-diode')};
-      function refreshBtns(){ Object.keys(btns).forEach(k=>btns[k].classList.toggle('on', c10.type===k)); el('c10-polarity').style.display = c10.type==='diode' ? '' : 'none'; }
+      function refreshBtns(){ Object.keys(btns).forEach(k=>btns[k].classList.toggle('on', c10.type===k)); }
       btns.resistor.onclick=()=>{ c10_setType('resistor'); refreshBtns(); };
       btns.lamp.onclick=()=>{ c10_setType('lamp'); refreshBtns(); };
       btns.diode.onclick=()=>{ c10_setType('diode'); refreshBtns(); };
-      el('c10-polarity').onclick=c10_togglePolarity;
       refreshBtns();
     },
     challenge:c10_challenge},
