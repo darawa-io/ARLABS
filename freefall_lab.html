@@ -395,7 +395,7 @@ SEC.push({
   hideShowStu:true, hideSlowPause:true,
   init(){
     this.grp=new THREE.Group(); sc.add(this.grp);
-    const pad=new THREE.Mesh(bx(4.6,.12,3),mDark); pad.position.y=.06; this.grp.add(pad);
+    const pad=new THREE.Mesh(bx(4.6,.12,3),mDark); pad.position.y=-.105; this.grp.add(pad); // top at -0.045 = sole level
     this.block=new THREE.Mesh(bx(1,1,1),mBlock); this.grp.add(this.block);
     this.stu=makeStudent(); this.grp.add(this.stu.g);
     this.labM=dynLabel(); this.grp.add(this.labM);
@@ -414,7 +414,7 @@ SEC.push({
     const thetaShoulder = 0.9;
     const phiElbow = 0.6;
     const sx=(Math.random()-.5)*.035*struggle, sz=(Math.random()-.5)*.035*struggle;
-    this.stu.g.position.set(-2.8+sx,0,sz);
+    this.stu.g.position.set(-0.375+sx,0,sz);
     this.stu.g.rotation.z=(Math.random()-.5)*.03*struggle;
     this.stu.g.rotation.x=.08*struggle;
     this.stu.armL.rotation.z=thetaShoulder;
@@ -600,8 +600,8 @@ SEC.push({
     this.gpts=[]; this.gmeas=0; this.impact=0;
     const ballY = 0.22 + P.h*SC3;
     const platTop = Math.max(0, ballY - 1.2);
-    this.plat.position.set(-0.95, platTop, 0);
     this.stu.g.position.set(-0.35, platTop - 0.04, 0);
+    this.plat.position.set(-0.95, this.stu.g.position.y - 0.045 - 0.06, 0); // top flush with soles
     const shoulderY = platTop + 1.4;
     const dx = 0.15 - (-0.35);
     const dy = ballY - shoulderY;
@@ -664,7 +664,7 @@ SEC.push({
     this.grp=new THREE.Group(); sc.add(this.grp);
     const platMat = new THREE.MeshStandardMaterial({color:0x27334a, roughness:.85, transparent:true, opacity:1});
     const plat = new THREE.Mesh(bx(2.2,.15,1.6), platMat);
-    plat.position.y = .07; this.grp.add(plat);
+    plat.position.y = -.12; this.grp.add(plat); // top at -0.045 = sole level
     this.plat = plat; this.platMat = platMat;
     this.stu=makeStudent(); this.stu.g.position.set(0,0,0); this.grp.add(this.stu.g);
     
