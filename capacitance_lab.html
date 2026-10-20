@@ -222,7 +222,7 @@ function updateWire(s,g,showFlow,speed,dt){
 /* ---------- state & physics ---------- */
 const EPS0=8.85e-12,HID=[2.2e-6,4.7e-6,8.2e-6],HN=['X','Y','Z'];
 const RES=1e5;
-const S={mod:'store',C:5e-6,Vs:9,Vc:0,mode:'idle',Vset:6,side:10,dmm:5,hid:0,recs:[],reveal:false,fit:false,Edel:0,I:0,t:0,lastI:0,hist:[],chal:false,locked:false,cq:null,hidC:3e-6,nz:[],tool:{on:false,h1:{v:3,q:20},h2:{v:9,q:70},drag:null},score:{calc:[0,0],graph:[0,0]},gm:null};
+const S={mod:'store',C:5e-6,Vs:9,Vc:0,mode:'idle',Vset:6,side:10,dmm:5,hid:0,recs:[],reveal:false,fit:false,Edel:0,I:0,t:0,lastI:0,hist:[],chal:false,locked:false,cq:null,hidC:3e-6,nz:[],tool:{on:false,h1:{v:3,q:20},h2:{v:9,q:70},drag:null},score:{calc:[0,0],graph:[0,0],energy:[0,0]},gm:null};
 function eng(x,u){if(!x)return '0 '+u;const P=[[1e-12,'p'],[1e-9,'n'],[1e-6,'µ'],[1e-3,'m'],[1,'']];let a=Math.abs(x),p=P[0];for(const q of P)if(a>=q[0]*.9995)p=q;return (+(x/p[0]).toPrecision(3))+' '+p[1]+u}
 const fitC=()=>{let a=0,b=0;S.recs.forEach(r=>{a+=r.v*r.q;b+=r.v*r.v});return b?a/b:0};
 const layout=()=>S.mod==='geo'?{s:S.side*.2,g:.2+S.dmm*.16}:{s:3,g:1.6};
@@ -271,8 +271,8 @@ geo:{cam:15,info:`<h3>4.1.4 · Parallel-plate capacitor</h3><p><b>C = ε₀A / d
  ctrl:()=>sl('side','plate side=',5,20,1,'cm')+sl('dmm','d=',1,20,.5,'mm')+`<button class="btn" data-a="georeset">Reset</button>`,
  hud:()=>{const A=Math.pow(S.side/100,2),ratio=S.side*10/S.dmm;return[row('Area A',(A*1e4).toFixed(0)+' cm²','green'),row('Separation d',S.dmm+' mm','green'),row('Capacitance C',eng(S.C,'F'),'amber'),row('Charge Q @12 V',eng(S.C*12,'C'),'violet'),row('Field E = ΔV/d',eng(12/(S.dmm/1000),'V/m'),'blue'),note(ratio>=10?'IDEAL: plate side ≫ d, so the field is uniform.':'NOT IDEAL: d is comparable to the plate size; the field bulges at the edges.')]}},
 energy:{cam:12,title:'ΔV against Q',graph:1,info:`<h3>4.1.5 · Energy stored</h3><p>As the capacitor charges, ΔV rises with Q (V = Q/C). The energy stored is the <b>area under the V–Q graph</b>, a triangle:</p><p><b>U = ½QV = ½CV² = ½Q²/C</b></p><p>Charge, then Discharge: the lamp receives the stored energy. Double V and Q doubles too, so U becomes <b>four times</b> larger. All three formulas in the readings agree.</p>`,
- ctrl:()=>cBtns([1,2,5,10])+`<div class="sep"></div>`+swBtns+sl('Vs','V<sub>s</sub>=',1,12,1,'V')+`<button class="btn" data-a="reset">Reset</button>`,
- hud:()=>{const Q=S.C*S.Vc,V=S.Vc;return[row('C',eng(S.C,'F'),'amber'),row('ΔV',eng(V,'V'),'blue'),row('Q',eng(Q,'C'),'violet'),row('½ Q V',eng(.5*Q*V,'J'),'green'),row('½ C V²',eng(.5*S.C*V*V,'J'),'green'),row('½ Q² / C',eng(.5*Q*Q/S.C,'J'),'green'),row('Delivered to lamp',eng(S.Edel,'J'),'amber')]}},
+ ctrl:()=>cBtns([1,2,5,10])+`<div class="sep"></div>`+swBtns+sl('Vs','V<sub>s</sub>=',1,12,1,'V')+`<button class="btn" data-a="reset">Reset</button>`+chalBtn(),
+ hud:()=>{const Q=S.C*S.Vc,V=S.Vc;return[...(S.chal?[note('🎯 Challenge: these readings belong to the simulator, not to the question. Use U = ½QV = ½CV² = ½Q²/C with the numbers in the question.')]:[]),row('C',eng(S.C,'F'),'amber'),row('ΔV',eng(V,'V'),'blue'),row('Q',eng(Q,'C'),'violet'),row('½ Q V',eng(.5*Q*V,'J'),'green'),row('½ C V²',eng(.5*S.C*V*V,'J'),'green'),row('½ Q² / C',eng(.5*Q*Q/S.C,'J'),'green'),row('Delivered to lamp',eng(S.Edel,'J'),'amber')]}},
 quiz:{cam:12}
 };
 
@@ -386,13 +386,43 @@ function newChal(){
     $('chal-check').textContent='✔ Check answer';$('chal-steps').className='';
     S.cq=Object.assign({tol:.02},D);$('chal-prompt').innerHTML=pick(P[unk])+' Give your answer in <b>'+D.unit+'</b>.';
     $('chal-lab').textContent=D.lab;$('chal-unit').textContent=D.unit;
-  }else{
+  }else if(S.mod==='graph'){
     const prev=S.hidC;let c;do{c=Math.round((1+Math.random()*8.5)*10)/10*1e-6}while(Math.abs(c-prev)<5e-7);
     S.hidC=c;S.recs=[];S.tool.on=false;S.fit=false;S.reveal=false;S.toolUsed=false;S.Vset=6;S.tool.h1.v=3;S.tool.h2.v=9;newNoise();
     S.cq={ans:S.hidC*1e6,tol:.08,unit:'µF'};
     $('chal-prompt').innerHTML='A capacitor of <b>unknown capacitance</b> is connected to a variable supply. Set several voltages and press <b>● Record</b> to plot (ΔV, Q) points. Then, in the graph panel, press <b>📈 Fit line</b> and open <b>📐 Gradient</b>: drag its two handles along the line to read ΔV and ΔQ. Calculate the <b>gradient ΔQ ÷ ΔV</b> and enter it below. <b>You get one attempt</b> per capacitor.';
     $('chal-lab').textContent='Gradient =';$('chal-unit').textContent='µC V⁻¹ (= µF)';
     $('chal-check').textContent='✔ Validate answer';updSteps(true);
+  }else{
+    $('chal-check').textContent='✔ Check answer';$('chal-steps').className='';
+    const fm=n=>String(+(+n).toPrecision(4));let C,V,t,key;
+    do{C=pick([1,2.2,4.7,10,22,47,100,220]);V=pick([1.5,3,4.5,6,9,12]);t=pick(['UCV','UQV','UQC','CUV','VUC','QUV','QUC','FV','FQ']);key=t+C+V}while(key===S.lastEn);
+    S.lastEn=key;
+    const Q=C*V,Uj=.5*C*V*V,us=Uj>=1000?1000:1,uu=us===1?'µJ':'mJ',U=Uj/us,k=t==='FQ'?pick([2,3,4,.5]):pick([2,3,4,5,.5]);
+    const gQ=`<b>${fm(Q)} µC</b>`,gC=`<b>${fm(C)} µF</b>`,gV=`<b>${fm(V)} V</b>`,gU=`<b>${fm(U)} ${uu}</b>`,noHalf={msg:'It looks like you left out the ½ in the energy rule.'};
+    const D={
+      UCV:{p:`A ${gC} capacitor is charged to a potential difference of ${gV}. Calculate the energy stored.`,lab:'Energy U =',unit:uu,ans:U,
+        work:`U = ½CV² = ½ × ${fm(C)} µF × (${fm(V)} V)² = ${fm(U)} ${uu}`,wrongs:[{v:2*U,...noHalf},{v:.5*C*V/us,msg:'It looks like you did not square the potential difference.'}]},
+      UQV:{p:`A capacitor holds ${gQ} of charge with a potential difference of ${gV} across it. Calculate the energy stored.`,lab:'Energy U =',unit:uu,ans:U,
+        work:`U = ½QV = ½ × ${fm(Q)} µC × ${fm(V)} V = ${fm(U)} ${uu}`,wrongs:[{v:2*U,...noHalf}]},
+      UQC:{p:`A ${gC} capacitor carries a charge of ${gQ}. Calculate the energy stored.`,lab:'Energy U =',unit:uu,ans:U,
+        work:`U = ½Q²/C = ½ × (${fm(Q)} µC)² ÷ ${fm(C)} µF = ${fm(U)} ${uu}`,wrongs:[{v:2*U,...noHalf},{v:.5*Q/C/us,msg:'It looks like you did not square the charge.'}]},
+      CUV:{p:`A capacitor stores ${gU} of energy when the potential difference across it is ${gV}. Calculate its capacitance.`,lab:'Capacitance C =',unit:'µF',ans:C,
+        work:`U = ½CV², so C = 2U ÷ V² = 2 × ${fm(U)} ${uu} ÷ (${fm(V)} V)² = ${fm(C)} µF`,wrongs:[{v:Uj/(V*V),msg:'It looks like you forgot the factor of 2 when rearranging U = ½CV².'},{v:2*Uj/V,msg:'It looks like you did not square the potential difference.'}]},
+      VUC:{p:`A ${gC} capacitor stores ${gU} of energy. Calculate the potential difference across it.`,lab:'Potential difference ΔV =',unit:'V',ans:V,
+        work:`U = ½CV², so V = √(2U ÷ C) = √(2 × ${fm(U)} ${uu} ÷ ${fm(C)} µF) = ${fm(V)} V`,wrongs:[{v:2*Uj/C,msg:'It looks like you forgot the square root.'},{v:Math.sqrt(Uj/C),msg:'It looks like you forgot the factor of 2 when rearranging.'}]},
+      QUV:{p:`A capacitor stores ${gU} of energy when the potential difference across it is ${gV}. Calculate the charge on its plates.`,lab:'Charge Q =',unit:'µC',ans:Q,
+        work:`U = ½QV, so Q = 2U ÷ V = 2 × ${fm(U)} ${uu} ÷ ${fm(V)} V = ${fm(Q)} µC`,wrongs:[{v:Uj/V,msg:'It looks like you forgot the factor of 2 when rearranging U = ½QV.'}]},
+      QUC:{p:`A ${gC} capacitor stores ${gU} of energy. Calculate the charge on its plates.`,lab:'Charge Q =',unit:'µC',ans:Q,
+        work:`U = ½Q²/C, so Q = √(2UC) = √(2 × ${fm(U)} ${uu} × ${fm(C)} µF) = ${fm(Q)} µC`,wrongs:[{v:2*Uj*C,msg:'It looks like you forgot the square root.'},{v:Math.sqrt(Uj*C),msg:'It looks like you forgot the factor of 2 when rearranging.'}]},
+      FV:{p:`The potential difference across a capacitor is multiplied by <b>${k}</b> while its capacitance stays the same. By what factor does the stored energy change?`,lab:'Factor =',unit:'× (times)',ans:k*k,
+        work:`U = ½CV² is proportional to V², so the energy is multiplied by ${k}² = ${fm(k*k)}`,wrongs:[{v:k,msg:'Remember that U is proportional to V², not to V.'}]},
+      FQ:{p:`The charge on a capacitor is multiplied by <b>${k}</b> while its capacitance stays the same. By what factor does the stored energy change?`,lab:'Factor =',unit:'× (times)',ans:k*k,
+        work:`U = ½Q²/C is proportional to Q², so the energy is multiplied by ${k}² = ${fm(k*k)}`,wrongs:[{v:k,msg:'Remember that U is proportional to Q², not to Q.'}]}
+    }[t];
+    S.cq={tol:.02,ans:D.ans,unit:D.unit,work:D.work,wrongs:D.wrongs};
+    $('chal-prompt').innerHTML=D.p+' Give your answer in <b>'+D.unit+'</b>. <b>You get one attempt</b> per question.';
+    $('chal-lab').textContent=D.lab;$('chal-unit').textContent=D.unit;
   }
 }
 function checkChal(){
@@ -409,8 +439,9 @@ function checkChal(){
   const sc=S.score[S.mod];sc[1]++;if(ok)sc[0]++;scoreTxt();
   const slip=[1e3,1e-3,1e6,1e-6].some(r=>Math.abs(a/(q.ans*r)-1)<.05)?' Check your unit prefix (n, µ, m).':'';
   let msg;
-  if(S.mod==='calc'){
-    const inv=q.wrong&&Math.abs(a-q.wrong)/q.wrong<.03?' It looks like the rule was rearranged the wrong way round.':'';
+  if(S.mod==='calc'||S.mod==='energy'){
+    let inv=q.wrong&&Math.abs(a-q.wrong)/q.wrong<.03?' It looks like the rule was rearranged the wrong way round.':'';
+    if(q.wrongs){const w=q.wrongs.find(w=>w.v>0&&Math.abs(a-w.v)/w.v<.03);if(w)inv=' '+w.msg}
     msg=ok?'✅ Correct! '+q.work:'❌ Not quite. You answered '+a+' '+q.unit+'. '+q.work+'.'+inv+slip;
   }else{
     const c=+q.ans.toPrecision(3),err=(a-q.ans)/q.ans*100,dv=Math.abs(S.tool.h2.v-S.tool.h1.v),dq=Math.abs(toolQ(S.tool.h2)-toolQ(S.tool.h1)),tr=dv>0?dq/dv:0;
@@ -426,7 +457,7 @@ function checkChal(){
       msg=`❌ <b>Not quite.</b> You answered ${a} µF (${err>0?'+':''}${err.toFixed(1)}% from the true value). The capacitance was <b>${c} µF</b>.${rd}${hint}${slip}`;
     }
   }
-  setRes(ok?'pass':'fail',msg+'<br><i>Press “New challenge” to try a different, randomly chosen capacitor.</i>');
+  setRes(ok?'pass':'fail',msg+'<br><i>'+(S.mod==='graph'?'Press “New challenge” to try a different, randomly chosen capacitor.':'Press “New challenge” for another question.')+'</i>');
 }
 $('chal-check').onclick=checkChal;$('chal-new').onclick=newChal;$('chal-exit').onclick=()=>act({dataset:{a:'chal'}});
 $('chal-in').addEventListener('keydown',e=>{if(e.key==='Enter')checkChal()});
