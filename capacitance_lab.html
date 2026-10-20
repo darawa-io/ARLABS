@@ -79,6 +79,9 @@ body.gbig #rightCol{z-index:40}
 #chal-head{display:flex;justify-content:space-between;margin-bottom:8px;border-bottom:1px solid rgba(255,200,87,.2);padding-bottom:6px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-weight:700}
 #chal-score{color:var(--green);letter-spacing:0;font-size:10.5px}
 #chal-prompt{font-size:12px;line-height:1.5;margin-bottom:10px;color:var(--text)}#chal-prompt b{color:#fff}
+#chal-steps{display:none;flex-wrap:wrap;gap:6px 14px;margin-bottom:10px;font-family:'Space Mono',monospace;font-size:10px}
+#chal-steps.show{display:flex}
+#chal-steps .st{color:var(--muted)}#chal-steps .st.done{color:var(--green)}
 #chal-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 #chal-row label,#chal-unit{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
 .chal-input{background:rgba(180,200,255,.08);border:1px solid rgba(180,200,255,.3);color:var(--text);border-radius:8px;padding:6px 10px;font-family:'Space Mono',monospace;font-size:12px;outline:none;width:130px}
@@ -146,7 +149,7 @@ body.gbig #rightCol{z-index:40}
   <div id="view2d" class="panel"><div id="v2head"><span id="v2t"></span><span id="v2btns"><button id="v2-fit" class="v2b" title="Line of best fit (needs 2+ points)">📈 Fit line</button><button id="v2-tool" class="v2b" title="Gradient tool (needs 2+ points)">📐 Gradient</button><button id="v2-expand" class="v2b" title="Enlarge">⤢</button><button id="v2-restore" class="v2b" title="Restore">⤣</button></span></div><canvas id="v2canvas"></canvas></div>
 </div>
 <div id="quiz"><div id="quiz-box"></div></div>
-<div id="chal"><div id="chal-bar"><div id="chal-head"><span>🎯 Challenge</span><span id="chal-score">Score: 0/0</span></div><div id="chal-prompt"></div>
+<div id="chal"><div id="chal-bar"><div id="chal-head"><span>🎯 Challenge</span><span id="chal-score">Score: 0/0</span></div><div id="chal-prompt"></div><div id="chal-steps"></div>
 <div id="chal-row"><label id="chal-lab" for="chal-in"></label><input type="number" id="chal-in" class="chal-input" step="any" placeholder="your answer"><span id="chal-unit"></span><button class="btn green" id="chal-check">✔ Check answer</button></div>
 <div id="chal-result"></div><div id="chal-actions"><button class="btn amber" id="chal-new">🔀 New challenge</button><button class="btn" id="chal-exit">Exit challenge</button></div></div></div>
 <div id="infoPanel" class="panel"><h2>Concept</h2><div id="info"></div></div>
@@ -339,7 +342,7 @@ function act(b){
   else if(a==='C'){S.C=+v*1e-6;clearHist();b.parentNode.querySelectorAll('[data-a=C]').forEach(x=>x.classList.toggle('on',x===b))}
   else if(a==='hid'){S.hid=+v;S.recs=[];S.reveal=false;S.tool.on=false;S.fit=false;newNoise();b.parentNode.querySelectorAll('[data-a=hid]').forEach(x=>x.classList.toggle('on',x===b))}
   else if(a==='rec'){if(S.recs.length<24&&!S.recs.some(r=>r.v===S.Vset))S.recs.push({v:S.Vset,q:Qcur()})}
-  else if(a==='clear'){S.recs=[];S.tool.on=false}
+  else if(a==='clear'){S.recs=[];S.tool.on=false;S.toolUsed=false}
   else if(a==='reveal')S.reveal=!S.reveal;
   else if(a==='georeset'){S.side=10;S.dmm=5;setMod('geo')}
   else if(a==='chal'){S.chal=!S.chal;S.reveal=false;S.recs=[];S.tool.on=false;S.fit=false;newNoise();if(!S.chal&&S.mod==='graph')S.hid=0;showChal();$('ctrlbody').innerHTML=M[S.mod].ctrl();if(S.chal)newChal()}
@@ -359,6 +362,13 @@ v2.addEventListener('pointermove',e=>{const h=S.tool.drag;if(!h||!S.gm)return;co
 const vup=()=>{S.tool.drag=null};v2.addEventListener('pointerup',vup);v2.addEventListener('pointercancel',vup);
 /* challenge mode */
 function showChal(){$('chal').classList.toggle('show',S.chal);$('hint').style.display=(S.chal||S.mod==='quiz')?'none':''}
+let _stepsHtml='';
+function updSteps(force){
+  const el=$('chal-steps');if(S.mod!=='graph'||!S.chal){el.className='';return}
+  const st=[[S.recs.length>=4,'Record ≥ 4 points ('+Math.min(S.recs.length,4)+'/4)'],[S.fit,'Fit line'],[S.toolUsed,'Gradient tool']];
+  const h=st.map(x=>'<span class="st'+(x[0]?' done':'')+'">'+(x[0]?'☑ ':'☐ ')+x[1]+'</span>').join('');
+  el.className='show';if(h!==_stepsHtml||force){_stepsHtml=h;el.innerHTML=h}
+}
 function setRes(cls,html){const r=$('chal-result');r.className=cls;r.innerHTML=html}
 function lockChal(on){$('chal-in').disabled=on;$('chal-check').disabled=on;S.locked=on}
 function scoreTxt(){const q=S.score[S.mod]||[0,0];$('chal-score').textContent='Score: '+q[0]+'/'+q[1]}
@@ -373,19 +383,28 @@ function newChal(){
     const D={Q:{ans:Q,unit:p+'C',lab:'Charge Q =',wrong:Cv/V,work:`Q = C × ΔV = ${Cv} ${p}F × ${V} V = ${Q} ${p}C`},
       C:{ans:Cv,unit:p+'F',lab:'Capacitance C =',wrong:Q*V,work:`C = Q ÷ ΔV = ${Q} ${p}C ÷ ${V} V = ${Cv} ${p}F`},
       V:{ans:V,unit:'V',lab:'Potential difference ΔV =',wrong:Q*Cv,work:`ΔV = Q ÷ C = ${Q} ${p}C ÷ ${Cv} ${p}F = ${V} V`}}[unk];
+    $('chal-check').textContent='✔ Check answer';$('chal-steps').className='';
     S.cq=Object.assign({tol:.02},D);$('chal-prompt').innerHTML=pick(P[unk])+' Give your answer in <b>'+D.unit+'</b>.';
     $('chal-lab').textContent=D.lab;$('chal-unit').textContent=D.unit;
   }else{
-    S.hidC=Math.round((1+Math.random()*9)*10)/10*1e-6;S.recs=[];S.tool.on=false;S.fit=false;S.reveal=false;newNoise();
+    const prev=S.hidC;let c;do{c=Math.round((1+Math.random()*8.5)*10)/10*1e-6}while(Math.abs(c-prev)<5e-7);
+    S.hidC=c;S.recs=[];S.tool.on=false;S.fit=false;S.reveal=false;S.toolUsed=false;S.Vset=6;S.tool.h1.v=3;S.tool.h2.v=9;newNoise();
     S.cq={ans:S.hidC*1e6,tol:.08,unit:'µF'};
-    $('chal-prompt').innerHTML='A capacitor of <b>unknown capacitance</b> is connected to a variable supply. Set several voltages and press <b>Record</b> to plot (ΔV, Q) points. Press <b>📈 Fit line</b>, then open the <b>📐 Gradient</b> tool and drag its handles along the line to read ΔV and ΔQ. Work out the gradient ΔQ ÷ ΔV and enter it below.';
+    $('chal-prompt').innerHTML='A capacitor of <b>unknown capacitance</b> is connected to a variable supply. Set several voltages and press <b>● Record</b> to plot (ΔV, Q) points. Then, in the graph panel, press <b>📈 Fit line</b> and open <b>📐 Gradient</b>: drag its two handles along the line to read ΔV and ΔQ. Calculate the <b>gradient ΔQ ÷ ΔV</b> and enter it below. <b>You get one attempt</b> per capacitor.';
     $('chal-lab').textContent='Gradient =';$('chal-unit').textContent='µC V⁻¹ (= µF)';
+    $('chal-check').textContent='✔ Validate answer';updSteps(true);
   }
 }
 function checkChal(){
   if(S.locked||!S.cq)return;const raw=$('chal-in').value.trim(),a=parseFloat(raw);
   if(raw===''||isNaN(a)){setRes('warn','Enter a numerical answer first.');return}
-  if(S.mod==='graph'&&S.recs.length<2){setRes('warn','Record at least 2 points on the graph first, then use the gradient tool.');return}
+  if(S.mod==='graph'){
+    const miss=[];
+    if(S.recs.length<4)miss.push('record at least <b>4 points</b> ('+S.recs.length+' so far)');
+    if(!S.fit)miss.push('press <b>📈 Fit line</b>');
+    if(!S.toolUsed)miss.push('open the <b>📐 Gradient</b> tool and read ΔV and ΔQ');
+    if(miss.length){setRes('warn','Before validating, '+miss.join(', ')+'. This attempt has not been used.');return}
+  }
   const q=S.cq,ok=Math.abs(a-q.ans)/q.ans<=q.tol;lockChal(true);
   const sc=S.score[S.mod];sc[1]++;if(ok)sc[0]++;scoreTxt();
   const slip=[1e3,1e-3,1e6,1e-6].some(r=>Math.abs(a/(q.ans*r)-1)<.05)?' Check your unit prefix (n, µ, m).':'';
@@ -394,10 +413,20 @@ function checkChal(){
     const inv=q.wrong&&Math.abs(a-q.wrong)/q.wrong<.03?' It looks like the rule was rearranged the wrong way round.':'';
     msg=ok?'✅ Correct! '+q.work:'❌ Not quite. You answered '+a+' '+q.unit+'. '+q.work+'.'+inv+slip;
   }else{
-    const c=+q.ans.toPrecision(3);
-    msg=ok?`✅ Correct! Your gradient (${a} µF) matches the capacitance, ${c} µF. Gradient of Q against ΔV = C.`:`❌ Not quite. Your gradient was ${a} µF but the capacitance was ${c} µF. Tip: take ΔV and ΔQ from well-separated handles on the fitted line; gradient = ΔQ ÷ ΔV.${slip}`;
+    const c=+q.ans.toPrecision(3),err=(a-q.ans)/q.ans*100,dv=Math.abs(S.tool.h2.v-S.tool.h1.v),dq=Math.abs(toolQ(S.tool.h2)-toolQ(S.tool.h1)),tr=dv>0?dq/dv:0;
+    const rd=dv>0?` Your gradient-tool readings were ΔV = ${dv.toFixed(1)} V and ΔQ = ${dq.toFixed(1)} µC, giving ${tr.toFixed(2)} µC V⁻¹.`:'';
+    if(ok){
+      msg=`✅ <b>Correct!</b> Your gradient, ${a} µF, is within ${Math.abs(err).toFixed(1)}% of the capacitance, ${c} µF. The gradient of a Q–ΔV graph equals C.`;
+    }else{
+      let hint='';
+      if(Math.abs(a*q.ans-1)<.1)hint=' It looks like you divided ΔV by ΔQ. The gradient is ΔQ ÷ ΔV (rise ÷ run).';
+      else if(tr&&Math.abs(tr-q.ans)/q.ans<=q.tol&&Math.abs(a-tr)/tr>.05)hint=' Your tool readings were fine, so check the division.';
+      else if(dv>0&&dv<3)hint=' Your handles were close together. Separate them widely along the line for a more reliable gradient.';
+      else hint=' Take ΔV and ΔQ from well-separated points on the fitted line.';
+      msg=`❌ <b>Not quite.</b> You answered ${a} µF (${err>0?'+':''}${err.toFixed(1)}% from the true value). The capacitance was <b>${c} µF</b>.${rd}${hint}${slip}`;
+    }
   }
-  setRes(ok?'pass':'fail',msg+'<br><i>Press “New challenge” for another problem.</i>');
+  setRes(ok?'pass':'fail',msg+'<br><i>Press “New challenge” to try a different, randomly chosen capacitor.</i>');
 }
 $('chal-check').onclick=checkChal;$('chal-new').onclick=newChal;$('chal-exit').onclick=()=>act({dataset:{a:'chal'}});
 $('chal-in').addEventListener('keydown',e=>{if(e.key==='Enter')checkChal()});
@@ -817,6 +846,8 @@ function frame(ts){
   const h=M[S.mod].hud().map(r=>typeof r==='string'?r:'<div class="dr"><span class="dl">'+r[0]+'</span><span class="dv '+r[2]+'">'+r[1]+'</span></div>').join('');
   if(h!==lastHud){$('hudBody').innerHTML=h;lastHud=h}
   const fb=$('v2-fit'),tb=$('v2-tool');if(S.recs.length<2)S.fit=false;if(!S.fit)S.tool.on=false;fb.disabled=S.recs.length<2;tb.disabled=!S.fit;fb.classList.toggle('on',S.fit);tb.classList.toggle('on',S.tool.on);
+  if(S.tool.on&&S.fit)S.toolUsed=true;
+  if(S.chal&&S.mod==='graph')updSteps();
   if(M[S.mod].graph)drawGraph();
   drawLabels();renderer.render(scene,cam);
 }
