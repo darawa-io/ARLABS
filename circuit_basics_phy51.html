@@ -362,6 +362,61 @@ function batteryMesh(x,y){
   g.userData.topY=yCursor+0.1; g.userData.bottomY=-H/2-0.045;
   return g;
 }
+function acSupplyMesh(x,y){
+  /* Bench a.c. power supply: dark case, live display (sine wave + marker), and two terminals whose +/- signs and colours swap as the polarity reverses. */
+  const g=new THREE.Group();
+  const W=1.0,H=1.9,D=0.5;
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(W,H,D), mat(0x2a3140,{metalness:0.35,roughness:0.5})));
+  const trim=new THREE.Mesh(new THREE.BoxGeometry(W+0.04,0.08,D+0.04), mat(0x5bc8ff,{metalness:0.5,roughness:0.3}));
+  trim.position.y=H/2-0.04; g.add(trim);
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=200;
+  const ctx=cv.getContext('2d');
+  const tex=new THREE.CanvasTexture(cv);
+  const screen=new THREE.Mesh(new THREE.PlaneGeometry(0.84,0.66), new THREE.MeshBasicMaterial({map:tex}));
+  screen.position.set(0,0,D/2+0.005); g.add(screen);
+  const mkPost=(py)=>{
+    const m=new THREE.MeshStandardMaterial({color:0x667085,emissive:0x667085,emissiveIntensity:0.35,metalness:0.6,roughness:0.35});
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,0.14,18), m);
+    post.position.set(0,py,0); g.add(post); return m;
+  };
+  const topMat=mkPost(H/2+0.05), botMat=mkPost(-H/2-0.05);
+  const sg=(txt,color,py)=>{ const sp=makeTextSprite(txt,{color:color,height:0.4}); sp.position.set(0,py,D/2+0.03); sp.visible=false; g.add(sp); return sp; };
+  const topPlus=sg('+','#ff5e72',H/2-0.3), topMinus=sg('-','#5bc8ff',H/2-0.3);
+  const botPlus=sg('+','#ff5e72',-H/2+0.3), botMinus=sg('-','#5bc8ff',-H/2+0.3);
+  g.userData.state=null;
+  g.userData.update=function(val,tNow,freq){
+    const st = Math.abs(val)<0.12 ? 0 : (val>0?1:-1);
+    if(st!==g.userData.state){
+      g.userData.state=st;
+      topPlus.visible=(st===1); topMinus.visible=(st===-1);
+      botPlus.visible=(st===-1); botMinus.visible=(st===1);
+      const cTop = st===0?0x667085:(st===1?0xff5e72:0x5bc8ff);
+      const cBot = st===0?0x667085:(st===1?0x5bc8ff:0xff5e72);
+      topMat.color.setHex(cTop); topMat.emissive.setHex(cTop);
+      botMat.color.setHex(cBot); botMat.emissive.setHex(cBot);
+    }
+    const w=cv.width,h=cv.height;
+    ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle='rgba(91,200,255,0.5)'; ctx.lineWidth=3; ctx.strokeRect(2,2,w-4,h-4);
+    ctx.fillStyle='#5bc8ff'; ctx.font="bold 22px 'Space Mono', monospace"; ctx.textAlign='center';
+    ctx.fillText('A.C. SUPPLY',w/2,30);
+    const mid=98, amp=42, x0=22, x1=w-22;
+    ctx.strokeStyle='rgba(180,200,255,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x0,mid); ctx.lineTo(x1,mid); ctx.stroke();
+    ctx.strokeStyle='#5bc8ff'; ctx.lineWidth=3; ctx.beginPath();
+    for(let i=0;i<=80;i++){ const px=x0+(i/80)*(x1-x0), py=mid-Math.sin(i/80*2*Math.PI)*amp; if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); }
+    ctx.stroke();
+    const ph=((tNow*freq)%1+1)%1;
+    ctx.fillStyle='#ffc857'; ctx.beginPath(); ctx.arc(x0+ph*(x1-x0), mid-Math.sin(ph*2*Math.PI)*amp, 7, 0, Math.PI*2); ctx.fill();
+    ctx.font="bold 20px 'Space Mono', monospace";
+    ctx.fillStyle = st===0?'#aab4c8':(st===1?'#ff5e72':'#5bc8ff');
+    ctx.fillText(st===0?'Top: 0 V (switching)':('Top: '+(st===1?'+':'-')+'   Bottom: '+(st===1?'-':'+')), w/2, 170);
+    ctx.textAlign='left';
+    tex.needsUpdate=true;
+  };
+  g.position.set(x,y,0);
+  return g;
+}
 function resistorMesh(x,y,label){
   const g=new THREE.Group();
   const body=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,1.0,16), mat(0xdcc9a0,{metalness:0.1,roughness:0.6}));
@@ -846,8 +901,10 @@ const c5={mode:'dc',parts:null,t:0,x0:-2.6,x1:2.6,y0:-1.4,y1:1.4};
 function c5_build(){
   clearStage();
   const {x0,x1,y0,y1}=c5;
+  c5.mode='dc';
   stage.add(buildLoopWires(x0,x1,y0,y1,0x5a6a90));
   const b=batteryMesh(x0,0); stage.add(b); c5.battery=b;
+  const acs=acSupplyMesh(x0,0); acs.visible=false; stage.add(acs); c5.acSupply=acs;
   stage.add(resistorMesh(x1,0,'R'));
   c5.parts=makeLoopParticles(16,0xffe9a8,x0,x1,y0,y1);
   c5.t=0;
@@ -864,13 +921,16 @@ function c5_tick(dt){
     const dir=val>=0?1:-1;
     const speed=Math.abs(val)*0.3;
     updateLoopParticles(c5.parts,dt,speed,dir,x0,x1,y0,y1);
+    if(c5.acSupply) c5.acSupply.userData.update(val,c5.t,f);
   }
   drawACWave({mode:c5.mode, freq: c5_freq(), t:c5.t});
 }
 function c5_toggleMode(){
   c5.mode = c5.mode==='dc'?'ac':'dc';
   const b=el('c5-toggle');
-  b.textContent = c5.mode==='dc'?'🔋 Source: D.C. (battery)':'〰️ Source: A.C. (mains-like)';
+  b.textContent = c5.mode==='dc'?'🔋 Source: D.C. (battery)':'〰️ Source: A.C. (power supply)';
+  if(c5.battery) c5.battery.visible = c5.mode==='dc';
+  if(c5.acSupply){ c5.acSupply.visible = c5.mode==='ac'; c5.acSupply.userData.state=null; }
   b.classList.toggle('on', c5.mode==='ac');
   setLoopParticleColor(c5.parts, c5.mode==='dc'?0xffe9a8:0x5bc8ff);
   const freqSlider=el('c5-freq'); if(freqSlider) freqSlider.disabled = c5.mode!=='ac';
@@ -881,6 +941,7 @@ function c5_hud(){
     {l:'Source type',v:isDC?'Direct Current (d.c.)':'Alternating Current (a.c.)',c:isDC?'#ffe9a8':'#5bc8ff'},
     {l:'Current direction',v:isDC?'Constant, one way only':'Reverses periodically',c:'#4dffa0'},
     {l:'Frequency',v:isDC?'— (n/a for d.c.)':fmt(c5_freq(),1)+' Hz',c:'#ffc857'},
+    {l:'Supply shown',v:isDC?'Battery: + and − fixed':'A.C. supply: + and − swap',c:'#5bc8ff'},
     {l:'Real-world example',v:isDC?'Battery, cell, solar panel':'Mains electricity supply',c:'#b57aff'}
   ];
 }
@@ -1494,7 +1555,7 @@ const CH1_SCENES=[
     blurb:`<p><b>d.c. and a.c.</b></p>
       <p><b>Direct current (d.c.)</b> always flows in the same direction — the current from a battery or cell is d.c.</p>
       <p><b>Alternating current (a.c.)</b> periodically reverses direction — mains electricity supplied to homes is a.c., typically reversing 50 or 60 times per second depending on the country.</p>
-      <p>Switch between a d.c. source and an a.c. source below and watch both the particle motion in the circuit and the current-vs-time waveform.</p>`,
+      <p>Switch between a d.c. source and an a.c. source below and watch both the particle motion in the circuit and the current-vs-time waveform. A battery has a fixed + and − terminal, so it can only supply d.c.; the a.c. power supply's terminals <b>swap polarity</b> every half cycle, which is what makes the current reverse.</p>`,
     build:c5_build, tick:c5_tick, hud:c5_hud,
     controlsHTML:`<button class="btn amber" id="c5-toggle">🔋 Source: D.C. (battery)</button>
       <div class="sw">Frequency=<input type="range" id="c5-freq" min="0.5" max="5" step="0.1" value="2" disabled> Hz</div>`,
@@ -2029,7 +2090,12 @@ const CH2_SCENES=[
 ];
 /* ===== UI WIRING ===== */
 let scenes=CH1_SCENES;
-let currentIdx=0, challengeMode=false, score={correct:0,total:0};
+let currentIdx=0, challengeMode=false;
+/* Each challenge (scene) keeps its own score, so switching tabs never mixes or wipes totals */
+const chalScores={};
+let chalAnswered=false;
+function curScore(){ const k=scenes[currentIdx].key; return chalScores[k]||(chalScores[k]={correct:0,total:0}); }
+function refreshScoreLabel(){ const sc=curScore(); el('chal-score').textContent='Score: '+sc.correct+'/'+sc.total; }
 
 function enterChapter(which){
   scenes = which===1?CH1_SCENES:CH2_SCENES;
@@ -2092,8 +2158,8 @@ function loadScene(i){
   buildTabs();
   renderHUD();
   challengeMode=false;
-  score={correct:0,total:0};
-  el('chal-score').textContent='Score: 0/0';
+  chalAnswered=false;
+  refreshScoreLabel();
   el('btn-challenge-toggle').classList.remove('on');
   updateChallengeAvailability();
 }
@@ -2107,6 +2173,8 @@ function updateChallengeAvailability(){
 }
 
 function newChallenge(){
+  chalAnswered=false;
+  refreshScoreLabel();
   el('chal-result').className=''; el('chal-result').style.display='none';
   el('challenge-wrap').classList.remove('collapsed');
   el('btn-chal-fold').textContent='▼';
@@ -2120,14 +2188,18 @@ function newChallenge(){
   el('chal-prompt').innerHTML=q.prompt;
   if(q.options){
     el('btn-chal-check').style.display='none';
+    /* Show the options in random order; order[displayIdx] = original index, so the checker still sees the original numbering */
+    const order=shuffleArr(q.options.map((_,i)=>i));
     el('chal-body').innerHTML='<div id="chal-options" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">' +
-      q.options.map((o,idx)=>'<button class="btn green" data-idx="'+idx+'">'+o+'</button>').join('') + '</div>';
+      order.map((orig,idx)=>'<button class="btn green" data-idx="'+idx+'">'+q.options[orig]+'</button>').join('') + '</div>';
     Array.from(el('chal-options').children).forEach(btn=>{
       btn.onclick=()=>{
+        if(chalAnswered) return;
         const idx=parseInt(btn.dataset.idx);
-        const res=c.check(idx);
+        const res=c.check(order[idx]);
+        const correctPos = res.correctIdx!==undefined ? order.indexOf(res.correctIdx) : -1;
         Array.from(el('chal-options').children).forEach((b,i)=>{
-          if(res.correctIdx!==undefined && i===res.correctIdx) b.classList.add('on');
+          if(i===correctPos) b.classList.add('on');
           else if(i===idx && !res.correct) b.style.borderColor='var(--red)';
           b.disabled=true;
         });
@@ -2140,9 +2212,15 @@ function newChallenge(){
   }
 }
 function showChalResult(res){
-  score.total++; if(res.correct) score.correct++;
-  el('chal-score').textContent='Score: '+score.correct+'/'+score.total;
   const box=el('chal-result');
+  /* A warning such as "enter a number" is not an attempt, and each question counts once */
+  const isWarning = typeof res.message==='string' && res.message.indexOf('⚠')===0;
+  if(!isWarning){
+    if(chalAnswered) return;
+    chalAnswered=true;
+    const sc=curScore(); sc.total++; if(res.correct) sc.correct++;
+    refreshScoreLabel();
+  }
   box.textContent=res.message;
   box.style.display='';
   box.className=res.correct? 'pass':'fail';
