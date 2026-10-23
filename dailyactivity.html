@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Radioactive Decay Lab & Daily Activity</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+        :root {
+            --bg: #060810;
+            --surface: #0b0f1e;
+            --border: rgba(180,200,255,0.12);
+            --amber: #ffc857;
+            --blue: #5bc8ff;
+            --violet: #b57aff;
+            --green: #4dffa0;
+            --red: #ff5e72;
+            --text: #ddeeff;
+            --muted: rgba(180,210,255,0.45);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); overflow-x: hidden; min-height: 100vh; }
+
+        /* Layout */
+        #sim-container { position: relative; width: 100vw; height: 55vh; min-height: 380px; background: #060810; }
+        #mainCanvas { width: 100%; height: 100%; display: block; }
+        #labelCanvas { position: absolute; top:0; left:0; pointer-events: none; z-index: 3; }
+
+        /* Header bar */
+        #header-bar {
+            position: absolute; top: 15px; left: 15px; z-index: 10;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #header-bar h1 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: #fff; }
+        #header-bar p { font-size: 9px; color: var(--muted); font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Top-left decay panel */
+        #decay-panel {
+            position: absolute; top: 65px; left: 15px; z-index: 10;
+            background: rgba(8,12,26,0.9); backdrop-filter: blur(12px);
+            border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+        }
+        #decay-panel h3 { font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+
+        /* HUD Right Panel */
+        #hud {
+            position: absolute; top: 15px; right: 15px; z-index: 10;
+            background: rgba(8,12,26,0.93); backdrop-filter: blur(15px);
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 16px; width: 280px; max-height: calc(100vh - 30px); overflow-y: auto;
+        }
+        #hud h2 { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+        .cpm-big { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--green); text-align: center; margin: 4px 0; }
+        .cpm-lbl { font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 2px; text-align: center; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+        
+        .dr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 4px 8px; border-radius: 6px; background: rgba(180,200,255,0.03); }
+        .dl { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); }
+        .dv { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; }
+        .hdiv { height: 1px; background: var(--border); margin: 8px 0; }
+
+        .btn-group { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+        .sbtn { padding: 5px 10px; border-radius: 16px; border: 1px solid rgba(180,200,255,0.2); background: rgba(180,200,255,0.05); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 9px; cursor: pointer; transition: all 0.2s; }
+        .sbtn.active-shield { background: rgba(255,200,80,0.2); border-color: var(--amber); color: var(--amber); }
+
+        /* Bottom Section: Student Form & Submission */
+        #form-section {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .card {
+            background: rgba(11,15,30,0.8);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .card h3 { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--blue); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group.full { grid-column: span 2; }
+        label { display: block; font-size: 11px; font-family: 'Space Mono', monospace; color: var(--muted); margin-bottom: 5px; }
+        input[type="text"] {
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+            background: rgba(180,200,255,0.04); color: #fff; font-size: 13px; outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--blue); }
+
+        .question-box {
+            background: rgba(181,122,255,0.04);
+            border: 1px solid rgba(181,122,255,0.25);
+            border-radius: 12px; padding: 14px; margin: 16px 0;
+        }
+        .chk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .chk-row input[type="checkbox"] { accent-color: var(--violet); width: 14px; height: 14px; cursor: pointer; }
+        .chk-row label { margin-bottom: 0; color: var(--text); font-size: 12px; cursor: pointer; }
+
+        button.submit-btn {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: var(--blue); color: #060810; font-family: 'Space Mono', monospace;
+            font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;
+        }
+        button.submit-btn:hover { background: #40b5ff; }
+        #message { margin-top: 12px; text-align: center; font-family: 'Space Mono', monospace; font-size: 11px; }
+
+        .ctrl-row { display: flex; gap: 8px; margin-top: 10px; }
+        .ctrl-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid rgba(180,200,255,0.2); background: rgba(180,200,255,0.06); color: var(--blue); font-family: 'Space Mono', monospace; font-size: 10px; cursor: pointer; text-align: center; }
+        .ctrl-btn.on { background: rgba(77,255,160,0.2); border-color: var(--green); color: var(--green); }
+    </style>
+</head>
+<body>
+
+<!-- 3D Simulation Viewport -->
+<div id="sim-container">
+    <div id="header-bar">
+        <div>
+            <h1>RADIOACTIVE DECAY LAB</h1>
+            <p>Radiation Shielding Activity</p>
+        </div>
+    </div>
+
+    <!-- Decay Curve Monitor -->
+    <div id="decay-panel">
+        <h3>Decay Curve</h3>
+        <canvas id="decay-canvas" width="180" height="110" style="border-radius:4px;display:block;"></canvas>
+    </div>
+
+    <!-- HUD Panel -->
+    <div id="hud">
+        <h2>Detector Readout</h2>
+        <div class="cpm-big" id="cpm-display">0</div>
+        <div class="cpm-lbl">counts per minute</div>
+        <div class="dr"><span class="dl">Gross CPM</span><span class="dv" id="val-gross">—</span></div>
+        <div class="dr"><span class="dl">Net CPM</span><span class="dv" id="val-net">—</span></div>
+        <div class="dr"><span class="dl">Elapsed</span><span class="dv" id="val-time">0.0s</span></div>
+
+        <div class="hdiv"></div>
+        <h2>Shield Slot</h2>
+        <div class="btn-group" id="shield-btns">
+            <button class="sbtn active-shield" data-sh="none" onclick="selectShield('none')">None</button>
+            <button class="sbtn" data-sh="paper" onclick="selectShield('paper')">📄 Paper</button>
+            <button class="sbtn" data-sh="al" onclick="selectShield('al')">🔩 Al</button>
+            <button class="sbtn" data-sh="pb" onclick="selectShield('pb')">🧱 Lead</button>
+        </div>
+        <div class="dr"><span class="dl">Status</span><span class="dv" id="val-shield" style="color:var(--amber);">None</span></div>
+
+        <div class="ctrl-row">
+            <button class="ctrl-btn on" id="btn-start" onclick="toggleAcquisition()">▶ Acquisition</button>
+            <button class="ctrl-btn" onclick="resetSim()">↺ Reset</button>
+        </div>
+    </div>
+
+    <canvas id="mainCanvas"></canvas>
+    <canvas id="labelCanvas"></canvas>
+</div>
+
+<!-- Student Record Form Section -->
+<div id="form-section">
+    <div class="card">
+        <h3>Daily Activity Submission</h3>
+        <form id="activityForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" required placeholder="Student Name">
+                </div>
+                <div class="form-group">
+                    <label for="id">Student ID:</label>
+                    <input type="text" id="id" required placeholder="ID Number">
+                </div>
+                <div class="form-group full">
+                    <label for="classRoom">Class / Section:</label>
+                    <input type="text" id="classRoom" required placeholder="e.g. Physics Period 3">
+                </div>
+            </div>
+
+            <div class="question-box">
+                <label style="color:var(--violet); font-weight:700; margin-bottom:8px;">Mystery Source Challenge:</label>
+                <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">Test the mystery source with different shields. Lead (Pb) attenuates gamma rays, paper stops alpha, aluminum stops beta. Check all radiation types present:</p>
+                <div class="chk-row"><input type="checkbox" id="chkAlpha"><label for="chkAlpha">Alpha (α)</label></div>
+                <div class="chk-row"><input type="checkbox" id="chkBeta"><label for="chkBeta">Beta (β)</label></div>
+                <div class="chk-row"><input type="checkbox" id="chkGamma"><label for="chkGamma">Gamma (γ)</label></div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Submit Activity Result</button>
+        </form>
+        <div id="message"></div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // ⚠️ PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
+    const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+    // Randomly assign mystery source composition for this student session
+    const pool = ['alpha', 'beta', 'gamma'];
+    const mysteryTypes = pool.filter(() => Math.random() > 0.3);
+    if(mysteryTypes.length === 0) mysteryTypes.push('gamma');
+
+    // Simulation state
+    const S = {
+        shield: 'none',
+        running: true,
+        elapsed: 0,
+        startTime: Date.now(),
+        initialActivity: 2500,
+        hlSec: 25,
+        grossCPM: 0,
+        decayData: []
+    };
+
+    const SHIELDS = {
+        none:  { stops: [] },
+        paper: { stops: ['alpha'] },
+        al:    { stops: ['alpha', 'beta'] },
+        pb:    { stops: ['alpha', 'beta'], gammaAtt: 0.20 } // Lead correctly attenuates gamma strongly
+    };
+
+    function computeCPM() {
+        const lambda = Math.LN2 / S.hlSec;
+        let base = S.initialActivity * Math.exp(-lambda * S.elapsed);
+        
+        let surviving = mysteryTypes.filter(t => !SHIELDS[S.shield].stops.includes(t));
+        let frac = surviving.length / mysteryTypes.length;
+
+        // Lead attenuation for gamma
+        if(surviving.includes('gamma') && SHIELDS[S.shield].gammaAtt !== undefined) {
+            frac = frac * SHIELDS[S.shield].gammaAtt;
+        }
+        if(mysteryTypes.length === 0) frac = 0;
+
+        base *= frac;
+        return Math.max(10, Math.round(base + 10 + Math.random() * 15));
+    }
+
+    // Three.js Setup
+    const container = document.getElementById('sim-container');
+    const canvas = document.getElementById('mainCanvas');
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setClearColor(0x060810, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 100);
+    camera.position.set(0, 4, 13);
+    camera.lookAt(0, 0, 0);
+
+    scene.add(new THREE.AmbientLight(0x8899cc, 1.2));
+    const sun = new THREE.DirectionalLight(0xfff0e8, 1.0);
+    sun.position.set(5, 10, 5); scene.add(sun);
+
+    // Bench
+    const root = new THREE.Group(); scene.add(root);
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(16, 0.2, 3), new THREE.MeshStandardMaterial({color:0x263050, roughness:0.6}));
+    bench.position.set(0, -0.5, 0); root.add(bench);
+
+    // GM Tube
+    const gmGroup = new THREE.Group(); gmGroup.position.set(6, 0, 0); root.add(gmGroup);
+    gmGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.8, 16), new THREE.MeshStandardMaterial({color:0x2a3d55, metalness:0.7})));
+
+    // Source
+    const srcGroup = new THREE.Group(); srcGroup.position.set(-6, 0, 0); root.add(srcGroup);
+    srcGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color:0xb57aff, emissive:0xb57aff, emissiveIntensity:0.8})));
+
+    // Shield Plate
+    const shieldPlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 1.5, 1.4),
+        new THREE.MeshStandardMaterial({color:0x888888, metalness:0.8})
+    );
+    shieldPlate.position.set(0, 0.3, 0); shieldPlate.visible = false; root.add(shieldPlate);
+
+    function selectShield(sh) {
+        S.shield = sh;
+        document.querySelectorAll('#shield-btns .sbtn').forEach(b => {
+            b.classList.remove('active-shield');
+            if(b.dataset.sh === sh) b.classList.add('active-shield');
+        });
+        document.getElementById('val-shield').textContent = sh.toUpperCase();
+        
+        if(sh === 'none') {
+            shieldPlate.visible = false;
+        } else {
+            shieldPlate.visible = true;
+            const cols = {paper:0xddeebb, al:0x9ab0cc, pb:0x444b54};
+            shieldPlate.material.color.setHex(cols[sh]);
+        }
+    }
+    window.selectShield = selectShield;
+
+    function toggleAcquisition() {
+        S.running = !S.running;
+        const btn = document.getElementById('btn-start');
+        btn.textContent = S.running ? '▶ Acquisition' : '■ Paused';
+        btn.classList.toggle('on', S.running);
+    }
+    window.toggleAcquisition = toggleAcquisition;
+
+    function resetSim() {
+        S.elapsed = 0;
+        S.startTime = Date.now();
+        S.decayData = [];
+    }
+    window.resetSim = resetSim;
+
+    // Animation & simulation loop
+    let lastTick = 0;
+    function animate(ts) {
+        requestAnimationFrame(animate);
+        if(S.running) {
+            S.elapsed = (Date.now() - S.startTime) / 1000;
+            S.grossCPM = computeCPM();
+
+            if(ts - lastTick > 1000) {
+                lastTick = ts;
+                S.decayData.push({t: S.elapsed, cpm: S.grossCPM});
+                if(S.decayData.length > 30) S.decayData.shift();
+                updateDecayCanvas();
+            }
+        }
+
+        document.getElementById('cpm-display').textContent = S.grossCPM;
+        document.getElementById('val-gross').textContent = S.grossCPM;
+        document.getElementById('val-net').textContent = Math.max(0, S.grossCPM - 15);
+        document.getElementById('val-time').textContent = S.elapsed.toFixed(1) + 's';
+
+        renderer.render(scene, camera);
+    }
+
+    function updateDecayCanvas() {
+        const c = document.getElementById('decay-canvas');
+        if(!c) return;
+        const ctx = c.getContext('2d');
+        const W = c.width, H = c.height;
+        ctx.fillStyle = '#060810'; ctx.fillRect(0,0,W,H);
+
+        if(S.decayData.length < 2) return;
+        const maxCPM = Math.max(...S.decayData.map(d=>d.cpm), 100);
+
+        ctx.beginPath(); ctx.strokeStyle = '#5bc8ff'; ctx.lineWidth = 2;
+        S.decayData.forEach((d, i) => {
+            const x = (i / (S.decayData.length - 1)) * W;
+            const y = H - (d.cpm / maxCPM) * (H - 10) - 5;
+            if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+    }
+
+    requestAnimationFrame(animate);
+
+    // Form submission handling
+    document.getElementById('activityForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+
+        const selected = [];
+        if(document.getElementById('chkAlpha').checked) selected.push('alpha');
+        if(document.getElementById('chkBeta').checked) selected.push('beta');
+        if(document.getElementById('chkGamma').checked) selected.push('gamma');
+
+        const isCorrect = mysteryTypes.sort().join(',') === selected.sort().join(',');
+        if(!isCorrect) {
+            messageDiv.style.color = "var(--red)";
+            messageDiv.textContent = "❌ Incorrect radiation identification. Test lead (Pb) and other shields carefully!";
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending record...";
+
+        const payload = {
+            name: document.getElementById('name').value,
+            id: document.getElementById('id').value,
+            classRoom: document.getElementById('classRoom').value,
+            identifiedTypes: selected.join(' + '),
+            status: "Success"
+        };
+
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            messageDiv.style.color = "var(--green)";
+            messageDiv.textContent = "🎉 Success! Your lab record has been saved to Google Sheets.";
+            document.getElementById('activityForm').reset();
+            submitBtn.style.display = 'none';
+        }).catch(() => {
+            messageDiv.style.color = "var(--red)";
+            messageDiv.textContent = "Submission error. Please check your network.";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Activity Result";
+        });
+    });
+</script>
+
+</body>
+</html>
