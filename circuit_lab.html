@@ -2437,6 +2437,7 @@ function openModal(c, screenX, screenY) {
 
 document.getElementById('modalOk').onclick = () => {
   if (!editTarget) return;
+  const _oldCap = editTarget.type === 'capacitor' ? editTarget.capacitance : null;
   document.querySelectorAll('#modalFields [data-key]').forEach(el => {
     const key = el.dataset.key;
     let val = el.value;
@@ -2445,6 +2446,12 @@ document.getElementById('modalOk').onclick = () => {
     if (val === 'false') val = false;
     editTarget[key] = val;
   });
+  // Changing a capacitor's C must conserve its stored CHARGE (Q = C·V), not its voltage.
+  // Otherwise a series chain that already settled (e.g. 4.5 V / 4.5 V) stays frozen in equilibrium.
+  if (editTarget.type === 'capacitor' && _oldCap > 0 && editTarget.capacitance > 0 && editTarget.capacitance !== _oldCap) {
+    editTarget._vc = (editTarget._vc || 0) * _oldCap / editTarget.capacitance;
+    editTarget._vcNext = editTarget._vc;
+  }
   document.getElementById('modalOverlay').classList.remove('show');
   updateCircuit();
 };
